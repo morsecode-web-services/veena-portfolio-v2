@@ -103,6 +103,7 @@ export default function Music() {
                     : 'bg-white text-gray-700 hover:bg-gray-50 active:bg-gray-100 shadow-premium border border-premium hover:shadow-premium-md'
                   }
                 `}
+                style={selectedCategory === category.id ? { backgroundColor: '#14213d', color: '#ffffff' } : {}}
                 role="tab"
                 aria-selected={selectedCategory === category.id}
                 aria-controls={`category-panel-${category.id}`}

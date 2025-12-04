@@ -58,14 +58,14 @@ export default function Home() {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
-          className="text-center mb-8 sm:mb-10 md:mb-12"
+          className="flex flex-col items-center justify-center mb-8 sm:mb-10 md:mb-12"
         >
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-serif font-bold text-navy-900 mb-3 md:mb-4 px-4">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-serif font-bold text-navy-900 mb-3 md:mb-4 text-center">
             {config.artist.name}
           </h1>
           {/* Premium gold accent underline */}
-          <div className="w-24 sm:w-32 h-1 bg-gradient-gold mx-auto mb-3 md:mb-4 rounded-full"></div>
-          <p className="text-lg sm:text-xl md:text-2xl text-navy-600 font-light px-4" role="doc-subtitle">
+          <div className="w-24 sm:w-32 h-1 bg-gradient-gold mb-3 md:mb-4 rounded-full"></div>
+          <p className="text-lg sm:text-xl md:text-2xl text-navy-600 font-light text-center" role="doc-subtitle">
             {config.artist.tagline}
           </p>
         </motion.div>
@@ -113,9 +113,9 @@ export default function Home() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.8, ease: [0.25, 0.1, 0.25, 1] }}
-          className="mb-12 sm:mb-14 md:mb-16 text-center max-w-3xl mx-auto px-4"
+          className="mb-12 sm:mb-14 md:mb-16 flex flex-col items-center justify-center max-w-3xl mx-auto px-4"
         >
-          <p className="text-base sm:text-lg md:text-xl text-gray-700 leading-relaxed mb-6">
+          <p className="text-base sm:text-lg md:text-xl text-gray-700 leading-relaxed mb-6 text-center">
             {config.artist.briefBio}
           </p>
           <motion.a
@@ -125,6 +125,7 @@ export default function Home() {
             whileTap={{ scale: 0.98 }}
             transition={{ type: 'spring', stiffness: 400, damping: 17 }}
             className="inline-block px-6 sm:px-8 py-3 bg-navy-900 text-white rounded-md hover:bg-navy-800 active:bg-navy-950 transition-all duration-300 font-medium shadow-premium-md hover:shadow-premium-lg text-sm sm:text-base touch-manipulation"
+            style={{ backgroundColor: '#14213d', color: '#ffffff' }}
           >
             Read More About {config.artist.name.split(' ')[0]}
           </motion.a>
