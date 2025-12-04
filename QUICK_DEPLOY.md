@@ -1,5 +1,8 @@
 # Quick Deploy to GitHub Pages
 
+## ✅ Latest Fix Applied
+Config loading issue fixed! The site now correctly loads from `/veena-portfolio-v2/config/site-config.json`
+
 ## 🚀 Deploy in 3 Steps
 
 ### 1️⃣ Enable GitHub Pages
@@ -10,7 +13,7 @@ Go to: https://github.com/nageshraj/veena-portfolio-v2/settings/pages
 ### 2️⃣ Push Your Code
 ```bash
 git add .
-git commit -m "Deploy to GitHub Pages"
+git commit -m "Fix config loading and deploy to GitHub Pages"
 git push origin main
 ```
 

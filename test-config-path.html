@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Config Path Test</title>
+</head>
+<body>
+    <h1>Config Path Test</h1>
+    <div id="results"></div>
+    
+    <script>
+        function getBasePath() {
+            const hostname = window.location.hostname;
+            const pathname = window.location.pathname;
+            
+            console.log('Hostname:', hostname);
+            console.log('Pathname:', pathname);
+            
+            if (hostname.includes('github.io') && pathname.startsWith('/veena-portfolio-v2')) {
+                return '/veena-portfolio-v2';
+            }
+            
+            return '';
+        }
+        
+        const basePath = getBasePath();
+        const configPath = '/config/site-config.json';
+        const fullPath = `${basePath}${configPath}`;
+        
+        const results = document.getElementById('results');
+        results.innerHTML = `
+            <p><strong>Current URL:</strong> ${window.location.href}</p>
+            <p><strong>Hostname:</strong> ${window.location.hostname}</p>
+            <p><strong>Pathname:</strong> ${window.location.pathname}</p>
+            <p><strong>Detected Base Path:</strong> "${basePath}"</p>
+            <p><strong>Config Path:</strong> ${configPath}</p>
+            <p><strong>Full Path:</strong> ${fullPath}</p>
+            <hr>
+            <p>Testing fetch...</p>
+        `;
+        
+        fetch(fullPath)
+            .then(response => {
+                results.innerHTML += `<p><strong>Fetch Status:</strong> ${response.status} ${response.statusText}</p>`;
+                if (response.ok) {
+                    return response.json();
+                }
+                throw new Error(`HTTP ${response.status}`);
+            })
+            .then(data => {
+                results.innerHTML += `<p style="color: green;"><strong>✅ SUCCESS!</strong></p>`;
+                results.innerHTML += `<p><strong>Artist Name:</strong> ${data.artist?.name}</p>`;
+                results.innerHTML += `<pre>${JSON.stringify(data, null, 2).substring(0, 500)}...</pre>`;
+            })
+            .catch(error => {
+                results.innerHTML += `<p style="color: red;"><strong>❌ ERROR:</strong> ${error.message}</p>`;
+            });
+    </script>
+</body>
+</html>

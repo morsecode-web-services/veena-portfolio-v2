@@ -119,6 +119,28 @@ export function validateConfig(data: unknown): {
 }
 
 /**
+ * Get the base path for the application
+ * This handles both development and production environments
+ */
+function getBasePath(): string {
+  // In production (GitHub Pages), use the hardcoded base path
+  // In development, use empty string
+  if (typeof window !== 'undefined') {
+    // Client-side: check if we're on GitHub Pages
+    const hostname = window.location.hostname;
+    const pathname = window.location.pathname;
+    
+    // If we're on GitHub Pages and not at root, extract base path
+    if (hostname.includes('github.io') && pathname.startsWith('/veena-portfolio-v2')) {
+      return '/veena-portfolio-v2';
+    }
+  }
+  
+  // Default to environment variable or empty string
+  return process.env.NEXT_PUBLIC_BASE_PATH || '';
+}
+
+/**
  * Loads and parses the site configuration from JSON file
  * @param configPath - Path to the configuration file (default: /config/site-config.json)
  * @returns Parsed and validated site configuration
@@ -128,8 +150,10 @@ export async function loadConfig(
 ): Promise<SiteConfig> {
   try {
     // Handle base path for GitHub Pages deployment
-    const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
+    const basePath = getBasePath();
     const fullPath = `${basePath}${configPath}`;
+    
+    console.log(`Loading config from: ${fullPath}`);
     
     const response = await fetch(fullPath);
     
