@@ -46,10 +46,9 @@ export default function PortfolioGenerator() {
           flex items-center gap-2 sm:gap-3 px-5 sm:px-6 py-2.5 sm:py-3 rounded-lg font-medium
           transition-all duration-300 shadow-md hover:shadow-lg text-sm sm:text-base
           touch-manipulation
-          ${
-            isGenerating
-              ? 'bg-gray-400 cursor-not-allowed'
-              : 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 active:from-blue-800 active:to-blue-900 text-white'
+          ${isGenerating
+            ? 'bg-gray-400 cursor-not-allowed'
+            : 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 active:from-blue-800 active:to-blue-900 text-white'
           }
         `}
         aria-label="Download portfolio as PDF"
@@ -63,8 +62,8 @@ export default function PortfolioGenerator() {
         ) : (
           <>
             <FaDownload className="text-lg sm:text-xl" />
-            <span className="hidden sm:inline">Download Portfolio PDF</span>
-            <span className="sm:hidden">Download PDF</span>
+            <span className="hidden sm:inline">Print Portfolio</span>
+            <span className="sm:hidden">Print</span>
             <FaFilePdf className="text-lg sm:text-xl" />
           </>
         )}
@@ -129,8 +128,7 @@ export default function PortfolioGenerator() {
             transition={{ duration: 0.3 }}
             className="text-xs sm:text-sm text-gray-600 text-center max-w-md"
           >
-            Click the button above to download a comprehensive PDF portfolio including all sections,
-            images, and clickable links.
+            Click the button above to open the print dialog. You can save as PDF from your browser's print menu.
           </motion.p>
         )}
       </AnimatePresence>

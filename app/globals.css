@@ -3,12 +3,17 @@
 :root {
   /* Professional color palette - deep blues, elegant grays, gold accents */
   /* WCAG AA compliant colors for accessibility */
-  --color-navy: 20, 33, 61;        /* #14213d - Primary dark blue */
-  --color-slate: 51, 65, 85;       /* #334155 - Secondary gray-blue */
-  --color-gold: 180, 130, 25;      /* #b48219 - Darker gold for better contrast */
-  --color-cream: 250, 248, 245;    /* #faf8f5 - Warm background */
-  --color-charcoal: 31, 41, 55;    /* #1f2937 - Text color */
-  
+  --color-navy: 20, 33, 61;
+  /* #14213d - Primary dark blue */
+  --color-slate: 51, 65, 85;
+  /* #334155 - Secondary gray-blue */
+  --color-gold: 180, 130, 25;
+  /* #b48219 - Darker gold for better contrast */
+  --color-cream: 250, 248, 245;
+  /* #faf8f5 - Warm background */
+  --color-charcoal: 31, 41, 55;
+  /* #1f2937 - Text color */
+
   /* Typography scale */
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
   --font-serif: 'Playfair Display', Georgia, serif;
@@ -23,7 +28,7 @@
   * {
     will-change: auto;
   }
-  
+
   /* Apply hardware acceleration to animated elements */
   [class*="transition"],
   [class*="animate"],
@@ -59,15 +64,20 @@ section {
 }
 
 /* Professional typography - refined for quiet luxury */
-h1, h2, h3 {
+h1,
+h2,
+h3 {
   font-family: var(--font-serif);
   font-weight: 700;
   line-height: 1.2;
-  letter-spacing: -0.02em; /* Tighter for elegance */
+  letter-spacing: -0.02em;
+  /* Tighter for elegance */
   color: rgb(var(--color-navy));
 }
 
-h4, h5, h6 {
+h4,
+h5,
+h6 {
   font-family: var(--font-serif);
   font-weight: 600;
   line-height: 1.3;
@@ -76,7 +86,8 @@ h4, h5, h6 {
 }
 
 /* Smooth transitions for interactive elements - using hardware-accelerated properties */
-a, button {
+a,
+button {
   transition: transform 0.3s ease, opacity 0.3s ease, color 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease;
 }
 
@@ -95,7 +106,11 @@ button:not(:disabled):active {
 }
 
 /* Focus states for accessibility - WCAG AA compliant */
-a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible {
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
   outline: 3px solid #2563eb;
   outline-offset: 2px;
   border-radius: 2px;
@@ -127,7 +142,9 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 
 /* Touch-friendly interactive elements on mobile */
 @media (max-width: 768px) {
-  button, a {
+
+  button,
+  a {
     min-height: 44px;
     min-width: 44px;
   }
@@ -190,8 +207,10 @@ html {
 
 /* Improved readability and visual hierarchy */
 p {
-  max-width: 75ch; /* Optimal line length for readability */
-  line-height: 1.8; /* Increased for better readability */
+  max-width: 75ch;
+  /* Optimal line length for readability */
+  line-height: 1.8;
+  /* Increased for better readability */
 }
 
 /* Premium borders for sophisticated design */
@@ -229,14 +248,18 @@ p {
   * {
     border-color: currentColor !important;
   }
-  
-  a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible {
+
+  a:focus-visible,
+  button:focus-visible,
+  input:focus-visible,
+  textarea:focus-visible {
     outline-width: 4px;
   }
 }
 
 /* Reduced motion support for accessibility */
 @media (prefers-reduced-motion: reduce) {
+
   *,
   *::before,
   *::after {
@@ -244,5 +267,153 @@ p {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+}
+
+/* Print Styles for PDF Generation */
+@media print {
+
+  /* Hide only navigation elements, not content sections */
+  header[role="banner"],
+  footer[role="contentinfo"],
+  nav,
+  .no-print {
+    display: none !important;
+  }
+
+  /* Reset page margins and layout */
+  @page {
+    margin: 1.5cm;
+    size: A4;
+  }
+
+  body {
+    background: white !important;
+    font-size: 11pt;
+    line-height: 1.6;
+  }
+
+  /* Main content container */
+  main {
+    display: block !important;
+    width: 100% !important;
+  }
+
+  /* Section spacing */
+  section {
+    page-break-inside: avoid;
+    margin-bottom: 1.5cm;
+    padding: 0.5cm 0;
+    display: block !important;
+  }
+
+  /* Headings */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    page-break-after: avoid;
+    font-weight: bold;
+  }
+
+  h1 {
+    font-size: 24pt;
+    margin-bottom: 0.5cm;
+  }
+
+  h2 {
+    font-size: 18pt;
+    margin-top: 0.8cm;
+    margin-bottom: 0.5cm;
+  }
+
+  h3 {
+    font-size: 14pt;
+    margin-top: 0.6cm;
+    margin-bottom: 0.4cm;
+  }
+
+  h4 {
+    font-size: 12pt;
+  }
+
+  /* Paragraphs and text */
+  p {
+    margin-bottom: 0.4cm;
+    orphans: 3;
+    widows: 3;
+  }
+
+  /* Images */
+  img {
+    max-width: 100% !important;
+    height: auto !important;
+    page-break-inside: avoid;
+    display: block !important;
+    margin: 0.5cm auto;
+  }
+
+  /* Links */
+  a {
+    text-decoration: underline;
+  }
+
+  /* Links - show URLs for external links */
+  a[href^="http"]::after {
+    content: " (" attr(href) ")";
+    font-size: 9pt;
+    color: #666;
+    word-break: break-all;
+  }
+
+  /* Avoid breaks inside these elements */
+  p,
+  blockquote,
+  pre,
+  ul,
+  ol,
+  dl,
+  figure,
+  table,
+  tr {
+    page-break-inside: avoid;
+  }
+
+  /* Lists */
+  ul,
+  ol {
+    margin-left: 1cm;
+  }
+
+  /* Hide buttons except those specifically marked for printing */
+  button:not(.print-include) {
+    display: none !important;
+  }
+
+  /* Form elements */
+  input,
+  textarea,
+  select {
+    border: 1px solid #999 !important;
+    background: white !important;
+  }
+
+  /* Videos and iframes - show as placeholders */
+  iframe,
+  video {
+    max-height: 150px !important;
+    border: 2px dashed #999 !important;
+    display: block !important;
+    page-break-inside: avoid;
+    position: relative;
+  }
+
+  /* Ensure content containers are visible */
+  div,
+  article,
+  aside {
+    page-break-inside: avoid;
   }
 }
