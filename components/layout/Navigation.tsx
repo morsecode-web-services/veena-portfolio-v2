@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaBars, FaTimes } from 'react-icons/fa';
 
@@ -17,8 +18,10 @@ const navItems = [
 export default function Navigation() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState('home');
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     const handleScroll = () => {
       requestAnimationFrame(() => {
         const sections = navItems.map((item) => item.id);
@@ -80,11 +83,10 @@ export default function Navigation() {
             >
               <button
                 onClick={() => scrollToSection(item.id)}
-                className={`relative text-sm font-medium transition-all duration-300 hover:text-blue-600 hover:scale-105 ${
-                  activeSection === item.id
+                className={`relative text-sm font-medium transition-all duration-300 hover:text-blue-600 hover:scale-105 ${activeSection === item.id
                     ? 'text-blue-600'
                     : 'text-gray-700'
-                }`}
+                  }`}
                 role="menuitem"
                 aria-label={`Navigate to ${item.label} section`}
                 aria-current={activeSection === item.id ? 'page' : undefined}
@@ -107,7 +109,7 @@ export default function Navigation() {
       {/* Mobile Menu Button */}
       <button
         onClick={() => setIsMenuOpen(!isMenuOpen)}
-        className="md:hidden text-gray-700 hover:text-blue-600 transition-colors z-50"
+        className="md:hidden text-gray-700 hover:text-blue-600 transition-colors z-50 relative"
         aria-label={isMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
         aria-expanded={isMenuOpen}
         aria-controls="mobile-menu"
@@ -115,56 +117,58 @@ export default function Navigation() {
         {isMenuOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
       </button>
 
-      {/* Mobile Navigation */}
-      <AnimatePresence>
-        {isMenuOpen && (
-          <>
-            {/* Backdrop */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setIsMenuOpen(false)}
-              className="fixed inset-0 bg-black/50 z-40 md:hidden"
-              aria-hidden="true"
-            />
+      {/* Mobile Navigation Portal */}
+      {mounted && createPortal(
+        <AnimatePresence>
+          {isMenuOpen && (
+            <>
+              {/* Backdrop */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setIsMenuOpen(false)}
+                className="fixed inset-0 bg-black/50 z-[9998] md:hidden"
+                aria-hidden="true"
+              />
 
-            {/* Slide-in Menu */}
-            <motion.nav
-              id="mobile-menu"
-              initial={{ x: '100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '100%' }}
-              transition={{ type: 'tween', duration: 0.3 }}
-              className="fixed top-0 right-0 bottom-0 w-64 bg-white shadow-2xl z-50 md:hidden"
-              role="navigation"
-              aria-label="Mobile navigation"
-            >
-              <div className="flex flex-col h-full pt-20 px-6">
-                <ul className="flex flex-col space-y-6" role="menu">
-                  {navItems.map((item) => (
-                    <li key={item.id} role="none">
-                      <button
-                        onClick={() => scrollToSection(item.id)}
-                        className={`text-lg font-medium transition-colors hover:text-blue-600 w-full text-left ${
-                          activeSection === item.id
-                            ? 'text-blue-600'
-                            : 'text-gray-700'
-                        }`}
-                        role="menuitem"
-                        aria-label={`Navigate to ${item.label} section`}
-                        aria-current={activeSection === item.id ? 'page' : undefined}
-                      >
-                        {item.label}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </motion.nav>
-          </>
-        )}
-      </AnimatePresence>
+              {/* Slide-in Menu */}
+              <motion.nav
+                id="mobile-menu"
+                initial={{ x: '100%' }}
+                animate={{ x: 0 }}
+                exit={{ x: '100%' }}
+                transition={{ type: 'tween', duration: 0.3 }}
+                className="fixed top-0 right-0 bottom-0 w-64 bg-white shadow-2xl z-[9999] md:hidden"
+                role="navigation"
+                aria-label="Mobile navigation"
+              >
+                <div className="flex flex-col h-full pt-20 px-6">
+                  <ul className="flex flex-col space-y-6" role="menu">
+                    {navItems.map((item) => (
+                      <li key={item.id} role="none">
+                        <button
+                          onClick={() => scrollToSection(item.id)}
+                          className={`text-lg font-medium transition-colors hover:text-blue-600 w-full text-left ${activeSection === item.id
+                              ? 'text-blue-600'
+                              : 'text-gray-700'
+                            }`}
+                          role="menuitem"
+                          aria-label={`Navigate to ${item.label} section`}
+                          aria-current={activeSection === item.id ? 'page' : undefined}
+                        >
+                          {item.label}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </motion.nav>
+            </>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
     </>
   );
 }

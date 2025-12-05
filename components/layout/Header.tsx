@@ -33,8 +33,8 @@ export default function Header() {
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled
-          ? 'bg-white/95 backdrop-blur-md shadow-premium-md border-b border-premium'
-          : 'bg-transparent'
+        ? 'bg-white/95 backdrop-blur-md shadow-premium-md border-b border-premium'
+        : 'bg-transparent'
         }`}
       role="banner"
     >
@@ -47,7 +47,7 @@ export default function Header() {
             className="flex items-center"
           >
             <a href="#home" className="focus:outline-none focus:ring-2 focus:ring-blue-600 rounded">
-              <h1 className="text-lg sm:text-xl md:text-2xl font-serif font-bold text-navy-900 truncate max-w-[200px] sm:max-w-none">
+              <h1 className="text-lg sm:text-xl md:text-2xl font-serif font-bold text-navy-900">
                 Aishwarya Manikarnike
               </h1>
             </a>
