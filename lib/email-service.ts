@@ -1,4 +1,5 @@
-// Email service utility
+// Email service utility using EmailJS
+import emailjs from '@emailjs/browser';
 import { ContactFormData } from '@/types';
 
 /**
@@ -7,7 +8,7 @@ import { ContactFormData } from '@/types';
 export class EmailServiceError extends Error {
   constructor(
     message: string,
-    public code: 'VALIDATION_ERROR' | 'NETWORK_ERROR' | 'SERVER_ERROR' | 'TIMEOUT_ERROR',
+    public code: 'VALIDATION_ERROR' | 'NETWORK_ERROR' | 'SERVER_ERROR' | 'TIMEOUT_ERROR' | 'CONFIG_ERROR',
     public retryable: boolean = false
   ) {
     super(message);
@@ -16,9 +17,25 @@ export class EmailServiceError extends Error {
 }
 
 /**
- * Sends a contact form email using the configured email service
- * This implementation uses a simple fetch to a Next.js API route
- * In production, you would configure this with Resend, EmailJS, or similar service
+ * Validates EmailJS configuration
+ */
+function validateEmailJSConfig(): void {
+  const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID;
+  const templateId = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID;
+  const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY;
+
+  if (!serviceId || !templateId || !publicKey) {
+    throw new EmailServiceError(
+      'EmailJS is not configured. Please set NEXT_PUBLIC_EMAILJS_SERVICE_ID, NEXT_PUBLIC_EMAILJS_TEMPLATE_ID, and NEXT_PUBLIC_EMAILJS_PUBLIC_KEY in your .env.local file.',
+      'CONFIG_ERROR',
+      false
+    );
+  }
+}
+
+/**
+ * Sends a contact form email using EmailJS
+ * EmailJS documentation: https://www.emailjs.com/docs/
  */
 export async function sendContactEmail(
   data: ContactFormData,
@@ -35,6 +52,9 @@ export async function sendContactEmail(
     );
   }
 
+  // Validate EmailJS configuration
+  validateEmailJSConfig();
+
   // Attempt to send with retries
   let lastError: Error | null = null;
   
@@ -45,7 +65,7 @@ export async function sendContactEmail(
     } catch (error) {
       lastError = error as Error;
       
-      // Don't retry on validation errors
+      // Don't retry on validation or config errors
       if (error instanceof EmailServiceError && !error.retryable) {
         throw error;
       }
@@ -66,7 +86,7 @@ export async function sendContactEmail(
 }
 
 /**
- * Internal function to send email with timeout
+ * Internal function to send email with timeout using EmailJS
  */
 async function sendEmailWithTimeout(
   data: ContactFormData,
@@ -83,40 +103,52 @@ async function sendEmailWithTimeout(
     }, timeout);
   });
 
-  // Create send promise
+  // Create send promise using EmailJS
   const sendPromise = (async () => {
-    // Simulate API call delay
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    try {
+      const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID!;
+      const templateId = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID!;
+      const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY!;
 
-    // In production, you would do something like:
-    // const response = await fetch('/api/contact', {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify(data),
-    // });
-    // 
-    // if (!response.ok) {
-    //   const errorData = await response.json().catch(() => ({}));
-    //   throw new EmailServiceError(
-    //     errorData.message || 'Failed to send email',
-    //     response.status >= 500 ? 'SERVER_ERROR' : 'NETWORK_ERROR',
-    //     response.status >= 500 // Retry on server errors
-    //   );
-    // }
+      // Prepare template parameters for EmailJS
+      // These variable names should match your EmailJS template variables
+      const templateParams = {
+        from_name: data.name,
+        from_email: data.email,
+        phone: data.phone,
+        message: data.purpose,
+        timestamp: data.timestamp?.toLocaleString() || new Date().toLocaleString(),
+      };
 
-    // For development, log the data
-    console.log('Contact form submission:', {
-      name: data.name,
-      email: data.email,
-      phone: data.phone,
-      purpose: data.purpose,
-      timestamp: data.timestamp,
-    });
+      // Send email using EmailJS
+      const response = await emailjs.send(
+        serviceId,
+        templateId,
+        templateParams,
+        publicKey
+      );
 
-    // Simulate occasional network errors for testing (10% chance)
-    if (Math.random() < 0.1) {
+      // Check response status
+      if (response.status !== 200) {
+        throw new EmailServiceError(
+          `EmailJS returned status ${response.status}: ${response.text}`,
+          'SERVER_ERROR',
+          true
+        );
+      }
+
+      console.log('Email sent successfully via EmailJS:', response);
+    } catch (error: any) {
+      // Handle EmailJS specific errors
+      if (error instanceof EmailServiceError) {
+        throw error;
+      }
+
+      // Network or EmailJS API errors
+      const errorMessage = error?.text || error?.message || 'Unknown error occurred';
+      
       throw new EmailServiceError(
-        'Network error occurred',
+        `Failed to send email: ${errorMessage}`,
         'NETWORK_ERROR',
         true
       );
@@ -128,36 +160,45 @@ async function sendEmailWithTimeout(
 }
 
 /**
- * Example API route implementation for production use with Resend:
+ * EmailJS Setup Instructions:
  * 
- * // app/api/contact/route.ts
- * import { Resend } from 'resend';
- * import { NextResponse } from 'next/server';
+ * 1. Create an account at https://www.emailjs.com/
  * 
- * const resend = new Resend(process.env.RESEND_API_KEY);
+ * 2. Add an email service (Gmail, Outlook, etc.)
+ *    - Go to Email Services and connect your email provider
  * 
- * export async function POST(request: Request) {
- *   try {
- *     const data = await request.json();
- *     
- *     await resend.emails.send({
- *       from: 'website@yourdomain.com',
- *       to: 'artist@example.com',
- *       subject: `New Contact Form Submission from ${data.name}`,
- *       html: `
- *         <h2>New Contact Form Submission</h2>
- *         <p><strong>Name:</strong> ${data.name}</p>
- *         <p><strong>Email:</strong> ${data.email}</p>
- *         <p><strong>Phone:</strong> ${data.phone}</p>
- *         <p><strong>Purpose:</strong></p>
- *         <p>${data.purpose}</p>
- *         <p><strong>Submitted:</strong> ${new Date(data.timestamp).toLocaleString()}</p>
- *       `,
- *     });
- *     
- *     return NextResponse.json({ success: true });
- *   } catch (error) {
- *     return NextResponse.json({ error: 'Failed to send email' }, { status: 500 });
- *   }
- * }
+ * 3. Create an email template
+ *    - Go to Email Templates and create a new template
+ *    - Use these variable names in your template:
+ *      {{from_name}} - Sender's name
+ *      {{from_email}} - Sender's email
+ *      {{phone}} - Sender's phone number
+ *      {{message}} - The message content
+ *      {{timestamp}} - When the form was submitted
+ * 
+ * 4. Get your credentials
+ *    - Service ID: From your Email Services page
+ *    - Template ID: From your Email Templates page
+ *    - Public Key: From Account > General (formerly called User ID)
+ * 
+ * 5. Create .env.local file in your project root:
+ *    NEXT_PUBLIC_EMAILJS_SERVICE_ID=your_service_id
+ *    NEXT_PUBLIC_EMAILJS_TEMPLATE_ID=your_template_id
+ *    NEXT_PUBLIC_EMAILJS_PUBLIC_KEY=your_public_key
+ * 
+ * Example EmailJS Template:
+ * 
+ * Subject: New Contact Form Submission from {{from_name}}
+ * 
+ * Body:
+ * You have received a new contact form submission:
+ * 
+ * Name: {{from_name}}
+ * Email: {{from_email}}
+ * Phone: {{phone}}
+ * 
+ * Message:
+ * {{message}}
+ * 
+ * Submitted: {{timestamp}}
  */
