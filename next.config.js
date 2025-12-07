@@ -27,7 +27,6 @@ const nextConfig = {
   },
   
   // Optimize production builds
-  swcMinify: true,
   
   // Enable React strict mode for better development experience
   reactStrictMode: true,
