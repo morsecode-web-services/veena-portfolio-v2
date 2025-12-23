@@ -172,6 +172,70 @@ export async function generatePDF(
 
     onProgress?.(40);
 
+    // ===== SPOTLIGHTS SECTION =====
+    checkPageBreak(60);
+    if (currentY > margin + 20) {
+      pdf.addPage();
+      currentY = margin;
+    }
+
+    addHeader('Highlights', 18);
+    addSpace(10);
+
+    // Add each spotlight
+    if (config.spotlights && config.spotlights.length > 0) {
+      for (const spotlight of config.spotlights) {
+        checkPageBreak(100);
+
+        // Spotlight title
+        addSubheader(spotlight.title, 14);
+
+        // Spotlight image
+        const spotlightImg = await loadImage(spotlight.imageUrl);
+        if (spotlightImg) {
+          const spotlightImgWidth = contentWidth;
+          const spotlightImgHeight = spotlightImgWidth * 0.5; // Wider/shorter aspect ratio for PDF fit
+
+          checkPageBreak(spotlightImgHeight + 10);
+          pdf.addImage(spotlightImg, 'JPEG', margin, currentY, spotlightImgWidth, spotlightImgHeight);
+          currentY += spotlightImgHeight + 8;
+        }
+
+        // Spotlight subtitle
+        pdf.setFont('helvetica', 'italic');
+        pdf.setFontSize(12);
+        pdf.setTextColor(COLORS.gold.r, COLORS.gold.g, COLORS.gold.b);
+        pdf.text(spotlight.subtitle, margin, currentY);
+        currentY += 8;
+
+        // Spotlight description
+        addText(spotlight.description, 11);
+        addSpace(2);
+
+        // Spotlight features
+        if (spotlight.features && spotlight.features.length > 0) {
+          spotlight.features.forEach((feature: any) => {
+            pdf.setFont('helvetica', 'bold');
+            pdf.setFontSize(10);
+            pdf.setTextColor(COLORS.navy.r, COLORS.navy.g, COLORS.navy.b);
+            pdf.text(`• ${feature.title}:`, margin + 5, currentY);
+            currentY += 5;
+
+            pdf.setFont('helvetica', 'normal');
+            pdf.setFontSize(10);
+            pdf.setTextColor(COLORS.gray.r, COLORS.gray.g, COLORS.gray.b);
+            const featureLines = pdf.splitTextToSize(feature.description, contentWidth - 10);
+            pdf.text(featureLines, margin + 10, currentY);
+            currentY += (featureLines.length * 10 * 0.4) + 3;
+          });
+        }
+
+        addSpace(15);
+      }
+    }
+
+    onProgress?.(50);
+
     // ===== PAGE 2: GALLERY =====
     pdf.addPage();
     currentY = margin;
@@ -208,7 +272,7 @@ export async function generatePDF(
       currentY += galleryImgHeight + 15;
     }
 
-    onProgress?.(60);
+    onProgress?.(65);
 
     // ===== PAGE 3: MUSIC =====
     pdf.addPage();
@@ -232,7 +296,7 @@ export async function generatePDF(
       addSpace(8);
     });
 
-    onProgress?.(75);
+    onProgress?.(80);
 
     // ===== PAGE 4: PRESS =====
     pdf.addPage();
@@ -255,7 +319,7 @@ export async function generatePDF(
       addSpace(8);
     });
 
-    onProgress?.(85);
+    onProgress?.(90);
 
     // ===== PAGE 5: FAQ =====
     checkPageBreak(60);

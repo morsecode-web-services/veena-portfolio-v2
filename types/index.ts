@@ -14,7 +14,8 @@ export interface SiteConfig {
     };
     featuredVideos: string[];
   };
-  spotlight: {
+  spotlights: {
+    id: string;
     title: string;
     subtitle: string;
     description: string;
@@ -23,7 +24,9 @@ export interface SiteConfig {
       description: string;
     }[];
     imageUrl: string;
-  };
+    ctaText?: string;
+    ctaLink?: string;
+  }[];
   gallery: {
     images: GalleryImage[];
   };

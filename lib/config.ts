@@ -43,11 +43,14 @@ const SpotlightFeatureSchema = z.object({
 });
 
 const SpotlightSchema = z.object({
+  id: z.string().min(1),
   title: z.string().min(1),
   subtitle: z.string().min(1),
   description: z.string().min(1),
   imageUrl: z.string().min(1),
   features: z.array(SpotlightFeatureSchema),
+  ctaText: z.string().optional(),
+  ctaLink: z.string().optional(),
 });
 
 const SiteConfigSchema = z.object({
@@ -64,7 +67,7 @@ const SiteConfigSchema = z.object({
     }),
     featuredVideos: z.array(z.string().url()),
   }),
-  spotlight: SpotlightSchema.optional(),
+  spotlights: z.array(SpotlightSchema).optional(),
   gallery: z.object({
     images: z.array(GalleryImageSchema),
   }),
@@ -101,13 +104,7 @@ const defaultConfig: SiteConfig = {
     },
     featuredVideos: [],
   },
-  spotlight: {
-    title: 'Spotlight Title',
-    subtitle: 'Spotlight Subtitle',
-    description: 'Spotlight description goes here.',
-    imageUrl: '/images/placeholder.jpg',
-    features: []
-  },
+  spotlights: [],
   gallery: {
     images: [],
   },

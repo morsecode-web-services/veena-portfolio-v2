@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import ImageWithFallback from '@/components/ui/ImageWithFallback';
 import VideoEmbed from '@/components/ui/VideoEmbed';
 import { loadConfig } from '@/lib/config';
@@ -10,6 +10,7 @@ import type { SiteConfig } from '@/types';
 export default function Home() {
   const [config, setConfig] = useState<SiteConfig | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [currentSpotlight, setCurrentSpotlight] = useState(0);
 
   useEffect(() => {
     loadConfig()
@@ -19,6 +20,16 @@ export default function Home() {
         setError(err.message);
       });
   }, []);
+
+  const nextSpotlight = () => {
+    if (!config?.spotlights) return;
+    setCurrentSpotlight((prev) => (prev + 1) % config.spotlights!.length);
+  };
+
+  const prevSpotlight = () => {
+    if (!config?.spotlights) return;
+    setCurrentSpotlight((prev) => (prev - 1 + config.spotlights!.length) % config.spotlights!.length);
+  };
 
   if (error) {
     return (
@@ -42,7 +53,7 @@ export default function Home() {
     );
   }
 
-
+  const spotlight = config.spotlights?.[currentSpotlight];
 
   return (
     <section id="home" className="px-4 sm:px-6 md:px-8" aria-label="Home">
@@ -87,62 +98,113 @@ export default function Home() {
           </div>
         </motion.div>
 
-        {/* Viral Spotlight: The 3 Generation Trio */}
-        {config.spotlight && (
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-10%" }}
-            transition={{ duration: 0.8 }}
-            className="mb-20 sm:mb-24 md:mb-32 relative overflow-hidden rounded-2xl bg-white text-navy-900 shadow-premium-xl border border-premium"
-          >
-            {/* Subtle background pattern */}
-            <div className="absolute inset-0 opacity-5 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]"></div>
+        {/* Viral Spotlight Carousel */}
+        {spotlight && (
+          <div className="mb-20 sm:mb-24 md:mb-32 relative">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={spotlight.id}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.5, ease: "easeInOut" }}
+                className="relative overflow-hidden rounded-2xl bg-white text-navy-900 shadow-premium-xl border border-premium"
+              >
+                {/* Subtle background pattern */}
+                <div className="absolute inset-0 opacity-5 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]"></div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2">
-              <div className="relative h-64 sm:h-80 lg:h-auto order-last lg:order-first">
-                <ImageWithFallback
-                  src={config.spotlight.imageUrl}
-                  alt={config.spotlight.title}
-                  fill
-                  className="object-cover"
-                  priority={false}
-                />
-              </div>
+                <div className="grid grid-cols-1 lg:grid-cols-2">
+                  <div className="relative h-64 sm:h-80 lg:h-auto lg:min-h-[500px] order-last lg:order-first">
+                    <ImageWithFallback
+                      src={spotlight.imageUrl}
+                      alt={spotlight.title}
+                      fill
+                      className="object-cover"
+                      priority={true}
+                    />
+                  </div>
 
-              <div className="p-8 sm:p-12 md:p-16 flex flex-col justify-center relative z-10 bg-white">
-                <div className="inline-block px-3 py-1 bg-gold-600 text-white text-xs font-bold tracking-wider uppercase rounded-full mb-4 self-start">
-                  Must See
-                </div>
-                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-serif font-bold mb-4 text-navy-900">
-                  {config.spotlight.title}
-                </h2>
-                <h3 className="text-xl text-gold-600 mb-6 font-serif italic">
-                  {config.spotlight.subtitle}
-                </h3>
-                <p className="text-gray-700 text-lg mb-8 leading-relaxed">
-                  {config.spotlight.description}
-                </p>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8 border-t border-gray-200 pt-8">
-                  {config.spotlight.features.map((feature, idx) => (
-                    <div key={idx}>
-                      <h4 className="text-navy-900 font-bold mb-2">{feature.title}</h4>
-                      <p className="text-sm text-gray-600">{feature.description}</p>
+                  <div className="p-8 sm:p-12 md:p-16 flex flex-col justify-center relative z-10 bg-white">
+                    <div className="inline-block px-3 py-1 bg-gold-600 text-white text-xs font-bold tracking-wider uppercase rounded-full mb-4 self-start">
+                      Must See
                     </div>
-                  ))}
-                </div>
+                    <h2 className="text-3xl sm:text-4xl lg:text-5xl font-serif font-bold mb-4 text-navy-900">
+                      {spotlight.title}
+                    </h2>
+                    <h3 className="text-xl text-gold-600 mb-6 font-serif italic">
+                      {spotlight.subtitle}
+                    </h3>
+                    <p className="text-gray-700 text-lg mb-8 leading-relaxed">
+                      {spotlight.description}
+                    </p>
 
-                <motion.a
-                  href="#music"
-                  whileHover={{ x: 5 }}
-                  className="inline-flex items-center text-gold-600 font-bold hover:text-gold-700 transition-colors"
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8 border-t border-gray-200 pt-8">
+                      {spotlight.features.map((feature, idx) => (
+                        <div key={idx}>
+                          <h4 className="text-navy-900 font-bold mb-2">{feature.title}</h4>
+                          <p className="text-sm text-gray-600">{feature.description}</p>
+                        </div>
+                      ))}
+                    </div>
+
+                    {spotlight.ctaLink && (
+                      <motion.a
+                        href={spotlight.ctaLink}
+                        whileHover={{ x: 5 }}
+                        className="inline-flex items-center text-gold-600 font-bold hover:text-gold-700 transition-colors"
+                      >
+                        {spotlight.ctaText || 'Learn More'} <span className="ml-2">→</span>
+                      </motion.a>
+                    )}
+                  </div>
+                </div>
+              </motion.div>
+            </AnimatePresence>
+
+            {/* Carousel Navigation - Explicit Inline Styles for Visibility and Z-Index */}
+            {config.spotlights && config.spotlights.length > 1 && (
+              <div className="absolute top-1/2 -translate-y-1/2 left-0 right-0 flex justify-between pointer-events-none px-2 sm:px-4 z-50">
+                <button
+                  onClick={prevSpotlight}
+                  className="pointer-events-auto p-3 rounded-full shadow-lg transition-transform hover:scale-110 border-2 border-white flex items-center justify-center transform hover:scale-110 active:scale-95"
+                  style={{ backgroundColor: '#14213d', color: '#ffffff', minWidth: '48px', minHeight: '48px' }}
+                  aria-label="Previous spotlight"
                 >
-                  Watch Their Performance <span className="ml-2">→</span>
-                </motion.a>
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+                <button
+                  onClick={nextSpotlight}
+                  className="pointer-events-auto p-3 rounded-full shadow-lg transition-transform hover:scale-110 border-2 border-white flex items-center justify-center transform hover:scale-110 active:scale-95"
+                  style={{ backgroundColor: '#14213d', color: '#ffffff', minWidth: '48px', minHeight: '48px' }}
+                  aria-label="Next spotlight"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
               </div>
-            </div>
-          </motion.div>
+            )}
+
+            {/* Carousel Dots */}
+            {config.spotlights && config.spotlights.length > 1 && (
+              <div className="flex justify-center gap-3 mt-8 relative z-20">
+                {config.spotlights.map((_, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setCurrentSpotlight(idx)}
+                    className={`h-3 rounded-full transition-all duration-300 shadow-sm border border-gray-200 ${currentSpotlight === idx ? 'w-8' : 'w-3 hover:bg-gray-400'
+                      }`}
+                    style={{
+                      backgroundColor: currentSpotlight === idx ? '#14213d' : '#cbd5e1'
+                    }}
+                    aria-label={`Go to slide ${idx + 1}`}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
         )}
 
         {/* Featured YouTube videos */}

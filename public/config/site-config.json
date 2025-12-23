@@ -21,26 +21,77 @@
       "https://www.youtube.com/embed/2Vv-BfVoq4g"
     ]
   },
-  "spotlight": {
-    "title": "The 3 Generation Veena Trio",
-    "subtitle": "A Musical Lineage on One Stage",
-    "description": "Witness a rare cultural phenomenon. Three generations of Veena artists performing together, weaving a tapestry of sound that spans decades of tradition and innovation.",
-    "imageUrl": "https://images.unsplash.com/photo-1511192336575-5a79af67a629?w=1200&h=800&fit=crop",
-    "features": [
-      {
-        "title": "Tradition",
-        "description": "The wisdom of the grandmother, carrying the pure, unadulterated roots of the art form."
-      },
-      {
-        "title": "Mastery",
-        "description": "The experience of the mother, bridging the past and present with technical brilliance."
-      },
-      {
-        "title": "Innovation",
-        "description": "The energy of Aishwarya, pushing the boundaries and carrying the legacy forward."
-      }
-    ]
-  },
+  "spotlights": [
+    {
+      "id": "trio",
+      "title": "The 3 Generation Veena Trio",
+      "subtitle": "A Musical Lineage on One Stage",
+      "description": "Witness a rare cultural phenomenon. Three generations of Veena artists performing together, weaving a tapestry of sound that spans decades of tradition and innovation.",
+      "imageUrl": "https://images.unsplash.com/photo-1511192336575-5a79af67a629?w=1200&h=800&fit=crop",
+      "ctaText": "Watch Their Performance",
+      "ctaLink": "#music",
+      "features": [
+        {
+          "title": "Tradition",
+          "description": "The wisdom of the grandmother, carrying the pure, unadulterated roots of the art form."
+        },
+        {
+          "title": "Mastery",
+          "description": "The experience of the mother, bridging the past and present with technical brilliance."
+        },
+        {
+          "title": "Innovation",
+          "description": "The energy of Aishwarya, pushing the boundaries and carrying the legacy forward."
+        }
+      ]
+    },
+    {
+      "id": "veena",
+      "title": "The Divine Instrument",
+      "subtitle": "Veena: The Sound of the Soul",
+      "description": "The Veena is not just an instrument; it is the physical manifestation of the human voice. Aishwarya's mastery over the Saraswati Veena brings out the subtlest nuances of Gamakas, creating a soundscape that is both meditative and exhilarating.",
+      "imageUrl": "https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=1200&h=800&fit=crop",
+      "ctaText": "Explore Veena Recitals",
+      "ctaLink": "#music",
+      "features": [
+        {
+          "title": "Gayaki Style",
+          "description": "Playing the instrument in a way that closely mimics the vocal style of Carnatic music."
+        },
+        {
+          "title": "Resonance",
+          "description": "Harnessing the natural acoustics of the Veena to create deep, vibrating tones."
+        },
+        {
+          "title": "Intricacy",
+          "description": "Complex finger techniques that produce rapid, precise melodic patterns."
+        }
+      ]
+    },
+    {
+      "id": "vocal",
+      "title": "The Voice of Tradition",
+      "subtitle": "Vocal Excellence & Purity",
+      "description": "Beyond the strings, Aishwarya is a gifted vocalist. Her singing is marked by impeccable pitch, clarity of diction, and a profound emotional connection to the Sahitya (lyrics). She brings the same depth to her vocal concerts as she does to her instrumental performances.",
+      "imageUrl": "https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=1200&h=800&fit=crop",
+      "ctaText": "Listen to Vocals",
+      "ctaLink": "#music",
+      "features": [
+        {
+          "title": "Bhav",
+          "description": "Expressing the emotional essence of the Raga and the composition."
+        },
+        {
+          "title": "Control",
+          "description": "A voice that moves effortlessly across octaves with stability and grace."
+        },
+        {
+          "title": "Repertoire",
+          "description": "A vast collection of compositions ranging from classical kritis to devotional bhajans."
+        }
+      ]
+    }
+  ],
   "gallery": {
     "images": [
       {
