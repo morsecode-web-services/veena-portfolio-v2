@@ -4,6 +4,7 @@ import './globals.css';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import MusicalBackground from '@/components/ui/MusicalBackground';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -109,7 +110,8 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       </head>
-      <body className="font-sans antialiased">
+      <body className="font-sans antialiased text-navy-900 bg-cream-50">
+        <MusicalBackground />
         {/* Skip Navigation Links for Accessibility */}
         <a
           href="#main-content"

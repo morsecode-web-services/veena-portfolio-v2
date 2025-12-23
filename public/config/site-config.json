@@ -164,7 +164,7 @@
       {
         "id": "vocal",
         "name": "Vocal",
-        "description": "Soulful vocal renditions of classical compositions",
+        "description": "Soulful vocal renditions of classical manifestations",
         "videos": [
           {
             "title": "Vocal Performance - Carnatic Classical",
@@ -256,5 +256,11 @@
     "facebook": "https://www.facebook.com/aishwaryamanikarnike",
     "instagram": "https://www.instagram.com/aishwaryamanikarnike",
     "twitter": "https://twitter.com/aishwaryaveena"
+  },
+  "features": {
+    "swaraAnimation": {
+      "desktop": true,
+      "mobile": false
+    }
   }
 }

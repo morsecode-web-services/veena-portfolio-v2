@@ -87,6 +87,12 @@ const SiteConfigSchema = z.object({
     twitter: z.string().url().optional(),
     linkedin: z.string().url().optional(),
   }),
+  features: z.object({
+    swaraAnimation: z.object({
+      desktop: z.boolean(),
+      mobile: z.boolean(),
+    }),
+  }).optional(),
 });
 
 // Default fallback configuration
@@ -118,6 +124,12 @@ const defaultConfig: SiteConfig = {
     items: [],
   },
   socialMedia: {},
+  features: {
+    swaraAnimation: {
+      desktop: true,
+      mobile: false,
+    },
+  },
 };
 
 /**

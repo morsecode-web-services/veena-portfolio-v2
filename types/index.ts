@@ -46,6 +46,12 @@ export interface SiteConfig {
     twitter?: string;
     linkedin?: string;
   };
+  features?: {
+    swaraAnimation: {
+      desktop: boolean;
+      mobile: boolean;
+    };
+  };
 }
 
 export interface MusicVideo {
