@@ -182,7 +182,7 @@ export async function loadConfig(
     const fullPath = basePath ? `${basePath}/${sanitizedConfigPath}` : `/${sanitizedConfigPath}`;
 
     // Error log for easier debugging on live site (visible in console)
-    console.warn(`[Config] Attempting to load from: ${fullPath}`);
+    // console.warn(`[Config] Attempting to load from: ${fullPath}`);
 
     const response = await fetch(fullPath);
 
@@ -227,4 +227,4 @@ export function loadConfigSync(configData: unknown): SiteConfig {
   }
 }
 
-export { SiteConfigSchema, defaultConfig };
+export { SiteConfigSchema, defaultConfig, getBasePath };

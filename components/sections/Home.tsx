@@ -75,14 +75,14 @@ export default function Home() {
           </p>
 
           {/* Hero CTAs */}
-          <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 mt-4">
+          <div className="flex flex-row gap-3 sm:gap-6 mt-4">
             <motion.a
               href="#music"
               whileHover={{ scale: 1.05, y: -2 }}
               whileTap={{ scale: 0.98 }}
-              className="px-8 py-3 bg-gold-600 text-white rounded-full font-semibold shadow-premium-lg hover:shadow-premium-xl transition-all duration-300 flex items-center gap-2"
+              className="px-4 sm:px-8 py-2.5 sm:py-3 bg-gold-600 text-white rounded-full text-sm sm:text-base font-semibold shadow-premium-lg hover:shadow-premium-xl transition-all duration-300 flex items-center gap-2 whitespace-nowrap"
             >
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" />
               </svg>
               Watch Showreel
@@ -91,7 +91,7 @@ export default function Home() {
               href="#contact"
               whileHover={{ scale: 1.05, y: -2 }}
               whileTap={{ scale: 0.98 }}
-              className="px-8 py-3 border-2 border-navy-900 text-navy-900 rounded-full font-semibold hover:bg-navy-900 hover:text-white transition-all duration-300"
+              className="px-4 sm:px-8 py-2.5 sm:py-3 border-2 border-navy-900 text-navy-900 rounded-full text-sm sm:text-base font-semibold hover:bg-navy-900 hover:text-white transition-all duration-300 whitespace-nowrap"
             >
               Book Artiste
             </motion.a>
@@ -163,7 +163,7 @@ export default function Home() {
 
             {/* Carousel Navigation - Explicit Inline Styles for Visibility and Z-Index */}
             {config.spotlights && config.spotlights.length > 1 && (
-              <div className="absolute top-1/2 -translate-y-1/2 left-0 right-0 flex justify-between pointer-events-none px-1 sm:px-4 z-50">
+              <div className="absolute top-[22%] sm:top-1/2 -translate-y-1/2 left-0 right-0 flex justify-between pointer-events-none px-2 sm:px-4 z-50">
                 <button
                   onClick={prevSpotlight}
                   className="pointer-events-auto p-2 sm:p-3 rounded-full shadow-lg transition-transform hover:scale-110 border-2 border-white flex items-center justify-center transform hover:scale-110 active:scale-95"

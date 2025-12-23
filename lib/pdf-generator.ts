@@ -31,9 +31,14 @@ export async function generatePDF(
     onProgress?.(5);
 
     // Load config data
-    const response = await fetch('/config/site-config.json');
+    const { getBasePath } = await import('./config');
+    const basePath = getBasePath().replace(/\/$/, '');
+    const configPath = '/config/site-config.json'.replace(/^\//, '');
+    const fullPath = basePath ? `${basePath}/${configPath}` : `/${configPath}`;
+
+    const response = await fetch(fullPath);
     if (!response.ok) {
-      throw new Error('Failed to load site configuration');
+      throw new Error(`Failed to load site configuration from ${fullPath}`);
     }
     const config = await response.json();
 
@@ -111,7 +116,17 @@ export async function generatePDF(
 
     const loadImage = async (url: string): Promise<string | null> => {
       try {
-        const response = await fetch(url);
+        let finalUrl = url;
+
+        // Handle local paths for GitHub Pages / Netlify variety
+        if (url.startsWith('/') && !url.startsWith('//')) {
+          const { getBasePath } = await import('./config');
+          const basePath = getBasePath().replace(/\/$/, '');
+          const sanitizedUrl = url.replace(/^\//, '');
+          finalUrl = basePath ? `${basePath}/${sanitizedUrl}` : `/${sanitizedUrl}`;
+        }
+
+        const response = await fetch(finalUrl);
         const blob = await response.blob();
         return new Promise((resolve) => {
           const reader = new FileReader();
@@ -119,7 +134,8 @@ export async function generatePDF(
           reader.onerror = () => resolve(null);
           reader.readAsDataURL(blob);
         });
-      } catch {
+      } catch (error) {
+        console.error(`[PDF] Failed to load image: ${url}`, error);
         return null;
       }
     };
@@ -352,16 +368,33 @@ export async function generatePDF(
 
     // Add footer to all pages
     const totalPages = pdf.getNumberOfPages();
+    const generationDate = new Date().toLocaleDateString(undefined, {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+
     for (let i = 1; i <= totalPages; i++) {
       pdf.setPage(i);
       pdf.setFontSize(9);
       pdf.setTextColor(COLORS.gray.r, COLORS.gray.g, COLORS.gray.b);
+
+      // Left: Date
+      pdf.text(
+        `Generated: ${generationDate}`,
+        margin,
+        pageHeight - 10
+      );
+
+      // Center: Artist Name
       pdf.text(
         `${config.artist.name} - Portfolio`,
         pageWidth / 2,
         pageHeight - 10,
         { align: 'center' }
       );
+
+      // Right: Page Numbers
       pdf.text(
         `Page ${i} of ${totalPages}`,
         pageWidth - margin,
