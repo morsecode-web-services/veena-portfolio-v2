@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { SectionErrorBoundary } from '@/components/ErrorBoundary';
 import HomeSection from '@/components/sections/Home';
 import About from '@/components/sections/About';
+import MusicalBackground from '@/components/ui/MusicalBackground';
 
 // Code-split heavy components for better performance
 const Gallery = dynamic(() => import('@/components/sections/Gallery'), {
@@ -83,10 +84,13 @@ export default function Page() {
       role="main"
     >
       {/* Home Section - Hero with full viewport presence */}
-      <div className="pt-28 pb-12 sm:pt-32 sm:pb-16 md:pt-40 md:pb-20 bg-cream-50">
-        <SectionErrorBoundary sectionName="Home">
-          <HomeSection />
-        </SectionErrorBoundary>
+      <div className="pt-28 pb-12 sm:pt-32 sm:pb-16 md:pt-40 md:pb-20 bg-cream-50 relative overflow-hidden">
+        <MusicalBackground />
+        <div className="relative z-10">
+          <SectionErrorBoundary sectionName="Home">
+            <HomeSection />
+          </SectionErrorBoundary>
+        </div>
       </div>
 
       {/* About Section - Elegant spacing and visual rhythm */}

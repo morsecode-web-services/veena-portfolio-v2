@@ -92,7 +92,11 @@ export default function MusicalBackground() {
     if (!mounted || !isVisible) return null;
 
     return (
-        <div className="fixed inset-0 overflow-hidden pointer-events-none z-[60] select-none" aria-hidden="true">
+        <div
+            className="absolute inset-x-0 bottom-0 overflow-hidden pointer-events-none z-0 select-none"
+            aria-hidden="true"
+            style={{ top: '7rem' }} // Keep strictly below the header area (pt-28 = 7rem)
+        >
             {swaraElements.map((swara) => (
                 <motion.div
                     key={swara.id}
@@ -101,7 +105,7 @@ export default function MusicalBackground() {
                         scale: 0.8
                     }}
                     animate={{
-                        opacity: [0, 0.22, 0.22, 0],
+                        opacity: [0, 0.5, 0.5, 0], // Saturated gold visibility
                         y: [0, -80],
                         scale: [0.8, 1.15],
                     }}
@@ -111,7 +115,7 @@ export default function MusicalBackground() {
                         delay: swara.delay,
                         ease: "linear"
                     }}
-                    className="absolute font-serif font-bold text-gold-600/40 will-change-transform"
+                    className="absolute font-serif font-bold text-gold-600 will-change-transform hidden lg:block"
                     style={{
                         fontSize: swara.size,
                         left: `${swara.x}%`,
