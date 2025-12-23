@@ -83,9 +83,9 @@ export default function Navigation() {
             >
               <button
                 onClick={() => scrollToSection(item.id)}
-                className={`relative text-sm font-medium transition-all duration-300 hover:text-blue-600 hover:scale-105 ${activeSection === item.id
-                    ? 'text-blue-600'
-                    : 'text-gray-700'
+                className={`relative text-sm font-medium transition-all duration-300 hover:text-gold-600 hover:scale-105 ${activeSection === item.id
+                  ? 'text-gold-600'
+                  : 'text-gray-700'
                   }`}
                 role="menuitem"
                 aria-label={`Navigate to ${item.label} section`}
@@ -95,7 +95,7 @@ export default function Navigation() {
                 {activeSection === item.id && (
                   <motion.div
                     layoutId="activeSection"
-                    className="absolute -bottom-1 left-0 right-0 h-0.5 bg-blue-600"
+                    className="absolute -bottom-1 left-0 right-0 h-0.5 bg-gold-600"
                     transition={{ type: 'spring', stiffness: 380, damping: 30 }}
                     aria-hidden="true"
                   />
@@ -109,7 +109,7 @@ export default function Navigation() {
       {/* Mobile Menu Button */}
       <button
         onClick={() => setIsMenuOpen(!isMenuOpen)}
-        className="md:hidden text-gray-700 hover:text-blue-600 transition-colors z-50 relative"
+        className="md:hidden text-gray-700 hover:text-gold-600 transition-colors z-50 relative"
         aria-label={isMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
         aria-expanded={isMenuOpen}
         aria-controls="mobile-menu"
@@ -149,9 +149,9 @@ export default function Navigation() {
                       <li key={item.id} role="none">
                         <button
                           onClick={() => scrollToSection(item.id)}
-                          className={`text-lg font-medium transition-colors hover:text-blue-600 w-full text-left ${activeSection === item.id
-                              ? 'text-blue-600'
-                              : 'text-gray-700'
+                          className={`text-lg font-medium transition-colors hover:text-gold-600 w-full text-left ${activeSection === item.id
+                            ? 'text-gold-600'
+                            : 'text-gray-700'
                             }`}
                           role="menuitem"
                           aria-label={`Navigate to ${item.label} section`}

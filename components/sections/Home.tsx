@@ -80,11 +80,13 @@ export default function Home() {
               href="#music"
               whileHover={{ scale: 1.05, y: -2 }}
               whileTap={{ scale: 0.98 }}
-              className="px-4 sm:px-8 py-2.5 sm:py-3 bg-gold-600 text-white rounded-full text-sm sm:text-base font-semibold shadow-premium-lg hover:shadow-premium-xl transition-all duration-300 flex items-center gap-2 whitespace-nowrap"
+              className="px-4 sm:px-8 py-2.5 sm:py-3 bg-gold-600 text-white rounded-full text-sm sm:text-base font-semibold shadow-premium-lg hover:shadow-premium-xl transition-all duration-300 flex items-center gap-3 whitespace-nowrap group"
             >
-              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" />
-              </svg>
+              {/* Cinematic Pulsing Play Indicator */}
+              <div className="relative flex items-center justify-center">
+                <div className="w-2.5 h-2.5 bg-white rounded-full relative z-10"></div>
+                <div className="absolute w-2.5 h-2.5 bg-white rounded-full animate-ping opacity-75"></div>
+              </div>
               Watch Showreel
             </motion.a>
             <motion.a

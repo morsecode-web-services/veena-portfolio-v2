@@ -8,10 +8,10 @@ interface LoadingSpinnerProps {
   className?: string;
 }
 
-export default function LoadingSpinner({ 
-  size = 'md', 
+export default function LoadingSpinner({
+  size = 'md',
   text,
-  className = '' 
+  className = ''
 }: LoadingSpinnerProps) {
   const sizeClasses = {
     sm: 'w-4 h-4',
@@ -28,7 +28,7 @@ export default function LoadingSpinner({
   return (
     <div className={`flex flex-col items-center justify-center gap-3 ${className}`}>
       <motion.div
-        className={`${sizeClasses[size]} border-3 border-gray-300 border-t-blue-600 rounded-full`}
+        className={`${sizeClasses[size]} border-3 border-gray-300 border-t-gold-600 rounded-full`}
         animate={{ rotate: 360 }}
         transition={{
           duration: 1,

@@ -42,7 +42,7 @@ export default function FAQItem({ item, isOpen, onToggle, index }: FAQItemProps)
         onKeyDown={handleKeyDown}
         aria-expanded={isOpen}
         aria-controls={`faq-answer-${index}`}
-        className="w-full text-left py-6 px-6 flex items-center justify-between hover:bg-cream-50 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-inset"
+        className="w-full text-left py-6 px-6 flex items-center justify-between hover:bg-cream-50 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gold-600 focus:ring-inset"
       >
         <h3 className="text-lg md:text-xl font-serif font-semibold text-navy-900 pr-8" id={`faq-question-${index}`}>
           {item.question}

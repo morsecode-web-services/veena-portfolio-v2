@@ -48,7 +48,7 @@ export default function PortfolioGenerator() {
           touch-manipulation
           ${isGenerating
             ? 'bg-gray-400 cursor-not-allowed'
-            : 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 active:from-blue-800 active:to-blue-900 text-white'
+            : 'bg-gold-600 hover:bg-gold-700 active:bg-gold-800 text-white'
           }
         `}
         aria-label="Download portfolio as PDF"
@@ -88,7 +88,7 @@ export default function PortfolioGenerator() {
                 initial={{ width: 0 }}
                 animate={{ width: `${progress}%` }}
                 transition={{ duration: 0.3, ease: 'easeOut' }}
-                className="bg-blue-600 h-2 sm:h-2.5 rounded-full"
+                className="bg-gold-600 h-2 sm:h-2.5 rounded-full"
               />
             </div>
             <p className="text-xs text-gray-500 mt-2 text-center">
@@ -118,20 +118,6 @@ export default function PortfolioGenerator() {
         )}
       </AnimatePresence>
 
-      {/* Success message (shown briefly after completion) */}
-      <AnimatePresence>
-        {!isGenerating && !error && progress === 0 && (
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            className="text-xs sm:text-sm text-gray-600 text-center max-w-md"
-          >
-            Click the button above to generate and download a professional portfolio PDF with all your content, images, and links.
-          </motion.p>
-        )}
-      </AnimatePresence>
     </div>
   );
 }
