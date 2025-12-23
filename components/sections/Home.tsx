@@ -82,10 +82,23 @@ export default function Home() {
               whileTap={{ scale: 0.98 }}
               className="px-4 sm:px-8 py-2.5 sm:py-3 bg-gold-600 text-white rounded-full text-sm sm:text-base font-semibold shadow-premium-lg hover:shadow-premium-xl transition-all duration-300 flex items-center gap-3 whitespace-nowrap group"
             >
-              {/* Cinematic Pulsing Play Indicator */}
-              <div className="relative flex items-center justify-center">
-                <div className="w-2.5 h-2.5 bg-white rounded-full relative z-10"></div>
-                <div className="absolute w-2.5 h-2.5 bg-white rounded-full animate-ping opacity-75"></div>
+              {/* Minimalist Musical Equalizer Indicator */}
+              <div className="flex items-end gap-[2px] h-3 w-4 mb-[2px]">
+                {[0, 1, 2].map((i) => (
+                  <motion.div
+                    key={i}
+                    animate={{
+                      height: ['20%', '100%', '30%', '80%', '20%']
+                    }}
+                    transition={{
+                      duration: 1 + i * 0.2,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                      delay: i * 0.1
+                    }}
+                    className="w-1 bg-white rounded-full"
+                  />
+                ))}
               </div>
               Watch Showreel
             </motion.a>
