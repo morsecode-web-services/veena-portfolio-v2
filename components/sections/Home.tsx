@@ -100,7 +100,7 @@ export default function Home() {
 
         {/* Viral Spotlight Carousel */}
         {spotlight && (
-          <div className="mb-20 sm:mb-24 md:mb-32 relative">
+          <div className="mb-12 sm:mb-24 md:mb-32 relative">
             <AnimatePresence mode="wait">
               <motion.div
                 key={spotlight.id}
@@ -114,7 +114,7 @@ export default function Home() {
                 <div className="absolute inset-0 opacity-5 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]"></div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2">
-                  <div className="relative h-64 sm:h-80 lg:h-auto lg:min-h-[500px] order-last lg:order-first">
+                  <div className="relative aspect-[16/10] sm:aspect-video lg:aspect-auto lg:h-auto lg:min-h-[500px]">
                     <ImageWithFallback
                       src={spotlight.imageUrl}
                       alt={spotlight.title}
@@ -124,25 +124,25 @@ export default function Home() {
                     />
                   </div>
 
-                  <div className="p-8 sm:p-12 md:p-16 flex flex-col justify-center relative z-10 bg-white">
-                    <div className="inline-block px-3 py-1 bg-gold-600 text-white text-xs font-bold tracking-wider uppercase rounded-full mb-4 self-start">
+                  <div className="p-5 sm:p-10 md:p-16 flex flex-col justify-center relative z-10 bg-white">
+                    <div className="inline-block px-3 py-1 bg-gold-600 text-white text-[10px] sm:text-xs font-bold tracking-wider uppercase rounded-full mb-3 sm:mb-4 self-start">
                       Must See
                     </div>
-                    <h2 className="text-3xl sm:text-4xl lg:text-5xl font-serif font-bold mb-4 text-navy-900">
+                    <h2 className="text-2xl sm:text-4xl lg:text-5xl font-serif font-bold mb-2 sm:mb-4 text-navy-900">
                       {spotlight.title}
                     </h2>
-                    <h3 className="text-xl text-gold-600 mb-6 font-serif italic">
+                    <h3 className="text-lg sm:text-xl text-gold-600 mb-4 sm:mb-6 font-serif italic">
                       {spotlight.subtitle}
                     </h3>
-                    <p className="text-gray-700 text-lg mb-8 leading-relaxed">
+                    <p className="text-gray-700 text-sm sm:text-base md:text-lg mb-6 sm:mb-8 leading-relaxed">
                       {spotlight.description}
                     </p>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8 border-t border-gray-200 pt-8">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8 border-t border-gray-200 pt-6 sm:pt-8">
                       {spotlight.features.map((feature, idx) => (
                         <div key={idx}>
-                          <h4 className="text-navy-900 font-bold mb-2">{feature.title}</h4>
-                          <p className="text-sm text-gray-600">{feature.description}</p>
+                          <h4 className="text-navy-900 font-bold mb-1 sm:mb-2 text-sm sm:text-base">{feature.title}</h4>
+                          <p className="text-xs sm:text-sm text-gray-600 leading-tight">{feature.description}</p>
                         </div>
                       ))}
                     </div>
@@ -151,7 +151,7 @@ export default function Home() {
                       <motion.a
                         href={spotlight.ctaLink}
                         whileHover={{ x: 5 }}
-                        className="inline-flex items-center text-gold-600 font-bold hover:text-gold-700 transition-colors"
+                        className="inline-flex items-center text-gold-600 font-bold hover:text-gold-700 transition-colors text-sm sm:text-base"
                       >
                         {spotlight.ctaText || 'Learn More'} <span className="ml-2">→</span>
                       </motion.a>
@@ -163,24 +163,24 @@ export default function Home() {
 
             {/* Carousel Navigation - Explicit Inline Styles for Visibility and Z-Index */}
             {config.spotlights && config.spotlights.length > 1 && (
-              <div className="absolute top-1/2 -translate-y-1/2 left-0 right-0 flex justify-between pointer-events-none px-2 sm:px-4 z-50">
+              <div className="absolute top-1/2 -translate-y-1/2 left-0 right-0 flex justify-between pointer-events-none px-1 sm:px-4 z-50">
                 <button
                   onClick={prevSpotlight}
-                  className="pointer-events-auto p-3 rounded-full shadow-lg transition-transform hover:scale-110 border-2 border-white flex items-center justify-center transform hover:scale-110 active:scale-95"
-                  style={{ backgroundColor: '#14213d', color: '#ffffff', minWidth: '48px', minHeight: '48px' }}
+                  className="pointer-events-auto p-2 sm:p-3 rounded-full shadow-lg transition-transform hover:scale-110 border-2 border-white flex items-center justify-center transform hover:scale-110 active:scale-95"
+                  style={{ backgroundColor: '#14213d', color: '#ffffff', minWidth: '40px', minHeight: '40px' }}
                   aria-label="Previous spotlight"
                 >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                   </svg>
                 </button>
                 <button
                   onClick={nextSpotlight}
-                  className="pointer-events-auto p-3 rounded-full shadow-lg transition-transform hover:scale-110 border-2 border-white flex items-center justify-center transform hover:scale-110 active:scale-95"
-                  style={{ backgroundColor: '#14213d', color: '#ffffff', minWidth: '48px', minHeight: '48px' }}
+                  className="pointer-events-auto p-2 sm:p-3 rounded-full shadow-lg transition-transform hover:scale-110 border-2 border-white flex items-center justify-center transform hover:scale-110 active:scale-95"
+                  style={{ backgroundColor: '#14213d', color: '#ffffff', minWidth: '40px', minHeight: '40px' }}
                   aria-label="Next spotlight"
                 >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
                 </button>
@@ -189,15 +189,17 @@ export default function Home() {
 
             {/* Carousel Dots */}
             {config.spotlights && config.spotlights.length > 1 && (
-              <div className="flex justify-center gap-3 mt-8 relative z-20">
+              <div className="flex justify-center gap-1.5 sm:gap-3 mt-3 sm:mt-8 relative z-20">
                 {config.spotlights.map((_, idx) => (
                   <button
                     key={idx}
                     onClick={() => setCurrentSpotlight(idx)}
-                    className={`h-3 rounded-full transition-all duration-300 shadow-sm border border-gray-200 ${currentSpotlight === idx ? 'w-8' : 'w-3 hover:bg-gray-400'
+                    className={`h-1 sm:h-2 rounded-full transition-all duration-300 ${currentSpotlight === idx ? 'w-3 sm:w-8' : 'w-1 sm:w-2 hover:bg-gray-400'
                       }`}
                     style={{
-                      backgroundColor: currentSpotlight === idx ? '#14213d' : '#cbd5e1'
+                      backgroundColor: currentSpotlight === idx ? '#14213d' : '#cbd5e1',
+                      minWidth: '0',
+                      minHeight: '0'
                     }}
                     aria-label={`Go to slide ${idx + 1}`}
                   />
