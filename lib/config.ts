@@ -37,6 +37,19 @@ const GalleryImageSchema = z.object({
   caption: z.string().optional(),
 });
 
+const SpotlightFeatureSchema = z.object({
+  title: z.string().min(1),
+  description: z.string().min(1),
+});
+
+const SpotlightSchema = z.object({
+  title: z.string().min(1),
+  subtitle: z.string().min(1),
+  description: z.string().min(1),
+  imageUrl: z.string().min(1),
+  features: z.array(SpotlightFeatureSchema),
+});
+
 const SiteConfigSchema = z.object({
   artist: z.object({
     name: z.string().min(1),
@@ -51,6 +64,7 @@ const SiteConfigSchema = z.object({
     }),
     featuredVideos: z.array(z.string().url()),
   }),
+  spotlight: SpotlightSchema.optional(),
   gallery: z.object({
     images: z.array(GalleryImageSchema),
   }),
@@ -86,6 +100,13 @@ const defaultConfig: SiteConfig = {
       vocal: '/images/placeholder.jpg',
     },
     featuredVideos: [],
+  },
+  spotlight: {
+    title: 'Spotlight Title',
+    subtitle: 'Spotlight Subtitle',
+    description: 'Spotlight description goes here.',
+    imageUrl: '/images/placeholder.jpg',
+    features: []
   },
   gallery: {
     images: [],

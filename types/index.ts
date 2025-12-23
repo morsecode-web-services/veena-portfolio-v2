@@ -14,6 +14,16 @@ export interface SiteConfig {
     };
     featuredVideos: string[];
   };
+  spotlight: {
+    title: string;
+    subtitle: string;
+    description: string;
+    features: {
+      title: string;
+      description: string;
+    }[];
+    imageUrl: string;
+  };
   gallery: {
     images: GalleryImage[];
   };

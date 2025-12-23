@@ -1,13 +1,13 @@
 {
   "artist": {
     "name": "Aishwarya Manikarnike",
-    "tagline": "Veena Virtuoso & Vocalist",
-    "briefBio": "Aishwarya Manikarnike is a renowned Veena musician and vocalist, carrying forward the rich tradition of Carnatic music with grace and innovation.",
+    "tagline": "A Legacy of Strings. A Future of Sound.",
+    "briefBio": "Redefining the boundaries of the Veena. From the roots of tradition to the stage of the world, Aishwarya Manikarnike breathes new life into ancient strings.",
     "fullBio": [
-      "Aishwarya Manikarnike is a distinguished Veena musician and vocalist who has captivated audiences worldwide with her soulful renditions and technical mastery.",
-      "Born into a family of musicians, she began her musical journey at a young age under the guidance of eminent gurus. Her dedication to the art form has earned her numerous accolades and recognition.",
-      "She specializes in both Veena and vocal performances, seamlessly blending traditional Carnatic music with contemporary sensibilities. Her performances are known for their emotional depth and technical precision.",
-      "Aishwarya has performed at prestigious venues across India and internationally, sharing the stage with legendary musicians and contributing to the preservation and promotion of Indian classical music."
+      "Aishwarya Manikarnike isn't just playing music; she's continuing a lineage. As a distinguished Veena virtuoso and vocalist, she bridges the gap between the sacred traditions of Carnatic music and the modern ear.",
+      "Born into a dynasty of musicians, she didn't just learn the art—she lived it. Her journey began at a young age, mastering the intricate science of sound under eminent gurus. Today, her dedication has earned her global acclaim.",
+      "She specializes in a unique duality: the resounding depth of the Veena and the emotive power of her voice. Her performances are known for their technical precision, emotional depth, and the ability to transport audiences.",
+      "From intimate chamber concerts to prestigious international festivals, Aishwarya shares the stage with legends, proving that classical music is not just history—it's alive."
     ]
   },
   "home": {
@@ -19,6 +19,26 @@
       "https://www.youtube.com/embed/jfKfPfyJRdk",
       "https://www.youtube.com/embed/ysz5S6PUM-U",
       "https://www.youtube.com/embed/2Vv-BfVoq4g"
+    ]
+  },
+  "spotlight": {
+    "title": "The 3 Generation Veena Trio",
+    "subtitle": "A Musical Lineage on One Stage",
+    "description": "Witness a rare cultural phenomenon. Three generations of Veena artists performing together, weaving a tapestry of sound that spans decades of tradition and innovation.",
+    "imageUrl": "https://images.unsplash.com/photo-1511192336575-5a79af67a629?w=1200&h=800&fit=crop",
+    "features": [
+      {
+        "title": "Tradition",
+        "description": "The wisdom of the grandmother, carrying the pure, unadulterated roots of the art form."
+      },
+      {
+        "title": "Mastery",
+        "description": "The experience of the mother, bridging the past and present with technical brilliance."
+      },
+      {
+        "title": "Innovation",
+        "description": "The energy of Aishwarya, pushing the boundaries and carrying the legacy forward."
+      }
     ]
   },
   "gallery": {
