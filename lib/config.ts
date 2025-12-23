@@ -125,11 +125,9 @@ const defaultConfig: SiteConfig = {
  * @param data - The configuration data to validate
  * @returns Validation result with success status and parsed data or error
  */
-export function validateConfig(data: unknown): {
-  success: boolean;
-  data?: SiteConfig;
-  error?: z.ZodError;
-} {
+export function validateConfig(data: unknown):
+  | { success: true; data: SiteConfig }
+  | { success: false; error: z.ZodError } {
   try {
     const parsed = SiteConfigSchema.parse(data);
     return { success: true, data: parsed as SiteConfig };
@@ -146,21 +144,27 @@ export function validateConfig(data: unknown): {
  * This handles both development and production environments
  */
 function getBasePath(): string {
-  // In production (GitHub Pages), use the hardcoded base path
-  // In development, use empty string
+  // Respect the environment variable if set (baked in at build time)
+  if (process.env.NEXT_PUBLIC_BASE_PATH) {
+    return process.env.NEXT_PUBLIC_BASE_PATH;
+  }
+
+  // Fallback runtime detection for GitHub Pages subpaths
   if (typeof window !== 'undefined') {
-    // Client-side: check if we're on GitHub Pages
     const hostname = window.location.hostname;
     const pathname = window.location.pathname;
 
-    // If we're on GitHub Pages and not at root, extract base path
-    if (hostname.includes('github.io') && pathname.startsWith('/veena-portfolio-v2')) {
-      return '/veena-portfolio-v2';
+    // Check for standard github.io subpath (usually repo name)
+    if (hostname.includes('github.io')) {
+      const pathParts = pathname.split('/').filter(Boolean);
+      if (pathParts.length > 0) {
+        // If it's a subpath deployment, the first part is usually the repo name
+        return `/${pathParts[0]}`;
+      }
     }
   }
 
-  // Default to environment variable or empty string
-  return process.env.NEXT_PUBLIC_BASE_PATH || '';
+  return '';
 }
 
 /**
@@ -173,15 +177,17 @@ export async function loadConfig(
 ): Promise<SiteConfig> {
   try {
     // Handle base path for GitHub Pages deployment
-    const basePath = getBasePath();
-    const fullPath = `${basePath}${configPath}`;
+    const basePath = getBasePath().replace(/\/$/, ''); // Remove trailing slash
+    const sanitizedConfigPath = configPath.replace(/^\//, ''); // Remove leading slash
+    const fullPath = basePath ? `${basePath}/${sanitizedConfigPath}` : `/${sanitizedConfigPath}`;
 
-    console.log(`Loading config from: ${fullPath}`);
+    // Error log for easier debugging on live site (visible in console)
+    console.warn(`[Config] Attempting to load from: ${fullPath}`);
 
     const response = await fetch(fullPath);
 
     if (!response.ok) {
-      console.error(`Failed to load configuration from ${fullPath}: ${response.statusText}`);
+      console.error(`[Config] HTTP Error ${response.status}: ${response.statusText} at ${fullPath}`);
       return defaultConfig;
     }
 
@@ -189,13 +195,13 @@ export async function loadConfig(
     const validation = validateConfig(data);
 
     if (!validation.success) {
-      console.error('Configuration validation failed:', validation.error);
+      console.error('[Config] Validation Failed. Errors:', validation.error.format());
       return defaultConfig;
     }
 
     return validation.data!;
   } catch (error) {
-    console.error('Error loading configuration:', error);
+    console.error('[Config] Unexpected Error:', error);
     return defaultConfig;
   }
 }
