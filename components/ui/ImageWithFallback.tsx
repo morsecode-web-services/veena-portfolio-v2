@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image, { ImageProps } from 'next/image';
 import { motion } from 'framer-motion';
 
@@ -27,12 +27,20 @@ export default function ImageWithFallback({
   const [attempts, setAttempts] = useState(0);
   const [isRetrying, setIsRetrying] = useState(false);
 
+  // Sync state when src prop changes
+  useEffect(() => {
+    setImgSrc(src);
+    setHasError(false);
+    setAttempts(0);
+    setIsRetrying(false);
+  }, [src]);
+
   const handleError = () => {
     if (attempts < retryCount) {
       // Retry loading the image
       setIsRetrying(true);
       setAttempts(prev => prev + 1);
-      
+
       // Add a small delay before retrying
       setTimeout(() => {
         setImgSrc(`${src}?retry=${attempts + 1}`);

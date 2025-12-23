@@ -17,16 +17,20 @@ export default function ImageGallery({ images }: ImageGalleryProps) {
   const imageRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   const navigateNext = useCallback(() => {
-    const nextIndex = (currentIndex + 1) % images.length;
-    setCurrentIndex(nextIndex);
-    setSelectedImage(images[nextIndex]);
-  }, [currentIndex, images]);
+    setCurrentIndex((prevIndex) => {
+      const nextIndex = (prevIndex + 1) % images.length;
+      setSelectedImage(images[nextIndex]);
+      return nextIndex;
+    });
+  }, [images]);
 
   const navigatePrevious = useCallback(() => {
-    const prevIndex = (currentIndex - 1 + images.length) % images.length;
-    setCurrentIndex(prevIndex);
-    setSelectedImage(images[prevIndex]);
-  }, [currentIndex, images]);
+    setCurrentIndex((prevIndex) => {
+      const prevIndexVal = (prevIndex - 1 + images.length) % images.length;
+      setSelectedImage(images[prevIndexVal]);
+      return prevIndexVal;
+    });
+  }, [images]);
 
   // Handle keyboard navigation
   useEffect(() => {
@@ -82,7 +86,7 @@ export default function ImageGallery({ images }: ImageGalleryProps) {
 
   const handleTouchEnd = () => {
     if (!touchStart || !touchEnd) return;
-    
+
     const distance = touchStart - touchEnd;
     const minSwipeDistance = 50;
 
@@ -220,9 +224,11 @@ export default function ImageGallery({ images }: ImageGalleryProps) {
 
             {/* Image container */}
             <motion.div
-              initial={{ scale: 0.9 }}
-              animate={{ scale: 1 }}
-              exit={{ scale: 0.9 }}
+              key={selectedImage.id}
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ duration: 0.3 }}
               className="relative max-w-7xl max-h-[90vh] w-full px-8 sm:px-12"
               onClick={(e) => e.stopPropagation()}
               role="dialog"
