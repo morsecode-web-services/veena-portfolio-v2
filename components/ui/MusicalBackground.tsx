@@ -111,11 +111,12 @@ export default function MusicalBackground() {
                         delay: swara.delay,
                         ease: "linear"
                     }}
-                    className="absolute font-serif font-bold text-gold-600/40"
+                    className="absolute font-serif font-bold text-gold-600/40 will-change-transform"
                     style={{
                         fontSize: swara.size,
                         left: `${swara.x}%`,
-                        top: `${swara.y}%`
+                        top: `${swara.y}%`,
+                        transform: 'translateZ(0)' // Force GPU layer promotion
                     }}
                 >
                     {swara.text}
