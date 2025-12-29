@@ -59,6 +59,15 @@ export async function generatePDF(
     let currentY = margin;
 
     // Helper functions
+    const getImageDimensions = (dataUrl: string): Promise<{ width: number; height: number }> => {
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => resolve({ width: img.width, height: img.height });
+        img.onerror = () => resolve({ width: 0, height: 0 });
+        img.src = dataUrl;
+      });
+    };
+
     const addHeader = (text: string, size: number = 20) => {
       pdf.setFont('helvetica', 'bold');
       pdf.setFontSize(size);
@@ -181,9 +190,42 @@ export async function generatePDF(
     // About section
     addHeader('About', 18);
     addSpace(5);
-    config.artist.fullBio.forEach((paragraph: string) => {
-      addText(paragraph);
-      addSpace(3);
+    config.artist.fullBio.forEach((block: any) => {
+      // Handle rich text blocks or fallback string
+      if (typeof block === 'string') {
+        checkPageBreak();
+        addText(block);
+        addSpace(3);
+      } else {
+        if (block.type === 'heading') {
+          checkPageBreak(30);
+          addSpace(5);
+          addSubheader(block.content, 14);
+          addSpace(2);
+        } else if (block.type === 'list') {
+          if (block.items && Array.isArray(block.items)) {
+            block.items.forEach((item: string) => {
+              checkPageBreak();
+              pdf.setFont('helvetica', 'normal');
+              pdf.setFontSize(11);
+              pdf.setTextColor(COLORS.gray.r, COLORS.gray.g, COLORS.gray.b);
+              // Add bullet point
+              pdf.text('•', margin + 2, currentY);
+
+              // Add item text
+              const lines = pdf.splitTextToSize(item, contentWidth - 10);
+              pdf.text(lines, margin + 8, currentY);
+              currentY += (lines.length * 11 * 0.4) + 3;
+            });
+            addSpace(3);
+          }
+        } else {
+          // Paragraph (default)
+          checkPageBreak();
+          addText(block.content || '');
+          addSpace(3);
+        }
+      }
     });
 
     onProgress?.(40);
@@ -209,11 +251,38 @@ export async function generatePDF(
         // Spotlight image
         const spotlightImg = await loadImage(spotlight.imageUrl);
         if (spotlightImg) {
+          const dims = await getImageDimensions(spotlightImg);
           const spotlightImgWidth = contentWidth;
-          const spotlightImgHeight = spotlightImgWidth * 0.5; // Wider/shorter aspect ratio for PDF fit
 
-          checkPageBreak(spotlightImgHeight + 10);
-          pdf.addImage(spotlightImg, 'JPEG', margin, currentY, spotlightImgWidth, spotlightImgHeight);
+          let spotlightImgHeight;
+          if (dims.width > 0 && dims.height > 0) {
+            // Maintain aspect ratio
+            const aspectRatio = dims.height / dims.width;
+            spotlightImgHeight = spotlightImgWidth * aspectRatio;
+
+            // Limit height if it's too tall (e.g. portrait images taking up whole page)
+            const maxHeight = pageHeight * 0.6;
+            if (spotlightImgHeight > maxHeight) {
+              spotlightImgHeight = maxHeight;
+              // Adjust width to maintain aspect ratio
+              // But we want it full width usually... so we might just crop or center?
+              // For PDF, let's just constrain height and let width reduce (center it)
+              const newWidth = spotlightImgHeight / aspectRatio;
+              const xOffset = (contentWidth - newWidth) / 2;
+
+              checkPageBreak(spotlightImgHeight + 10);
+              pdf.addImage(spotlightImg, 'JPEG', margin + xOffset, currentY, newWidth, spotlightImgHeight);
+            } else {
+              checkPageBreak(spotlightImgHeight + 10);
+              pdf.addImage(spotlightImg, 'JPEG', margin, currentY, spotlightImgWidth, spotlightImgHeight);
+            }
+          } else {
+            // Fallback if dimensions load failed
+            spotlightImgHeight = spotlightImgWidth * 0.5625; // 16:9
+            checkPageBreak(spotlightImgHeight + 10);
+            pdf.addImage(spotlightImg, 'JPEG', margin, currentY, spotlightImgWidth, spotlightImgHeight);
+          }
+
           currentY += spotlightImgHeight + 8;
         }
 

@@ -13,7 +13,7 @@ interface VideoEmbedProps {
 const extractVideoId = (url: string): string | null => {
   // Extract YouTube video ID from various URL formats
   const patterns = [
-    /(?:youtube\.com\/embed\/|youtube\.com\/watch\?v=|youtu\.be\/)([^&?/]+)/,
+    /(?:youtube\.com\/embed\/|youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/live\/|youtube\.com\/shorts\/)([^&?/]+)/,
     /youtube\.com\/v\/([^&?/]+)/,
   ];
 
