@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Image, { ImageProps } from 'next/image';
 import { motion } from 'framer-motion';
+import { getBasePath } from '@/lib/config';
 
 interface ImageWithFallbackProps extends Omit<ImageProps, 'onError'> {
   fallbackSrc?: string;
@@ -29,7 +30,19 @@ export default function ImageWithFallback({
 
   // Sync state when src prop changes
   useEffect(() => {
-    setImgSrc(src);
+    // Normalize path to include base path if needed
+    const basePath = getBasePath().replace(/\/$/, '');
+    const normalizePath = (path: string | object) => {
+      // If path is a string starting with / and not external URL, prepend base path
+      if (typeof path === 'string' && path.startsWith('/') && !path.startsWith('http')) {
+        // Check if path already includes base path to avoid duplication
+        if (basePath && path.startsWith(basePath)) return path;
+        return `${basePath}${path}`;
+      }
+      return path as string;
+    };
+
+    setImgSrc(normalizePath(src));
     setHasError(false);
     setAttempts(0);
     setIsRetrying(false);
