@@ -10,6 +10,21 @@ interface VideoEmbedProps {
   retryCount?: number;
 }
 
+const extractVideoId = (url: string): string | null => {
+  // Extract YouTube video ID from various URL formats
+  const patterns = [
+    /(?:youtube\.com\/embed\/|youtube\.com\/watch\?v=|youtu\.be\/)([^&?/]+)/,
+    /youtube\.com\/v\/([^&?/]+)/,
+  ];
+
+  for (const pattern of patterns) {
+    const match = url.match(pattern);
+    if (match) return match[1];
+  }
+  return null;
+};
+
+
 /**
  * Video embed component with error handling and retry logic
  * Handles failed video loads gracefully with fallback UI
@@ -26,7 +41,21 @@ export default function VideoEmbed({
   const [videoSrc, setVideoSrc] = useState(src);
 
   useEffect(() => {
-    setVideoSrc(src);
+    // Try to extract YouTube video ID and convert to embed URL
+    const videoId = extractVideoId(src);
+    if (videoId) {
+      // Preserve query parameters if they exist (except v=...)
+      const urlObj = new URL(src);
+      const searchParams = new URLSearchParams(urlObj.search);
+      searchParams.delete('v');
+
+      const queryStr = searchParams.toString();
+      const embedUrl = `https://www.youtube.com/embed/${videoId}${queryStr ? `?${queryStr}` : ''}`;
+      setVideoSrc(embedUrl);
+    } else {
+      setVideoSrc(src);
+    }
+
     setHasError(false);
     setAttempts(0);
   }, [src]);
@@ -49,19 +78,7 @@ export default function VideoEmbed({
     setIsRetrying(false);
   };
 
-  const extractVideoId = (url: string): string | null => {
-    // Extract YouTube video ID from various URL formats
-    const patterns = [
-      /(?:youtube\.com\/embed\/|youtube\.com\/watch\?v=|youtu\.be\/)([^&?/]+)/,
-      /youtube\.com\/v\/([^&?/]+)/,
-    ];
 
-    for (const pattern of patterns) {
-      const match = url.match(pattern);
-      if (match) return match[1];
-    }
-    return null;
-  };
 
   const getDirectVideoUrl = (): string => {
     const videoId = extractVideoId(src);

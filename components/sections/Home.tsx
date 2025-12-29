@@ -135,6 +135,7 @@ export default function Home() {
                       alt={spotlight.title}
                       fill
                       className="object-cover"
+                      style={{ objectPosition: spotlight.imagePosition || 'center' }}
                       priority={true}
                     />
                   </div>

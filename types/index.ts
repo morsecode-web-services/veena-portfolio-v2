@@ -1,11 +1,16 @@
 // Type definitions for the Veena Musician Website
 
+export type BioBlock =
+  | { type: 'paragraph'; content: string }
+  | { type: 'heading'; content: string }
+  | { type: 'list'; items: string[] };
+
 export interface SiteConfig {
   artist: {
     name: string;
     tagline: string;
     briefBio: string;
-    fullBio: string[];
+    fullBio: (string | BioBlock)[];
   };
   home: {
     images: {
@@ -24,6 +29,7 @@ export interface SiteConfig {
       description: string;
     }[];
     imageUrl: string;
+    imagePosition?: string;
     ctaText?: string;
     ctaLink?: string;
   }[];

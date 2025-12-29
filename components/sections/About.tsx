@@ -61,36 +61,18 @@ export default function About() {
         </motion.div>
 
         {/* Biography Subsections */}
-        <div className="space-y-8 sm:space-y-10 md:space-y-12 px-2">
-          {config.artist.fullBio.map((paragraph, index) => (
+        <div className="space-y-6 sm:space-y-8 md:space-y-10 px-2 relative">
+          {/* Decorative vertical line */}
+          <div className="absolute left-6 top-4 bottom-4 w-0.5 bg-gradient-to-b from-transparent via-gold-200 to-transparent opacity-50 hidden sm:block"></div>
+
+          {config.artist.fullBio.map((block, index) => (
             <BiographySubsection
               key={index}
-              content={paragraph}
+              block={block}
               index={index}
             />
           ))}
         </div>
-
-        {/* Additional subsection for musical journey */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-100px' }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          className="mt-10 sm:mt-12 md:mt-16 p-6 sm:p-7 md:p-8 bg-white rounded-lg shadow-premium-lg border border-premium"
-          role="complementary"
-          aria-label="Musical excellence highlights"
-        >
-          <h3 className="text-xl sm:text-2xl md:text-3xl font-serif font-semibold text-navy-900 mb-4 sm:mb-5 md:mb-6">
-            Musical Excellence
-          </h3>
-          <p className="text-base sm:text-lg text-gray-700 leading-relaxed">
-            With a deep commitment to preserving the rich heritage of Carnatic music while
-            embracing innovation, {config.artist.name.split(' ')[0]} continues to inspire
-            audiences around the world. Her performances are a testament to years of rigorous
-            training, artistic sensitivity, and an unwavering dedication to her craft.
-          </p>
-        </motion.div>
       </div>
     </section>
   );
@@ -98,13 +80,13 @@ export default function About() {
 
 // Subsection component with intersection observer
 interface BiographySubsectionProps {
-  content: string;
+  block: string | { type: string; content?: string; items?: string[] };
   index: number;
 }
 
-const BiographySubsection = ({ content, index }: BiographySubsectionProps) => {
+const BiographySubsection = ({ block, index }: BiographySubsectionProps) => {
   const ref = useRef<HTMLDivElement>(null);
-  const isInView = useIntersectionObserver(ref, { threshold: 0.2 });
+  const isInView = useIntersectionObserver(ref, { threshold: 0.1 });
   const [hasAnimated, setHasAnimated] = useState(false);
 
   useEffect(() => {
@@ -113,20 +95,61 @@ const BiographySubsection = ({ content, index }: BiographySubsectionProps) => {
     }
   }, [isInView, hasAnimated]);
 
+  // Normalize block to object format if it's a string
+  const contentBlock = typeof block === 'string'
+    ? { type: 'paragraph', content: block }
+    : block;
+
+  const getDelay = () => Math.min(index * 0.1, 0.5); // Cap delay for long lists
+
+  if (contentBlock.type === 'heading') {
+    return (
+      <motion.div
+        ref={ref}
+        initial={{ opacity: 0, x: -20 }}
+        animate={hasAnimated ? { opacity: 1, x: 0 } : { opacity: 0, x: -20 }}
+        transition={{ duration: 0.6, delay: getDelay() }}
+        className="pt-6 sm:pt-8"
+      >
+        <h3 className="text-xl sm:text-2xl font-serif font-bold text-navy-900 border-l-4 border-gold-500 pl-4">
+          {contentBlock.content}
+        </h3>
+      </motion.div>
+    );
+  }
+
+  if (contentBlock.type === 'list') {
+    return (
+      <motion.div
+        ref={ref}
+        initial={{ opacity: 0, y: 20 }}
+        animate={hasAnimated ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+        transition={{ duration: 0.6, delay: getDelay() }}
+        className="pl-4 sm:pl-8"
+      >
+        <ul className="space-y-3">
+          {contentBlock.items?.map((item, idx) => (
+            <li key={idx} className="flex items-start gap-3 text-base sm:text-lg text-gray-700">
+              <span className="text-gold-600 mt-1.5 text-xs">◆</span>
+              <span>{item}</span>
+            </li>
+          ))}
+        </ul>
+      </motion.div>
+    );
+  }
+
+  // Default to paragraph
   return (
     <motion.div
       ref={ref}
-      initial={{ opacity: 0, y: 30 }}
-      animate={hasAnimated ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
-      transition={{
-        duration: 0.7,
-        delay: index * 0.15, // Staggered animation
-        ease: [0.25, 0.1, 0.25, 1], // Custom easing for elegance
-      }}
-      className="subsection"
+      initial={{ opacity: 0, y: 20 }}
+      animate={hasAnimated ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+      transition={{ duration: 0.6, delay: getDelay() }}
+      className="pl-0 sm:pl-4"
     >
-      <p className="text-base sm:text-lg md:text-xl text-gray-700 leading-relaxed font-light">
-        {content}
+      <p className="text-base sm:text-lg text-gray-700 leading-relaxed font-light text-justify">
+        {contentBlock.content}
       </p>
     </motion.div>
   );

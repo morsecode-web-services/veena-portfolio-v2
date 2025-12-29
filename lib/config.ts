@@ -2,6 +2,12 @@ import { z } from 'zod';
 import type { SiteConfig } from '@/types';
 
 // Zod schemas for validation
+const BioBlockSchema = z.union([
+  z.object({ type: z.literal('paragraph'), content: z.string() }),
+  z.object({ type: z.literal('heading'), content: z.string() }),
+  z.object({ type: z.literal('list'), items: z.array(z.string()) }),
+]);
+
 const MusicVideoSchema = z.object({
   title: z.string().min(1),
   url: z.string().url(),
@@ -48,6 +54,7 @@ const SpotlightSchema = z.object({
   subtitle: z.string().min(1),
   description: z.string().min(1),
   imageUrl: z.string().min(1),
+  imagePosition: z.string().optional(),
   features: z.array(SpotlightFeatureSchema),
   ctaText: z.string().optional(),
   ctaLink: z.string().optional(),
@@ -58,7 +65,7 @@ const SiteConfigSchema = z.object({
     name: z.string().min(1),
     tagline: z.string().min(1),
     briefBio: z.string().min(1),
-    fullBio: z.array(z.string().min(1)),
+    fullBio: z.array(z.union([z.string().min(1), BioBlockSchema])),
   }),
   home: z.object({
     images: z.object({

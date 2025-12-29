@@ -2,12 +2,61 @@
   "artist": {
     "name": "Aishwarya Manikarnike",
     "tagline": "A Legacy of Strings. A Future of Sound.",
-    "briefBio": "Redefining the boundaries of the Veena. From the roots of tradition to the stage of the world, Aishwarya Manikarnike breathes new life into ancient strings.",
+    "briefBio": "An ‘A’-Grade Veena Artist of All India Radio and Vidwat Antima rank-holding vocalist, Aishwarya Manikarnike has been immersed in the Carnatic tradition within a musical family since childhood. Her artistry rejoices in the majesty of the Saraswati Veena as well as the vibrance of the human voice.",
     "fullBio": [
-      "Aishwarya Manikarnike isn't just playing music; she's continuing a lineage. As a distinguished Veena virtuoso and vocalist, she bridges the gap between the sacred traditions of Carnatic music and the modern ear.",
-      "Born into a dynasty of musicians, she didn't just learn the art—she lived it. Her journey began at a young age, mastering the intricate science of sound under eminent gurus. Today, her dedication has earned her global acclaim.",
-      "She specializes in a unique duality: the resounding depth of the Veena and the emotive power of her voice. Her performances are known for their technical precision, emotional depth, and the ability to transport audiences.",
-      "From intimate chamber concerts to prestigious international festivals, Aishwarya shares the stage with legends, proving that classical music is not just history—it's alive."
+      {
+        "type": "heading",
+        "content": "‘A’-Grade Veena Artist (AIR) | Vidwat Antima Rank-Holding Vocalist"
+      },
+      {
+        "type": "paragraph",
+        "content": "Rejoicing in the majesty of the Saraswati Veena and the brilliance of Carnatic vocals, Aishwarya Manikarnike is a multifaceted artiste representing the third generation of a distinguished musical lineage. Nurtured from a tender age by a family of celebrated musicians, she has spent over a decade establishing herself as a prolific Vainika and Vocalist, bridging traditional roots with a contemporary professional career as a Data Engineer."
+      },
+      {
+        "type": "heading",
+        "content": "Musical Lineage & Training"
+      },
+      {
+        "type": "paragraph",
+        "content": "Aishwarya’s foundation was laid under the rigorous tutelage of her grandmother, Karnataka Kalashree Veena Vid. Smt. M. K. Saraswathi (A-Top Grade, AIR), known for her mastery of the Gayaki style. Her training has been further enriched by her mother, Vid. Smt. Rajyashree Josyer Shrikanth (A-Grade, AIR), and her uncle, violinist Vid. G. Venkatesha Josyer. Currently, she continues her vocal advanced training under the esteemed Sangeetha Kalarathna Vid. M. S. Sheela, while also receiving guidance from mridangist Gaanakala Vid. H. S. Sudhindra and exploring Hindustani vocals under Smt. Geetha Hegde."
+      },
+      {
+        "type": "heading",
+        "content": "Technical Excellence & Accolades"
+      },
+      {
+        "type": "paragraph",
+        "content": "Aishwarya is a rare talent who holds high-level credentials in both voice and instrument. A milestone in her career was her 2024 elevation to ‘A’-Grade in Veena by All India Radio, following a series of national competition wins. Her academic prowess is equally notable; she secured the 3rd Rank at the State level in the Vidwat Antima examinations. Her contributions have been recognized with several prestigious awards, including:"
+      },
+      {
+        "type": "list",
+        "items": [
+          "Best Instrumentalist – The Madras Music Academy (Spirit of Youth)",
+          "Raga Laya Prabha Award – Sri Rama Lalitha Kala Mandira, Bengaluru",
+          "SAMA Yuva Puraskara – SAMA Arts Foundation",
+          "CCRT Scholarships – Awarded by the Indian Ministry of Culture (Junior and Young Artiste schemes)"
+        ]
+      },
+      {
+        "type": "heading",
+        "content": "Performance Highlights"
+      },
+      {
+        "type": "paragraph",
+        "content": "Aishwarya’s performance career is highlighted by a historic appearance at the Rashtrapati Bhavan on Republic Day 2025, performing in the presence of the President and Prime Minister of India. As a soloist and a member of a unique Three-Generation Veena Trio alongside her mother and grandmother, she has graced premier stages including the Music Academy Chennai (HCL Series), Bangalore Gayana Samaja, Udupi Sri Krishna Temple, and TTD Nadaneerajanam."
+      },
+      {
+        "type": "paragraph",
+        "content": "A specialist in the complex Ragam-Tanam-Pallavi (RTP) form, she has won top honors at the Bangalore Gayana Samaja and SRLKM Pallavi Sammela, where she is acclaimed for presenting intricate Pallavis in challenging talas and scales."
+      },
+      {
+        "type": "heading",
+        "content": "Artistry & Vision"
+      },
+      {
+        "type": "paragraph",
+        "content": "Whether through the resonant strings of the Saraswati Veena or her \"sparkling\" vocal delivery, Aishwarya’s music is a testament to a lifetime of devotion. By balancing her career in technology with her classical pursuits, she aspires to preserve and carry forward the vast treasure of Carnatic Classical art for generations to come."
+      }
     ]
   },
   "home": {
@@ -16,12 +65,35 @@
       "vocal": "https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=800&h=600&fit=crop"
     },
     "featuredVideos": [
-      "https://www.youtube.com/embed/jfKfPfyJRdk",
-      "https://www.youtube.com/embed/ysz5S6PUM-U",
-      "https://www.youtube.com/embed/2Vv-BfVoq4g"
+      "https://youtu.be/2GhEVYnmenE?si=Op38IJIIk-2PE0Z6",
+      "https://youtu.be/EcAwPX-Bq6k?si=dnkStd-DPFTL7NHd",
+      "https://youtu.be/rC1pyqeLQY0?si=-bGLk9AufFydiBPA"
     ]
   },
   "spotlights": [
+    {
+      "id": "veena",
+      "title": "The Divine Instrument",
+      "subtitle": "Veena: The Sound of the Soul",
+      "description": "The Veena is not just an instrument; it is the physical manifestation of the human voice. Aishwarya's mastery over the Saraswati Veena brings out the subtlest nuances of Gamakas, creating a soundscape that is both meditative and exhilarating.",
+      "imageUrl": "/images/spotlight/veena.jpg",
+      "ctaText": "Explore Veena Recitals",
+      "ctaLink": "#music",
+      "features": [
+        {
+          "title": "Gayaki Style",
+          "description": "Playing the instrument in a way that closely mimics the vocal style of Carnatic music."
+        },
+        {
+          "title": "Resonance",
+          "description": "Harnessing the natural acoustics of the Veena to create deep, vibrating tones."
+        },
+        {
+          "title": "Intricacy",
+          "description": "Complex finger techniques that produce rapid, precise melodic patterns."
+        }
+      ]
+    },
     {
       "id": "trio",
       "title": "The 3 Generation Veena Trio",
@@ -46,34 +118,12 @@
       ]
     },
     {
-      "id": "veena",
-      "title": "The Divine Instrument",
-      "subtitle": "Veena: The Sound of the Soul",
-      "description": "The Veena is not just an instrument; it is the physical manifestation of the human voice. Aishwarya's mastery over the Saraswati Veena brings out the subtlest nuances of Gamakas, creating a soundscape that is both meditative and exhilarating.",
-      "imageUrl": "https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=1200&h=800&fit=crop",
-      "ctaText": "Explore Veena Recitals",
-      "ctaLink": "#music",
-      "features": [
-        {
-          "title": "Gayaki Style",
-          "description": "Playing the instrument in a way that closely mimics the vocal style of Carnatic music."
-        },
-        {
-          "title": "Resonance",
-          "description": "Harnessing the natural acoustics of the Veena to create deep, vibrating tones."
-        },
-        {
-          "title": "Intricacy",
-          "description": "Complex finger techniques that produce rapid, precise melodic patterns."
-        }
-      ]
-    },
-    {
       "id": "vocal",
       "title": "The Voice of Tradition",
       "subtitle": "Vocal Excellence & Purity",
       "description": "Beyond the strings, Aishwarya is a gifted vocalist. Her singing is marked by impeccable pitch, clarity of diction, and a profound emotional connection to the Sahitya (lyrics). She brings the same depth to her vocal concerts as she does to her instrumental performances.",
-      "imageUrl": "https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=1200&h=800&fit=crop",
+      "imageUrl": "/images/spotlight/vocal.HEIC",
+      "imagePosition": "center 5%",
       "ctaText": "Listen to Vocals",
       "ctaLink": "#music",
       "features": [
