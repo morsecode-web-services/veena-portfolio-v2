@@ -195,6 +195,7 @@
     ]
   },
   "music": {
+    "layout": "carousel",
     "categories": [
       {
         "id": "veena",

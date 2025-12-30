@@ -37,6 +37,7 @@ export interface SiteConfig {
     images: GalleryImage[];
   };
   music: {
+    layout?: 'grid' | 'carousel';
     categories: MusicCategory[];
   };
   press: {

@@ -79,6 +79,7 @@ const SiteConfigSchema = z.object({
     images: z.array(GalleryImageSchema),
   }),
   music: z.object({
+    layout: z.enum(['grid', 'carousel']).optional(),
     categories: z.array(MusicCategorySchema),
   }),
   press: z.object({

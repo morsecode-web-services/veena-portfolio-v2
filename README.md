@@ -182,6 +182,43 @@ Customize the theme in `tailwind.config.ts`:
 - **Fonts:** Custom font families
 - **Animations:** Custom animation keyframes
 
+### Feature Flags & Customization
+
+You can toggle specific features and layouts in `public/config/site-config.json` under the `features` and `music` sections:
+
+#### Music Section Layout
+Choose between two display modes for the Music section:
+- **Carousel (Default):** `"layout": "carousel"` - Modern, multi-select stacked carousel view.
+- **Grid:** `"layout": "grid"` - Classic single-tab grid view.
+
+```json
+"music": {
+  "layout": "carousel", 
+  "categories": [...]
+}
+```
+
+#### Swara Animation
+Control the floating musical notes animation visibility:
+```json
+"features": {
+  "swaraAnimation": {
+    "desktop": true,
+    "mobile": false
+  }
+}
+```
+
+#### Structured Biography
+The `artist.fullBio` field supports rich text formatting using blocks:
+```json
+"fullBio": [
+  { "type": "paragraph", "content": "..." },
+  { "type": "heading", "content": "..." },
+  { "type": "list", "items": ["..."] }
+]
+```
+
 ## Deployment
 
 ### Deploy to Vercel (Recommended)
