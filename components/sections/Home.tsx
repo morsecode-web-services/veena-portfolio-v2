@@ -70,7 +70,7 @@ export default function Home() {
           </h1>
           {/* Premium gold accent underline */}
           <div className="w-24 sm:w-32 h-1 bg-gradient-gold mb-6 md:mb-8 rounded-full animate-pulse-slow"></div>
-          <p className="text-lg sm:text-xl md:text-2xl text-navy-600 font-light text-center max-w-3xl leading-relaxed mb-8">
+          <p className="text-sm sm:text-base md:text-lg text-navy-600 font-light text-center max-w-3xl leading-relaxed mb-8">
             {config.artist.briefBio}
           </p>
 
