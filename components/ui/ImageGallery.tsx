@@ -66,6 +66,15 @@ export default function ImageGallery({ images }: ImageGalleryProps) {
     };
   }, [selectedImage]);
 
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   const openLightbox = (image: GalleryImage, index: number) => {
     setSelectedImage(image);
     setCurrentIndex(index);
@@ -129,13 +138,22 @@ export default function ImageGallery({ images }: ImageGalleryProps) {
               showErrorMessage={false}
               retryCount={2}
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              <div className="absolute bottom-0 left-0 right-0 p-2 sm:p-3">
+            {/* Caption Overlay - On desktop: hover. On mobile: shows when scrolled into view */}
+            <motion.div
+              initial={isMobile ? { opacity: 0 } : false}
+              whileInView={isMobile ? { opacity: 1 } : {}}
+              viewport={{ once: false, amount: 0.7 }}
+              transition={{ duration: 0.4 }}
+              className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 md:group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+            >
+              <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4">
                 {image.caption && (
-                  <p className="text-white text-[10px] sm:text-xs font-medium">{image.caption}</p>
+                  <p className="text-white text-xs sm:text-sm font-medium leading-tight">
+                    {image.caption}
+                  </p>
                 )}
               </div>
-            </div>
+            </motion.div>
           </motion.div>
         ))}
       </div>

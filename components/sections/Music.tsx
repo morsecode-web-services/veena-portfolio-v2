@@ -109,7 +109,7 @@ export default function Music() {
             transition={{ duration: 0.4 }}
             className="text-center mb-8"
           >
-            <p className="text-gray-600 max-w-2xl mx-auto px-4">
+            <p className="text-sm sm:text-base text-gray-600 max-w-2xl mx-auto px-4">
               {selectedMainCategory.description}
             </p>
           </motion.div>
