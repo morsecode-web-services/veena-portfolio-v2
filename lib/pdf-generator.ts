@@ -149,7 +149,7 @@ export async function generatePDF(
       }
     };
 
-    // ===== PAGE 1: HOME + ABOUT =====
+    // ===== PAGE 1: HOME =====
     onProgress?.(20);
 
     // Title
@@ -181,56 +181,13 @@ export async function generatePDF(
     }
     currentY += imgHeight + 10;
 
-    onProgress?.(30);
-
     // Brief bio
     addText(config.artist.briefBio, 12);
     addSpace(10);
 
-    // About section
-    addHeader('About', 18);
-    addSpace(5);
-    config.artist.fullBio.forEach((block: any) => {
-      // Handle rich text blocks or fallback string
-      if (typeof block === 'string') {
-        checkPageBreak();
-        addText(block);
-        addSpace(3);
-      } else {
-        if (block.type === 'heading') {
-          checkPageBreak(30);
-          addSpace(5);
-          addSubheader(block.content, 14);
-          addSpace(2);
-        } else if (block.type === 'list') {
-          if (block.items && Array.isArray(block.items)) {
-            block.items.forEach((item: string) => {
-              checkPageBreak();
-              pdf.setFont('helvetica', 'normal');
-              pdf.setFontSize(11);
-              pdf.setTextColor(COLORS.gray.r, COLORS.gray.g, COLORS.gray.b);
-              // Add bullet point
-              pdf.text('•', margin + 2, currentY);
+    onProgress?.(30);
 
-              // Add item text
-              const lines = pdf.splitTextToSize(item, contentWidth - 10);
-              pdf.text(lines, margin + 8, currentY);
-              currentY += (lines.length * 11 * 0.4) + 3;
-            });
-            addSpace(3);
-          }
-        } else {
-          // Paragraph (default)
-          checkPageBreak();
-          addText(block.content || '');
-          addSpace(3);
-        }
-      }
-    });
-
-    onProgress?.(40);
-
-    // ===== SPOTLIGHTS SECTION =====
+    // ===== HIGHLIGHTS SECTION (SPOTLIGHTS) =====
     checkPageBreak(60);
     if (currentY > margin + 20) {
       pdf.addPage();
@@ -264,9 +221,6 @@ export async function generatePDF(
             const maxHeight = pageHeight * 0.6;
             if (spotlightImgHeight > maxHeight) {
               spotlightImgHeight = maxHeight;
-              // Adjust width to maintain aspect ratio
-              // But we want it full width usually... so we might just crop or center?
-              // For PDF, let's just constrain height and let width reduce (center it)
               const newWidth = spotlightImgHeight / aspectRatio;
               const xOffset = (contentWidth - newWidth) / 2;
 
@@ -319,11 +273,121 @@ export async function generatePDF(
       }
     }
 
+    onProgress?.(40);
+
+    // ===== ABOUT SECTION =====
+    checkPageBreak(60);
+    if (currentY > margin + 20) {
+      pdf.addPage();
+      currentY = margin;
+    }
+
+    addHeader('About', 18);
+    addSpace(5);
+    config.artist.fullBio.forEach((block: any) => {
+      // Handle rich text blocks or fallback string
+      if (typeof block === 'string') {
+        checkPageBreak();
+        addText(block);
+        addSpace(3);
+      } else {
+        if (block.type === 'heading') {
+          checkPageBreak(30);
+          addSpace(5);
+          addSubheader(block.content, 14);
+          addSpace(2);
+        } else if (block.type === 'list') {
+          if (block.items && Array.isArray(block.items)) {
+            block.items.forEach((item: string) => {
+              checkPageBreak();
+              pdf.setFont('helvetica', 'normal');
+              pdf.setFontSize(11);
+              pdf.setTextColor(COLORS.gray.r, COLORS.gray.g, COLORS.gray.b);
+              // Add bullet point
+              pdf.text('•', margin + 2, currentY);
+
+              // Add item text
+              const lines = pdf.splitTextToSize(item, contentWidth - 10);
+              pdf.text(lines, margin + 8, currentY);
+              currentY += (lines.length * 11 * 0.4) + 3;
+            });
+            addSpace(3);
+          }
+        } else {
+          // Paragraph (default)
+          checkPageBreak();
+          addText(block.content || '');
+          addSpace(3);
+        }
+      }
+    });
+
     onProgress?.(50);
 
-    // ===== PAGE 2: GALLERY =====
-    pdf.addPage();
-    currentY = margin;
+    // ===== MUSIC SECTION =====
+    checkPageBreak(60);
+    if (currentY > margin + 20) {
+      pdf.addPage();
+      currentY = margin;
+    }
+
+    addHeader('Music', 20);
+    addSpace(10);
+
+    config.music.categories.forEach((category: any, catIndex: number) => {
+      checkPageBreak();
+      addSubheader(category.name, 14);
+      addText(category.description, 10);
+      addSpace(3);
+
+      // Iterate through subcategories
+      if (category.subcategories && Array.isArray(category.subcategories)) {
+        category.subcategories.forEach((subcategory: any) => {
+          checkPageBreak();
+
+          // Subcategory name
+          pdf.setFont('helvetica', 'bold');
+          pdf.setFontSize(11);
+          pdf.setTextColor(COLORS.navy.r, COLORS.navy.g, COLORS.navy.b);
+          pdf.text(`${subcategory.name}:`, margin + 5, currentY);
+          currentY += 6;
+
+          // Videos in this subcategory
+          if (subcategory.videos && Array.isArray(subcategory.videos)) {
+            subcategory.videos.forEach((video: any) => {
+              // Extract video ID from various YouTube URL formats
+              let videoId = '';
+              try {
+                const url = new URL(video.url);
+                if (url.hostname.includes('youtu.be')) {
+                  videoId = url.pathname.slice(1).split('?')[0];
+                } else if (url.hostname.includes('youtube.com')) {
+                  videoId = url.searchParams.get('v') || url.pathname.split('/').pop() || '';
+                }
+              } catch {
+                videoId = video.url.split('/').pop()?.split('?')[0] || '';
+              }
+
+              const youtubeLink = videoId ? `https://www.youtube.com/watch?v=${videoId}` : video.url;
+              addLink(`  • ${video.title}`, youtubeLink, 9);
+            });
+          }
+
+          addSpace(5);
+        });
+      }
+
+      addSpace(8);
+    });
+
+    onProgress?.(65);
+
+    // ===== GALLERY SECTION =====
+    checkPageBreak(60);
+    if (currentY > margin + 20) {
+      pdf.addPage();
+      currentY = margin;
+    }
 
     addHeader('Performance Gallery', 20);
     addSpace(10);
@@ -357,35 +421,14 @@ export async function generatePDF(
       currentY += galleryImgHeight + 15;
     }
 
-    onProgress?.(65);
+    onProgress?.(75);
 
-    // ===== PAGE 3: MUSIC =====
-    pdf.addPage();
-    currentY = margin;
-
-    addHeader('Music', 20);
-    addSpace(10);
-
-    config.music.categories.forEach((category: any, catIndex: number) => {
-      checkPageBreak();
-      addSubheader(category.name, 14);
-      addText(category.description, 10);
-
-      category.videos.forEach((video: any, vidIndex: number) => {
-        // Extract video ID from embed URL
-        const videoId = video.url.split('/').pop() || '';
-        const youtubeLink = `https://www.youtube.com/watch?v=${videoId}`;
-        addLink(video.title, youtubeLink, 10);
-      });
-
-      addSpace(8);
-    });
-
-    onProgress?.(80);
-
-    // ===== PAGE 4: PRESS =====
-    pdf.addPage();
-    currentY = margin;
+    // ===== PRESS SECTION =====
+    checkPageBreak(60);
+    if (currentY > margin + 20) {
+      pdf.addPage();
+      currentY = margin;
+    }
 
     addHeader('Press & Recognition', 20);
     addSpace(10);
@@ -404,9 +447,9 @@ export async function generatePDF(
       addSpace(8);
     });
 
-    onProgress?.(90);
+    onProgress?.(85);
 
-    // ===== PAGE 5: FAQ =====
+    // ===== FAQ SECTION =====
     checkPageBreak(60);
     if (currentY > margin + 20) {
       pdf.addPage();
@@ -432,6 +475,48 @@ export async function generatePDF(
       pdf.text(aLines, margin, currentY);
       currentY += (aLines.length * 10 * 0.4) + 8;
     });
+
+    onProgress?.(92);
+
+    // ===== CONTACT SECTION =====
+    checkPageBreak(60);
+    if (currentY > margin + 20) {
+      pdf.addPage();
+      currentY = margin;
+    }
+
+    addHeader('Contact', 20);
+    addSpace(10);
+
+    addText('For bookings, collaborations, or inquiries, please reach out through the following channels:', 11);
+    addSpace(8);
+
+    // Social Media Links
+    if (config.socialMedia) {
+      if (config.socialMedia.youtube) {
+        addLink('YouTube: ' + config.socialMedia.youtube, config.socialMedia.youtube, 11);
+        addSpace(3);
+      }
+      if (config.socialMedia.instagram) {
+        addLink('Instagram: ' + config.socialMedia.instagram, config.socialMedia.instagram, 11);
+        addSpace(3);
+      }
+      if (config.socialMedia.facebook) {
+        addLink('Facebook: ' + config.socialMedia.facebook, config.socialMedia.facebook, 11);
+        addSpace(3);
+      }
+      if (config.socialMedia.twitter) {
+        addLink('Twitter: ' + config.socialMedia.twitter, config.socialMedia.twitter, 11);
+        addSpace(3);
+      }
+      if (config.socialMedia.linkedin) {
+        addLink('LinkedIn: ' + config.socialMedia.linkedin, config.socialMedia.linkedin, 11);
+        addSpace(3);
+      }
+    }
+
+    addSpace(10);
+    addText('Thank you for your interest in my musical journey. I look forward to connecting with you!', 11);
 
     onProgress?.(95);
 
