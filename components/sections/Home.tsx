@@ -123,13 +123,29 @@ export default function Home() {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
                 transition={{ duration: 0.5, ease: "easeInOut" }}
-                className="relative overflow-hidden rounded-2xl bg-white text-navy-900 shadow-premium-xl border border-premium"
+                drag="x"
+                dragConstraints={{ left: 0, right: 0 }}
+                dragElastic={0.2}
+                onDragEnd={(e, { offset, velocity }) => {
+                  const swipeThreshold = 50;
+                  const swipeVelocityThreshold = 500;
+
+                  // Swipe left (next)
+                  if (offset.x < -swipeThreshold || velocity.x < -swipeVelocityThreshold) {
+                    nextSpotlight();
+                  }
+                  // Swipe right (previous)
+                  else if (offset.x > swipeThreshold || velocity.x > swipeVelocityThreshold) {
+                    prevSpotlight();
+                  }
+                }}
+                className="relative overflow-hidden rounded-2xl bg-white text-navy-900 shadow-premium-xl border border-premium cursor-grab active:cursor-grabbing"
               >
                 {/* Subtle background pattern */}
                 <div className="absolute inset-0 opacity-5 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]"></div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2">
-                  <div className="relative aspect-[16/10] sm:aspect-video lg:aspect-auto lg:h-auto lg:min-h-[500px]">
+                  <div className="relative aspect-[16/10] sm:aspect-video lg:aspect-auto lg:h-auto lg:min-h-[500px] pointer-events-none">
                     <ImageWithFallback
                       src={spotlight.imageUrl}
                       alt={spotlight.title}
@@ -140,7 +156,7 @@ export default function Home() {
                     />
                   </div>
 
-                  <div className="p-5 sm:p-10 md:p-16 flex flex-col justify-center relative z-10 bg-white">
+                  <div className="p-5 sm:p-10 md:p-16 flex flex-col justify-center relative z-10 bg-white pointer-events-none">
                     <div className="inline-block px-3 py-1 bg-gold-600 text-white text-[10px] sm:text-xs font-bold tracking-wider uppercase rounded-full mb-3 sm:mb-4 self-start">
                       Must See
                     </div>
@@ -167,7 +183,7 @@ export default function Home() {
                       <motion.a
                         href={spotlight.ctaLink}
                         whileHover={{ x: 5 }}
-                        className="inline-flex items-center text-gold-600 font-bold hover:text-gold-700 transition-colors text-sm sm:text-base"
+                        className="inline-flex items-center text-gold-600 font-bold hover:text-gold-700 transition-colors text-sm sm:text-base pointer-events-auto"
                       >
                         {spotlight.ctaText || 'Learn More'} <span className="ml-2">→</span>
                       </motion.a>
