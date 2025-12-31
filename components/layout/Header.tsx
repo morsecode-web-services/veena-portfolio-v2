@@ -1,12 +1,14 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { debounce } from '@/lib/utils';
 import Navigation from './Navigation';
 
 export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
+
+  const headerRef = useRef<HTMLElement>(null);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const debouncedHandleScroll = useCallback(
@@ -24,11 +26,30 @@ export default function Header() {
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+
+    // Track header height for other sticky elements
+    const updateHeaderHeight = () => {
+      if (headerRef.current) {
+        const height = headerRef.current.offsetHeight;
+        document.documentElement.style.setProperty('--header-height', `${height}px`);
+      }
+    };
+
+    const resizeObserver = new ResizeObserver(updateHeaderHeight);
+    if (headerRef.current) {
+      resizeObserver.observe(headerRef.current);
+    }
+    updateHeaderHeight();
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      resizeObserver.disconnect();
+    };
   }, [debouncedHandleScroll]);
 
   return (
     <motion.header
+      ref={headerRef}
       initial={{ y: -100, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}

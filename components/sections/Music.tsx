@@ -75,7 +75,10 @@ export default function Music() {
         </motion.div>
 
         {/* Main Category Tabs (Veena / Vocal) */}
-        <div className="sticky top-[80px] z-40 py-4 mb-4 -mx-4 px-4 bg-white/90 backdrop-blur-md border-b border-gray-100/50">
+        <div
+          className="sticky z-40 py-4 mb-4 -mx-4 px-4 bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-[0_4px_12px_-4px_rgba(0,0,0,0.05)]"
+          style={{ top: 'var(--header-height, 70px)' }}
+        >
           <div className="max-w-7xl mx-auto flex flex-wrap justify-center gap-3 sm:gap-4">
             {config.music.categories.map((category) => {
               const isActive = selectedMainCategoryId === category.id;
