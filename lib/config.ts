@@ -13,11 +13,18 @@ const MusicVideoSchema = z.object({
   url: z.string().url(),
 });
 
-const MusicCategorySchema = z.object({
+const MusicSubcategorySchema = z.object({
   id: z.string().min(1),
   name: z.string().min(1),
   description: z.string(),
   videos: z.array(MusicVideoSchema),
+});
+
+const MusicCategorySchema = z.object({
+  id: z.string().min(1),
+  name: z.string().min(1),
+  description: z.string(),
+  subcategories: z.array(MusicSubcategorySchema),
 });
 
 const PressArticleSchema = z.object({

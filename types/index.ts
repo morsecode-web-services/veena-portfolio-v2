@@ -66,11 +66,18 @@ export interface MusicVideo {
   url: string;
 }
 
-export interface MusicCategory {
+export interface MusicSubcategory {
   id: string;
   name: string;
   description: string;
   videos: MusicVideo[];
+}
+
+export interface MusicCategory {
+  id: string;
+  name: string;
+  description: string;
+  subcategories: MusicSubcategory[];
 }
 
 export interface PressArticle {

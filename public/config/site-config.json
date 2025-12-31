@@ -201,34 +201,86 @@
         "id": "veena",
         "name": "Veena",
         "description": "Classical Veena performances showcasing the depth and beauty of this ancient instrument",
-        "videos": [
+        "subcategories": [
           {
-            "title": "Sangeetha Devathe Saraswathi",
-            "url": "https://www.youtube.com/watch?v=v1O4Ot7Ytyo&list=PL7QLQI--tZlywhq6Ae48KWRfgSdylFSp3"
+            "id": "veena-concerts",
+            "name": "Concerts",
+            "description": "Full-length Veena concert performances",
+            "videos": [
+              {
+                "title": "The Music Academy Madras - HCL Concert 2021",
+                "url": "https://youtu.be/EcAwPX-Bq6k?si=dnkStd-DPFTL7NHd"
+              },
+              {
+                "title": "The Music Academy Madras 2022",
+                "url": "https://youtu.be/SxzRstP73vs?si=Y9ygvhKDwXC8YwkW"
+              },
+              {
+                "title": "Prayog Navaratri Utsav",
+                "url": "https://www.youtube.com/live/6em00nkgsXU?si=SlJsqxvPcug-pSj2&t=10"
+              },
+              {
+                "title": "Carnatic Veena Recital",
+                "url": "https://youtu.be/eppYSVRPV9E?si=0RwJureP7ArYhqOl&t=3423"
+              }
+            ]
           },
           {
-            "title": "Gajavadana | Sriranjani | Papanasam Sivan",
-            "url": "https://www.youtube.com/watch?v=uIkuDVHl83A&list=PL7QLQI--tZlyUpEpaXK1fmm-uc7zNbu4b"
+            "id": "veena-rtp",
+            "name": "RTP",
+            "description": "Ragam Tanam Pallavi - the pinnacle of Carnatic music improvisation on Veena",
+            "videos": [
+              {
+                "title": "Dual Rhythm (Dwinade) RTP in Raga Lathangi",
+                "url": "https://youtu.be/ccUiMyWMsPc?si=PP0Ka7xyEWDGaF-8"
+              },
+              {
+                "title": "Dwiraga Dwinade Pallavi - CarnaticIQ Contest",
+                "url": "https://youtu.be/p8ma77z3dTs?si=HdZzzy0GT3ppcWQc"
+              },
+              {
+                "title": "RTP feature concert - Raga Latangi, Chaturashra Jhampe tala",
+                "url": "https://youtu.be/3uVEau1Icvc?si=1IQRWIhcJpttc2mO"
+              }
+            ]
           },
           {
-            "title": "The Music Academy Madras - HCL Concert 2021",
-            "url": "https://youtu.be/EcAwPX-Bq6k?si=dnkStd-DPFTL7NHd"
+            "id": "veena-collaborations",
+            "name": "Collaborations",
+            "description": "Veena collaborations with other artists",
+            "videos": [
+              {
+                "title": "Veena Duet | Rajyashree Josyer Shrikanth & Aishwarya Manikarnike",
+                "url": "https://youtu.be/35WEBfDVSUo?si=q0uVYIi6FMAuwO5F"
+              },
+              {
+                "title": "3 Generation Veena Trio - Sringaaralahari",
+                "url": "https://youtu.be/P-hAFdCtLqs?si=TaqHRrSHBS2UvtgC"
+              },
+              {
+                "title": "Yugala Raaga Nilaye",
+                "url": "https://youtu.be/ehknsXo5pEg?si=nj4owbvL0eev3NfO"
+              }
+            ]
           },
           {
-            "title": "The Music Academy Madras 2022",
-            "url": "https://youtu.be/SxzRstP73vs?si=Y9ygvhKDwXC8YwkW"
-          },
-          {
-            "title": "Veena Duet | Rajyashree Josyer Shrikanth & Aishwarya Manikarnike",
-            "url": "https://youtu.be/35WEBfDVSUo?si=q0uVYIi6FMAuwO5F"
-          },
-          {
-            "title": "Prayog Navaratri Utsav",
-            "url": "https://www.youtube.com/live/6em00nkgsXU?si=SlJsqxvPcug-pSj2&t=10"
-          },
-          {
-            "title": "Carnatic Veena Recital",
-            "url": "https://youtu.be/eppYSVRPV9E?si=0RwJureP7ArYhqOl&t=3423"
+            "id": "veena-compositions",
+            "name": "Compositions",
+            "description": "Individual Veena compositions and pieces",
+            "videos": [
+              {
+                "title": "Sangeetha Devathe Saraswathi",
+                "url": "https://www.youtube.com/watch?v=v1O4Ot7Ytyo&list=PL7QLQI--tZlywhq6Ae48KWRfgSdylFSp3"
+              },
+              {
+                "title": "Gajavadana | Sriranjani | Papanasam Sivan",
+                "url": "https://www.youtube.com/watch?v=uIkuDVHl83A&list=PL7QLQI--tZlyUpEpaXK1fmm-uc7zNbu4b"
+              },
+              {
+                "title": "Brahmakalasha - Veena Cover",
+                "url": "https://youtu.be/rC1pyqeLQY0?si=-bGLk9AufFydiBPA"
+              }
+            ]
           }
         ]
       },
@@ -236,97 +288,65 @@
         "id": "vocal",
         "name": "Vocal",
         "description": "Soulful vocal renditions of classical manifestations",
-        "videos": [
+        "subcategories": [
           {
-            "title": "Prayog Navaratri Utsava",
-            "url": "https://www.youtube.com/live/pi32w-os-Ug?si=5QbRHnjaLPECz4iU&t=67"
+            "id": "vocal-concerts",
+            "name": "Concerts",
+            "description": "Full-length vocal concert performances",
+            "videos": [
+              {
+                "title": "Prayog Navaratri Utsava",
+                "url": "https://www.youtube.com/live/pi32w-os-Ug?si=5QbRHnjaLPECz4iU&t=67"
+              },
+              {
+                "title": "Sankara TV - 2015",
+                "url": "https://youtu.be/1jrEWp_szkg?si=9rFmUmHKy42yh4Mu&t=333"
+              }
+            ]
           },
           {
-            "title": "Pranamamyaham Sri Prananatham",
-            "url": "https://youtu.be/9iT780Aahj0?si=hWm-v-T3742Aiuey"
+            "id": "vocal-rtp",
+            "name": "RTP",
+            "description": "Ragam Tanam Pallavi - vocal improvisation showcasing mastery",
+            "videos": []
           },
           {
-            "title": "Bolava Vitthala",
-            "url": "https://youtu.be/2GhEVYnmenE?si=RO40gF0olkb6P-nR"
+            "id": "vocal-collaborations",
+            "name": "Collaborations",
+            "description": "Vocal collaborations with other artists",
+            "videos": [
+              {
+                "title": "Jagadodharana",
+                "url": "https://youtube.com/shorts/HVMPjH1qZRM?si=pISOVBPZ-iJnufQ0"
+              },
+              {
+                "title": "Jayatu Sada Bharati - A Tribute to Mother India",
+                "url": "https://youtu.be/8OeXgPNt4RA?si=QUJfhEZ9rd84y34y"
+              },
+              {
+                "title": "Jhulat Radha (Bhajan)",
+                "url": "https://youtu.be/0XUrxel03zs?si=UeyGnEpTLCAJn-8W"
+              }
+            ]
           },
           {
-            "title": "Alaipayuthe Kanna",
-            "url": "https://youtu.be/RV58JMtqxaw?si=pi9nSszkLPhyVKsk"
-          }
-        ]
-      },
-      {
-        "id": "trio",
-        "name": "3 Generation Veena Trio",
-        "description": "Unique performances featuring three generations of Veena artists",
-        "videos": [
-          {
-            "title": "Sringaaralahari - Three Generation Veena Trio Performance",
-            "url": "https://youtu.be/P-hAFdCtLqs?si=TaqHRrSHBS2UvtgC"
-          }
-        ]
-      },
-      {
-        "id": "rtp",
-        "name": "RTP",
-        "description": "Ragam Tanam Pallavi - the pinnacle of Carnatic music improvisation",
-        "videos": [
-          {
-            "title": "Dual Rhythm (Dwinade) RTP in Raga Lathangi",
-            "url": "https://youtu.be/ccUiMyWMsPc?si=PP0Ka7xyEWDGaF-8"
-          },
-          {
-            "title": "Dwiraga Dwinade Pallavi - CarnaticIQ Contest",
-            "url": "https://youtu.be/p8ma77z3dTs?si=HdZzzy0GT3ppcWQc"
-          },
-          {
-            "title": "RTP feature concert - Raga Latangi, Chaturashra Jhampe tala",
-            "url": "https://youtu.be/3uVEau1Icvc?si=1IQRWIhcJpttc2mO"
-          }
-        ]
-      },
-      {
-        "id": "other",
-        "name": "Other Music",
-        "description": "Other music performances",
-        "videos": [
-          {
-            "title": "Brahmakalasha - Veena Cover",
-            "url": "https://youtu.be/rC1pyqeLQY0?si=-bGLk9AufFydiBPA"
-          }
-        ]
-      },
-      {
-        "id": "collaborations",
-        "name": "Collaborations",
-        "description": "Collaborations with other artists",
-        "videos": [
-          {
-            "title": "Yugala Raaga Nilaye",
-            "url": "https://youtu.be/ehknsXo5pEg?si=nj4owbvL0eev3NfO"
-          },
-          {
-            "title": "Jagadodharana",
-            "url": "https://youtube.com/shorts/HVMPjH1qZRM?si=pISOVBPZ-iJnufQ0"
-          },
-          {
-            "title": "Jayatu Sada Bharati - A Tribute to Mother India",
-            "url": "https://youtu.be/8OeXgPNt4RA?si=QUJfhEZ9rd84y34y"
-          },
-          {
-            "title": "Jhulat Radha (Bhajan)",
-            "url": "https://youtu.be/0XUrxel03zs?si=UeyGnEpTLCAJn-8W"
-          }
-        ]
-      },
-      {
-        "id": "early",
-        "name": "Early Performances",
-        "description": "Early performances",
-        "videos": [
-          {
-            "title": "Sankara TV - 2015",
-            "url": "https://youtu.be/1jrEWp_szkg?si=9rFmUmHKy42yh4Mu&t=333"
+            "id": "vocal-compositions",
+            "name": "Compositions",
+            "description": "Individual vocal compositions and pieces",
+            "videos": [
+              {
+                "title": "Pranamamyaham Sri Prananatham",
+                "url": "https://youtu.be/9iT780Aahj0?si=hWm-v-T3742Aiuey"
+              },
+              {
+                "title": "Bolava Vitthala",
+                "url": "https://youtu.be/2GhEVYnmenE?si=RO40gF0olkb6P-nR"
+              },
+              {
+                "title": "Alaipayuthe Kanna",
+                "url": "https://youtu.be/RV58JMtqxaw?si=pi9nSszkLPhyVKsk"
+              }
+            ]
           }
         ]
       }

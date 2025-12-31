@@ -94,49 +94,49 @@ export default function Page() {
       </div>
 
       {/* About Section - Elegant spacing and visual rhythm */}
-      <div className="py-12 sm:py-16 md:py-20 bg-white">
+      <div className="py-10 sm:py-14 md:py-18 bg-white">
         <SectionErrorBoundary sectionName="About">
           <About />
         </SectionErrorBoundary>
       </div>
 
       {/* Gallery Section - Subtle background variation */}
-      <div className="py-12 sm:py-16 md:py-20 bg-cream-50">
+      <div className="py-10 sm:py-14 md:py-18 bg-cream-50">
         <SectionErrorBoundary sectionName="Gallery">
           <Gallery />
         </SectionErrorBoundary>
       </div>
 
       {/* Music Section - Clean white background */}
-      <div className="py-12 sm:py-16 md:py-20 bg-white">
+      <div className="py-10 sm:py-14 md:py-18 bg-white">
         <SectionErrorBoundary sectionName="Music">
           <Music />
         </SectionErrorBoundary>
       </div>
 
       {/* Press Section - Sophisticated gray tone */}
-      <div className="py-12 sm:py-16 md:py-20 bg-cream-50">
+      <div className="py-10 sm:py-14 md:py-18 bg-cream-50">
         <SectionErrorBoundary sectionName="Press">
           <Press />
         </SectionErrorBoundary>
       </div>
 
       {/* FAQ Section - Return to white for clarity */}
-      <div className="py-12 sm:py-16 md:py-20 bg-white">
+      <div className="py-10 sm:py-14 md:py-18 bg-white">
         <SectionErrorBoundary sectionName="FAQ">
           <FAQ />
         </SectionErrorBoundary>
       </div>
 
       {/* Contact Section - Elegant navy accent background */}
-      <div className="py-12 sm:py-16 md:py-20 bg-cream-50">
+      <div className="py-10 sm:py-14 md:py-18 bg-cream-50">
         <SectionErrorBoundary sectionName="Contact">
           <Contact />
         </SectionErrorBoundary>
       </div>
 
       {/* Portfolio Download Section */}
-      <div id="pdf-generator-section" className="py-12 sm:py-14 md:py-16 bg-white border-t border-gray-200">
+      <div id="pdf-generator-section" className="py-10 sm:py-12 md:py-14 bg-white border-t border-gray-200">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 md:px-8">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
