@@ -46,8 +46,8 @@ export default function Header() {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="flex items-center"
           >
-            <a href="#home" className="focus:outline-none focus:ring-2 focus:ring-blue-600 rounded">
-              <h1 className="text-base sm:text-lg md:text-xl font-serif font-bold text-navy-900">
+            <a href="#home" className="focus:outline-none focus:ring-2 focus:ring-blue-600 rounded flex items-center">
+              <h1 className="text-base sm:text-lg md:text-xl font-serif font-bold text-navy-900 mb-0">
                 Aishwarya Manikarnike
               </h1>
             </a>

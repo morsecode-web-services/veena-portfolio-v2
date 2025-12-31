@@ -109,7 +109,7 @@ export default function Navigation() {
       {/* Mobile Menu Button */}
       <button
         onClick={() => setIsMenuOpen(!isMenuOpen)}
-        className="md:hidden text-gray-700 hover:text-gold-600 transition-colors z-50 relative"
+        className="md:hidden text-gray-700 hover:text-gold-600 transition-colors z-50 relative flex items-center justify-center"
         aria-label={isMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
         aria-expanded={isMenuOpen}
         aria-controls="mobile-menu"
