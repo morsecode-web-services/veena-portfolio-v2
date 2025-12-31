@@ -63,27 +63,27 @@ export default function Home() {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
-          className="flex flex-col items-center justify-center mb-8 sm:mb-10 md:mb-12"
+          className="flex flex-col items-center justify-center mb-6 sm:mb-8 md:mb-10"
         >
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-serif font-bold text-navy-900 mb-3 md:mb-4 text-center">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-serif font-bold text-navy-900 mb-2 md:mb-3 text-center">
             {config.artist.name}
           </h1>
           {/* Premium gold accent underline */}
-          <div className="w-24 sm:w-32 h-1 bg-gradient-gold mb-6 md:mb-8 rounded-full animate-pulse-slow"></div>
-          <p className="text-sm sm:text-base md:text-lg text-navy-600 font-light text-center max-w-3xl leading-relaxed mb-8">
+          <div className="w-20 sm:w-24 h-1 bg-gradient-gold mb-5 md:mb-6 rounded-full animate-pulse-slow"></div>
+          <p className="text-xs sm:text-sm md:text-base text-navy-600 font-light text-center max-w-2xl leading-relaxed mb-6">
             {config.artist.briefBio}
           </p>
 
           {/* Hero CTAs */}
-          <div className="flex flex-row gap-3 sm:gap-6 mt-4">
+          <div className="flex flex-row gap-2 sm:gap-4 mt-3">
             <motion.a
               href="#music"
               whileHover={{ scale: 1.05, y: -2 }}
               whileTap={{ scale: 0.98 }}
-              className="px-4 sm:px-8 py-2.5 sm:py-3 bg-gold-600 text-white rounded-full text-sm sm:text-base font-semibold shadow-premium-lg hover:shadow-premium-xl transition-all duration-300 flex items-center gap-3 whitespace-nowrap group"
+              className="px-3 sm:px-6 py-2 sm:py-2.5 bg-gold-600 text-white rounded-full text-xs sm:text-sm font-semibold shadow-premium-lg hover:shadow-premium-xl transition-all duration-300 flex items-center gap-2 whitespace-nowrap group"
             >
               {/* Minimalist Musical Equalizer Indicator */}
-              <div className="flex items-end gap-[2px] h-3 w-4 mb-[2px]">
+              <div className="flex items-end gap-[2px] h-2.5 w-3.5 mb-[1px]">
                 {[0, 1, 2].map((i) => (
                   <motion.div
                     key={i}
@@ -96,7 +96,7 @@ export default function Home() {
                       ease: "easeInOut",
                       delay: i * 0.1
                     }}
-                    className="w-1 bg-white rounded-full"
+                    className="w-0.5 bg-white rounded-full"
                   />
                 ))}
               </div>
@@ -106,7 +106,7 @@ export default function Home() {
               href="#contact"
               whileHover={{ scale: 1.05, y: -2 }}
               whileTap={{ scale: 0.98 }}
-              className="px-4 sm:px-8 py-2.5 sm:py-3 border-2 border-navy-900 text-navy-900 rounded-full text-sm sm:text-base font-semibold hover:bg-navy-900 hover:text-white transition-all duration-300 whitespace-nowrap"
+              className="px-3 sm:px-6 py-2 sm:py-2.5 border-2 border-navy-900 text-navy-900 rounded-full text-xs sm:text-sm font-semibold hover:bg-navy-900 hover:text-white transition-all duration-300 whitespace-nowrap flex items-center justify-center"
             >
               Book Artiste
             </motion.a>
@@ -156,17 +156,17 @@ export default function Home() {
                     />
                   </div>
 
-                  <div className="p-5 sm:p-10 md:p-16 flex flex-col justify-center relative z-10 bg-white pointer-events-none">
-                    <div className="inline-block px-3 py-1 bg-gold-600 text-white text-[10px] sm:text-xs font-bold tracking-wider uppercase rounded-full mb-3 sm:mb-4 self-start">
+                  <div className="p-4 sm:p-8 md:p-12 flex flex-col justify-center relative z-10 bg-white pointer-events-none">
+                    <div className="inline-block px-3 py-1 bg-gold-600 text-white text-[10px] sm:text-xs font-bold tracking-wider uppercase rounded-full mb-2 sm:mb-3 self-start">
                       Must See
                     </div>
-                    <h2 className="text-2xl sm:text-4xl lg:text-5xl font-serif font-bold mb-2 sm:mb-4 text-navy-900">
+                    <h2 className="text-xl sm:text-3xl lg:text-4xl font-serif font-bold mb-1.5 sm:mb-3 text-navy-900">
                       {spotlight.title}
                     </h2>
-                    <h3 className="text-lg sm:text-xl text-gold-600 mb-4 sm:mb-6 font-serif italic">
+                    <h3 className="text-base sm:text-lg text-gold-600 mb-3 sm:mb-5 font-serif italic">
                       {spotlight.subtitle}
                     </h3>
-                    <p className="text-gray-700 text-sm sm:text-base md:text-lg mb-6 sm:mb-8 leading-relaxed">
+                    <p className="text-gray-700 text-xs sm:text-sm md:text-base mb-5 sm:mb-6 leading-relaxed">
                       {spotlight.description}
                     </p>
 
@@ -250,7 +250,7 @@ export default function Home() {
             role="region"
             aria-label="Featured performances"
           >
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-serif font-semibold text-navy-900 text-center mb-6 sm:mb-8 px-4">
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-serif font-semibold text-navy-900 text-center mb-5 sm:mb-6 px-4">
               Featured Performances
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8">

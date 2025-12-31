@@ -30,16 +30,16 @@ export default function Footer() {
   const socialMedia = config?.socialMedia || {};
 
   return (
-    <footer className="bg-gradient-navy text-white py-8 sm:py-10 md:py-12 border-t border-premium" role="contentinfo">
+    <footer className="bg-gradient-navy text-white py-6 sm:py-8 md:py-10 border-t border-premium" role="contentinfo">
       <div className="container mx-auto px-4 sm:px-6 md:px-8">
-        <div className="flex flex-col items-center space-y-5 sm:space-y-6">
+        <div className="flex flex-col items-center space-y-4 sm:space-y-5">
           {/* Social Media Icons */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="flex flex-wrap justify-center gap-4 sm:gap-5 md:gap-6"
+            className="flex flex-wrap justify-center gap-3 sm:gap-4 md:gap-5"
             role="navigation"
             aria-label="Social media links"
           >
@@ -61,10 +61,10 @@ export default function Footer() {
                   href={url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-gray-400 hover:text-white active:text-gray-300 transition-colors duration-200 touch-manipulation p-2"
+                  className="text-gray-400 hover:text-white active:text-gray-300 transition-colors duration-200 touch-manipulation p-1.5"
                   aria-label={`Visit our ${platform.charAt(0).toUpperCase() + platform.slice(1)} page (opens in new tab)`}
                 >
-                  <Icon size={24} className="sm:w-7 sm:h-7" />
+                  <Icon size={20} className="sm:w-6 sm:h-6" />
                 </motion.a>
               );
             })}
@@ -76,7 +76,7 @@ export default function Footer() {
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.3 }}
-            className="text-center text-gray-400 text-xs sm:text-sm px-4"
+            className="text-center text-gray-400 text-[10px] sm:text-xs px-4"
           >
             <p>
               &copy; {new Date().getFullYear()}{' '}

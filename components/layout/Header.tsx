@@ -38,7 +38,7 @@ export default function Header() {
         }`}
       role="banner"
     >
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-3 md:py-4">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-2 md:py-3">
         <div className="flex items-center justify-between">
           <motion.div
             initial={{ opacity: 0, x: -20 }}
@@ -47,7 +47,7 @@ export default function Header() {
             className="flex items-center"
           >
             <a href="#home" className="focus:outline-none focus:ring-2 focus:ring-blue-600 rounded">
-              <h1 className="text-lg sm:text-xl md:text-2xl font-serif font-bold text-navy-900">
+              <h1 className="text-base sm:text-lg md:text-xl font-serif font-bold text-navy-900">
                 Aishwarya Manikarnike
               </h1>
             </a>

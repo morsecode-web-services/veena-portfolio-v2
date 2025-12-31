@@ -115,7 +115,7 @@ export default function VideoEmbed({
       >
         <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
           <svg
-            className="w-16 h-16 text-gray-400 mb-4"
+            className="w-12 h-12 text-gray-400 mb-4"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -128,15 +128,15 @@ export default function VideoEmbed({
             />
           </svg>
           <p className="text-gray-700 font-medium mb-2">Video unavailable</p>
-          <p className="text-sm text-gray-500 mb-4">
+          <p className="text-xs text-gray-500 mb-4">
             Unable to load this video. Please try again or view it directly on YouTube.
           </p>
-          <div className="flex gap-3">
+          <div className="flex gap-2">
             {attempts < retryCount && (
               <button
                 onClick={handleRetry}
                 disabled={isRetrying}
-                className="px-4 py-2 bg-navy-900 text-white rounded-md hover:bg-navy-800 active:bg-navy-950 transition-all duration-300 text-sm font-medium disabled:bg-gray-400 shadow-premium"
+                className="px-3 py-1.5 bg-navy-900 text-white rounded-md hover:bg-navy-800 active:bg-navy-950 transition-all duration-300 text-xs font-medium disabled:bg-gray-400 shadow-premium"
               >
                 {isRetrying ? 'Retrying...' : 'Retry'}
               </button>
@@ -145,7 +145,7 @@ export default function VideoEmbed({
               href={getDirectVideoUrl()}
               target="_blank"
               rel="noopener noreferrer"
-              className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors text-sm font-medium"
+              className="px-3 py-1.5 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors text-xs font-medium"
             >
               Watch on YouTube
             </a>
@@ -169,8 +169,8 @@ export default function VideoEmbed({
             className="absolute inset-0 w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity duration-300"
             onError={handleThumbnailError}
           />
-          <div className="relative z-20 w-16 h-16 sm:w-20 sm:h-20 bg-red-600 rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
-            <svg className="w-8 h-8 sm:w-10 sm:h-10 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
+          <div className="relative z-20 w-12 h-12 sm:w-16 sm:h-16 bg-red-600 rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+            <svg className="w-6 h-6 sm:w-8 sm:h-8 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
               <path d="M8 5v14l11-7z" />
             </svg>
           </div>

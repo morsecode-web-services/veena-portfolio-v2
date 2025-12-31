@@ -105,7 +105,7 @@ export default function ImageGallery({ images }: ImageGalleryProps) {
   return (
     <>
       {/* Gallery Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 md:gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-5">
         {images.map((image, index) => (
           <motion.div
             key={image.id}
@@ -130,9 +130,9 @@ export default function ImageGallery({ images }: ImageGalleryProps) {
               retryCount={2}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4">
+              <div className="absolute bottom-0 left-0 right-0 p-2 sm:p-3">
                 {image.caption && (
-                  <p className="text-white text-xs sm:text-sm font-medium">{image.caption}</p>
+                  <p className="text-white text-[10px] sm:text-xs font-medium">{image.caption}</p>
                 )}
               </div>
             </div>
@@ -241,16 +241,16 @@ export default function ImageGallery({ images }: ImageGalleryProps) {
                   alt={selectedImage.alt}
                   width={selectedImage.width}
                   height={selectedImage.height}
-                  className="max-w-full max-h-[75vh] sm:max-h-[85vh] w-auto h-auto object-contain"
+                  className="max-w-full max-h-[65vh] sm:max-h-[75vh] w-auto h-auto object-contain"
                   priority
                   showErrorMessage={true}
                   retryCount={2}
                 />
               </div>
               {selectedImage.caption && (
-                <div className="mt-3 sm:mt-4 text-center px-4">
-                  <p className="text-white text-sm sm:text-base md:text-lg">{selectedImage.caption}</p>
-                  <p className="text-gray-400 text-xs sm:text-sm mt-1">
+                <div className="mt-2 sm:mt-3 text-center px-4">
+                  <p className="text-white text-xs sm:text-sm md:text-base">{selectedImage.caption}</p>
+                  <p className="text-gray-400 text-[10px] sm:text-xs mt-1">
                     {currentIndex + 1} / {images.length}
                   </p>
                 </div>

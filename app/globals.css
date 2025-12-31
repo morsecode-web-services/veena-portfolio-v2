@@ -17,6 +17,9 @@
   /* Typography scale */
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
   --font-serif: 'Playfair Display', Georgia, serif;
+
+  /* Component sizing multiplier - 0.8 = 80% of original size */
+  --size-scale: 0.8;
 }
 
 * {

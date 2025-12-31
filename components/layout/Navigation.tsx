@@ -72,7 +72,7 @@ export default function Navigation() {
         role="navigation"
         aria-label="Main navigation"
       >
-        <ul className="flex space-x-8" role="menubar">
+        <ul className="flex space-x-6" role="menubar">
           {navItems.map((item, index) => (
             <motion.li
               key={item.id}
@@ -83,7 +83,7 @@ export default function Navigation() {
             >
               <button
                 onClick={() => scrollToSection(item.id)}
-                className={`relative text-sm font-medium transition-all duration-300 hover:text-gold-600 hover:scale-105 ${activeSection === item.id
+                className={`relative text-xs font-medium transition-all duration-300 hover:text-gold-600 hover:scale-105 ${activeSection === item.id
                   ? 'text-gold-600'
                   : 'text-gray-700'
                   }`}
@@ -114,7 +114,7 @@ export default function Navigation() {
         aria-expanded={isMenuOpen}
         aria-controls="mobile-menu"
       >
-        {isMenuOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
+        {isMenuOpen ? <FaTimes size={20} /> : <FaBars size={20} />}
       </button>
 
       {/* Mobile Navigation Portal */}
@@ -149,7 +149,7 @@ export default function Navigation() {
                       <li key={item.id} role="none">
                         <button
                           onClick={() => scrollToSection(item.id)}
-                          className={`text-lg font-medium transition-colors hover:text-gold-600 w-full text-left ${activeSection === item.id
+                          className={`text-base font-medium transition-colors hover:text-gold-600 w-full text-left ${activeSection === item.id
                             ? 'text-gold-600'
                             : 'text-gray-700'
                             }`}
