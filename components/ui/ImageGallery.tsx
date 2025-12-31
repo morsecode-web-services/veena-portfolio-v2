@@ -138,13 +138,10 @@ export default function ImageGallery({ images }: ImageGalleryProps) {
               showErrorMessage={false}
               retryCount={2}
             />
-            {/* Caption Overlay - On desktop: hover. On mobile: shows when scrolled into view */}
-            <motion.div
-              initial={isMobile ? { opacity: 0 } : false}
-              whileInView={isMobile ? { opacity: 1 } : {}}
-              viewport={{ once: false, amount: 0.7 }}
-              transition={{ duration: 0.4 }}
-              className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 md:group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+            {/* Caption Overlay - Static on mobile, hover on desktop */}
+            <div
+              className={`absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent transition-opacity duration-300 pointer-events-none ${isMobile ? 'opacity-100' : 'opacity-0 md:group-hover:opacity-100'
+                }`}
             >
               <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4">
                 {image.caption && (
@@ -153,7 +150,7 @@ export default function ImageGallery({ images }: ImageGalleryProps) {
                   </p>
                 )}
               </div>
-            </motion.div>
+            </div>
           </motion.div>
         ))}
       </div>
