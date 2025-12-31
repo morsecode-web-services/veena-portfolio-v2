@@ -106,10 +106,10 @@ export default function Navigation() {
         </ul>
       </motion.nav>
 
-      {/* Mobile Menu Button */}
       <button
         onClick={() => setIsMenuOpen(!isMenuOpen)}
-        className="md:hidden text-gray-700 hover:text-gold-600 transition-colors z-50 relative flex items-center justify-center"
+        className={`md:hidden transition-colors z-[10001] relative flex items-center justify-center ${isMenuOpen ? 'text-gold-600' : 'text-gray-700'
+          } hover:text-gold-600`}
         aria-label={isMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
         aria-expanded={isMenuOpen}
         aria-controls="mobile-menu"
@@ -144,12 +144,12 @@ export default function Navigation() {
                 aria-label="Mobile navigation"
               >
                 <div className="flex flex-col h-full pt-20 px-6">
-                  <ul className="flex flex-col space-y-6" role="menu">
+                  <ul className="flex flex-col space-y-1" role="menu">
                     {navItems.map((item) => (
                       <li key={item.id} role="none">
                         <button
                           onClick={() => scrollToSection(item.id)}
-                          className={`text-base font-medium transition-colors hover:text-gold-600 w-full text-left ${activeSection === item.id
+                          className={`text-base font-medium py-1.5 transition-colors hover:text-gold-600 w-full text-left ${activeSection === item.id
                             ? 'text-gold-600'
                             : 'text-gray-700'
                             }`}
