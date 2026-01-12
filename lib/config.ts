@@ -9,7 +9,7 @@ const BioBlockSchema = z.union([
 ]);
 
 const MusicVideoSchema = z.object({
-  title: z.string().min(1),
+  title: z.string().min(1).optional(),
   url: z.string().url(),
 });
 
@@ -79,7 +79,7 @@ const SiteConfigSchema = z.object({
       veena: z.string().min(1),
       vocal: z.string().min(1),
     }),
-    featuredVideos: z.array(z.string().url()),
+    featuredVideos: z.array(z.union([z.string().url(), MusicVideoSchema])),
   }),
   spotlights: z.array(SpotlightSchema).optional(),
   gallery: z.object({

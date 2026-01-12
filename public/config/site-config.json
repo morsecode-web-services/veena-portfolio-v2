@@ -65,9 +65,18 @@
       "vocal": "images/spotlight/vocal.HEIC"
     },
     "featuredVideos": [
-      "https://youtu.be/2GhEVYnmenE?si=Op38IJIIk-2PE0Z6",
-      "https://youtu.be/EcAwPX-Bq6k?si=dnkStd-DPFTL7NHd",
-      "https://youtu.be/rC1pyqeLQY0?si=-bGLk9AufFydiBPA"
+      {
+        "title": "Bolava Vitthala",
+        "url": "https://youtu.be/2GhEVYnmenE?si=Op38IJIIk-2PE0Z6"
+      },
+      {
+        "title": "The Music Academy Madras - HCL Concert 2021",
+        "url": "https://youtu.be/EcAwPX-Bq6k?si=dnkStd-DPFTL7NHd"
+      },
+      {
+        "title": "Brahmakalasha - Veena Cover",
+        "url": "https://youtu.be/rC1pyqeLQY0?si=-bGLk9AufFydiBPA"
+      }
     ]
   },
   "spotlights": [

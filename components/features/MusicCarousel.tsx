@@ -104,14 +104,16 @@ export default function MusicCarousel({ title, description, videos }: MusicCarou
                         transition={{ duration: 0.5, delay: index * 0.05 }}
                         className="flex-none w-[75vw] sm:w-[280px] md:w-[320px] snap-center"
                     >
-                        <div className="bg-white rounded-lg overflow-hidden shadow-premium border border-gray-100 hover:shadow-premium-lg transition-all duration-300 group h-full flex flex-col">
-                            <div className="aspect-video relative overflow-hidden bg-gray-100">
-                                <VideoEmbed src={video.url} title={video.title} />
+                        <div className="flex flex-col h-full bg-white rounded-xl overflow-hidden group border border-navy-100 hover:border-gold-500/30 transition-all duration-500 cursor-pointer">
+                            <div className="relative aspect-video">
+                                <VideoEmbed src={video.url} title={video.title || 'Performance Video'} />
                             </div>
-                            <div className="p-3 flex-grow flex flex-col justify-center">
-                                <h4 className="text-sm font-medium text-navy-900 line-clamp-2 leading-snug group-hover:text-gold-600 transition-colors">
-                                    {video.title}
+                            <div className="p-4 flex flex-col items-center justify-center text-center relative overflow-hidden bg-navy-50/20">
+                                <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-navy-200/30 to-transparent" />
+                                <h4 className="text-sm font-serif font-bold text-navy-900 group-hover:text-gold-600 transition-colors duration-300 leading-snug line-clamp-2">
+                                    {video.title || 'Performance Video'}
                                 </h4>
+
                             </div>
                         </div>
                     </motion.div>

@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useId } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useVideo } from '@/context/VideoContext';
 
 interface VideoEmbedProps {
   src: string;
@@ -35,13 +36,24 @@ export default function VideoEmbed({
   className = '',
   retryCount = 2,
 }: VideoEmbedProps) {
-  const [isPlaying, setIsPlaying] = useState(false);
+  const instanceId = useId();
+  const { activeVideoId, setActiveVideo } = useVideo();
   const [hasError, setHasError] = useState(false);
   const [attempts, setAttempts] = useState(0);
   const [isRetrying, setIsRetrying] = useState(false);
   const [videoSrc, setVideoSrc] = useState(src);
   const [videoId, setVideoId] = useState<string | null>(null);
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
+
+  const isPlaying = activeVideoId === instanceId;
+
+  const setIsPlaying = (playing: boolean) => {
+    if (playing) {
+      setActiveVideo(instanceId);
+    } else if (isPlaying) {
+      setActiveVideo(null);
+    }
+  };
 
   useEffect(() => {
     // Try to extract YouTube video ID and convert to embed URL
@@ -166,13 +178,23 @@ export default function VideoEmbed({
           <img
             src={thumbnailUrl}
             alt={title}
-            className="absolute inset-0 w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity duration-300"
+            className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-90 group-hover:opacity-100"
             onError={handleThumbnailError}
           />
-          <div className="relative z-20 w-12 h-12 sm:w-16 sm:h-16 bg-red-600 rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
-            <svg className="w-6 h-6 sm:w-8 sm:h-8 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M8 5v14l11-7z" />
-            </svg>
+
+          {/* Removed vignette overlay for cleaner look */}
+
+          {/* Premium Play Button */}
+          <div className="absolute inset-0 flex items-center justify-center z-20">
+            <motion.div
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
+              className="w-14 h-14 sm:w-16 sm:h-16 bg-white/10 backdrop-blur-md border border-white/30 rounded-full flex items-center justify-center shadow-2xl group-hover:bg-red-600 group-hover:border-red-500 transition-all duration-300"
+            >
+              <svg className="w-6 h-6 sm:w-8 sm:h-8 text-white ml-1 drop-shadow-lg" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M8 5v14l11-7z" />
+              </svg>
+            </motion.div>
           </div>
         </button>
       ) : (

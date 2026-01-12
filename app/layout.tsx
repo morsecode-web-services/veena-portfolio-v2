@@ -89,6 +89,8 @@ export const viewport = {
   themeColor: '#14213d',
 };
 
+import { VideoProvider } from '@/context/VideoContext';
+
 export default function RootLayout({
   children,
 }: {
@@ -124,9 +126,11 @@ export default function RootLayout({
           Skip to navigation
         </a>
         <ErrorBoundary>
-          <Header />
-          {children}
-          <Footer />
+          <VideoProvider>
+            <Header />
+            {children}
+            <Footer />
+          </VideoProvider>
         </ErrorBoundary>
       </body>
     </html>

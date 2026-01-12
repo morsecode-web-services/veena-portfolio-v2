@@ -17,7 +17,7 @@ export interface SiteConfig {
       veena: string;
       vocal: string;
     };
-    featuredVideos: string[];
+    featuredVideos: (string | MusicVideo)[];
   };
   spotlights: {
     id: string;
@@ -62,7 +62,7 @@ export interface SiteConfig {
 }
 
 export interface MusicVideo {
-  title: string;
+  title?: string;
   url: string;
 }
 

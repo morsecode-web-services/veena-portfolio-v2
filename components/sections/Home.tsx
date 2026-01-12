@@ -157,9 +157,6 @@ export default function Home() {
                   </div>
 
                   <div className="p-4 sm:p-8 md:p-12 flex flex-col justify-center relative z-10 bg-white pointer-events-none">
-                    <div className="inline-block px-3 py-1 bg-gold-600 text-white text-[10px] sm:text-xs font-bold tracking-wider uppercase rounded-full mb-2 sm:mb-3 self-start">
-                      Must See
-                    </div>
                     <h2 className="text-xl sm:text-3xl lg:text-4xl font-serif font-bold mb-1.5 sm:mb-3 text-navy-900">
                       {spotlight.title}
                     </h2>
@@ -254,22 +251,44 @@ export default function Home() {
               Featured Performances
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
-              {config.home.featuredVideos.map((videoUrl, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: 1.2 + index * 0.1, ease: [0.25, 0.1, 0.25, 1] }}
-                  whileHover={{ y: -5, transition: { duration: 0.3 } }}
-                  className="rounded-lg overflow-hidden shadow-premium-lg hover:shadow-premium-xl border border-premium transition-all duration-300"
-                >
-                  <VideoEmbed
-                    src={videoUrl}
-                    title={`Featured video ${index + 1}`}
-                    retryCount={2}
-                  />
-                </motion.div>
-              ))}
+              {config.home.featuredVideos.map((video, index) => {
+                const videoUrl = typeof video === 'string' ? video : video.url;
+                const videoTitle = typeof video === 'string' ? `Featured performance ${index + 1}` : video.title || `Featured performance ${index + 1}`;
+
+                return (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, delay: 1.2 + index * 0.1, ease: [0.25, 0.1, 0.25, 1] }}
+                    whileHover={{ y: -5, transition: { duration: 0.3 } }}
+                    className="rounded-lg overflow-hidden border border-premium transition-all duration-300"
+                  >
+                    <div className="flex flex-col h-full bg-white rounded-xl overflow-hidden border border-navy-100 hover:border-gold-500/30 transition-all duration-500 group/card">
+                      {/* Video Top Section */}
+                      <div className="relative aspect-video">
+                        <VideoEmbed
+                          src={videoUrl}
+                          title={videoTitle}
+                          retryCount={2}
+                        />
+                      </div>
+
+                      {/* Integrated Content Section - Soft Navy Tinted Background */}
+                      <div className="p-5 flex flex-col items-center justify-center text-center relative overflow-hidden bg-navy-50/30">
+                        {/* Subtle decorative top line */}
+                        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-navy-200/50 to-transparent" />
+
+                        <h3 className="text-sm sm:text-base font-serif font-bold text-navy-900 group-hover/card:text-gold-600 transition-colors duration-300 leading-snug">
+                          {videoTitle}
+                        </h3>
+
+
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
             </div>
           </motion.div>
         )}
