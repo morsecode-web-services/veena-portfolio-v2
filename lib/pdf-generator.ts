@@ -159,53 +159,18 @@ export async function generatePDF(
     pdf.text(config.artist.name, pageWidth / 2, currentY, { align: 'center' });
     currentY += 10;
 
-    // Tagline
-    pdf.setFont('helvetica', 'italic');
-    pdf.setFontSize(14);
-    pdf.setTextColor(COLORS.gray.r, COLORS.gray.g, COLORS.gray.b);
-    pdf.text(config.artist.tagline, pageWidth / 2, currentY, { align: 'center' });
-    currentY += 15;
+    // Tagline and images removed as per user request
+    currentY += 5;
 
-    // Load and add home images
-    const imgWidth = (contentWidth - 10) / 2;
-    const imgHeight = imgWidth * 0.75;
+    // ===== PAGE 1: SPOTLIGHTS (NO HEADING) =====
+    onProgress?.(20);
 
-    const veenaImg = await loadImage(config.home.images.veena);
-    const vocalImg = await loadImage(config.home.images.vocal);
-
-    if (veenaImg) {
-      pdf.addImage(veenaImg, 'JPEG', margin, currentY, imgWidth, imgHeight);
-    }
-    if (vocalImg) {
-      pdf.addImage(vocalImg, 'JPEG', margin + imgWidth + 10, currentY, imgWidth, imgHeight);
-    }
-    currentY += imgHeight + 10;
-
-    // Brief bio
-    addText(config.artist.briefBio, 12);
-    addSpace(10);
-
-    onProgress?.(30);
-
-    // ===== HIGHLIGHTS SECTION (SPOTLIGHTS) =====
-    checkPageBreak(60);
-    if (currentY > margin + 20) {
-      pdf.addPage();
-      currentY = margin;
-    }
-
-    addHeader('Highlights', 18);
-    addSpace(10);
-
-    // Add each spotlight
+    // Add each spotlight immediately after the name
     if (config.spotlights && config.spotlights.length > 0) {
       for (const spotlight of config.spotlights) {
         checkPageBreak(100);
-
-        // Spotlight title
         addSubheader(spotlight.title, 14);
 
-        // Spotlight image
         const spotlightImg = await loadImage(spotlight.imageUrl);
         if (spotlightImg) {
           const dims = await getImageDimensions(spotlightImg);
@@ -213,17 +178,13 @@ export async function generatePDF(
 
           let spotlightImgHeight;
           if (dims.width > 0 && dims.height > 0) {
-            // Maintain aspect ratio
             const aspectRatio = dims.height / dims.width;
             spotlightImgHeight = spotlightImgWidth * aspectRatio;
-
-            // Limit height if it's too tall (e.g. portrait images taking up whole page)
             const maxHeight = pageHeight * 0.6;
             if (spotlightImgHeight > maxHeight) {
               spotlightImgHeight = maxHeight;
               const newWidth = spotlightImgHeight / aspectRatio;
               const xOffset = (contentWidth - newWidth) / 2;
-
               checkPageBreak(spotlightImgHeight + 10);
               pdf.addImage(spotlightImg, 'JPEG', margin + xOffset, currentY, newWidth, spotlightImgHeight);
             } else {
@@ -231,27 +192,22 @@ export async function generatePDF(
               pdf.addImage(spotlightImg, 'JPEG', margin, currentY, spotlightImgWidth, spotlightImgHeight);
             }
           } else {
-            // Fallback if dimensions load failed
-            spotlightImgHeight = spotlightImgWidth * 0.5625; // 16:9
+            spotlightImgHeight = spotlightImgWidth * 0.5625;
             checkPageBreak(spotlightImgHeight + 10);
             pdf.addImage(spotlightImg, 'JPEG', margin, currentY, spotlightImgWidth, spotlightImgHeight);
           }
-
           currentY += spotlightImgHeight + 8;
         }
 
-        // Spotlight subtitle
         pdf.setFont('helvetica', 'italic');
         pdf.setFontSize(12);
         pdf.setTextColor(COLORS.gold.r, COLORS.gold.g, COLORS.gold.b);
         pdf.text(spotlight.subtitle, margin, currentY);
         currentY += 8;
 
-        // Spotlight description
         addText(spotlight.description, 11);
         addSpace(2);
 
-        // Spotlight features
         if (spotlight.features && spotlight.features.length > 0) {
           spotlight.features.forEach((feature: any) => {
             pdf.setFont('helvetica', 'bold');
@@ -259,7 +215,6 @@ export async function generatePDF(
             pdf.setTextColor(COLORS.navy.r, COLORS.navy.g, COLORS.navy.b);
             pdf.text(`• ${feature.title}:`, margin + 5, currentY);
             currentY += 5;
-
             pdf.setFont('helvetica', 'normal');
             pdf.setFontSize(10);
             pdf.setTextColor(COLORS.gray.r, COLORS.gray.g, COLORS.gray.b);
@@ -268,7 +223,6 @@ export async function generatePDF(
             currentY += (featureLines.length * 10 * 0.4) + 3;
           });
         }
-
         addSpace(15);
       }
     }
@@ -277,15 +231,15 @@ export async function generatePDF(
 
     // ===== ABOUT SECTION =====
     checkPageBreak(60);
-    if (currentY > margin + 20) {
-      pdf.addPage();
-      currentY = margin;
-    }
+    addHeader('About', 20);
+    addSpace(8);
 
-    addHeader('About', 18);
+    // Intro Bio first
+    addText(config.artist.briefBio, 11);
     addSpace(5);
+
+    // Full Bio
     config.artist.fullBio.forEach((block: any) => {
-      // Handle rich text blocks or fallback string
       if (typeof block === 'string') {
         checkPageBreak();
         addText(block);
@@ -303,10 +257,7 @@ export async function generatePDF(
               pdf.setFont('helvetica', 'normal');
               pdf.setFontSize(11);
               pdf.setTextColor(COLORS.gray.r, COLORS.gray.g, COLORS.gray.b);
-              // Add bullet point
               pdf.text('•', margin + 2, currentY);
-
-              // Add item text
               const lines = pdf.splitTextToSize(item, contentWidth - 10);
               pdf.text(lines, margin + 8, currentY);
               currentY += (lines.length * 11 * 0.4) + 3;
@@ -314,7 +265,6 @@ export async function generatePDF(
             addSpace(3);
           }
         } else {
-          // Paragraph (default)
           checkPageBreak();
           addText(block.content || '');
           addSpace(3);
@@ -322,15 +272,10 @@ export async function generatePDF(
       }
     });
 
-    onProgress?.(50);
+    onProgress?.(55);
 
     // ===== MUSIC SECTION =====
     checkPageBreak(60);
-    if (currentY > margin + 20) {
-      pdf.addPage();
-      currentY = margin;
-    }
-
     addHeader('Music', 20);
     addSpace(10);
 
@@ -499,14 +444,6 @@ export async function generatePDF(
       }
       if (config.socialMedia.instagram) {
         addLink('Instagram: ' + config.socialMedia.instagram, config.socialMedia.instagram, 11);
-        addSpace(3);
-      }
-      if (config.socialMedia.facebook) {
-        addLink('Facebook: ' + config.socialMedia.facebook, config.socialMedia.facebook, 11);
-        addSpace(3);
-      }
-      if (config.socialMedia.twitter) {
-        addLink('Twitter: ' + config.socialMedia.twitter, config.socialMedia.twitter, 11);
         addSpace(3);
       }
       if (config.socialMedia.linkedin) {

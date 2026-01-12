@@ -26,9 +26,7 @@ const jsonLd = {
   description: 'Official website of Veena musician Aishwarya Manikarnike. Showcasing classical Indian music performances, recordings, and artistic journey.',
   sameAs: [
     'https://www.youtube.com/@aishwaryamanikarnike',
-    'https://www.facebook.com/aishwaryamanikarnike',
-    'https://www.instagram.com/aishwaryamanikarnike',
-    'https://twitter.com/aishwaryaveena'
+    'https://www.instagram.com/aishwaryamanikarnike'
   ]
 };
 

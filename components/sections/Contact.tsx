@@ -32,17 +32,7 @@ export default function Contact() {
           <ContactForm />
         </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.4 }}
-          className="mt-8 sm:mt-10 md:mt-12 text-center text-xs sm:text-sm text-gray-500 px-4"
-        >
-          <p>
-            All inquiries are treated with the utmost professionalism and confidentiality.
-          </p>
-        </motion.div>
+
       </div>
     </section>
   );
