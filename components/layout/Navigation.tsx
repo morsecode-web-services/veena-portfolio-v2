@@ -83,10 +83,8 @@ export default function Navigation() {
             >
               <button
                 onClick={() => scrollToSection(item.id)}
-                className={`relative text-xs font-medium transition-all duration-300 hover:text-gold-600 hover:scale-105 ${activeSection === item.id
-                  ? 'text-gold-600'
-                  : 'text-gray-700'
-                  }`}
+                className="relative text-xs font-medium transition-all duration-300 hover:text-gold-600 min-h-[44px] min-w-[44px] flex items-center justify-center px-3"
+                style={{ color: activeSection === item.id ? '#8B6914' : '#334155' }}
                 role="menuitem"
                 aria-label={`Navigate to ${item.label} section`}
                 aria-current={activeSection === item.id ? 'page' : undefined}
@@ -149,7 +147,7 @@ export default function Navigation() {
                       <li key={item.id} role="none">
                         <button
                           onClick={() => scrollToSection(item.id)}
-                          className={`text-base font-medium py-1.5 transition-colors hover:text-gold-600 w-full text-left ${activeSection === item.id
+                          className={`text-base font-medium py-3 px-4 transition-colors hover:text-gold-600 w-full text-left min-h-[44px] ${activeSection === item.id
                             ? 'text-gold-600'
                             : 'text-gray-700'
                             }`}

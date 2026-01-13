@@ -30,10 +30,18 @@ export default function Gallery() {
   }
 
   if (!config) {
+    // Calculate expected gallery height to prevent layout shift
+    // Estimate: 3 columns, ~320px per row (image + spacing)
+    const estimatedImageCount = 12; // Default estimate
+    const columns = 3;
+    const rows = Math.ceil(estimatedImageCount / columns);
+    const rowHeight = 320;
+    const skeletonHeight = rows * rowHeight + 200; // Add header space
+
     return (
       <section id="gallery" className="py-20 px-4 md:px-8 bg-white">
         <div className="max-w-7xl mx-auto">
-          <div className="flex items-center justify-center min-h-[600px]">
+          <div className="flex items-center justify-center" style={{ minHeight: `${skeletonHeight}px` }}>
             <div className="text-center">
               <div className="inline-block w-8 h-8 border-3 border-gray-300 border-t-gold-600 rounded-full animate-spin mb-3" />
               <p className="text-gray-600">Loading gallery...</p>

@@ -69,7 +69,7 @@ export default function About() {
             transition={{ duration: 0.8 }}
             className="lg:col-span-5 xl:col-span-4 lg:sticky lg:top-24"
           >
-            <div className="relative aspect-[4/5] sm:aspect-square lg:aspect-[3/4] rounded-2xl overflow-hidden shadow-premium-xl group">
+            <div className="relative aspect-[4/5] sm:aspect-square lg:aspect-[3/4] rounded-2xl overflow-hidden shadow-premium-xl group" style={{ minHeight: '400px' }}>
               <div className="absolute inset-0 bg-navy-900/10 group-hover:bg-transparent transition-colors duration-500 z-10"></div>
               <img
                 src={config.home.images.veena}
@@ -77,6 +77,7 @@ export default function About() {
                 width="800"
                 height="1000"
                 loading="eager"
+                fetchPriority="high"
                 className="w-full h-full object-cover grayscale-[20%] group-hover:grayscale-0 transition-all duration-700 transform group-hover:scale-105"
               />
               {/* Decorative Frame */}
