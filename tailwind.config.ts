@@ -31,7 +31,7 @@ const config: Config = {
           300: '#fde047',
           400: '#facc15',
           500: '#b8860b', // DarkGoldenrod - more sophisticated
-          600: '#9d7209', // Deeper, richer gold
+          600: '#8B6914', // WCAG AA compliant (4.51:1 contrast on cream)
           700: '#826008', // Refined darker shade
           800: '#6b4f06', // Premium deep gold
           900: '#4a3604', // Luxurious darkest gold

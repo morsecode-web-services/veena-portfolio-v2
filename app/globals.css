@@ -7,8 +7,8 @@
   /* #14213d - Primary dark blue */
   --color-slate: 51, 65, 85;
   /* #334155 - Secondary gray-blue */
-  --color-gold: 139, 105, 20;
-  /* #8B6914 - Darker gold for WCAG AA compliance (4.51:1 contrast) */
+  --color-gold: 180, 130, 25;
+  /* #b48219 - Gold (managed by Tailwind config) */
   --color-cream: 250, 248, 245;
   /* #faf8f5 - Warm background */
   --color-charcoal: 31, 41, 55;
