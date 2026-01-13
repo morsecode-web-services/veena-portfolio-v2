@@ -3,6 +3,7 @@
 import { useState, useEffect, useId } from 'react';
 import { m, AnimatePresence } from 'framer-motion';
 import { useVideo } from '@/context/VideoContext';
+import Image from 'next/image'; // Added Image import
 
 interface VideoEmbedProps {
   src: string;
@@ -81,7 +82,7 @@ export default function VideoEmbed({
     setHasError(false);
     setAttempts(0);
     setIsPlaying(false);
-  }, [src]);
+  }, [src, setIsPlaying]);
 
   const handleThumbnailError = () => {
     // Fallback to hqdefault if maxresdefault fails (404)
@@ -175,11 +176,12 @@ export default function VideoEmbed({
           className="absolute inset-0 w-full h-full flex items-center justify-center group cursor-pointer z-10"
           aria-label={`Play video: ${title}`}
         >
-          <img
+          <Image
             src={thumbnailUrl}
             alt={title}
-            className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-90 group-hover:opacity-100"
-            onError={handleThumbnailError}
+            fill
+            className="object-cover group-hover:scale-105 transition-transform duration-700 opacity-90 group-hover:opacity-100"
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           />
 
           {/* Removed vignette overlay for cleaner look */}

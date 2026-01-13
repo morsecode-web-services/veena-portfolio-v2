@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { m } from 'framer-motion';
+import Image from 'next/image';
 import { loadConfig } from '@/lib/config';
 import { useIntersectionObserver } from '@/hooks/useIntersectionObserver';
 import type { SiteConfig } from '@/types';
@@ -71,13 +72,12 @@ export default function About() {
           >
             <div className="relative aspect-[4/5] sm:aspect-square lg:aspect-[3/4] rounded-2xl overflow-hidden shadow-premium-xl group" style={{ minHeight: '400px' }}>
               <div className="absolute inset-0 bg-navy-900/10 group-hover:bg-transparent transition-colors duration-500 z-10"></div>
-              <img
+              <Image
                 src={config.home.images.veena}
                 alt={config.artist.name}
-                width="800"
-                height="1000"
-                loading="eager"
-                fetchPriority="high"
+                width={800}
+                height={1000}
+                priority
                 className="w-full h-full object-cover grayscale-[20%] group-hover:grayscale-0 transition-all duration-700 transform group-hover:scale-105"
               />
               {/* Decorative Frame */}

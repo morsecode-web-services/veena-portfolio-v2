@@ -108,7 +108,7 @@
       "title": "The 3 Generation Veena Trio",
       "subtitle": "A Musical Lineage on One Stage",
       "description": "Witness a rare cultural phenomenon. Three generations of Veena artists performing together, weaving a tapestry of sound that spans decades of tradition and innovation.",
-      "imageUrl": "https://images.unsplash.com/photo-1511192336575-5a79af67a629?w=1200&h=800&fit=crop",
+      "imageUrl": "/images/gallery/gallery-5.jpg",
       "ctaText": "Watch Their Performance",
       "ctaLink": "#music",
       "features": [
@@ -155,51 +155,51 @@
     "images": [
       {
         "id": "1",
-        "src": "https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=1200&h=800&fit=crop",
+        "src": "/images/gallery/gallery-1.jpg",
         "alt": "Veena performance at concert hall",
         "width": 1200,
         "height": 800,
-        "caption": "Solo Veena performance at the Music Academy"
+        "caption": "Concert performance"
       },
       {
         "id": "2",
-        "src": "https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=1200&h=800&fit=crop",
+        "src": "/images/gallery/gallery-2.jpg",
         "alt": "Vocal performance on stage",
         "width": 1200,
         "height": 800,
-        "caption": "Carnatic vocal recital"
+        "caption": "Musical recital"
       },
       {
         "id": "3",
-        "src": "https://images.unsplash.com/photo-1507838153414-b4b713384a76?w=1200&h=800&fit=crop",
-        "alt": "Traditional concert setting",
+        "src": "/images/gallery/gallery-3.jpg",
+        "alt": "Stage performance with traditional attire",
         "width": 1200,
         "height": 800,
-        "caption": "Traditional concert at temple festival"
+        "caption": "Traditional presentation"
       },
       {
         "id": "4",
-        "src": "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=1200&h=800&fit=crop",
+        "src": "/images/gallery/gallery-4.jpg",
         "alt": "Intimate performance setting",
         "width": 1200,
         "height": 800,
-        "caption": "Intimate performance for music enthusiasts"
+        "caption": "Chamber concert"
       },
       {
         "id": "5",
-        "src": "https://images.unsplash.com/photo-1511192336575-5a79af67a629?w=1200&h=800&fit=crop",
-        "alt": "Three generation Veena trio",
+        "src": "/images/gallery/gallery-5.jpg",
+        "alt": "Three-generation trio performance",
         "width": 1200,
         "height": 800,
-        "caption": "Three Generation Veena Trio performance"
+        "caption": "Musical heritage"
       },
       {
         "id": "6",
-        "src": "https://images.unsplash.com/photo-1460723237483-7a6dc9d0b212?w=1200&h=800&fit=crop",
-        "alt": "International music festival",
+        "src": "/images/gallery/gallery-6.jpg",
+        "alt": "Classical music ensemble",
         "width": 1200,
         "height": 800,
-        "caption": "Performance at international music festival"
+        "caption": "Collaborative performance"
       }
     ]
   },
