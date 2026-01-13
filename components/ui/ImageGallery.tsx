@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import ImageWithFallback from '@/components/ui/ImageWithFallback';
 import { m, AnimatePresence } from 'framer-motion';
+import Image from 'next/image';
 import type { GalleryImage } from '@/types';
 
 interface ImageGalleryProps {
@@ -118,25 +119,32 @@ export default function ImageGallery({ images }: ImageGalleryProps) {
         {images.map((image, index) => (
           <m.div
             key={image.id}
-            ref={(el) => { imageRefs.current[index] = el; }}
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-50px' }}
-            transition={{ duration: 0.5, delay: index * 0.1 }}
-            className="group relative aspect-[4/3] overflow-hidden rounded-lg shadow-elegant-lg cursor-pointer touch-manipulation"
+            layout
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            whileHover={{ scale: 1.05 }}
+            transition={{ duration: 0.3 }}
+            className="group relative aspect-[3/2] cursor-pointer overflow-hidden rounded-lg shadow-md hover:shadow-premium-lg"
             onClick={() => openLightbox(image, index)}
+            role="button"
+            tabIndex={0}
+            aria-label={`View ${image.alt}`}
+            onKeyPress={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                openLightbox(image, index);
+              }
+            }}
           >
-            <ImageWithFallback
+            <Image
               src={image.src}
               alt={image.alt}
               fill
-              className="object-cover transition-transform duration-500 group-hover:scale-110 group-active:scale-105"
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-              loading="lazy"
-              placeholder="blur"
-              blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCwAB//2Q=="
-              showErrorMessage={false}
-              retryCount={2}
+              className="object-cover transition-transform duration-500 group-hover:scale-110"
+              loading={index < 6 ? 'eager' : 'lazy'}
+              quality={85}
             />
             {/* Caption Overlay - Static on mobile, hover on desktop */}
             <div
