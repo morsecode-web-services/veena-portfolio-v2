@@ -1,13 +1,13 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import ContactForm from '@/components/features/ContactForm';
 
 export default function Contact() {
   return (
     <section id="contact" className="px-4 sm:px-6 md:px-8" aria-label="Contact">
       <div id="contact-section" className="max-w-6xl mx-auto">
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-100px' }}
@@ -21,16 +21,16 @@ export default function Contact() {
             I welcome inquiries for performances, collaborations, and teaching opportunities.
             Please share your details and I will respond promptly.
           </p>
-        </motion.div>
+        </m.div>
 
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-50px' }}
           transition={{ duration: 0.6, delay: 0.2 }}
         >
           <ContactForm />
-        </motion.div>
+        </m.div>
 
 
       </div>

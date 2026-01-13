@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useId } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { useVideo } from '@/context/VideoContext';
 
 interface VideoEmbedProps {
@@ -119,7 +119,7 @@ export default function VideoEmbed({
 
   if (hasError) {
     return (
-      <motion.div
+      <m.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         className={`relative w-full bg-gray-100 rounded-lg overflow-hidden border border-premium ${className}`}
@@ -163,7 +163,7 @@ export default function VideoEmbed({
             </a>
           </div>
         </div>
-      </motion.div>
+      </m.div>
     );
   }
 
@@ -186,7 +186,7 @@ export default function VideoEmbed({
 
           {/* Premium Play Button */}
           <div className="absolute inset-0 flex items-center justify-center z-20">
-            <motion.div
+            <m.div
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.95 }}
               className="w-14 h-14 sm:w-16 sm:h-16 bg-white/10 backdrop-blur-md border border-white/30 rounded-full flex items-center justify-center shadow-2xl group-hover:bg-red-600 group-hover:border-red-500 transition-all duration-300"
@@ -194,21 +194,21 @@ export default function VideoEmbed({
               <svg className="w-6 h-6 sm:w-8 sm:h-8 text-white ml-1 drop-shadow-lg" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M8 5v14l11-7z" />
               </svg>
-            </motion.div>
+            </m.div>
           </div>
         </button>
       ) : (
         <>
           <AnimatePresence>
             {isRetrying && (
-              <motion.div
+              <m.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 className="absolute inset-0 flex items-center justify-center bg-gray-900/75 rounded-lg z-10"
               >
                 <div className="text-white text-sm">Loading video...</div>
-              </motion.div>
+              </m.div>
             )}
           </AnimatePresence>
           <iframe

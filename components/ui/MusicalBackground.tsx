@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import { loadConfig } from '@/lib/config';
 import type { SiteConfig } from '@/types';
@@ -98,7 +98,7 @@ export default function MusicalBackground() {
             style={{ top: '7rem' }} // Keep strictly below the header area (pt-28 = 7rem)
         >
             {swaraElements.map((swara) => (
-                <motion.div
+                <m.div
                     key={swara.id}
                     initial={{
                         opacity: 0,
@@ -124,7 +124,7 @@ export default function MusicalBackground() {
                     }}
                 >
                     {swara.text}
-                </motion.div>
+                </m.div>
             ))}
         </div>
     );

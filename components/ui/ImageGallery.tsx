@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import ImageWithFallback from '@/components/ui/ImageWithFallback';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import type { GalleryImage } from '@/types';
 
 interface ImageGalleryProps {
@@ -116,7 +116,7 @@ export default function ImageGallery({ images }: ImageGalleryProps) {
       {/* Gallery Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-5">
         {images.map((image, index) => (
-          <motion.div
+          <m.div
             key={image.id}
             ref={(el) => { imageRefs.current[index] = el; }}
             initial={{ opacity: 0, y: 20 }}
@@ -151,14 +151,14 @@ export default function ImageGallery({ images }: ImageGalleryProps) {
                 )}
               </div>
             </div>
-          </motion.div>
+          </m.div>
         ))}
       </div>
 
       {/* Lightbox Modal */}
       <AnimatePresence>
         {selectedImage && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -238,7 +238,7 @@ export default function ImageGallery({ images }: ImageGalleryProps) {
             </button>
 
             {/* Image container */}
-            <motion.div
+            <m.div
               key={selectedImage.id}
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
@@ -270,14 +270,14 @@ export default function ImageGallery({ images }: ImageGalleryProps) {
                   </p>
                 </div>
               )}
-            </motion.div>
+            </m.div>
 
             {/* Instructions */}
             <div className="absolute bottom-2 sm:bottom-4 left-1/2 transform -translate-x-1/2 text-gray-400 text-xs sm:text-sm px-4 text-center">
               <p className="hidden md:block">Use arrow keys or click arrows to navigate • Press ESC to close</p>
               <p className="md:hidden">Swipe to navigate • Tap outside to close</p>
             </div>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
     </>

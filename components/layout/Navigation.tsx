@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { FaBars, FaTimes } from 'react-icons/fa';
 
 const navItems = [
@@ -63,7 +63,7 @@ export default function Navigation() {
   return (
     <>
       {/* Desktop Navigation */}
-      <motion.nav
+      <m.nav
         id="navigation"
         initial={{ opacity: 0, x: 20 }}
         animate={{ opacity: 1, x: 0 }}
@@ -74,7 +74,7 @@ export default function Navigation() {
       >
         <ul className="flex space-x-6" role="menubar">
           {navItems.map((item, index) => (
-            <motion.li
+            <m.li
               key={item.id}
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -93,7 +93,7 @@ export default function Navigation() {
               >
                 {item.label}
                 {activeSection === item.id && (
-                  <motion.div
+                  <m.div
                     layoutId="activeSection"
                     className="absolute -bottom-1 left-0 right-0 h-0.5 bg-gold-600"
                     transition={{ type: 'spring', stiffness: 380, damping: 30 }}
@@ -101,10 +101,10 @@ export default function Navigation() {
                   />
                 )}
               </button>
-            </motion.li>
+            </m.li>
           ))}
         </ul>
-      </motion.nav>
+      </m.nav>
 
       <button
         onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -123,7 +123,7 @@ export default function Navigation() {
           {isMenuOpen && (
             <>
               {/* Backdrop */}
-              <motion.div
+              <m.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
@@ -133,7 +133,7 @@ export default function Navigation() {
               />
 
               {/* Slide-in Menu */}
-              <motion.nav
+              <m.nav
                 id="mobile-menu"
                 initial={{ x: '100%' }}
                 animate={{ x: 0 }}
@@ -163,7 +163,7 @@ export default function Navigation() {
                     ))}
                   </ul>
                 </div>
-              </motion.nav>
+              </m.nav>
             </>
           )}
         </AnimatePresence>,

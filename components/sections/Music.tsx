@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { loadConfig } from '@/lib/config';
 import type { SiteConfig } from '@/types';
 import MusicCarousel from '@/components/features/MusicCarousel';
@@ -59,7 +59,7 @@ export default function Music() {
     <section id="music" className="px-4 sm:px-6 md:px-8" aria-label="Music">
       <div id="music-section" className="max-w-7xl mx-auto">
         {/* Section Title */}
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-100px' }}
@@ -72,7 +72,7 @@ export default function Music() {
           <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto px-4">
             Explore performances across different styles and traditions
           </p>
-        </motion.div>
+        </m.div>
 
         {/* Main Category Tabs (Veena / Vocal) */}
         <div
@@ -102,7 +102,7 @@ export default function Music() {
 
         {/* Subcategory Description */}
         {selectedMainCategory && (
-          <motion.div
+          <m.div
             key={selectedMainCategory.id}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -112,14 +112,14 @@ export default function Music() {
             <p className="text-sm sm:text-base text-gray-600 max-w-2xl mx-auto px-4">
               {selectedMainCategory.description}
             </p>
-          </motion.div>
+          </m.div>
         )}
 
         {/* Subcategory Carousels */}
         {selectedMainCategory && (
           <div className="space-y-2 min-h-[400px]">
             <AnimatePresence mode='wait'>
-              <motion.div
+              <m.div
                 key={selectedMainCategory.id}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -128,7 +128,7 @@ export default function Music() {
                 className="space-y-2"
               >
                 {selectedMainCategory.subcategories.map((subcategory) => (
-                  <motion.div
+                  <m.div
                     key={subcategory.id}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -139,9 +139,9 @@ export default function Music() {
                       description={subcategory.description}
                       videos={subcategory.videos}
                     />
-                  </motion.div>
+                  </m.div>
                 ))}
-              </motion.div>
+              </m.div>
             </AnimatePresence>
           </div>
         )}

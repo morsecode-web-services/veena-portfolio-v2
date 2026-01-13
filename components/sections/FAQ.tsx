@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { loadConfig } from '@/lib/config';
 import FAQItem from '@/components/ui/FAQItem';
 import type { SiteConfig } from '@/types';
@@ -54,7 +54,7 @@ export default function FAQ() {
     <section id="faq" className="px-4 sm:px-6 md:px-8" aria-label="Frequently asked questions">
       <div id="faq-section" className="max-w-4xl mx-auto">
         {/* Section Title */}
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-100px' }}
@@ -68,10 +68,10 @@ export default function FAQ() {
           <p className="text-sm sm:text-base text-gray-600 max-w-2xl mx-auto px-4 leading-relaxed">
             Find answers to common questions about performances, lessons, and bookings
           </p>
-        </motion.div>
+        </m.div>
 
         {/* FAQ Accordion */}
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-100px' }}
@@ -87,10 +87,10 @@ export default function FAQ() {
               index={index}
             />
           ))}
-        </motion.div>
+        </m.div>
 
         {/* Contact CTA */}
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-100px' }}
@@ -100,7 +100,7 @@ export default function FAQ() {
           <p className="text-base sm:text-lg text-gray-700 mb-4">
             Have a question that&apos;s not answered here?
           </p>
-          <motion.a
+          <m.a
             href="#contact"
             whileHover={{ scale: 1.05, y: -2 }}
             whileTap={{ scale: 0.98 }}
@@ -108,8 +108,8 @@ export default function FAQ() {
             className="inline-block px-5 sm:px-6 py-2.5 bg-gold-600 text-white font-semibold rounded-md hover:bg-gold-700 active:bg-gold-800 transition-all duration-300 shadow-premium-md hover:shadow-premium-lg text-xs sm:text-sm touch-manipulation"
           >
             Get in Touch
-          </motion.a>
-        </motion.div>
+          </m.a>
+        </m.div>
       </div>
     </section>
   );

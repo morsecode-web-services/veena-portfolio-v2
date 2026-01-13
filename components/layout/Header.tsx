@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { debounce } from '@/lib/utils';
 import Navigation from './Navigation';
 
@@ -48,7 +48,7 @@ export default function Header() {
   }, [debouncedHandleScroll]);
 
   return (
-    <motion.header
+    <m.header
       ref={headerRef}
       initial={{ y: -100, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
@@ -61,7 +61,7 @@ export default function Header() {
     >
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-2 md:py-3">
         <div className="flex items-center justify-between">
-          <motion.div
+          <m.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
@@ -72,10 +72,10 @@ export default function Header() {
                 Aishwarya Manikarnike
               </h1>
             </a>
-          </motion.div>
+          </m.div>
           <Navigation />
         </div>
       </div>
-    </motion.header>
+    </m.header>
   );
 }

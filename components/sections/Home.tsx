@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import ImageWithFallback from '@/components/ui/ImageWithFallback';
 import VideoEmbed from '@/components/ui/VideoEmbed';
 import { loadConfig } from '@/lib/config';
@@ -59,7 +59,7 @@ export default function Home() {
     <section id="home" className="px-4 sm:px-6 md:px-8" aria-label="Home">
       <div id="home-section" className="max-w-7xl mx-auto">
         {/* Hero Title */}
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
@@ -76,7 +76,7 @@ export default function Home() {
 
           {/* Hero CTAs */}
           <div className="flex flex-row gap-2 sm:gap-4 mt-3">
-            <motion.a
+            <m.a
               href="#music"
               whileHover={{ scale: 1.05, y: -2 }}
               whileTap={{ scale: 0.98 }}
@@ -85,7 +85,7 @@ export default function Home() {
               {/* Minimalist Musical Equalizer Indicator */}
               <div className="flex items-end gap-[2px] h-2.5 w-3.5 mb-[1px]">
                 {[0, 1, 2].map((i) => (
-                  <motion.div
+                  <m.div
                     key={i}
                     animate={{
                       height: ['20%', '100%', '30%', '80%', '20%']
@@ -101,23 +101,23 @@ export default function Home() {
                 ))}
               </div>
               Watch Showreel
-            </motion.a>
-            <motion.a
+            </m.a>
+            <m.a
               href="#contact"
               whileHover={{ scale: 1.05, y: -2 }}
               whileTap={{ scale: 0.98 }}
               className="px-3 sm:px-6 py-2 sm:py-2.5 border-2 border-navy-900 text-navy-900 rounded-full text-xs sm:text-sm font-semibold hover:bg-navy-900 hover:text-white transition-all duration-300 whitespace-nowrap flex items-center justify-center"
             >
               Book Artiste
-            </motion.a>
+            </m.a>
           </div>
-        </motion.div>
+        </m.div>
 
         {/* Viral Spotlight Carousel */}
         {spotlight && (
           <div className="mb-12 sm:mb-24 md:mb-32 relative">
             <AnimatePresence mode="wait">
-              <motion.div
+              <m.div
                 key={spotlight.id}
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -177,17 +177,17 @@ export default function Home() {
                     </div>
 
                     {spotlight.ctaLink && (
-                      <motion.a
+                      <m.a
                         href={spotlight.ctaLink}
                         whileHover={{ x: 5 }}
                         className="inline-flex items-center text-gold-600 font-bold hover:text-gold-700 transition-colors text-sm sm:text-base pointer-events-auto"
                       >
                         {spotlight.ctaText || 'Learn More'} <span className="ml-2">→</span>
-                      </motion.a>
+                      </m.a>
                     )}
                   </div>
                 </div>
-              </motion.div>
+              </m.div>
             </AnimatePresence>
 
             {/* Carousel Navigation - Explicit Inline Styles for Visibility and Z-Index */}
@@ -240,7 +240,7 @@ export default function Home() {
 
         {/* Featured YouTube videos */}
         {config.home.featuredVideos.length > 0 && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
@@ -256,7 +256,7 @@ export default function Home() {
                 const videoTitle = typeof video === 'string' ? `Featured performance ${index + 1}` : video.title || `Featured performance ${index + 1}`;
 
                 return (
-                  <motion.div
+                  <m.div
                     key={index}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -286,11 +286,11 @@ export default function Home() {
 
                       </div>
                     </div>
-                  </motion.div>
+                  </m.div>
                 );
               })}
             </div>
-          </motion.div>
+          </m.div>
         )}
       </div>
     </section>

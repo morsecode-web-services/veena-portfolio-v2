@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import VideoEmbed from '@/components/ui/VideoEmbed';
 import type { MusicVideo } from '@/types';
 
@@ -96,7 +96,7 @@ export default function MusicCarousel({ title, description, videos }: MusicCarou
                 style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
             >
                 {videos.map((video, index) => (
-                    <motion.div
+                    <m.div
                         key={`${carouselId}-${index}`}
                         initial={{ opacity: 0, y: 15 }}
                         whileInView={{ opacity: 1, y: 0 }}
@@ -116,7 +116,7 @@ export default function MusicCarousel({ title, description, videos }: MusicCarou
 
                             </div>
                         </div>
-                    </motion.div>
+                    </m.div>
                 ))}
             </div>
         </div>

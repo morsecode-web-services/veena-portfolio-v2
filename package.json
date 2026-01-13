@@ -38,6 +38,7 @@
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.7.0",
     "autoprefixer": "^10.4.22",
+    "critters": "^0.0.23",
     "eslint": "^8.57.1",
     "eslint-config-next": "^14.2.33",
     "fast-check": "^4.3.0",

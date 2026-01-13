@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { loadConfig } from '@/lib/config';
 import ImageGallery from '@/components/ui/ImageGallery';
 import type { SiteConfig } from '@/types';
@@ -48,7 +48,7 @@ export default function Gallery() {
     <section id="gallery" className="px-4 sm:px-6 md:px-8" aria-label="Performance gallery">
       <div id="gallery-section" className="max-w-7xl mx-auto">
         {/* Section Header */}
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-100px' }}
@@ -61,7 +61,7 @@ export default function Gallery() {
           <p className="text-sm sm:text-base text-gray-600 max-w-2xl mx-auto px-4 leading-relaxed">
             A visual journey through memorable performances and musical moments
           </p>
-        </motion.div>
+        </m.div>
 
         {/* Gallery Grid */}
         {config.gallery?.images && config.gallery.images.length > 0 ? (

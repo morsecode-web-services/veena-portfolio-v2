@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import {
   FaYoutube,
   FaFacebook,
@@ -34,7 +34,7 @@ export default function Footer() {
       <div className="container mx-auto px-4 sm:px-6 md:px-8">
         <div className="flex flex-col items-center space-y-4 sm:space-y-5">
           {/* Social Media Icons */}
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -50,7 +50,7 @@ export default function Footer() {
               if (!Icon) return null;
 
               return (
-                <motion.a
+                <m.a
                   key={platform}
                   initial={{ opacity: 0, scale: 0.8 }}
                   whileInView={{ opacity: 1, scale: 1 }}
@@ -65,13 +65,13 @@ export default function Footer() {
                   aria-label={`Visit our ${platform.charAt(0).toUpperCase() + platform.slice(1)} page (opens in new tab)`}
                 >
                   <Icon size={20} className="sm:w-6 sm:h-6" />
-                </motion.a>
+                </m.a>
               );
             })}
-          </motion.div>
+          </m.div>
 
           {/* Copyright */}
-          <motion.div
+          <m.div
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
@@ -83,7 +83,7 @@ export default function Footer() {
               {config?.artist.name || 'Aishwarya Manikarnike'}. All rights
               reserved.
             </p>
-          </motion.div>
+          </m.div>
         </div>
       </div>
     </footer>

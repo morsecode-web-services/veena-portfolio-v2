@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { loadConfig } from '@/lib/config';
 import type { SiteConfig } from '@/types';
 import PressCard from '@/components/ui/PressCard';
@@ -48,7 +48,7 @@ export default function Press() {
     <section id="press" className="px-4 sm:px-6 md:px-8" aria-label="Press and recognition">
       <div id="press-section" className="max-w-7xl mx-auto">
         {/* Section Header */}
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-100px' }}
@@ -61,13 +61,13 @@ export default function Press() {
           <p className="text-sm sm:text-base text-gray-600 max-w-2xl mx-auto px-4 leading-relaxed">
             Featured articles and media coverage highlighting achievements and contributions to classical music
           </p>
-        </motion.div>
+        </m.div>
 
         {/* Press Articles Grid */}
         {config.press.articles.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
             {config.press.articles.map((article, index) => (
-              <motion.div
+              <m.div
                 key={index}
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -79,7 +79,7 @@ export default function Press() {
                 }}
               >
                 <PressCard article={article} />
-              </motion.div>
+              </m.div>
             ))}
           </div>
         ) : (

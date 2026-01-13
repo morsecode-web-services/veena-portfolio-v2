@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { FAQItem as FAQItemType } from '@/types';
 
 interface FAQItemProps {
@@ -31,7 +31,7 @@ export default function FAQItem({ item, isOpen, onToggle, index }: FAQItemProps)
   };
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: index * 0.1 }}
@@ -47,7 +47,7 @@ export default function FAQItem({ item, isOpen, onToggle, index }: FAQItemProps)
         <h3 className="text-base md:text-lg font-serif font-semibold text-navy-900 pr-6" id={`faq-question-${index}`}>
           {item.question}
         </h3>
-        <motion.div
+        <m.div
           animate={{ rotate: isOpen ? 180 : 0 }}
           transition={{ duration: 0.3, ease: 'easeInOut' }}
           className="flex-shrink-0"
@@ -65,10 +65,10 @@ export default function FAQItem({ item, isOpen, onToggle, index }: FAQItemProps)
               d="M19 9l-7 7-7-7"
             />
           </svg>
-        </motion.div>
+        </m.div>
       </button>
 
-      <motion.div
+      <m.div
         initial={false}
         animate={{
           height: isOpen ? height : 0,
@@ -88,7 +88,7 @@ export default function FAQItem({ item, isOpen, onToggle, index }: FAQItemProps)
             {item.answer}
           </p>
         </div>
-      </motion.div>
-    </motion.div>
+      </m.div>
+    </m.div>
   );
 }

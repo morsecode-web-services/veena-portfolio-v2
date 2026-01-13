@@ -1,13 +1,14 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { SectionErrorBoundary } from '@/components/ErrorBoundary';
 import HomeSection from '@/components/sections/Home';
 import About from '@/components/sections/About';
 import MusicalBackground from '@/components/ui/MusicalBackground';
 
 // Code-split heavy components for better performance
+// Setting ssr: false for below-the-fold sections to reduce initial main-thread work
 const Gallery = dynamic(() => import('@/components/sections/Gallery'), {
   loading: () => (
     <div className="py-10 sm:py-12 md:py-16 px-4 sm:px-6 md:px-8">
@@ -16,7 +17,7 @@ const Gallery = dynamic(() => import('@/components/sections/Gallery'), {
       </div>
     </div>
   ),
-  ssr: true,
+  ssr: false,
 });
 
 const Music = dynamic(() => import('@/components/sections/Music'), {
@@ -27,7 +28,7 @@ const Music = dynamic(() => import('@/components/sections/Music'), {
       </div>
     </div>
   ),
-  ssr: true,
+  ssr: false,
 });
 
 const Press = dynamic(() => import('@/components/sections/Press'), {
@@ -38,7 +39,7 @@ const Press = dynamic(() => import('@/components/sections/Press'), {
       </div>
     </div>
   ),
-  ssr: true,
+  ssr: false,
 });
 
 const FAQ = dynamic(() => import('@/components/sections/FAQ'), {
@@ -49,7 +50,7 @@ const FAQ = dynamic(() => import('@/components/sections/FAQ'), {
       </div>
     </div>
   ),
-  ssr: true,
+  ssr: false,
 });
 
 const Contact = dynamic(() => import('@/components/sections/Contact'), {
@@ -60,7 +61,7 @@ const Contact = dynamic(() => import('@/components/sections/Contact'), {
       </div>
     </div>
   ),
-  ssr: true,
+  ssr: false,
 });
 
 // PDF generator is heavy and rarely used - load only when needed
@@ -75,7 +76,7 @@ const PortfolioGenerator = dynamic(() => import('@/components/features/Portfolio
 
 export default function Page() {
   return (
-    <motion.main
+    <m.main
       id="main-content"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -121,14 +122,14 @@ export default function Page() {
       </div>
 
       {/* FAQ Section - Return to white for clarity */}
-      <div className="py-8 sm:py-11 md:py-14 bg-white">
+      <div className="py-8 sm:py-11 md:py-20 bg-white">
         <SectionErrorBoundary sectionName="FAQ">
           <FAQ />
         </SectionErrorBoundary>
       </div>
 
       {/* Contact Section - Elegant navy accent background */}
-      <div className="py-8 sm:py-11 md:py-14 bg-cream-50">
+      <div className="py-8 sm:py-11 md:py-20 bg-cream-50">
         <SectionErrorBoundary sectionName="Contact">
           <Contact />
         </SectionErrorBoundary>
@@ -137,7 +138,7 @@ export default function Page() {
       {/* Portfolio Download Section */}
       <div id="pdf-generator-section" className="py-8 sm:py-10 md:py-12 bg-white border-t border-gray-200">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 md:px-8">
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-100px' }}
@@ -150,8 +151,8 @@ export default function Page() {
             <p className="text-sm sm:text-base text-gray-600 max-w-2xl mx-auto px-4 leading-relaxed">
               Get a comprehensive PDF portfolio with all sections, images, and clickable links
             </p>
-          </motion.div>
-          <motion.div
+          </m.div>
+          <m.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-50px' }}
@@ -160,9 +161,10 @@ export default function Page() {
             <SectionErrorBoundary sectionName="Portfolio Generator">
               <PortfolioGenerator />
             </SectionErrorBoundary>
-          </motion.div>
+          </m.div>
         </div>
       </div>
-    </motion.main>
+    </m.main>
   );
 }
+

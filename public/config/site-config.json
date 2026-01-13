@@ -62,7 +62,7 @@
   "home": {
     "images": {
       "veena": "images/spotlight/veena.jpg",
-      "vocal": "images/spotlight/vocal.HEIC"
+      "vocal": "images/spotlight/vocal.jpg"
     },
     "featuredVideos": [
       {
@@ -131,7 +131,7 @@
       "title": "The Voice of Tradition",
       "subtitle": "Vocal Excellence & Purity",
       "description": "Beyond the strings, Aishwarya is a gifted vocalist. Her singing is marked by impeccable pitch, clarity of diction, and a profound emotional connection to the Sahitya (lyrics). She brings the same depth to her vocal concerts as she does to her instrumental performances.",
-      "imageUrl": "/images/spotlight/vocal.HEIC",
+      "imageUrl": "/images/spotlight/vocal.jpg",
       "imagePosition": "center 5%",
       "ctaText": "Listen to Vocals",
       "ctaLink": "#music",

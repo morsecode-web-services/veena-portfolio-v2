@@ -87,7 +87,7 @@ export const viewport = {
   themeColor: '#14213d',
 };
 
-import { VideoProvider } from '@/context/VideoContext';
+import { Providers } from '@/components/Providers';
 
 export default function RootLayout({
   children,
@@ -101,9 +101,11 @@ export default function RootLayout({
         <link rel="preconnect" href="https://www.youtube.com" />
         <link rel="preconnect" href="https://www.youtube-nocookie.com" />
         <link rel="preconnect" href="https://i.ytimg.com" />
+        <link rel="preconnect" href="https://img.youtube.com" />
         <link rel="dns-prefetch" href="https://www.youtube.com" />
         <link rel="dns-prefetch" href="https://www.youtube-nocookie.com" />
         <link rel="dns-prefetch" href="https://i.ytimg.com" />
+        <link rel="dns-prefetch" href="https://img.youtube.com" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
@@ -123,13 +125,11 @@ export default function RootLayout({
         >
           Skip to navigation
         </a>
-        <ErrorBoundary>
-          <VideoProvider>
-            <Header />
-            {children}
-            <Footer />
-          </VideoProvider>
-        </ErrorBoundary>
+        <Providers>
+          <Header />
+          {children}
+          <Footer />
+        </Providers>
       </body>
     </html>
   );

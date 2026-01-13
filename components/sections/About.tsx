@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { loadConfig } from '@/lib/config';
 import { useIntersectionObserver } from '@/hooks/useIntersectionObserver';
 import type { SiteConfig } from '@/types';
@@ -47,7 +47,7 @@ export default function About() {
     <section id="about" className="px-4 sm:px-6 md:px-8" aria-label="About">
       <div id="about-section" className="max-w-7xl mx-auto">
         {/* Section Title */}
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-100px' }}
@@ -58,11 +58,11 @@ export default function About() {
             About {config.artist.name.split(' ')[0]}
           </h2>
           <div className="w-20 sm:w-24 h-1 bg-gradient-gold mx-auto rounded-full"></div>
-        </motion.div>
+        </m.div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
           {/* Portrait Image Column - Sticky on Desktop */}
-          <motion.div
+          <m.div
             initial={{ opacity: 0, x: -30 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
@@ -100,7 +100,7 @@ export default function About() {
                 ))}
               </ul>
             </div>
-          </motion.div>
+          </m.div>
 
           {/* Biography Text Column */}
           <div className="lg:col-span-7 xl:col-span-8 space-y-6 sm:space-y-8 relative">
@@ -149,7 +149,7 @@ const BiographySubsection = ({ block, index }: BiographySubsectionProps) => {
 
   if (contentBlock.type === 'heading') {
     return (
-      <motion.div
+      <m.div
         ref={ref}
         initial={{ opacity: 0, x: -20 }}
         animate={hasAnimated ? { opacity: 1, x: 0 } : { opacity: 0, x: -20 }}
@@ -159,13 +159,13 @@ const BiographySubsection = ({ block, index }: BiographySubsectionProps) => {
         <h3 className="text-lg sm:text-xl font-serif font-bold text-navy-900 border-l-4 border-gold-500 pl-4">
           {contentBlock.content}
         </h3>
-      </motion.div>
+      </m.div>
     );
   }
 
   if (contentBlock.type === 'list') {
     return (
-      <motion.div
+      <m.div
         ref={ref}
         initial={{ opacity: 0, y: 20 }}
         animate={hasAnimated ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
@@ -180,13 +180,13 @@ const BiographySubsection = ({ block, index }: BiographySubsectionProps) => {
             </li>
           ))}
         </ul>
-      </motion.div>
+      </m.div>
     );
   }
 
   // Default to paragraph
   return (
-    <motion.div
+    <m.div
       ref={ref}
       initial={{ opacity: 0, y: 20 }}
       animate={hasAnimated ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
@@ -196,6 +196,6 @@ const BiographySubsection = ({ block, index }: BiographySubsectionProps) => {
       <p className="text-sm sm:text-base text-gray-700 leading-relaxed font-light text-justify">
         {contentBlock.content}
       </p>
-    </motion.div>
+    </m.div>
   );
 };
