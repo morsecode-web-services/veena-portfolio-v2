@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useId } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useVideo } from '@/context/VideoContext';
 
 interface VideoEmbedProps {
   src: string;
@@ -9,6 +10,21 @@ interface VideoEmbedProps {
   className?: string;
   retryCount?: number;
 }
+
+const extractVideoId = (url: string): string | null => {
+  // Extract YouTube video ID from various URL formats
+  const patterns = [
+    /(?:youtube\.com\/embed\/|youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/live\/|youtube\.com\/shorts\/)([^&?/]+)/,
+    /youtube\.com\/v\/([^&?/]+)/,
+  ];
+
+  for (const pattern of patterns) {
+    const match = url.match(pattern);
+    if (match) return match[1];
+  }
+  return null;
+};
+
 
 /**
  * Video embed component with error handling and retry logic
@@ -20,16 +36,59 @@ export default function VideoEmbed({
   className = '',
   retryCount = 2,
 }: VideoEmbedProps) {
+  const instanceId = useId();
+  const { activeVideoId, setActiveVideo } = useVideo();
   const [hasError, setHasError] = useState(false);
   const [attempts, setAttempts] = useState(0);
   const [isRetrying, setIsRetrying] = useState(false);
   const [videoSrc, setVideoSrc] = useState(src);
+  const [videoId, setVideoId] = useState<string | null>(null);
+  const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
+
+  const isPlaying = activeVideoId === instanceId;
+
+  const setIsPlaying = (playing: boolean) => {
+    if (playing) {
+      setActiveVideo(instanceId);
+    } else if (isPlaying) {
+      setActiveVideo(null);
+    }
+  };
 
   useEffect(() => {
-    setVideoSrc(src);
+    // Try to extract YouTube video ID and convert to embed URL
+    const extractedId = extractVideoId(src);
+    setVideoId(extractedId);
+
+    if (extractedId) {
+      // Preserve query parameters if they exist (except v=...)
+      const urlObj = new URL(src);
+      const searchParams = new URLSearchParams(urlObj.search);
+      searchParams.delete('v');
+
+      const queryStr = searchParams.toString();
+      // Add autoplay=1 to the embed URL for when it loads after click
+      const embedUrl = `https://www.youtube.com/embed/${extractedId}?autoplay=1${queryStr ? `&${queryStr}` : ''}`;
+      setVideoSrc(embedUrl);
+      // Default to hqdefault (Standard Quality) avoids 404s on older videos
+      // maxresdefault often fails, causing console noise even with fallback logic
+      setThumbnailUrl(`https://img.youtube.com/vi/${extractedId}/hqdefault.jpg`);
+    } else {
+      setVideoSrc(src);
+      setThumbnailUrl(null);
+    }
+
     setHasError(false);
     setAttempts(0);
+    setIsPlaying(false);
   }, [src]);
+
+  const handleThumbnailError = () => {
+    // Fallback to hqdefault if maxresdefault fails (404)
+    if (thumbnailUrl && thumbnailUrl.includes('maxresdefault') && videoId) {
+      setThumbnailUrl(`https://img.youtube.com/vi/${videoId}/hqdefault.jpg`);
+    }
+  };
 
   const handleRetry = () => {
     if (attempts < retryCount) {
@@ -49,22 +108,9 @@ export default function VideoEmbed({
     setIsRetrying(false);
   };
 
-  const extractVideoId = (url: string): string | null => {
-    // Extract YouTube video ID from various URL formats
-    const patterns = [
-      /(?:youtube\.com\/embed\/|youtube\.com\/watch\?v=|youtu\.be\/)([^&?/]+)/,
-      /youtube\.com\/v\/([^&?/]+)/,
-    ];
 
-    for (const pattern of patterns) {
-      const match = url.match(pattern);
-      if (match) return match[1];
-    }
-    return null;
-  };
 
   const getDirectVideoUrl = (): string => {
-    const videoId = extractVideoId(src);
     if (videoId) {
       return `https://www.youtube.com/watch?v=${videoId}`;
     }
@@ -81,7 +127,7 @@ export default function VideoEmbed({
       >
         <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
           <svg
-            className="w-16 h-16 text-gray-400 mb-4"
+            className="w-12 h-12 text-gray-400 mb-4"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -94,15 +140,15 @@ export default function VideoEmbed({
             />
           </svg>
           <p className="text-gray-700 font-medium mb-2">Video unavailable</p>
-          <p className="text-sm text-gray-500 mb-4">
+          <p className="text-xs text-gray-500 mb-4">
             Unable to load this video. Please try again or view it directly on YouTube.
           </p>
-          <div className="flex gap-3">
+          <div className="flex gap-2">
             {attempts < retryCount && (
               <button
                 onClick={handleRetry}
                 disabled={isRetrying}
-                className="px-4 py-2 bg-navy-900 text-white rounded-md hover:bg-navy-800 active:bg-navy-950 transition-all duration-300 text-sm font-medium disabled:bg-gray-400 shadow-premium"
+                className="px-3 py-1.5 bg-navy-900 text-white rounded-md hover:bg-navy-800 active:bg-navy-950 transition-all duration-300 text-xs font-medium disabled:bg-gray-400 shadow-premium"
               >
                 {isRetrying ? 'Retrying...' : 'Retry'}
               </button>
@@ -111,7 +157,7 @@ export default function VideoEmbed({
               href={getDirectVideoUrl()}
               target="_blank"
               rel="noopener noreferrer"
-              className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors text-sm font-medium"
+              className="px-3 py-1.5 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors text-xs font-medium"
             >
               Watch on YouTube
             </a>
@@ -122,28 +168,60 @@ export default function VideoEmbed({
   }
 
   return (
-    <div className={`relative w-full ${className}`} style={{ paddingBottom: '56.25%' }}>
-      <AnimatePresence>
-        {isRetrying && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="absolute inset-0 flex items-center justify-center bg-gray-900/75 rounded-lg z-10"
-          >
-            <div className="text-white text-sm">Loading video...</div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-      <iframe
-        src={videoSrc}
-        title={title}
-        className="absolute top-0 left-0 w-full h-full rounded-lg"
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-        allowFullScreen
-        loading="lazy"
-        onError={handleIframeError}
-      />
+    <div className={`relative w-full bg-gray-900 rounded-lg overflow-hidden ${className}`} style={{ paddingBottom: '56.25%' }}>
+      {!isPlaying && thumbnailUrl ? (
+        <button
+          onClick={() => setIsPlaying(true)}
+          className="absolute inset-0 w-full h-full flex items-center justify-center group cursor-pointer z-10"
+          aria-label={`Play video: ${title}`}
+        >
+          <img
+            src={thumbnailUrl}
+            alt={title}
+            className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-90 group-hover:opacity-100"
+            onError={handleThumbnailError}
+          />
+
+          {/* Removed vignette overlay for cleaner look */}
+
+          {/* Premium Play Button */}
+          <div className="absolute inset-0 flex items-center justify-center z-20">
+            <motion.div
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
+              className="w-14 h-14 sm:w-16 sm:h-16 bg-white/10 backdrop-blur-md border border-white/30 rounded-full flex items-center justify-center shadow-2xl group-hover:bg-red-600 group-hover:border-red-500 transition-all duration-300"
+            >
+              <svg className="w-6 h-6 sm:w-8 sm:h-8 text-white ml-1 drop-shadow-lg" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M8 5v14l11-7z" />
+              </svg>
+            </motion.div>
+          </div>
+        </button>
+      ) : (
+        <>
+          <AnimatePresence>
+            {isRetrying && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="absolute inset-0 flex items-center justify-center bg-gray-900/75 rounded-lg z-10"
+              >
+                <div className="text-white text-sm">Loading video...</div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+          <iframe
+            src={videoSrc}
+            title={title}
+            className="absolute top-0 left-0 w-full h-full rounded-lg"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+            loading="lazy"
+            onError={handleIframeError}
+          />
+        </>
+      )}
     </div>
   );
 }

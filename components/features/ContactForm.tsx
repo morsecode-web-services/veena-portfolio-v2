@@ -91,17 +91,17 @@ export default function ContactForm() {
 
   return (
     <div className="max-w-2xl mx-auto px-2">
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 sm:space-y-6" aria-label="Contact form">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 sm:space-y-5" aria-label="Contact form">
         {/* Name Field */}
         <div>
-          <label htmlFor="name" className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="name" className="block text-[10px] sm:text-xs font-medium text-gray-700 mb-1.5">
             Name *
           </label>
           <input
             id="name"
             type="text"
             {...register('name')}
-            className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 border rounded-lg focus:ring-2 focus:ring-navy-500 focus:border-transparent transition-all text-sm sm:text-base ${errors.name ? 'border-red-500' : 'border-gray-300'
+            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-navy-500 focus:border-transparent transition-all text-xs sm:text-sm ${errors.name ? 'border-red-500' : 'border-gray-300'
               }`}
             placeholder="Your full name"
             disabled={isSubmitting}
@@ -124,14 +124,14 @@ export default function ContactForm() {
 
         {/* Phone Field */}
         <div>
-          <label htmlFor="phone" className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="phone" className="block text-[10px] sm:text-xs font-medium text-gray-700 mb-1.5">
             Phone Number *
           </label>
           <input
             id="phone"
             type="tel"
             {...register('phone')}
-            className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 border rounded-lg focus:ring-2 focus:ring-navy-500 focus:border-transparent transition-all text-sm sm:text-base ${errors.phone ? 'border-red-500' : 'border-gray-300'
+            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-navy-500 focus:border-transparent transition-all text-xs sm:text-sm ${errors.phone ? 'border-red-500' : 'border-gray-300'
               }`}
             placeholder="+91 9876543210"
             disabled={isSubmitting}
@@ -154,14 +154,14 @@ export default function ContactForm() {
 
         {/* Email Field */}
         <div>
-          <label htmlFor="email" className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="email" className="block text-[10px] sm:text-xs font-medium text-gray-700 mb-1.5">
             Email Address *
           </label>
           <input
             id="email"
             type="email"
             {...register('email')}
-            className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 border rounded-lg focus:ring-2 focus:ring-navy-500 focus:border-transparent transition-all text-sm sm:text-base ${errors.email ? 'border-red-500' : 'border-gray-300'
+            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-navy-500 focus:border-transparent transition-all text-xs sm:text-sm ${errors.email ? 'border-red-500' : 'border-gray-300'
               }`}
             placeholder="your.email@example.com"
             disabled={isSubmitting}
@@ -184,14 +184,14 @@ export default function ContactForm() {
 
         {/* Purpose Field */}
         <div>
-          <label htmlFor="purpose" className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="purpose" className="block text-[10px] sm:text-xs font-medium text-gray-700 mb-1.5">
             Purpose of Contact *
           </label>
           <textarea
             id="purpose"
             {...register('purpose')}
-            rows={5}
-            className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 border rounded-lg focus:ring-2 focus:ring-navy-500 focus:border-transparent transition-all resize-none text-sm sm:text-base ${errors.purpose ? 'border-red-500' : 'border-gray-300'
+            rows={4}
+            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-navy-500 focus:border-transparent transition-all resize-none text-xs sm:text-sm ${errors.purpose ? 'border-red-500' : 'border-gray-300'
               }`}
             placeholder="Please describe your inquiry, booking request, or collaboration opportunity..."
             disabled={isSubmitting}
@@ -220,7 +220,7 @@ export default function ContactForm() {
             whileHover={!isSubmitting ? { scale: 1.02, y: -2 } : {}}
             whileTap={!isSubmitting ? { scale: 0.98 } : {}}
             transition={{ type: 'spring', stiffness: 400, damping: 17 }}
-            className={`w-full py-3 sm:py-4 px-5 sm:px-6 rounded-lg font-medium text-white transition-all duration-300 text-sm sm:text-base touch-manipulation shadow-premium-md ${isSubmitting
+            className={`w-full py-2.5 sm:py-3 px-4 sm:px-5 rounded-lg font-medium text-white transition-all duration-300 text-xs sm:text-sm touch-manipulation shadow-premium-md ${isSubmitting
               ? 'bg-gray-400 cursor-not-allowed'
               : 'bg-navy-900 hover:bg-navy-800 active:bg-navy-950 hover:shadow-premium-lg'
               }`}

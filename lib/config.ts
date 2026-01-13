@@ -2,16 +2,29 @@ import { z } from 'zod';
 import type { SiteConfig } from '@/types';
 
 // Zod schemas for validation
+const BioBlockSchema = z.union([
+  z.object({ type: z.literal('paragraph'), content: z.string() }),
+  z.object({ type: z.literal('heading'), content: z.string() }),
+  z.object({ type: z.literal('list'), items: z.array(z.string()) }),
+]);
+
 const MusicVideoSchema = z.object({
-  title: z.string().min(1),
+  title: z.string().min(1).optional(),
   url: z.string().url(),
+});
+
+const MusicSubcategorySchema = z.object({
+  id: z.string().min(1),
+  name: z.string().min(1),
+  description: z.string(),
+  videos: z.array(MusicVideoSchema),
 });
 
 const MusicCategorySchema = z.object({
   id: z.string().min(1),
   name: z.string().min(1),
   description: z.string(),
-  videos: z.array(MusicVideoSchema),
+  subcategories: z.array(MusicSubcategorySchema),
 });
 
 const PressArticleSchema = z.object({
@@ -37,24 +50,43 @@ const GalleryImageSchema = z.object({
   caption: z.string().optional(),
 });
 
+const SpotlightFeatureSchema = z.object({
+  title: z.string().min(1),
+  description: z.string().min(1),
+});
+
+const SpotlightSchema = z.object({
+  id: z.string().min(1),
+  title: z.string().min(1),
+  subtitle: z.string().min(1),
+  description: z.string().min(1),
+  imageUrl: z.string().min(1),
+  imagePosition: z.string().optional(),
+  features: z.array(SpotlightFeatureSchema),
+  ctaText: z.string().optional(),
+  ctaLink: z.string().optional(),
+});
+
 const SiteConfigSchema = z.object({
   artist: z.object({
     name: z.string().min(1),
     tagline: z.string().min(1),
     briefBio: z.string().min(1),
-    fullBio: z.array(z.string().min(1)),
+    fullBio: z.array(z.union([z.string().min(1), BioBlockSchema])),
   }),
   home: z.object({
     images: z.object({
       veena: z.string().min(1),
       vocal: z.string().min(1),
     }),
-    featuredVideos: z.array(z.string().url()),
+    featuredVideos: z.array(z.union([z.string().url(), MusicVideoSchema])),
   }),
+  spotlights: z.array(SpotlightSchema).optional(),
   gallery: z.object({
     images: z.array(GalleryImageSchema),
   }),
   music: z.object({
+    layout: z.enum(['grid', 'carousel']).optional(),
     categories: z.array(MusicCategorySchema),
   }),
   press: z.object({
@@ -70,6 +102,12 @@ const SiteConfigSchema = z.object({
     twitter: z.string().url().optional(),
     linkedin: z.string().url().optional(),
   }),
+  features: z.object({
+    swaraAnimation: z.object({
+      desktop: z.boolean(),
+      mobile: z.boolean(),
+    }),
+  }).optional(),
 });
 
 // Default fallback configuration
@@ -87,6 +125,7 @@ const defaultConfig: SiteConfig = {
     },
     featuredVideos: [],
   },
+  spotlights: [],
   gallery: {
     images: [],
   },
@@ -100,6 +139,12 @@ const defaultConfig: SiteConfig = {
     items: [],
   },
   socialMedia: {},
+  features: {
+    swaraAnimation: {
+      desktop: true,
+      mobile: false,
+    },
+  },
 };
 
 /**
@@ -107,11 +152,9 @@ const defaultConfig: SiteConfig = {
  * @param data - The configuration data to validate
  * @returns Validation result with success status and parsed data or error
  */
-export function validateConfig(data: unknown): {
-  success: boolean;
-  data?: SiteConfig;
-  error?: z.ZodError;
-} {
+export function validateConfig(data: unknown):
+  | { success: true; data: SiteConfig }
+  | { success: false; error: z.ZodError } {
   try {
     const parsed = SiteConfigSchema.parse(data);
     return { success: true, data: parsed as SiteConfig };
@@ -128,21 +171,27 @@ export function validateConfig(data: unknown): {
  * This handles both development and production environments
  */
 function getBasePath(): string {
-  // In production (GitHub Pages), use the hardcoded base path
-  // In development, use empty string
+  // Respect the environment variable if set (baked in at build time)
+  if (process.env.NEXT_PUBLIC_BASE_PATH) {
+    return process.env.NEXT_PUBLIC_BASE_PATH;
+  }
+
+  // Fallback runtime detection for GitHub Pages subpaths
   if (typeof window !== 'undefined') {
-    // Client-side: check if we're on GitHub Pages
     const hostname = window.location.hostname;
     const pathname = window.location.pathname;
 
-    // If we're on GitHub Pages and not at root, extract base path
-    if (hostname.includes('github.io') && pathname.startsWith('/veena-portfolio-v2')) {
-      return '/veena-portfolio-v2';
+    // Check for standard github.io subpath (usually repo name)
+    if (hostname.includes('github.io')) {
+      const pathParts = pathname.split('/').filter(Boolean);
+      if (pathParts.length > 0) {
+        // If it's a subpath deployment, the first part is usually the repo name
+        return `/${pathParts[0]}`;
+      }
     }
   }
 
-  // Default to environment variable or empty string
-  return process.env.NEXT_PUBLIC_BASE_PATH || '';
+  return '';
 }
 
 /**
@@ -155,15 +204,17 @@ export async function loadConfig(
 ): Promise<SiteConfig> {
   try {
     // Handle base path for GitHub Pages deployment
-    const basePath = getBasePath();
-    const fullPath = `${basePath}${configPath}`;
+    const basePath = getBasePath().replace(/\/$/, ''); // Remove trailing slash
+    const sanitizedConfigPath = configPath.replace(/^\//, ''); // Remove leading slash
+    const fullPath = basePath ? `${basePath}/${sanitizedConfigPath}` : `/${sanitizedConfigPath}`;
 
-    console.log(`Loading config from: ${fullPath}`);
+    // Error log for easier debugging on live site (visible in console)
+    // console.warn(`[Config] Attempting to load from: ${fullPath}`);
 
     const response = await fetch(fullPath);
 
     if (!response.ok) {
-      console.error(`Failed to load configuration from ${fullPath}: ${response.statusText}`);
+      console.error(`[Config] HTTP Error ${response.status}: ${response.statusText} at ${fullPath}`);
       return defaultConfig;
     }
 
@@ -171,13 +222,13 @@ export async function loadConfig(
     const validation = validateConfig(data);
 
     if (!validation.success) {
-      console.error('Configuration validation failed:', validation.error);
+      console.error('[Config] Validation Failed. Errors:', validation.error.format());
       return defaultConfig;
     }
 
     return validation.data!;
   } catch (error) {
-    console.error('Error loading configuration:', error);
+    console.error('[Config] Unexpected Error:', error);
     return defaultConfig;
   }
 }
@@ -203,4 +254,4 @@ export function loadConfigSync(configData: unknown): SiteConfig {
   }
 }
 
-export { SiteConfigSchema, defaultConfig };
+export { SiteConfigSchema, defaultConfig, getBasePath };

@@ -1,12 +1,14 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { debounce } from '@/lib/utils';
 import Navigation from './Navigation';
 
 export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
+
+  const headerRef = useRef<HTMLElement>(null);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const debouncedHandleScroll = useCallback(
@@ -24,21 +26,40 @@ export default function Header() {
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+
+    // Track header height for other sticky elements
+    const updateHeaderHeight = () => {
+      if (headerRef.current) {
+        const height = headerRef.current.offsetHeight;
+        document.documentElement.style.setProperty('--header-height', `${height}px`);
+      }
+    };
+
+    const resizeObserver = new ResizeObserver(updateHeaderHeight);
+    if (headerRef.current) {
+      resizeObserver.observe(headerRef.current);
+    }
+    updateHeaderHeight();
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      resizeObserver.disconnect();
+    };
   }, [debouncedHandleScroll]);
 
   return (
     <motion.header
+      ref={headerRef}
       initial={{ y: -100, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled
-        ? 'bg-white/95 backdrop-blur-md shadow-premium-md border-b border-premium'
+      className={`fixed top-0 left-0 right-0 z-[10000] transition-all duration-300 ${isScrolled
+        ? 'bg-white shadow-premium-md border-b border-premium'
         : 'bg-transparent'
         }`}
       role="banner"
     >
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-3 md:py-4">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-2 md:py-3">
         <div className="flex items-center justify-between">
           <motion.div
             initial={{ opacity: 0, x: -20 }}
@@ -46,8 +67,8 @@ export default function Header() {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="flex items-center"
           >
-            <a href="#home" className="focus:outline-none focus:ring-2 focus:ring-blue-600 rounded">
-              <h1 className="text-lg sm:text-xl md:text-2xl font-serif font-bold text-navy-900">
+            <a href="#home" className="focus:outline-none focus:ring-2 focus:ring-blue-600 rounded flex items-center">
+              <h1 className="text-base sm:text-lg md:text-xl font-serif font-bold text-navy-900 mb-0">
                 Aishwarya Manikarnike
               </h1>
             </a>

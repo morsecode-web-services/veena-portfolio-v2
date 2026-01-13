@@ -17,6 +17,9 @@
   /* Typography scale */
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
   --font-serif: 'Playfair Display', Georgia, serif;
+
+  /* Component sizing multiplier - 0.8 = 80% of original size */
+  --size-scale: 0.8;
 }
 
 * {
@@ -268,6 +271,23 @@ p {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* Viral / Cinematic Animations */
+@keyframes pulse-slow {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.6;
+  }
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
 /* Print Styles for PDF Generation */

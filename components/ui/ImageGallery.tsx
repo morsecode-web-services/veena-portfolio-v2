@@ -17,16 +17,20 @@ export default function ImageGallery({ images }: ImageGalleryProps) {
   const imageRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   const navigateNext = useCallback(() => {
-    const nextIndex = (currentIndex + 1) % images.length;
-    setCurrentIndex(nextIndex);
-    setSelectedImage(images[nextIndex]);
-  }, [currentIndex, images]);
+    setCurrentIndex((prevIndex) => {
+      const nextIndex = (prevIndex + 1) % images.length;
+      setSelectedImage(images[nextIndex]);
+      return nextIndex;
+    });
+  }, [images]);
 
   const navigatePrevious = useCallback(() => {
-    const prevIndex = (currentIndex - 1 + images.length) % images.length;
-    setCurrentIndex(prevIndex);
-    setSelectedImage(images[prevIndex]);
-  }, [currentIndex, images]);
+    setCurrentIndex((prevIndex) => {
+      const prevIndexVal = (prevIndex - 1 + images.length) % images.length;
+      setSelectedImage(images[prevIndexVal]);
+      return prevIndexVal;
+    });
+  }, [images]);
 
   // Handle keyboard navigation
   useEffect(() => {
@@ -62,6 +66,15 @@ export default function ImageGallery({ images }: ImageGalleryProps) {
     };
   }, [selectedImage]);
 
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   const openLightbox = (image: GalleryImage, index: number) => {
     setSelectedImage(image);
     setCurrentIndex(index);
@@ -82,7 +95,7 @@ export default function ImageGallery({ images }: ImageGalleryProps) {
 
   const handleTouchEnd = () => {
     if (!touchStart || !touchEnd) return;
-    
+
     const distance = touchStart - touchEnd;
     const minSwipeDistance = 50;
 
@@ -101,7 +114,7 @@ export default function ImageGallery({ images }: ImageGalleryProps) {
   return (
     <>
       {/* Gallery Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 md:gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-5">
         {images.map((image, index) => (
           <motion.div
             key={image.id}
@@ -125,10 +138,16 @@ export default function ImageGallery({ images }: ImageGalleryProps) {
               showErrorMessage={false}
               retryCount={2}
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            {/* Caption Overlay - Static on mobile, hover on desktop */}
+            <div
+              className={`absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent transition-opacity duration-300 pointer-events-none ${isMobile ? 'opacity-100' : 'opacity-0 md:group-hover:opacity-100'
+                }`}
+            >
               <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4">
                 {image.caption && (
-                  <p className="text-white text-xs sm:text-sm font-medium">{image.caption}</p>
+                  <p className="text-white text-xs sm:text-sm font-medium leading-tight">
+                    {image.caption}
+                  </p>
                 )}
               </div>
             </div>
@@ -220,9 +239,11 @@ export default function ImageGallery({ images }: ImageGalleryProps) {
 
             {/* Image container */}
             <motion.div
-              initial={{ scale: 0.9 }}
-              animate={{ scale: 1 }}
-              exit={{ scale: 0.9 }}
+              key={selectedImage.id}
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ duration: 0.3 }}
               className="relative max-w-7xl max-h-[90vh] w-full px-8 sm:px-12"
               onClick={(e) => e.stopPropagation()}
               role="dialog"
@@ -235,16 +256,16 @@ export default function ImageGallery({ images }: ImageGalleryProps) {
                   alt={selectedImage.alt}
                   width={selectedImage.width}
                   height={selectedImage.height}
-                  className="max-w-full max-h-[75vh] sm:max-h-[85vh] w-auto h-auto object-contain"
+                  className="max-w-full max-h-[65vh] sm:max-h-[75vh] w-auto h-auto object-contain"
                   priority
                   showErrorMessage={true}
                   retryCount={2}
                 />
               </div>
               {selectedImage.caption && (
-                <div className="mt-3 sm:mt-4 text-center px-4">
-                  <p className="text-white text-sm sm:text-base md:text-lg">{selectedImage.caption}</p>
-                  <p className="text-gray-400 text-xs sm:text-sm mt-1">
+                <div className="mt-2 sm:mt-3 text-center px-4">
+                  <p className="text-white text-xs sm:text-sm md:text-base">{selectedImage.caption}</p>
+                  <p className="text-gray-400 text-[10px] sm:text-xs mt-1">
                     {currentIndex + 1} / {images.length}
                   </p>
                 </div>

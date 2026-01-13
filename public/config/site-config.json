@@ -1,26 +1,156 @@
 {
   "artist": {
     "name": "Aishwarya Manikarnike",
-    "tagline": "Veena Virtuoso & Vocalist",
-    "briefBio": "Aishwarya Manikarnike is a renowned Veena musician and vocalist, carrying forward the rich tradition of Carnatic music with grace and innovation.",
+    "tagline": "A Legacy of Strings. A Future of Sound.",
+    "briefBio": "An ‘A’-Grade Veena Artist of All India Radio and Vidwat Antima rank-holding vocalist, Aishwarya Manikarnike has been immersed in artistic tradition within a musical family since childhood. She rejoices in Carnatic Music on the majestic Saraswati Veena and through sparkling vocals.",
     "fullBio": [
-      "Aishwarya Manikarnike is a distinguished Veena musician and vocalist who has captivated audiences worldwide with her soulful renditions and technical mastery.",
-      "Born into a family of musicians, she began her musical journey at a young age under the guidance of eminent gurus. Her dedication to the art form has earned her numerous accolades and recognition.",
-      "She specializes in both Veena and vocal performances, seamlessly blending traditional Carnatic music with contemporary sensibilities. Her performances are known for their emotional depth and technical precision.",
-      "Aishwarya has performed at prestigious venues across India and internationally, sharing the stage with legendary musicians and contributing to the preservation and promotion of Indian classical music."
+      {
+        "type": "heading",
+        "content": "‘A’-Grade Veena Artist (AIR) | Vidwat Antima Rank-Holding Vocalist"
+      },
+      {
+        "type": "paragraph",
+        "content": "Rejoicing in the majesty of the Saraswati Veena and the brilliance of Carnatic vocals, Aishwarya Manikarnike is a multifaceted artiste representing the third generation of a distinguished musical lineage. Nurtured from a tender age by a family of celebrated musicians, she has spent over a decade establishing herself as a prolific Vainika and Vocalist, bridging traditional roots with a contemporary professional career as a Data Engineer."
+      },
+      {
+        "type": "heading",
+        "content": "Musical Lineage & Training"
+      },
+      {
+        "type": "paragraph",
+        "content": "Aishwarya’s foundation was laid under the rigorous tutelage of her grandmother, Karnataka Kalashree Veena Vid. Smt. M. K. Saraswathi (A-Top Grade, AIR), known for her mastery of the Gayaki style. Her training has been further enriched by her mother, Vid. Smt. Rajyashree Josyer Shrikanth (A-Grade, AIR), and her uncle, violinist Vid. G. Venkatesha Josyer. Currently, she continues her vocal advanced training under the esteemed Sangeetha Kalarathna Vid. M. S. Sheela, while also receiving guidance from mridangist Gaanakala Vid. H. S. Sudhindra and exploring Hindustani vocals under Smt. Geetha Hegde."
+      },
+      {
+        "type": "heading",
+        "content": "Technical Excellence & Accolades"
+      },
+      {
+        "type": "paragraph",
+        "content": "Aishwarya is a rare talent who holds high-level credentials in both voice and instrument. A milestone in her career was her 2024 elevation to ‘A’-Grade in Veena by All India Radio, following a series of national competition wins. Her academic prowess is equally notable; she secured the 3rd Rank at the State level in the Vidwat Antima examinations. Her contributions have been recognized with several prestigious awards, including:"
+      },
+      {
+        "type": "list",
+        "items": [
+          "Best Instrumentalist – The Madras Music Academy (Spirit of Youth)",
+          "Raga Laya Prabha Award – Sri Rama Lalitha Kala Mandira, Bengaluru",
+          "SAMA Yuva Puraskara – SAMA Arts Foundation",
+          "CCRT Scholarships – Awarded by the Indian Ministry of Culture (Junior and Young Artiste schemes)"
+        ]
+      },
+      {
+        "type": "heading",
+        "content": "Performance Highlights"
+      },
+      {
+        "type": "paragraph",
+        "content": "Aishwarya’s performance career is highlighted by a historic appearance at the Rashtrapati Bhavan on Republic Day 2025, performing in the presence of the President and Prime Minister of India. As a soloist and a member of a unique Three-Generation Veena Trio alongside her mother and grandmother, she has graced premier stages including the Music Academy Chennai (HCL Series), Bangalore Gayana Samaja, Udupi Sri Krishna Temple, and TTD Nadaneerajanam."
+      },
+      {
+        "type": "paragraph",
+        "content": "A specialist in the complex Ragam-Tanam-Pallavi (RTP) form, she has won top honors at the Bangalore Gayana Samaja and SRLKM Pallavi Sammela, where she is acclaimed for presenting intricate Pallavis in challenging talas and scales."
+      },
+      {
+        "type": "heading",
+        "content": "Artistry & Vision"
+      },
+      {
+        "type": "paragraph",
+        "content": "Whether through the resonant strings of the Saraswati Veena or her \"sparkling\" vocal delivery, Aishwarya’s music is a testament to a lifetime of devotion. By balancing her career in technology with her classical pursuits, she aspires to preserve and carry forward the vast treasure of Carnatic Classical art for generations to come."
+      }
     ]
   },
   "home": {
     "images": {
-      "veena": "https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=800&h=600&fit=crop",
-      "vocal": "https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=800&h=600&fit=crop"
+      "veena": "images/spotlight/veena.jpg",
+      "vocal": "images/spotlight/vocal.HEIC"
     },
     "featuredVideos": [
-      "https://www.youtube.com/embed/jfKfPfyJRdk",
-      "https://www.youtube.com/embed/ysz5S6PUM-U",
-      "https://www.youtube.com/embed/2Vv-BfVoq4g"
+      {
+        "title": "Bolava Vitthala",
+        "url": "https://youtu.be/2GhEVYnmenE?si=Op38IJIIk-2PE0Z6"
+      },
+      {
+        "title": "The Music Academy Madras - HCL Concert 2021",
+        "url": "https://youtu.be/EcAwPX-Bq6k?si=dnkStd-DPFTL7NHd"
+      },
+      {
+        "title": "Brahmakalasha - Veena Cover",
+        "url": "https://youtu.be/rC1pyqeLQY0?si=-bGLk9AufFydiBPA"
+      }
     ]
   },
+  "spotlights": [
+    {
+      "id": "veena",
+      "title": "The Divine Instrument",
+      "subtitle": "Veena: The Sound of the Soul",
+      "description": "The Veena is not just an instrument; it is the physical manifestation of the human voice. Aishwarya's mastery over the Saraswati Veena brings out the subtlest nuances of Gamakas, creating a soundscape that is both meditative and exhilarating.",
+      "imageUrl": "/images/spotlight/veena.jpg",
+      "ctaText": "Explore Veena Recitals",
+      "ctaLink": "#music",
+      "features": [
+        {
+          "title": "Gayaki Style",
+          "description": "Playing the instrument in a way that closely mimics the vocal style of Carnatic music."
+        },
+        {
+          "title": "Resonance",
+          "description": "Harnessing the natural acoustics of the Veena to create deep, vibrating tones."
+        },
+        {
+          "title": "Intricacy",
+          "description": "Complex finger techniques that produce rapid, precise melodic patterns."
+        }
+      ]
+    },
+    {
+      "id": "trio",
+      "title": "The 3 Generation Veena Trio",
+      "subtitle": "A Musical Lineage on One Stage",
+      "description": "Witness a rare cultural phenomenon. Three generations of Veena artists performing together, weaving a tapestry of sound that spans decades of tradition and innovation.",
+      "imageUrl": "https://images.unsplash.com/photo-1511192336575-5a79af67a629?w=1200&h=800&fit=crop",
+      "ctaText": "Watch Their Performance",
+      "ctaLink": "#music",
+      "features": [
+        {
+          "title": "Tradition",
+          "description": "The wisdom of the grandmother, carrying the pure, unadulterated roots of the art form."
+        },
+        {
+          "title": "Mastery",
+          "description": "The experience of the mother, bridging the past and present with technical brilliance."
+        },
+        {
+          "title": "Innovation",
+          "description": "The energy of Aishwarya, pushing the boundaries and carrying the legacy forward."
+        }
+      ]
+    },
+    {
+      "id": "vocal",
+      "title": "The Voice of Tradition",
+      "subtitle": "Vocal Excellence & Purity",
+      "description": "Beyond the strings, Aishwarya is a gifted vocalist. Her singing is marked by impeccable pitch, clarity of diction, and a profound emotional connection to the Sahitya (lyrics). She brings the same depth to her vocal concerts as she does to her instrumental performances.",
+      "imageUrl": "/images/spotlight/vocal.HEIC",
+      "imagePosition": "center 5%",
+      "ctaText": "Listen to Vocals",
+      "ctaLink": "#music",
+      "features": [
+        {
+          "title": "Bhav",
+          "description": "Expressing the emotional essence of the Raga and the composition."
+        },
+        {
+          "title": "Control",
+          "description": "A voice that moves effortlessly across octaves with stability and grace."
+        },
+        {
+          "title": "Repertoire",
+          "description": "A vast collection of compositions ranging from classical kritis to devotional bhajans."
+        }
+      ]
+    }
+  ],
   "gallery": {
     "images": [
       {
@@ -74,56 +204,158 @@
     ]
   },
   "music": {
+    "layout": "carousel",
     "categories": [
       {
         "id": "veena",
         "name": "Veena",
         "description": "Classical Veena performances showcasing the depth and beauty of this ancient instrument",
-        "videos": [
+        "subcategories": [
           {
-            "title": "Veena Recital - Raga Kalyani",
-            "url": "https://www.youtube.com/embed/jfKfPfyJRdk"
+            "id": "veena-concerts",
+            "name": "Concerts",
+            "description": "Full-length Veena concert performances",
+            "videos": [
+              {
+                "title": "The Music Academy Madras - HCL Concert 2021",
+                "url": "https://youtu.be/EcAwPX-Bq6k?si=dnkStd-DPFTL7NHd"
+              },
+              {
+                "title": "The Music Academy Madras 2022",
+                "url": "https://youtu.be/SxzRstP73vs?si=Y9ygvhKDwXC8YwkW"
+              },
+              {
+                "title": "Prayog Navaratri Utsav",
+                "url": "https://www.youtube.com/live/6em00nkgsXU?si=SlJsqxvPcug-pSj2&t=10"
+              },
+              {
+                "title": "Carnatic Veena Recital",
+                "url": "https://youtu.be/eppYSVRPV9E?si=0RwJureP7ArYhqOl&t=3423"
+              }
+            ]
           },
           {
-            "title": "Veena Performance - Traditional Composition",
-            "url": "https://www.youtube.com/embed/ysz5S6PUM-U"
+            "id": "veena-rtp",
+            "name": "RTP",
+            "description": "Ragam Tanam Pallavi - the pinnacle of Carnatic music improvisation on Veena",
+            "videos": [
+              {
+                "title": "Dual Rhythm (Dwinade) RTP in Raga Lathangi",
+                "url": "https://youtu.be/ccUiMyWMsPc?si=PP0Ka7xyEWDGaF-8"
+              },
+              {
+                "title": "Dwiraga Dwinade Pallavi - CarnaticIQ Contest",
+                "url": "https://youtu.be/p8ma77z3dTs?si=HdZzzy0GT3ppcWQc"
+              },
+              {
+                "title": "RTP feature concert - Raga Latangi, Chaturashra Jhampe tala",
+                "url": "https://youtu.be/3uVEau1Icvc?si=1IQRWIhcJpttc2mO"
+              }
+            ]
+          },
+          {
+            "id": "veena-collaborations",
+            "name": "Collaborations",
+            "description": "Veena collaborations with other artists",
+            "videos": [
+              {
+                "title": "Veena Duet | Rajyashree Josyer Shrikanth & Aishwarya Manikarnike",
+                "url": "https://youtu.be/35WEBfDVSUo?si=q0uVYIi6FMAuwO5F"
+              },
+              {
+                "title": "3 Generation Veena Trio - Sringaaralahari",
+                "url": "https://youtu.be/P-hAFdCtLqs?si=TaqHRrSHBS2UvtgC"
+              },
+              {
+                "title": "Yugala Raaga Nilaye",
+                "url": "https://youtu.be/ehknsXo5pEg?si=nj4owbvL0eev3NfO"
+              }
+            ]
+          },
+          {
+            "id": "veena-compositions",
+            "name": "Compositions",
+            "description": "Individual Veena compositions and pieces",
+            "videos": [
+              {
+                "title": "Sangeetha Devathe Saraswathi",
+                "url": "https://www.youtube.com/watch?v=v1O4Ot7Ytyo&list=PL7QLQI--tZlywhq6Ae48KWRfgSdylFSp3"
+              },
+              {
+                "title": "Gajavadana | Sriranjani | Papanasam Sivan",
+                "url": "https://www.youtube.com/watch?v=uIkuDVHl83A&list=PL7QLQI--tZlyUpEpaXK1fmm-uc7zNbu4b"
+              },
+              {
+                "title": "Brahmakalasha - Veena Cover",
+                "url": "https://youtu.be/rC1pyqeLQY0?si=-bGLk9AufFydiBPA"
+              }
+            ]
           }
         ]
       },
       {
         "id": "vocal",
         "name": "Vocal",
-        "description": "Soulful vocal renditions of classical compositions",
-        "videos": [
+        "description": "Soulful vocal renditions of classical manifestations",
+        "subcategories": [
           {
-            "title": "Vocal Performance - Carnatic Classical",
-            "url": "https://www.youtube.com/embed/2Vv-BfVoq4g"
+            "id": "vocal-concerts",
+            "name": "Concerts",
+            "description": "Full-length vocal concert performances",
+            "videos": [
+              {
+                "title": "Prayog Navaratri Utsava",
+                "url": "https://www.youtube.com/live/pi32w-os-Ug?si=5QbRHnjaLPECz4iU&t=67"
+              },
+              {
+                "title": "Sankara TV - 2015",
+                "url": "https://youtu.be/1jrEWp_szkg?si=9rFmUmHKy42yh4Mu&t=333"
+              }
+            ]
           },
           {
-            "title": "Vocal Recital - Devotional Songs",
-            "url": "https://www.youtube.com/embed/jfKfPfyJRdk"
-          }
-        ]
-      },
-      {
-        "id": "trio",
-        "name": "3 Generation Veena Trio",
-        "description": "Unique performances featuring three generations of Veena artists",
-        "videos": [
+            "id": "vocal-rtp",
+            "name": "RTP",
+            "description": "Ragam Tanam Pallavi - vocal improvisation showcasing mastery",
+            "videos": []
+          },
           {
-            "title": "Three Generation Veena Trio Performance",
-            "url": "https://www.youtube.com/embed/ysz5S6PUM-U"
-          }
-        ]
-      },
-      {
-        "id": "rtp",
-        "name": "RTP",
-        "description": "Ragam Tanam Pallavi - the pinnacle of Carnatic music improvisation",
-        "videos": [
+            "id": "vocal-collaborations",
+            "name": "Collaborations",
+            "description": "Vocal collaborations with other artists",
+            "videos": [
+              {
+                "title": "Jagadodharana",
+                "url": "https://youtube.com/shorts/HVMPjH1qZRM?si=pISOVBPZ-iJnufQ0"
+              },
+              {
+                "title": "Jayatu Sada Bharati - A Tribute to Mother India",
+                "url": "https://youtu.be/8OeXgPNt4RA?si=QUJfhEZ9rd84y34y"
+              },
+              {
+                "title": "Jhulat Radha (Bhajan)",
+                "url": "https://youtu.be/0XUrxel03zs?si=UeyGnEpTLCAJn-8W"
+              }
+            ]
+          },
           {
-            "title": "Ragam Tanam Pallavi - Advanced Improvisation",
-            "url": "https://www.youtube.com/embed/2Vv-BfVoq4g"
+            "id": "vocal-compositions",
+            "name": "Compositions",
+            "description": "Individual vocal compositions and pieces",
+            "videos": [
+              {
+                "title": "Pranamamyaham Sri Prananatham",
+                "url": "https://youtu.be/9iT780Aahj0?si=hWm-v-T3742Aiuey"
+              },
+              {
+                "title": "Bolava Vitthala",
+                "url": "https://youtu.be/2GhEVYnmenE?si=RO40gF0olkb6P-nR"
+              },
+              {
+                "title": "Alaipayuthe Kanna",
+                "url": "https://youtu.be/RV58JMtqxaw?si=pi9nSszkLPhyVKsk"
+              }
+            ]
           }
         ]
       }
@@ -182,8 +414,12 @@
   },
   "socialMedia": {
     "youtube": "https://www.youtube.com/@aishwaryamanikarnike",
-    "facebook": "https://www.facebook.com/aishwaryamanikarnike",
-    "instagram": "https://www.instagram.com/aishwaryamanikarnike",
-    "twitter": "https://twitter.com/aishwaryaveena"
+    "instagram": "https://www.instagram.com/aishwaryamanikarnike"
+  },
+  "features": {
+    "swaraAnimation": {
+      "desktop": true,
+      "mobile": false
+    }
   }
 }

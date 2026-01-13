@@ -42,9 +42,9 @@ export default function FAQItem({ item, isOpen, onToggle, index }: FAQItemProps)
         onKeyDown={handleKeyDown}
         aria-expanded={isOpen}
         aria-controls={`faq-answer-${index}`}
-        className="w-full text-left py-6 px-6 flex items-center justify-between hover:bg-cream-50 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-inset"
+        className="w-full text-left py-4 px-5 flex items-center justify-between hover:bg-cream-50 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gold-600 focus:ring-inset"
       >
-        <h3 className="text-lg md:text-xl font-serif font-semibold text-navy-900 pr-8" id={`faq-question-${index}`}>
+        <h3 className="text-base md:text-lg font-serif font-semibold text-navy-900 pr-6" id={`faq-question-${index}`}>
           {item.question}
         </h3>
         <motion.div
@@ -53,7 +53,7 @@ export default function FAQItem({ item, isOpen, onToggle, index }: FAQItemProps)
           className="flex-shrink-0"
         >
           <svg
-            className="w-6 h-6 text-gold-600"
+            className="w-5 h-5 text-gold-600"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -83,8 +83,8 @@ export default function FAQItem({ item, isOpen, onToggle, index }: FAQItemProps)
         role="region"
         aria-labelledby={`faq-question-${index}`}
       >
-        <div ref={contentRef} className="px-6 pb-6">
-          <p className="text-base md:text-lg text-gray-700 leading-relaxed">
+        <div ref={contentRef} className="px-5 pb-5">
+          <p className="text-sm md:text-base text-gray-700 leading-relaxed font-light">
             {item.answer}
           </p>
         </div>

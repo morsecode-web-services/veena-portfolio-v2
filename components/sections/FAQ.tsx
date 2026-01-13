@@ -41,7 +41,7 @@ export default function FAQ() {
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center justify-center min-h-[400px]">
             <div className="text-center">
-              <div className="inline-block w-8 h-8 border-3 border-gray-300 border-t-blue-600 rounded-full animate-spin mb-3" />
+              <div className="inline-block w-8 h-8 border-3 border-gray-300 border-t-gold-600 rounded-full animate-spin mb-3" />
               <p className="text-gray-600">Loading FAQ...</p>
             </div>
           </div>
@@ -59,13 +59,13 @@ export default function FAQ() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-100px' }}
           transition={{ duration: 0.6 }}
-          className="text-center mb-8 sm:mb-10 md:mb-12"
+          className="text-center mb-6 sm:mb-8 md:mb-10"
         >
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif font-bold text-navy-900 mb-3 md:mb-4 px-4">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-serif font-bold text-navy-900 mb-2 md:mb-3 px-4">
             Frequently Asked Questions
           </h2>
-          <div className="w-24 sm:w-28 h-1 bg-gradient-gold mx-auto mb-4 sm:mb-5 md:mb-6 rounded-full"></div>
-          <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto px-4">
+          <div className="w-20 sm:w-24 h-1 bg-gradient-gold mx-auto mb-3 sm:mb-4 md:mb-5 rounded-full"></div>
+          <p className="text-sm sm:text-base text-gray-600 max-w-2xl mx-auto px-4 leading-relaxed">
             Find answers to common questions about performances, lessons, and bookings
           </p>
         </motion.div>
@@ -105,7 +105,7 @@ export default function FAQ() {
             whileHover={{ scale: 1.05, y: -2 }}
             whileTap={{ scale: 0.98 }}
             transition={{ type: 'spring', stiffness: 400, damping: 17 }}
-            className="inline-block px-6 sm:px-8 py-3 bg-gold-600 text-white font-semibold rounded-md hover:bg-gold-700 active:bg-gold-800 transition-all duration-300 shadow-premium-md hover:shadow-premium-lg text-sm sm:text-base touch-manipulation"
+            className="inline-block px-5 sm:px-6 py-2.5 bg-gold-600 text-white font-semibold rounded-md hover:bg-gold-700 active:bg-gold-800 transition-all duration-300 shadow-premium-md hover:shadow-premium-lg text-xs sm:text-sm touch-manipulation"
           >
             Get in Touch
           </motion.a>
