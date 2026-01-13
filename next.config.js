@@ -36,6 +36,13 @@ const nextConfig = {
     optimizeCss: true,
     optimizePackageImports: ['framer-motion', 'react-icons'],
   },
+
+  // Tree-shake react-icons to reduce bundle size
+  modularizeImports: {
+    'react-icons': {
+      transform: 'react-icons/{{member}}',
+    },
+  },
 }
 
 module.exports = nextConfig

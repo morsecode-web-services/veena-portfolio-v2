@@ -74,6 +74,9 @@ export default function About() {
               <img
                 src={config.home.images.veena}
                 alt={config.artist.name}
+                width="800"
+                height="1000"
+                loading="eager"
                 className="w-full h-full object-cover grayscale-[20%] group-hover:grayscale-0 transition-all duration-700 transform group-hover:scale-105"
               />
               {/* Decorative Frame */}
@@ -82,10 +85,10 @@ export default function About() {
 
             {/* Quick Facts Card - Desktop Only */}
             <div className="mt-8 p-6 bg-navy-50 rounded-2xl border border-navy-100 hidden lg:block shadow-sm">
-              <h4 className="text-sm font-serif font-bold text-navy-900 mb-4 uppercase tracking-wider flex items-center gap-2">
+              <h3 className="text-sm font-serif font-bold text-navy-900 mb-4 uppercase tracking-wider flex items-center gap-2">
                 <span className="w-8 h-px bg-gold-500"></span>
                 Professional Highlights
-              </h4>
+              </h3>
               <ul className="space-y-4">
                 {[
                   { label: "Grade", value: "‘A’-Grade Veena Artist (AIR)" },

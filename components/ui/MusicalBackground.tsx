@@ -105,7 +105,7 @@ export default function MusicalBackground() {
                         scale: 0.8
                     }}
                     animate={{
-                        opacity: [0, 0.5, 0.5, 0], // Saturated gold visibility
+                        opacity: [0, 0.7, 0.7, 0], // Increased for better contrast
                         y: [0, -80],
                         scale: [0.8, 1.15],
                     }}
@@ -120,7 +120,8 @@ export default function MusicalBackground() {
                         fontSize: swara.size,
                         left: `${swara.x}%`,
                         top: `${swara.y}%`,
-                        transform: 'translateZ(0)' // Force GPU layer promotion
+                        transform: 'translateZ(0)', // Force GPU layer promotion
+                        textShadow: '0 1px 2px rgba(0,0,0,0.1)' // Subtle shadow for better readability
                     }}
                 >
                     {swara.text}
