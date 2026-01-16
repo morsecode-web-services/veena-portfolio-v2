@@ -1,54 +1,21 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { m } from 'framer-motion';
-import { loadConfig } from '@/lib/config';
 import FAQItem from '@/components/ui/FAQItem';
 import type { SiteConfig } from '@/types';
 
-export default function FAQ() {
-  const [config, setConfig] = useState<SiteConfig | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [openIndex, setOpenIndex] = useState<number | null>(null);
+interface FAQProps {
+  config: SiteConfig;
+}
 
-  useEffect(() => {
-    loadConfig()
-      .then(setConfig)
-      .catch((err) => {
-        console.error('Failed to load config:', err);
-        setError(err.message);
-      });
-  }, []);
+export default function FAQ({ config }: FAQProps) {
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   const handleToggle = (index: number) => {
     // Single-expansion mode: close if already open, otherwise open the clicked item
     setOpenIndex(openIndex === index ? null : index);
   };
-
-  if (error) {
-    return (
-      <section id="faq" className="py-16 px-4 md:px-8">
-        <div className="max-w-7xl mx-auto">
-          <p className="text-red-600">Error loading FAQ: {error}</p>
-        </div>
-      </section>
-    );
-  }
-
-  if (!config) {
-    return (
-      <section id="faq" className="py-16 px-4 md:px-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex items-center justify-center min-h-[400px]">
-            <div className="text-center">
-              <div className="inline-block w-8 h-8 border-3 border-gray-300 border-t-gold-600 rounded-full animate-spin mb-3" />
-              <p className="text-gray-600">Loading FAQ...</p>
-            </div>
-          </div>
-        </div>
-      </section>
-    );
-  }
 
   return (
     <section id="faq" className="px-4 sm:px-6 md:px-8" aria-label="Frequently asked questions">

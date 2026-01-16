@@ -1,25 +1,20 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { m, AnimatePresence } from 'framer-motion';
 import ImageWithFallback from '@/components/ui/ImageWithFallback';
 import VideoEmbed from '@/components/ui/VideoEmbed';
-import { loadConfig } from '@/lib/config';
 import type { SiteConfig } from '@/types';
 
-export default function Home() {
-  const [config, setConfig] = useState<SiteConfig | null>(null);
-  const [error, setError] = useState<string | null>(null);
+interface HomeProps {
+  config: SiteConfig;
+}
+
+export default function Home({ config }: HomeProps) {
   const [currentSpotlight, setCurrentSpotlight] = useState(0);
 
-  useEffect(() => {
-    loadConfig()
-      .then(setConfig)
-      .catch((err) => {
-        console.error('Failed to load config:', err);
-        setError(err.message);
-      });
-  }, []);
+  // Guard clause just in case, though parent should handle validity
+  if (!config) return null;
 
   const nextSpotlight = () => {
     if (!config?.spotlights) return;
@@ -31,38 +26,13 @@ export default function Home() {
     setCurrentSpotlight((prev) => (prev - 1 + config.spotlights!.length) % config.spotlights!.length);
   };
 
-  if (error) {
-    return (
-      <section id="home" className="py-16 px-4 md:px-8">
-        <div className="max-w-7xl mx-auto">
-          <p className="text-red-600">Error loading configuration: {error}</p>
-        </div>
-      </section>
-    );
-  }
-
-  if (!config) {
-    return (
-      <section id="home" className="py-16 px-4 md:px-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex items-center justify-center">
-            <div className="animate-pulse text-gray-600">Loading...</div>
-          </div>
-        </div>
-      </section>
-    );
-  }
-
   const spotlight = config.spotlights?.[currentSpotlight];
 
   return (
     <section id="home" className="px-4 sm:px-6 md:px-8" aria-label="Home">
       <div id="home-section" className="max-w-7xl mx-auto">
-        {/* Hero Title */}
-        <m.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
+        {/* Hero Title - STATIC RENDER for LCP Optimization (Removed m.div wrapper) */}
+        <div
           className="flex flex-col items-center justify-center mb-6 sm:mb-8 md:mb-10"
         >
           <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-serif font-bold text-navy-900 mb-2 md:mb-3 text-center">
@@ -111,12 +81,13 @@ export default function Home() {
               Book Artiste
             </m.a>
           </div>
-        </m.div>
+        </div>
 
         {/* Viral Spotlight Carousel */}
         {spotlight && (
           <div className="mb-12 sm:mb-24 md:mb-32 relative">
-            <AnimatePresence mode="wait">
+            {/* initial={false} to prevent entry animation on first mount (LCP optimization) */}
+            <AnimatePresence mode="wait" initial={false}>
               <m.div
                 key={spotlight.id}
                 initial={{ opacity: 0, x: 20 }}
@@ -283,8 +254,6 @@ export default function Home() {
                         <h3 className="text-sm sm:text-base font-serif font-bold text-navy-900 group-hover/card:text-gold-600 transition-colors duration-300 leading-snug">
                           {videoTitle}
                         </h3>
-
-
                       </div>
                     </div>
                   </m.div>

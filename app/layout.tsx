@@ -88,6 +88,12 @@ export const viewport = {
 };
 
 import { Providers } from '@/components/Providers';
+import siteConfig from '@/public/config/site-config.json';
+import { validateConfig } from '@/lib/config';
+
+// Validate config at build time (optional in layout as it runs on server)
+const configValidation = validateConfig(siteConfig);
+const config = configValidation.success ? configValidation.data : undefined;
 
 export default function RootLayout({
   children,
@@ -128,7 +134,7 @@ export default function RootLayout({
         <Providers>
           <Header />
           {children}
-          <Footer />
+          <Footer config={config} />
         </Providers>
       </body>
     </html>

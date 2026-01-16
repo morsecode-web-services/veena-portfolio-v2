@@ -2,7 +2,6 @@
 
 import { m } from 'framer-motion';
 import { useEffect, useState } from 'react';
-import { loadConfig } from '@/lib/config';
 import type { SiteConfig } from '@/types';
 
 /**
@@ -28,20 +27,22 @@ interface FloatingSwara {
     delay: number;
 }
 
+interface MusicalBackgroundProps {
+    config?: SiteConfig;
+}
+
 /**
  * MusicalBackground component
  * Renders subtle floating musical swaras restricted to gutters
  * Configurable via site-config.json feature flags
  */
-export default function MusicalBackground() {
+export default function MusicalBackground({ config }: MusicalBackgroundProps) {
     const [mounted, setMounted] = useState(false);
-    const [config, setConfig] = useState<SiteConfig | null>(null);
     const [swaraElements, setSwaraElements] = useState<FloatingSwara[]>([]);
     const [isMobile, setIsMobile] = useState(false);
 
     useEffect(() => {
         setMounted(true);
-        loadConfig().then(setConfig);
 
         // Simple mobile detection
         const checkMobile = () => setIsMobile(window.innerWidth < 1024);

@@ -1,48 +1,15 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { m } from 'framer-motion';
-import { loadConfig } from '@/lib/config';
 import type { SiteConfig } from '@/types';
 import PressCard from '@/components/ui/PressCard';
 
-export default function Press() {
-  const [config, setConfig] = useState<SiteConfig | null>(null);
-  const [error, setError] = useState<string | null>(null);
+interface PressProps {
+  config: SiteConfig;
+}
 
-  useEffect(() => {
-    loadConfig()
-      .then(setConfig)
-      .catch((err) => {
-        console.error('Failed to load config:', err);
-        setError(err.message);
-      });
-  }, []);
-
-  if (error) {
-    return (
-      <section id="press" className="px-4 md:px-8">
-        <div className="max-w-7xl mx-auto">
-          <p className="text-red-600">Error loading press articles: {error}</p>
-        </div>
-      </section>
-    );
-  }
-
-  if (!config) {
-    return (
-      <section id="press" className="px-4 md:px-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex items-center justify-center min-h-[400px]">
-            <div className="text-center">
-              <div className="inline-block w-8 h-8 border-3 border-gray-300 border-t-blue-600 rounded-full animate-spin mb-3" />
-              <p className="text-gray-600">Loading press articles...</p>
-            </div>
-          </div>
-        </div>
-      </section>
-    );
-  }
+export default function Press({ config }: PressProps) {
+  // Config passed as prop
 
   return (
     <section id="press" className="px-4 sm:px-6 md:px-8" aria-label="Press and recognition">

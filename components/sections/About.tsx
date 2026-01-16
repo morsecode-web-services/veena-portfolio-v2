@@ -1,48 +1,17 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { m } from 'framer-motion';
 import Image from 'next/image';
-import { loadConfig } from '@/lib/config';
 import { useIntersectionObserver } from '@/hooks/useIntersectionObserver';
 import type { SiteConfig } from '@/types';
 
-export default function About() {
-  const [config, setConfig] = useState<SiteConfig | null>(null);
-  const [error, setError] = useState<string | null>(null);
+interface AboutProps {
+  config: SiteConfig;
+}
 
-
-
-  useEffect(() => {
-    loadConfig()
-      .then(setConfig)
-      .catch((err) => {
-        console.error('Failed to load config:', err);
-        setError(err.message);
-      });
-  }, []);
-
-  if (error) {
-    return (
-      <section id="about" className="py-16 px-4 md:px-8">
-        <div className="max-w-7xl mx-auto">
-          <p className="text-red-600">Error loading configuration: {error}</p>
-        </div>
-      </section>
-    );
-  }
-
-  if (!config) {
-    return (
-      <section id="about" className="py-16 px-4 md:px-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex items-center justify-center">
-            <div className="animate-pulse text-gray-600">Loading...</div>
-          </div>
-        </div>
-      </section>
-    );
-  }
+export default function About({ config }: AboutProps) {
+  // Config passed as prop, no loading state needed
 
   return (
     <section id="about" className="px-4 sm:px-6 md:px-8" aria-label="About">

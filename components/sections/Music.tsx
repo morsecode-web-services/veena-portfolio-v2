@@ -1,57 +1,19 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { m, AnimatePresence } from 'framer-motion';
-import { loadConfig } from '@/lib/config';
 import type { SiteConfig } from '@/types';
 import MusicCarousel from '@/components/features/MusicCarousel';
 
-export default function Music() {
-  const [config, setConfig] = useState<SiteConfig | null>(null);
-  const [error, setError] = useState<string | null>(null);
+interface MusicProps {
+  config: SiteConfig;
+}
 
+export default function Music({ config }: MusicProps) {
   // State for main category selection (Veena or Vocal)
-  const [selectedMainCategoryId, setSelectedMainCategoryId] = useState<string>('');
-
-  useEffect(() => {
-    loadConfig()
-      .then((loadedConfig) => {
-        setConfig(loadedConfig);
-        // Default Initialization: Select first main category
-        if (loadedConfig.music.categories.length > 0) {
-          setSelectedMainCategoryId(loadedConfig.music.categories[0].id);
-        }
-      })
-      .catch((err) => {
-        console.error('Failed to load config:', err);
-        setError(err.message);
-      });
-  }, []);
-
-  if (error) {
-    return (
-      <section id="music" className="py-20 px-4 md:px-8 bg-white">
-        <div className="max-w-7xl mx-auto">
-          <p className="text-red-600">Error loading configuration: {error}</p>
-        </div>
-      </section>
-    );
-  }
-
-  if (!config) {
-    return (
-      <section id="music" className="py-20 px-4 md:px-8 bg-white">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex items-center justify-center min-h-[400px]">
-            <div className="text-center">
-              <div className="inline-block w-8 h-8 border-3 border-gray-300 border-t-gold-600 rounded-full animate-spin mb-3" />
-              <p className="text-gray-600">Loading music...</p>
-            </div>
-          </div>
-        </div>
-      </section>
-    );
-  }
+  const [selectedMainCategoryId, setSelectedMainCategoryId] = useState<string>(
+    config.music.categories.length > 0 ? config.music.categories[0].id : ''
+  );
 
   const selectedMainCategory = config.music.categories.find(c => c.id === selectedMainCategoryId);
 

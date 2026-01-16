@@ -1,6 +1,5 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { m } from 'framer-motion';
 import {
   FaYoutube,
@@ -9,7 +8,6 @@ import {
   FaTwitter,
   FaLinkedin,
 } from 'react-icons/fa';
-import { loadConfig } from '@/lib/config';
 import type { SiteConfig } from '@/types';
 
 const socialMediaIcons = {
@@ -20,13 +18,11 @@ const socialMediaIcons = {
   linkedin: FaLinkedin,
 };
 
-export default function Footer() {
-  const [config, setConfig] = useState<SiteConfig | null>(null);
+interface FooterProps {
+  config?: SiteConfig;
+}
 
-  useEffect(() => {
-    loadConfig().then(setConfig);
-  }, []);
-
+export default function Footer({ config }: FooterProps) {
   const socialMedia = config?.socialMedia || {};
 
   return (
