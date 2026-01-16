@@ -105,7 +105,7 @@ export default function FAQ() {
             whileHover={{ scale: 1.05, y: -2 }}
             whileTap={{ scale: 0.98 }}
             transition={{ type: 'spring', stiffness: 400, damping: 17 }}
-            className="inline-block px-5 sm:px-6 py-2.5 bg-gold-600 text-white font-semibold rounded-md hover:bg-gold-700 active:bg-gold-800 transition-all duration-300 shadow-premium-md hover:shadow-premium-lg text-xs sm:text-sm touch-manipulation"
+            className="inline-flex items-center justify-center px-5 sm:px-6 py-2.5 bg-gold-600 text-white font-semibold rounded-md hover:bg-gold-700 active:bg-gold-800 transition-all duration-300 shadow-premium-md hover:shadow-premium-lg text-xs sm:text-sm touch-manipulation"
           >
             Get in Touch
           </m.a>

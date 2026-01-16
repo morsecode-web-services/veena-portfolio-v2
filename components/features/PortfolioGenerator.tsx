@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { FaDownload, FaFilePdf, FaSpinner } from 'react-icons/fa';
 import { generatePDF } from '@/lib/pdf-generator';
 
@@ -36,7 +36,7 @@ export default function PortfolioGenerator() {
 
   return (
     <div className="flex flex-col items-center gap-3 sm:gap-4 px-4">
-      <motion.button
+      <m.button
         onClick={handleGeneratePDF}
         disabled={isGenerating}
         whileHover={!isGenerating ? { scale: 1.05, y: -2 } : {}}
@@ -67,12 +67,12 @@ export default function PortfolioGenerator() {
             <FaFilePdf className="text-lg sm:text-xl" />
           </>
         )}
-      </motion.button>
+      </m.button>
 
       {/* Progress indicator */}
       <AnimatePresence>
         {isGenerating && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
@@ -84,7 +84,7 @@ export default function PortfolioGenerator() {
               <span>{progress}%</span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2 sm:h-2.5 overflow-hidden">
-              <motion.div
+              <m.div
                 initial={{ width: 0 }}
                 animate={{ width: `${progress}%` }}
                 transition={{ duration: 0.3, ease: 'easeOut' }}
@@ -94,14 +94,14 @@ export default function PortfolioGenerator() {
             <p className="text-xs text-gray-500 mt-2 text-center">
               This may take a few moments depending on content size
             </p>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
 
       {/* Error message */}
       <AnimatePresence>
         {error && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
@@ -114,7 +114,7 @@ export default function PortfolioGenerator() {
             <p className="text-xs text-red-600 mt-2">
               Please try again or contact support if the issue persists.
             </p>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
 

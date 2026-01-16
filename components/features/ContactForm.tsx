@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { sendContactEmail } from '@/lib/email-service';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 
 // Zod validation schema
 const contactFormSchema = z.object({
@@ -110,7 +110,7 @@ export default function ContactForm() {
             aria-describedby={errors.name ? 'name-error' : undefined}
           />
           {errors.name && (
-            <motion.p
+            <m.p
               id="name-error"
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -118,7 +118,7 @@ export default function ContactForm() {
               role="alert"
             >
               {errors.name.message}
-            </motion.p>
+            </m.p>
           )}
         </div>
 
@@ -140,7 +140,7 @@ export default function ContactForm() {
             aria-describedby={errors.phone ? 'phone-error' : undefined}
           />
           {errors.phone && (
-            <motion.p
+            <m.p
               id="phone-error"
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -148,7 +148,7 @@ export default function ContactForm() {
               role="alert"
             >
               {errors.phone.message}
-            </motion.p>
+            </m.p>
           )}
         </div>
 
@@ -170,7 +170,7 @@ export default function ContactForm() {
             aria-describedby={errors.email ? 'email-error' : undefined}
           />
           {errors.email && (
-            <motion.p
+            <m.p
               id="email-error"
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -178,7 +178,7 @@ export default function ContactForm() {
               role="alert"
             >
               {errors.email.message}
-            </motion.p>
+            </m.p>
           )}
         </div>
 
@@ -200,7 +200,7 @@ export default function ContactForm() {
             aria-describedby={errors.purpose ? 'purpose-error' : undefined}
           />
           {errors.purpose && (
-            <motion.p
+            <m.p
               id="purpose-error"
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -208,13 +208,13 @@ export default function ContactForm() {
               role="alert"
             >
               {errors.purpose.message}
-            </motion.p>
+            </m.p>
           )}
         </div>
 
         {/* Submit Button */}
         <div>
-          <motion.button
+          <m.button
             type="submit"
             disabled={isSubmitting}
             whileHover={!isSubmitting ? { scale: 1.02, y: -2 } : {}}
@@ -253,12 +253,12 @@ export default function ContactForm() {
             ) : (
               'Send Message'
             )}
-          </motion.button>
+          </m.button>
         </div>
 
         {/* Success Message */}
         {submitStatus === 'success' && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             className="p-4 bg-green-50 border border-green-200 rounded-lg"
@@ -284,12 +284,12 @@ export default function ContactForm() {
                 </p>
               </div>
             </div>
-          </motion.div>
+          </m.div>
         )}
 
         {/* Error Message */}
         {submitStatus === 'error' && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             className="p-4 bg-red-50 border border-red-200 rounded-lg"
@@ -315,7 +315,7 @@ export default function ContactForm() {
                 </p>
               </div>
             </div>
-          </motion.div>
+          </m.div>
         )}
       </form>
     </div>

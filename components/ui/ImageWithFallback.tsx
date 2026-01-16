@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Image, { ImageProps } from 'next/image';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { getBasePath } from '@/lib/config';
 
 interface ImageWithFallbackProps extends Omit<ImageProps, 'onError'> {
@@ -108,13 +108,13 @@ export default function ImageWithFallback({
         onError={handleError}
       />
       {isRetrying && (
-        <motion.div
+        <m.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           className="absolute inset-0 flex items-center justify-center bg-gray-900/50 rounded-lg"
         >
           <div className="text-white text-sm">Retrying...</div>
-        </motion.div>
+        </m.div>
       )}
     </>
   );
