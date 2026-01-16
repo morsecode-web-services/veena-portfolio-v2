@@ -145,7 +145,7 @@ export default function Home() {
                 <div className="absolute inset-0 opacity-5 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]"></div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2">
-                  <div className="relative aspect-[16/10] sm:aspect-video lg:aspect-auto lg:h-auto lg:min-h-[550px] pointer-events-none">
+                  <div className="relative aspect-[16/10] sm:aspect-video lg:aspect-auto lg:h-[550px] pointer-events-none">
                     <ImageWithFallback
                       src={spotlight.imageUrl}
                       alt={spotlight.title}
@@ -153,6 +153,7 @@ export default function Home() {
                       className="object-cover"
                       style={{ objectPosition: spotlight.imagePosition || 'center' }}
                       priority={true}
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 100vw, 50vw"
                     />
                   </div>
 

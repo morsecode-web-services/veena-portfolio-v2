@@ -16,7 +16,9 @@ const nextConfig = {
 
   images: {
     // Disable image optimization for static export
-    unoptimized: true,
+    // Use custom loader for static export optimization
+    loader: 'custom',
+    loaderFile: './lib/imageLoader.ts',
   },
 
   // Enable compiler optimizations
