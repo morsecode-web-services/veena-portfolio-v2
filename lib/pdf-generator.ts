@@ -1,4 +1,5 @@
 import jsPDF from 'jspdf';
+import QRCode from 'qrcode';
 
 export interface PDFGenerationOptions {
   onProgress?: (progress: number) => void;
@@ -10,14 +11,25 @@ export interface PDFGenerationResult {
   error?: string;
 }
 
-// Color palette (using RGB to avoid oklch issues)
+// Color palette
 const COLORS = {
   navy: { r: 20, g: 33, b: 61 },      // #14213d
   gold: { r: 184, g: 134, b: 11 },    // #b8860b
   cream: { r: 250, g: 248, b: 245 },  // #faf8f5
   gray: { r: 107, g: 114, b: 128 },   // #6b7280
+  black: { r: 10, g: 10, b: 10 },     // #0a0a0a
+  slate: { r: 51, g: 65, b: 85 },     // #334155
   white: { r: 255, g: 255, b: 255 },
+  lightGray: { r: 240, g: 240, b: 240 },
 };
+
+// Layout constants
+const MARGIN = 20;
+const LINE_HEIGHT_SCALE = 0.4;
+
+interface Cursor {
+  y: number;
+}
 
 /**
  * Generates a professional portfolio PDF from the website's config data
@@ -51,462 +63,529 @@ export async function generatePDF(
       format: 'a4',
     });
 
+    // Helper to load fonts
+    await loadCustomFonts(pdf, basePath);
+
     const pageWidth = pdf.internal.pageSize.getWidth();
     const pageHeight = pdf.internal.pageSize.getHeight();
-    const margin = 20;
-    const contentWidth = pageWidth - (margin * 2);
+    const contentWidth = pageWidth - (MARGIN * 2);
 
-    let currentY = margin;
+    // Initialize Cursor
+    const cursor: Cursor = { y: MARGIN };
 
-    // Helper functions
-    const getImageDimensions = (dataUrl: string): Promise<{ width: number; height: number }> => {
-      return new Promise((resolve) => {
-        const img = new Image();
-        img.onload = () => resolve({ width: img.width, height: img.height });
-        img.onerror = () => resolve({ width: 0, height: 0 });
-        img.src = dataUrl;
-      });
-    };
+    // --- Helpers ---
 
-    const addHeader = (text: string, size: number = 20) => {
-      pdf.setFont('helvetica', 'bold');
+    const setFontHeader = (size: number = 24) => {
+      try {
+        pdf.setFont('PlayfairDisplay', 'bold');
+      } catch {
+        pdf.setFont('times', 'bold');
+      }
       pdf.setFontSize(size);
       pdf.setTextColor(COLORS.navy.r, COLORS.navy.g, COLORS.navy.b);
-      pdf.text(text, margin, currentY);
-      currentY += size * 0.5;
     };
 
-    const addSubheader = (text: string, size: number = 14) => {
-      pdf.setFont('helvetica', 'bold');
+    const setFontSubheader = (size: number = 16) => {
+      try {
+        pdf.setFont('PlayfairDisplay', 'bold');
+      } catch {
+        pdf.setFont('helvetica', 'bold');
+      }
       pdf.setFontSize(size);
       pdf.setTextColor(COLORS.navy.r, COLORS.navy.g, COLORS.navy.b);
-      pdf.text(text, margin, currentY);
-      currentY += size * 0.5;
     };
 
-    const addText = (text: string, size: number = 11) => {
-      pdf.setFont('helvetica', 'normal');
+    const setFontBody = (size: number = 12, bold = false) => {
+      try {
+        pdf.setFont('Inter', bold ? 'bold' : 'normal');
+      } catch {
+        pdf.setFont('helvetica', bold ? 'bold' : 'normal');
+      }
       pdf.setFontSize(size);
-      pdf.setTextColor(COLORS.gray.r, COLORS.gray.g, COLORS.gray.b);
+      pdf.setTextColor(COLORS.black.r, COLORS.black.g, COLORS.black.b);
+    };
+
+    const setFontAccent = (size: number = 10) => {
+      try {
+        pdf.setFont('Inter', 'normal');
+      } catch {
+        pdf.setFont('helvetica', 'italic');
+      }
+      pdf.setFontSize(size);
+      pdf.setTextColor(COLORS.gold.r, COLORS.gold.g, COLORS.gold.b);
+    };
+
+    const addText = (text: string, size: number = 12, bold = false) => {
+      setFontBody(size, bold);
       const lines = pdf.splitTextToSize(text, contentWidth);
-      pdf.text(lines, margin, currentY);
-      currentY += (lines.length * size * 0.4) + 3;
+      pdf.text(lines, MARGIN, cursor.y);
+      cursor.y += (lines.length * size * LINE_HEIGHT_SCALE) + 3;
     };
 
-    const addLink = (text: string, url: string, size: number = 11) => {
-      pdf.setFont('helvetica', 'normal');
-      pdf.setFontSize(size);
-      pdf.setTextColor(0, 102, 204); // Blue for links
+    const addLink = async (text: string, url: string, size: number = 12, withQR = false) => {
+      setFontBody(size);
+      pdf.setTextColor(0, 102, 204);
 
-      // Use text() instead of textWithLink() to avoid spacing issues
-      pdf.text(text, margin, currentY);
+      pdf.text(text, MARGIN, cursor.y);
 
-      // Add clickable link area if links are enabled
       if (includeLinks) {
         const textWidth = pdf.getTextWidth(text);
-        pdf.link(margin, currentY - size * 0.7, textWidth, size, { url });
+        pdf.link(MARGIN, cursor.y - size * 0.7, textWidth, size, { url });
       }
 
-      currentY += size * 0.5;
-    };
+      const textHeight = size * LINE_HEIGHT_SCALE + 2;
 
-    const addSpace = (space: number = 5) => {
-      currentY += space;
+      if (withQR) {
+        try {
+          // Increased resolution for better print quality
+          const qrDataUrl = await QRCode.toDataURL(url, { margin: 1, width: 200 });
+          // Increased physicial size on paper (mm)
+          const qrSize = 25;
+          const xPos = pageWidth - MARGIN - qrSize;
+          // Align top of QR mostly with top of text (approx adjustment)
+          pdf.addImage(qrDataUrl, 'PNG', xPos, cursor.y - size * 0.8, qrSize, qrSize);
+        } catch (e) {
+          console.warn("Failed to generate QR code", e);
+        }
+      }
+
+      // Add extra spacing if QR is present to accommodate its height
+      // 3mm standard spacing, or enough to clear the QR code + padding
+      const spacing = withQR ? 28 : 3;
+      cursor.y += textHeight + spacing;
     };
 
     const checkPageBreak = (neededSpace: number = 40) => {
-      if (currentY + neededSpace > pageHeight - margin) {
+      if (cursor.y + neededSpace > pageHeight - MARGIN) {
         pdf.addPage();
-        currentY = margin;
+        cursor.y = MARGIN;
         return true;
       }
       return false;
     };
 
     const loadImage = async (url: string): Promise<string | null> => {
-      try {
-        let finalUrl = url;
-
-        // Handle local paths for GitHub Pages / Netlify variety
-        if (url.startsWith('/') && !url.startsWith('//')) {
-          const { getBasePath } = await import('./config');
-          const basePath = getBasePath().replace(/\/$/, '');
-          const sanitizedUrl = url.replace(/^\//, '');
-          finalUrl = basePath ? `${basePath}/${sanitizedUrl}` : `/${sanitizedUrl}`;
-        }
-
-        const response = await fetch(finalUrl);
-        const blob = await response.blob();
-        return new Promise((resolve) => {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result as string);
-          reader.onerror = () => resolve(null);
-          reader.readAsDataURL(blob);
-        });
-      } catch (error) {
-        console.error(`[PDF] Failed to load image: ${url}`, error);
-        return null;
-      }
+      return loadExternalImage(url, basePath);
     };
 
-    // ===== PAGE 1: HOME =====
-    onProgress?.(20);
+    // --- Sections ---
 
-    // Title
-    pdf.setFont('times', 'bold');
-    pdf.setFontSize(28);
-    pdf.setTextColor(COLORS.navy.r, COLORS.navy.g, COLORS.navy.b);
-    pdf.text(config.artist.name, pageWidth / 2, currentY, { align: 'center' });
-    currentY += 10;
+    // 1. Cover Page
+    onProgress?.(15);
+    await renderCoverPage(pdf, config, pageWidth, pageHeight, loadImage);
 
-    // Tagline and images removed as per user request
-    currentY += 5;
+    // Start Content on new page
+    pdf.addPage();
+    cursor.y = MARGIN;
 
-    // ===== PAGE 1: SPOTLIGHTS (NO HEADING) =====
-    onProgress?.(20);
+    // 2. About
+    onProgress?.(30);
+    renderAboutSection(pdf, config, contentWidth, cursor, addHeader);
 
-    // Add each spotlight immediately after the name
-    if (config.spotlights && config.spotlights.length > 0) {
+    // 3. Spotlights
+    onProgress?.(45);
+    checkPageBreak(60);
+    addHeader(pdf, 'Spotlights', cursor, setFontHeader);
+    cursor.y += 15;
+
+    if (config.spotlights) {
       for (const spotlight of config.spotlights) {
-        checkPageBreak(100);
-        addSubheader(spotlight.title, 14);
-
-        const spotlightImg = await loadImage(spotlight.imageUrl);
-        if (spotlightImg) {
-          const dims = await getImageDimensions(spotlightImg);
-          const spotlightImgWidth = contentWidth;
-
-          let spotlightImgHeight;
-          if (dims.width > 0 && dims.height > 0) {
-            const aspectRatio = dims.height / dims.width;
-            spotlightImgHeight = spotlightImgWidth * aspectRatio;
-            const maxHeight = pageHeight * 0.6;
-            if (spotlightImgHeight > maxHeight) {
-              spotlightImgHeight = maxHeight;
-              const newWidth = spotlightImgHeight / aspectRatio;
-              const xOffset = (contentWidth - newWidth) / 2;
-              checkPageBreak(spotlightImgHeight + 10);
-              pdf.addImage(spotlightImg, 'JPEG', margin + xOffset, currentY, newWidth, spotlightImgHeight);
-            } else {
-              checkPageBreak(spotlightImgHeight + 10);
-              pdf.addImage(spotlightImg, 'JPEG', margin, currentY, spotlightImgWidth, spotlightImgHeight);
-            }
-          } else {
-            spotlightImgHeight = spotlightImgWidth * 0.5625;
-            checkPageBreak(spotlightImgHeight + 10);
-            pdf.addImage(spotlightImg, 'JPEG', margin, currentY, spotlightImgWidth, spotlightImgHeight);
-          }
-          currentY += spotlightImgHeight + 8;
-        }
-
-        pdf.setFont('helvetica', 'italic');
-        pdf.setFontSize(12);
-        pdf.setTextColor(COLORS.gold.r, COLORS.gold.g, COLORS.gold.b);
-        pdf.text(spotlight.subtitle, margin, currentY);
-        currentY += 8;
-
-        addText(spotlight.description, 11);
-        addSpace(2);
-
-        if (spotlight.features && spotlight.features.length > 0) {
-          spotlight.features.forEach((feature: any) => {
-            pdf.setFont('helvetica', 'bold');
-            pdf.setFontSize(10);
-            pdf.setTextColor(COLORS.navy.r, COLORS.navy.g, COLORS.navy.b);
-            pdf.text(`• ${feature.title}:`, margin + 5, currentY);
-            currentY += 5;
-            pdf.setFont('helvetica', 'normal');
-            pdf.setFontSize(10);
-            pdf.setTextColor(COLORS.gray.r, COLORS.gray.g, COLORS.gray.b);
-            const featureLines = pdf.splitTextToSize(feature.description, contentWidth - 10);
-            pdf.text(featureLines, margin + 10, currentY);
-            currentY += (featureLines.length * 10 * 0.4) + 3;
-          });
-        }
-        addSpace(15);
+        await renderSpotlight(pdf, spotlight, contentWidth, pageHeight, cursor, loadImage);
       }
     }
 
-    onProgress?.(40);
-
-    // ===== ABOUT SECTION =====
+    // 4. Music
+    onProgress?.(60);
     checkPageBreak(60);
-    addHeader('About', 20);
-    addSpace(8);
+    addHeader(pdf, 'Music', cursor, setFontHeader);
+    cursor.y += 10;
+    await renderMusicSection(pdf, config.music, cursor, addLink);
 
-    // Intro Bio first
-    addText(config.artist.briefBio, 11);
-    addSpace(5);
-
-    // Full Bio
-    config.artist.fullBio.forEach((block: any) => {
-      if (typeof block === 'string') {
-        checkPageBreak();
-        addText(block);
-        addSpace(3);
-      } else {
-        if (block.type === 'heading') {
-          checkPageBreak(30);
-          addSpace(5);
-          addSubheader(block.content, 14);
-          addSpace(2);
-        } else if (block.type === 'list') {
-          if (block.items && Array.isArray(block.items)) {
-            block.items.forEach((item: string) => {
-              checkPageBreak();
-              pdf.setFont('helvetica', 'normal');
-              pdf.setFontSize(11);
-              pdf.setTextColor(COLORS.gray.r, COLORS.gray.g, COLORS.gray.b);
-              pdf.text('•', margin + 2, currentY);
-              const lines = pdf.splitTextToSize(item, contentWidth - 10);
-              pdf.text(lines, margin + 8, currentY);
-              currentY += (lines.length * 11 * 0.4) + 3;
-            });
-            addSpace(3);
-          }
-        } else {
-          checkPageBreak();
-          addText(block.content || '');
-          addSpace(3);
-        }
-      }
-    });
-
-    onProgress?.(55);
-
-    // ===== MUSIC SECTION =====
-    checkPageBreak(60);
-    addHeader('Music', 20);
-    addSpace(10);
-
-    config.music.categories.forEach((category: any, catIndex: number) => {
-      checkPageBreak();
-      addSubheader(category.name, 14);
-      addText(category.description, 10);
-      addSpace(3);
-
-      // Iterate through subcategories
-      if (category.subcategories && Array.isArray(category.subcategories)) {
-        category.subcategories.forEach((subcategory: any) => {
-          checkPageBreak();
-
-          // Subcategory name
-          pdf.setFont('helvetica', 'bold');
-          pdf.setFontSize(11);
-          pdf.setTextColor(COLORS.navy.r, COLORS.navy.g, COLORS.navy.b);
-          pdf.text(`${subcategory.name}:`, margin + 5, currentY);
-          currentY += 6;
-
-          // Videos in this subcategory
-          if (subcategory.videos && Array.isArray(subcategory.videos)) {
-            subcategory.videos.forEach((video: any) => {
-              // Extract video ID from various YouTube URL formats
-              let videoId = '';
-              try {
-                const url = new URL(video.url);
-                if (url.hostname.includes('youtu.be')) {
-                  videoId = url.pathname.slice(1).split('?')[0];
-                } else if (url.hostname.includes('youtube.com')) {
-                  videoId = url.searchParams.get('v') || url.pathname.split('/').pop() || '';
-                }
-              } catch {
-                videoId = video.url.split('/').pop()?.split('?')[0] || '';
-              }
-
-              const youtubeLink = videoId ? `https://www.youtube.com/watch?v=${videoId}` : video.url;
-              addLink(`  • ${video.title}`, youtubeLink, 9);
-            });
-          }
-
-          addSpace(5);
-        });
-      }
-
-      addSpace(8);
-    });
-
-    onProgress?.(65);
-
-    // ===== GALLERY SECTION =====
-    checkPageBreak(60);
-    if (currentY > margin + 20) {
-      pdf.addPage();
-      currentY = margin;
-    }
-
-    addHeader('Performance Gallery', 20);
-    addSpace(10);
-
-    // Load gallery images
-    const galleryImages = config.gallery.images.slice(0, 6); // Limit to 6 images
-    const galleryImgWidth = (contentWidth - 10) / 2;
-    const galleryImgHeight = galleryImgWidth * 0.67;
-
-    for (let i = 0; i < galleryImages.length; i += 2) {
-      checkPageBreak(galleryImgHeight + 20);
-
-      const img1 = await loadImage(galleryImages[i].src);
-      if (img1) {
-        pdf.addImage(img1, 'JPEG', margin, currentY, galleryImgWidth, galleryImgHeight);
-        pdf.setFontSize(9);
-        pdf.setTextColor(COLORS.gray.r, COLORS.gray.g, COLORS.gray.b);
-        pdf.text(galleryImages[i].caption, margin, currentY + galleryImgHeight + 4);
-      }
-
-      if (i + 1 < galleryImages.length) {
-        const img2 = await loadImage(galleryImages[i + 1].src);
-        if (img2) {
-          pdf.addImage(img2, 'JPEG', margin + galleryImgWidth + 10, currentY, galleryImgWidth, galleryImgHeight);
-          pdf.setFontSize(9);
-          pdf.setTextColor(COLORS.gray.r, COLORS.gray.g, COLORS.gray.b);
-          pdf.text(galleryImages[i + 1].caption, margin + galleryImgWidth + 10, currentY + galleryImgHeight + 4);
-        }
-      }
-
-      currentY += galleryImgHeight + 15;
-    }
-
+    // 5. Gallery
     onProgress?.(75);
+    pdf.addPage();
+    cursor.y = MARGIN;
+    addHeader(pdf, 'Performance Gallery', cursor, setFontHeader);
+    cursor.y += 15;
+    await renderGallery(pdf, config.gallery?.images || [], contentWidth, pageHeight, cursor, loadImage);
 
-    // ===== PRESS SECTION =====
-    checkPageBreak(60);
-    if (currentY > margin + 20) {
-      pdf.addPage();
-      currentY = margin;
-    }
-
-    addHeader('Press & Recognition', 20);
-    addSpace(10);
-
-    config.press.articles.forEach((article: any) => {
-      checkPageBreak();
-      addSubheader(article.title, 13);
-      pdf.setFontSize(10);
-      pdf.setFont('helvetica', 'italic');
-      pdf.setTextColor(COLORS.gray.r, COLORS.gray.g, COLORS.gray.b);
-      pdf.text(`${article.publication} - ${new Date(article.date).toLocaleDateString()}`, margin, currentY);
-      currentY += 6;
-
-      addText(article.excerpt, 10);
-      addLink(article.title, article.url, 10);
-      addSpace(8);
-    });
-
+    // 6. Press
     onProgress?.(85);
+    pdf.addPage();
+    cursor.y = MARGIN;
+    addHeader(pdf, 'Press & Recognition', cursor, setFontHeader);
+    cursor.y += 10;
+    if (config.press?.articles) {
+      config.press.articles.forEach((article: any) => {
+        checkPageBreak(30);
+        setFontSubheader(13);
+        pdf.text(article.title, MARGIN, cursor.y);
+        cursor.y += 6;
 
-    // ===== FAQ SECTION =====
-    checkPageBreak(60);
-    if (currentY > margin + 20) {
-      pdf.addPage();
-      currentY = margin;
+        setFontAccent(10);
+        pdf.text(`${article.publication} - ${new Date(article.date).toLocaleDateString()}`, MARGIN, cursor.y);
+        cursor.y += 6;
+
+        addText(article.excerpt, 10);
+        addLink(article.title, article.url, 10);
+        cursor.y += 5;
+      });
     }
 
-    addHeader('Frequently Asked Questions', 20);
-    addSpace(10);
-
-    config.faq.items.forEach((item: any, index: number) => {
-      checkPageBreak();
-      pdf.setFont('helvetica', 'bold');
-      pdf.setFontSize(11);
-      pdf.setTextColor(COLORS.navy.r, COLORS.navy.g, COLORS.navy.b);
-      const qLines = pdf.splitTextToSize(`Q${index + 1}: ${item.question}`, contentWidth);
-      pdf.text(qLines, margin, currentY);
-      currentY += (qLines.length * 11 * 0.4) + 3;
-
-      pdf.setFont('helvetica', 'normal');
-      pdf.setFontSize(10);
-      pdf.setTextColor(COLORS.gray.r, COLORS.gray.g, COLORS.gray.b);
-      const aLines = pdf.splitTextToSize(`A: ${item.answer}`, contentWidth);
-      pdf.text(aLines, margin, currentY);
-      currentY += (aLines.length * 10 * 0.4) + 8;
-    });
-
-    onProgress?.(92);
-
-    // ===== CONTACT SECTION =====
-    checkPageBreak(60);
-    if (currentY > margin + 20) {
-      pdf.addPage();
-      currentY = margin;
-    }
-
-    addHeader('Contact', 20);
-    addSpace(10);
-
-    addText('For bookings, collaborations, or inquiries, please reach out through the following channels:', 11);
-    addSpace(8);
-
-    // Social Media Links
-    if (config.socialMedia) {
-      if (config.socialMedia.youtube) {
-        addLink('YouTube: ' + config.socialMedia.youtube, config.socialMedia.youtube, 11);
-        addSpace(3);
-      }
-      if (config.socialMedia.instagram) {
-        addLink('Instagram: ' + config.socialMedia.instagram, config.socialMedia.instagram, 11);
-        addSpace(3);
-      }
-      if (config.socialMedia.linkedin) {
-        addLink('LinkedIn: ' + config.socialMedia.linkedin, config.socialMedia.linkedin, 11);
-        addSpace(3);
-      }
-    }
-
-    addSpace(10);
-    addText('Thank you for your interest in my musical journey. I look forward to connecting with you!', 11);
-
+    // 7. Contact
     onProgress?.(95);
+    checkPageBreak(60);
+    addHeader(pdf, 'Contact', cursor, setFontHeader);
+    cursor.y += 10;
 
-    // Add footer to all pages
-    const totalPages = pdf.getNumberOfPages();
-    const generationDate = new Date().toLocaleDateString(undefined, {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
+    addText("For bookings, collaborations, or inquiries, please reach out:", 11);
+    cursor.y += 5;
 
-    for (let i = 1; i <= totalPages; i++) {
-      pdf.setPage(i);
-      pdf.setFontSize(9);
-      pdf.setTextColor(COLORS.gray.r, COLORS.gray.g, COLORS.gray.b);
-
-      // Left: Date
-      pdf.text(
-        `Generated: ${generationDate}`,
-        margin,
-        pageHeight - 10
-      );
-
-      // Center: Artist Name
-      pdf.text(
-        `${config.artist.name} - Portfolio`,
-        pageWidth / 2,
-        pageHeight - 10,
-        { align: 'center' }
-      );
-
-      // Right: Page Numbers
-      pdf.text(
-        `Page ${i} of ${totalPages}`,
-        pageWidth - margin,
-        pageHeight - 10,
-        { align: 'right' }
-      );
+    if (config.artist.email) {
+      await addLink(`Email: ${config.artist.email}`, `mailto:${config.artist.email}`, 12, false);
     }
 
-    // Download the PDF
-    const fileName = `${config.artist.name.replace(/\s+/g, '_')}_Portfolio_${new Date().toISOString().split('T')[0]}.pdf`;
+    if (config.socialMedia) {
+      if (config.socialMedia.youtube) await addLink('YouTube Channel', config.socialMedia.youtube, 12, true);
+      if (config.socialMedia.instagram) await addLink('Instagram Profile', config.socialMedia.instagram, 12, true);
+      if (config.socialMedia.linkedin) await addLink('LinkedIn Profile', config.socialMedia.linkedin, 12, true);
+      if (config.socialMedia.facebook) await addLink('Facebook Page', config.socialMedia.facebook, 12, true);
+      if (config.socialMedia.twitter) await addLink('Twitter Profile', config.socialMedia.twitter, 12, true);
+    }
+
+    addFooter(pdf, config, pageWidth, pageHeight);
+
+    // Save
+    const dateStr = new Date().toISOString().split('T')[0];
+    const fileName = `${config.artist.name.replace(/\s+/g, '_')}_Portfolio_${dateStr}.pdf`;
     pdf.save(fileName);
 
     onProgress?.(100);
-
     return { success: true };
+
   } catch (error) {
     console.error('PDF generation error:', error);
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+  }
+}
 
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error occurred',
-    };
+// --- Helper Functions ---
+
+async function loadCustomFonts(pdf: jsPDF, basePath: string) {
+  const fonts = [
+    { name: 'PlayfairDisplay', style: 'bold', file: 'PlayfairDisplay-Bold.ttf' },
+    { name: 'Inter', style: 'normal', file: 'Inter-Regular.ttf' },
+    { name: 'Inter', style: 'bold', file: 'Inter-Bold.ttf' },
+  ];
+
+  for (const font of fonts) {
+    try {
+      const url = basePath ? `${basePath}/fonts/${font.file}` : `/fonts/${font.file}`;
+      const resp = await fetch(url);
+      if (resp.ok) {
+        const text = await resp.clone().text();
+        if (text.startsWith('404') || text.includes('Not Found') || text.length < 1000) {
+          console.warn(`Invalid font file detected for ${font.file}`);
+          continue;
+        }
+
+        const blob = await resp.blob();
+        const reader = new FileReader();
+        await new Promise<void>((resolve) => {
+          reader.onloadend = () => {
+            const result = reader.result as string;
+            if (result && result.includes(',')) {
+              const base64 = result.split(',')[1];
+              if (base64) {
+                try {
+                  pdf.addFileToVFS(font.file, base64);
+                  pdf.addFont(font.file, font.name, font.style);
+                } catch (fontError) {
+                  console.warn(`Failed to add font ${font.file} to jsPDF`, fontError);
+                }
+              }
+            }
+            resolve();
+          };
+          reader.readAsDataURL(blob);
+        });
+      } else {
+        console.warn(`Could not load font ${font.file}: ${resp.status}`);
+      }
+    } catch (e) {
+      console.warn(`Error loading font ${font.file}`, e);
+    }
+  }
+}
+
+async function renderCoverPage(pdf: jsPDF, config: any, pageWidth: number, pageHeight: number, loadImg: any) {
+  // Background - Split design
+  // Top 2/3 Cream
+  pdf.setFillColor(COLORS.cream.r, COLORS.cream.g, COLORS.cream.b);
+  pdf.rect(0, 0, pageWidth, pageHeight * 0.65, 'F');
+
+  // Bottom 1/3 Navy
+  pdf.setFillColor(COLORS.navy.r, COLORS.navy.g, COLORS.navy.b);
+  pdf.rect(0, pageHeight * 0.65, pageWidth, pageHeight * 0.35, 'F');
+
+  // Decorative Vertical Gold Line
+  pdf.setDrawColor(COLORS.gold.r, COLORS.gold.g, COLORS.gold.b);
+  pdf.setLineWidth(2);
+  pdf.line(MARGIN, MARGIN, MARGIN, pageHeight - MARGIN);
+
+  let currentY = MARGIN + 40;
+
+  // 1. Artist Name (Large, Navy, Top-Left aligned next to gold line)
+  try { pdf.setFont('PlayfairDisplay', 'bold'); } catch { pdf.setFont('times', 'bold'); }
+  pdf.setFontSize(42);
+  pdf.setTextColor(COLORS.navy.r, COLORS.navy.g, COLORS.navy.b);
+
+  // Split name if too long
+  const nameParts = config.artist.name.split(' ');
+  if (nameParts.length > 2) {
+    pdf.text(nameParts.slice(0, -1).join(' '), MARGIN + 10, currentY);
+    currentY += 18;
+    pdf.text(nameParts.slice(-1)[0], MARGIN + 10, currentY);
+  } else {
+    pdf.text(config.artist.name, MARGIN + 10, currentY);
+  }
+
+  currentY += 10;
+
+  // Tagline (Gold, Serif)
+  try { pdf.setFont('PlayfairDisplay', 'normal'); } catch { pdf.setFont('times', 'italic'); }
+  pdf.setFontSize(16);
+  pdf.setTextColor(COLORS.gold.r, COLORS.gold.g, COLORS.gold.b);
+  pdf.text(config.artist.tagline, MARGIN + 10, currentY);
+
+  // 2. Hero Image (Centered in the layout, overlapping the split)
+  // Load primary image (Veena)
+  let heroImgUrl = config.home?.images?.veena;
+  // Fallback to first spotlight if no home image
+  if (!heroImgUrl && config.spotlights?.[0]) {
+    heroImgUrl = config.spotlights[0].imageUrl;
+  }
+
+  if (heroImgUrl) {
+    const imgData = await loadImg(heroImgUrl);
+    if (imgData) {
+      const imgWidth = pageWidth * 0.5; // Half page width
+      const props = pdf.getImageProperties(imgData);
+      const imgHeight = (props.height / props.width) * imgWidth;
+
+      // Position: Right aligned, somewhat overlapping the vertical center
+      const xPos = pageWidth - imgWidth - MARGIN;
+      const yPos = (pageHeight * 0.65) - (imgHeight * 0.6); // Overlap the split
+
+      // White border for the image
+      pdf.setDrawColor(255, 255, 255);
+      pdf.setLineWidth(3);
+      pdf.rect(xPos - 1.5, yPos - 1.5, imgWidth + 3, imgHeight + 3);
+
+
+      pdf.addImage(imgData, 'JPEG', xPos, yPos, imgWidth, imgHeight);
+    }
+  }
+
+  // 3. Footer / Bottom Section (White text on Navy background)
+  currentY = pageHeight * 0.65 + 30;
+
+  // "PORTFOLIO"
+  try { pdf.setFont('Inter', 'bold'); } catch { pdf.setFont('helvetica', 'bold'); }
+  pdf.setFontSize(14);
+  pdf.setTextColor(COLORS.white.r, COLORS.white.g, COLORS.white.b);
+  // pdf.setCharSpace(3); // Removed tracking as requested
+  pdf.text('PORTFOLIO', MARGIN + 10, currentY);
+
+  currentY += 15;
+  // pdf.setCharSpace(0); // Removed tracking reset
+
+  // Date
+  try { pdf.setFont('Inter', 'normal'); } catch { pdf.setFont('helvetica', 'normal'); }
+  pdf.setFontSize(10);
+  pdf.setTextColor(200, 200, 200);
+  pdf.text(new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'long' }).toUpperCase(), MARGIN + 10, currentY);
+
+  // Contact Info Preview (Optional)
+  const contactText = config.artist.email || 'morsecode.in';
+  pdf.text(contactText, MARGIN + 10, pageHeight - MARGIN - 10);
+}
+
+function addFooter(pdf: jsPDF, config: any, pageWidth: number, pageHeight: number) {
+  const totalPages = pdf.getNumberOfPages();
+  for (let i = 1; i <= totalPages; i++) {
+    if (i === 1) continue;
+    pdf.setPage(i);
+    pdf.setFontSize(9);
+    pdf.setTextColor(COLORS.gray.r, COLORS.gray.g, COLORS.gray.b);
+    pdf.text(`${config.artist.name} - Portfolio`, MARGIN, pageHeight - 10);
+    pdf.text(`Page ${i - 1} of ${totalPages - 1}`, pageWidth - MARGIN, pageHeight - 10, { align: 'right' });
+  }
+}
+
+async function loadExternalImage(url: string, basePath: string): Promise<string | null> {
+  try {
+    let finalUrl = url;
+    if (url.startsWith('/') && !url.startsWith('//')) {
+      const sanitizedUrl = url.replace(/^\//, '');
+      finalUrl = basePath ? `${basePath}/${sanitizedUrl}` : `/${sanitizedUrl}`;
+    }
+    const response = await fetch(finalUrl);
+    const blob = await response.blob();
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = () => resolve(null);
+      reader.readAsDataURL(blob);
+    });
+  } catch (e) {
+    console.error("Image load fail", e);
+    return null;
+  }
+}
+
+function addHeader(pdf: jsPDF, text: string, cursor: Cursor, setFontFn: (s: number) => void) {
+  setFontFn(20);
+  pdf.text(text, MARGIN, cursor.y);
+}
+
+async function renderSpotlight(pdf: jsPDF, spotlight: any, width: number, pageHeight: number, cursor: Cursor, loadImg: any) {
+  if (cursor.y > pageHeight - 80) {
+    pdf.addPage();
+    cursor.y = MARGIN;
+  }
+
+  pdf.setFontSize(16);
+  pdf.setTextColor(COLORS.navy.r, COLORS.navy.g, COLORS.navy.b);
+  try { pdf.setFont('PlayfairDisplay', 'bold'); } catch { pdf.setFont('helvetica', 'bold'); }
+  pdf.text(spotlight.title, MARGIN, cursor.y);
+  cursor.y += 8;
+
+  pdf.setFontSize(12);
+  pdf.setTextColor(COLORS.gold.r, COLORS.gold.g, COLORS.gold.b);
+  try { pdf.setFont('Inter', 'normal'); } catch { pdf.setFont('helvetica', 'italic'); }
+  pdf.text(spotlight.subtitle, MARGIN, cursor.y);
+  cursor.y += 10;
+
+  const imgData = await loadImg(spotlight.imageUrl);
+  if (imgData) {
+    const props = pdf.getImageProperties(imgData);
+    const imgWidth = width;
+    const imgHeight = (props.height / props.width) * imgWidth;
+
+    if (cursor.y + imgHeight > pageHeight - MARGIN) {
+      pdf.addPage();
+      cursor.y = MARGIN;
+    }
+
+    pdf.addImage(imgData, 'JPEG', MARGIN, cursor.y, imgWidth, imgHeight);
+    cursor.y += imgHeight + 8;
+  }
+
+  try { pdf.setFont('Inter', 'normal'); } catch { pdf.setFont('helvetica', 'normal'); }
+  pdf.setFontSize(12); // Increased font
+  pdf.setTextColor(COLORS.black.r, COLORS.black.g, COLORS.black.b);
+  const lines = pdf.splitTextToSize(spotlight.description, width);
+  pdf.text(lines, MARGIN, cursor.y);
+  cursor.y += (lines.length * 12 * LINE_HEIGHT_SCALE) + 12; // Adjusted spacing
+}
+
+function renderAboutSection(pdf: jsPDF, config: any, width: number, cursor: Cursor, headerFn: any) {
+  headerFn(pdf, 'About', cursor, (s: number) => {
+    try { pdf.setFont('PlayfairDisplay', 'bold'); } catch { pdf.setFont('times', 'bold'); }
+    pdf.setFontSize(s);
+    pdf.setTextColor(COLORS.navy.r, COLORS.navy.g, COLORS.navy.b);
+  });
+  cursor.y += 10;
+
+  try { pdf.setFont('Inter', 'normal'); } catch { pdf.setFont('helvetica', 'normal'); }
+  pdf.setFontSize(12); // Increased font
+  pdf.setTextColor(COLORS.black.r, COLORS.black.g, COLORS.black.b);
+  const bio = config.artist.briefBio;
+  const lines = pdf.splitTextToSize(bio, width);
+  pdf.text(lines, MARGIN, cursor.y);
+  cursor.y += (lines.length * 12 * LINE_HEIGHT_SCALE) + 10; // Adjusted spacing
+}
+
+async function renderMusicSection(pdf: jsPDF, musicConfig: any, cursor: Cursor, linkFn: any) {
+  for (let i = 0; i < musicConfig.categories.length; i++) {
+    const cat = musicConfig.categories[i];
+
+    // Force new page for second category onwards (e.g. Vocal)
+    if (i > 0) {
+      pdf.addPage();
+      cursor.y = MARGIN;
+    } else if (cursor.y > 250) {
+      // Safety break for first category
+      pdf.addPage();
+      cursor.y = MARGIN;
+    }
+
+    try { pdf.setFont('PlayfairDisplay', 'bold'); } catch { pdf.setFont('helvetica', 'bold'); }
+    pdf.setFontSize(16);
+    pdf.setTextColor(COLORS.navy.r, COLORS.navy.g, COLORS.navy.b);
+    pdf.text(cat.name, MARGIN, cursor.y);
+
+    pdf.setDrawColor(COLORS.gold.r, COLORS.gold.g, COLORS.gold.b);
+    pdf.setLineWidth(0.5);
+    pdf.line(MARGIN, cursor.y + 2, MARGIN + 20, cursor.y + 2);
+
+    cursor.y += 12;
+
+    if (cat.subcategories) {
+      for (const sub of cat.subcategories) {
+        if (cursor.y > 270) {
+          pdf.addPage();
+          cursor.y = MARGIN;
+        }
+
+        try { pdf.setFont('Inter', 'bold'); } catch { pdf.setFont('helvetica', 'bold'); }
+        pdf.setFontSize(12);
+        pdf.setTextColor(COLORS.slate.r, COLORS.slate.g, COLORS.slate.b);
+        pdf.text(sub.name, MARGIN + 2, cursor.y);
+        cursor.y += 7;
+
+        if (sub.videos) {
+          for (const vid of sub.videos) {
+            if (cursor.y > 280) {
+              pdf.addPage();
+              cursor.y = MARGIN;
+            }
+            // Updated to size 12 for consistency
+            await linkFn(`• ${vid.title}`, vid.url, 12, false);
+          }
+        }
+        cursor.y += 4;
+      }
+    }
+    cursor.y += 4;
+  }
+}
+
+async function renderGallery(pdf: jsPDF, images: any[], width: number, pageHeight: number, cursor: Cursor, loadImg: any) {
+  const imgW = (width - 10) / 2;
+  const imgH = imgW * 0.67;
+
+  for (let i = 0; i < Math.min(images.length, 6); i += 2) {
+    if (cursor.y + imgH > pageHeight - MARGIN) {
+      pdf.addPage();
+      cursor.y = MARGIN;
+    }
+
+    const img1 = await loadImg(images[i].src);
+    if (img1) {
+      pdf.addImage(img1, 'JPEG', MARGIN, cursor.y, imgW, imgH);
+      pdf.setFontSize(9);
+      pdf.text(images[i].caption || '', MARGIN, cursor.y + imgH + 5);
+    }
+
+    if (i + 1 < images.length) {
+      const img2 = await loadImg(images[i + 1].src);
+      if (img2) {
+        pdf.addImage(img2, 'JPEG', MARGIN + imgW + 10, cursor.y, imgW, imgH);
+        pdf.text(images[i + 1].caption || '', MARGIN + imgW + 10, cursor.y + imgH + 5);
+      }
+    }
+    cursor.y += imgH + 15;
   }
 }
