@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { m, AnimatePresence } from 'framer-motion';
 import { FaBars, FaTimes } from 'react-icons/fa';
+import HeaderPDFButton from './HeaderPDFButton';
 
 const navItems = [
   { id: 'home', label: 'Home' },
@@ -106,7 +107,7 @@ export default function Navigation() {
 
       <button
         onClick={() => setIsMenuOpen(!isMenuOpen)}
-        className={`md:hidden transition-colors z-[10001] relative flex items-center justify-center ${isMenuOpen ? 'text-gold-600' : 'text-gray-700'
+        className={`md:hidden transition-colors z-[10012] relative flex items-center justify-center ${isMenuOpen ? 'text-gold-600' : 'text-gray-700'
           } hover:text-gold-600`}
         aria-label={isMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
         aria-expanded={isMenuOpen}
@@ -126,7 +127,7 @@ export default function Navigation() {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 onClick={() => setIsMenuOpen(false)}
-                className="fixed inset-0 bg-black/50 z-[9998] md:hidden"
+                className="fixed inset-0 bg-black/60 z-[100] md:hidden backdrop-blur-sm"
                 aria-hidden="true"
               />
 
@@ -137,17 +138,29 @@ export default function Navigation() {
                 animate={{ x: 0 }}
                 exit={{ x: '100%' }}
                 transition={{ type: 'tween', duration: 0.3 }}
-                className="fixed top-0 right-0 bottom-0 w-64 bg-white shadow-2xl z-[9999] md:hidden"
+                className="fixed top-0 right-0 bottom-0 w-72 bg-white shadow-2xl z-[110] md:hidden overflow-hidden flex flex-col"
                 role="navigation"
                 aria-label="Mobile navigation"
               >
-                <div className="flex flex-col h-full pt-20 px-6">
+                {/* Header inside mobile menu */}
+                <div className="flex items-center justify-between px-8 py-6 border-b border-gray-50">
+                  <span className="text-[10px] font-semibold text-gray-500 tracking-[0.2em] uppercase">Menu</span>
+                  <button
+                    onClick={() => setIsMenuOpen(false)}
+                    className="p-2 text-gold-600 hover:bg-gold-50 rounded-full transition-colors"
+                    aria-label="Close menu"
+                  >
+                    <FaTimes size={20} />
+                  </button>
+                </div>
+
+                <div className="flex-1 overflow-y-auto px-6 py-4 scrollbar-hide">
                   <ul className="flex flex-col space-y-1" role="menu">
                     {navItems.map((item) => (
                       <li key={item.id} role="none">
                         <button
                           onClick={() => scrollToSection(item.id)}
-                          className={`text-base font-medium py-3 px-4 transition-colors hover:text-gold-600 w-full text-left min-h-[44px] ${activeSection === item.id
+                          className={`text-base font-medium py-3.5 px-2 transition-colors hover:text-gold-600 w-full text-left flex items-center justify-between ${activeSection === item.id
                             ? 'text-gold-600'
                             : 'text-gray-700'
                             }`}
@@ -156,9 +169,18 @@ export default function Navigation() {
                           aria-current={activeSection === item.id ? 'page' : undefined}
                         >
                           {item.label}
+                          {activeSection === item.id && (
+                            <m.div
+                              layoutId="activeDot"
+                              className="w-1.5 h-1.5 rounded-full bg-gold-600"
+                            />
+                          )}
                         </button>
                       </li>
                     ))}
+                    <li role="none" className="pt-4 border-t border-gray-100 mt-4">
+                      <HeaderPDFButton showLabel={true} />
+                    </li>
                   </ul>
                 </div>
               </m.nav>

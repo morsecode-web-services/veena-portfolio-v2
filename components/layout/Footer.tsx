@@ -9,6 +9,7 @@ import {
   FaLinkedin,
 } from 'react-icons/fa';
 import type { SiteConfig } from '@/types';
+import Image from 'next/image';
 
 const socialMediaIcons = {
   youtube: FaYoutube,
@@ -28,7 +29,25 @@ export default function Footer({ config }: FooterProps) {
   return (
     <footer className="bg-gradient-navy text-white py-6 sm:py-8 md:py-10 border-t border-premium" role="contentinfo">
       <div className="container mx-auto px-4 sm:px-6 md:px-8">
-        <div className="flex flex-col items-center space-y-4 sm:space-y-5">
+        <div className="flex flex-col items-center space-y-6 md:space-y-8">
+          {/* Logo */}
+          {config?.artist.logo && (
+            <m.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+              className="relative w-12 h-12 md:w-16 md:h-16"
+            >
+              <Image
+                src={config.artist.logo}
+                alt={`${config.artist.name} Logo`}
+                fill
+                className="object-contain brightness-0 invert opacity-80 hover:opacity-100 transition-opacity duration-300"
+              />
+            </m.div>
+          )}
+
           {/* Social Media Icons */}
           <m.div
             initial={{ opacity: 0, y: 20 }}

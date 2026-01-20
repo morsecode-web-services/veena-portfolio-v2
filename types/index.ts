@@ -12,6 +12,7 @@ export interface SiteConfig {
     briefBio: string;
     fullBio: (string | BioBlock)[];
     email?: string;
+    logo?: string;
   };
   home: {
     images: {

@@ -132,7 +132,7 @@ export default function RootLayout({
           Skip to navigation
         </a>
         <Providers>
-          <Header />
+          <Header config={config} />
           {children}
           <Footer config={config} />
         </Providers>

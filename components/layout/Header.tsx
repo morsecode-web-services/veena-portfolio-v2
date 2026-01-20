@@ -4,9 +4,18 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { m } from 'framer-motion';
 import { debounce } from '@/lib/utils';
 import Navigation from './Navigation';
+import HeaderPDFButton from './HeaderPDFButton';
+import Image from 'next/image';
+import type { SiteConfig } from '@/types';
 
-export default function Header() {
+interface HeaderProps {
+  config?: SiteConfig;
+}
+
+export default function Header({ config }: HeaderProps) {
   const [isScrolled, setIsScrolled] = useState(false);
+  const logo = config?.artist.logo;
+  const artistName = config?.artist.name || 'Aishwarya Manikarnike';
 
   const headerRef = useRef<HTMLElement>(null);
 
@@ -53,7 +62,7 @@ export default function Header() {
       initial={{ y: -100, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
-      className={`fixed top-0 left-0 right-0 z-[10000] transition-all duration-300 ${isScrolled
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled
         ? 'bg-white shadow-premium-md border-b border-premium'
         : 'bg-transparent'
         }`}
@@ -67,13 +76,35 @@ export default function Header() {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="flex items-center"
           >
-            <a href="#home" className="focus:outline-none focus:ring-2 focus:ring-blue-600 rounded flex items-center">
-              <h1 className="text-base sm:text-lg md:text-xl font-serif font-bold text-navy-900 mb-0">
-                Aishwarya Manikarnike
+            <a href="#home" className="focus:outline-none focus:ring-2 focus:ring-blue-600 rounded flex items-center gap-2 md:gap-3 group">
+              {logo && (
+                <div className="relative w-8 h-8 md:w-10 md:h-10 transition-transform duration-300 group-hover:scale-110">
+                  <Image
+                    src={logo}
+                    alt={`${artistName} Logo`}
+                    fill
+                    className="object-contain"
+                    priority
+                  />
+                </div>
+              )}
+              <h1 className="text-base sm:text-lg md:text-xl font-serif font-bold text-navy-900 mb-0 group-hover:text-gold-600 transition-colors duration-300">
+                {artistName}
               </h1>
             </a>
           </m.div>
-          <Navigation />
+
+          <div className="flex items-center gap-4">
+            <Navigation />
+            <m.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+              className="hidden sm:block"
+            >
+              <HeaderPDFButton />
+            </m.div>
+          </div>
         </div>
       </div>
     </m.header>

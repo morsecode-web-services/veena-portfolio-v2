@@ -333,7 +333,21 @@ async function renderCoverPage(pdf: jsPDF, config: any, pageWidth: number, pageH
   pdf.setLineWidth(2);
   pdf.line(MARGIN, MARGIN, MARGIN, pageHeight - MARGIN);
 
-  let currentY = MARGIN + 40;
+  // 0. Logo (Top-Left, above the name)
+  let currentY = MARGIN + 15;
+  if (config.artist.logo) {
+    const logoData = await loadImg(config.artist.logo);
+    if (logoData) {
+      const logoWidth = 20; // Consistent with header logo size (approx)
+      const props = pdf.getImageProperties(logoData);
+      const logoHeight = (props.height / props.width) * logoWidth;
+
+      pdf.addImage(logoData, 'PNG', MARGIN + 10, currentY, logoWidth, logoHeight);
+      currentY += logoHeight + 10;
+    }
+  }
+
+  currentY = Math.max(currentY, MARGIN + 40);
 
   // 1. Artist Name (Large, Navy, Top-Left aligned next to gold line)
   try { pdf.setFont('PlayfairDisplay', 'bold'); } catch { pdf.setFont('times', 'bold'); }

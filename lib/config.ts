@@ -74,6 +74,7 @@ const SiteConfigSchema = z.object({
     briefBio: z.string().min(1),
     fullBio: z.array(z.union([z.string().min(1), BioBlockSchema])),
     email: z.string().email().optional(),
+    logo: z.string().optional(),
   }),
   home: z.object({
     images: z.object({
