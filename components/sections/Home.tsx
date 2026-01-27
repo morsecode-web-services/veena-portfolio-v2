@@ -15,6 +15,26 @@ export default function Home({ config }: HomeProps) {
   const [isHovering, setIsHovering] = useState(false);
   const autoScrollInterval = useRef<NodeJS.Timeout | null>(null);
 
+  // Auto-scroll effect - must be before early return (Rules of Hooks)
+  useEffect(() => {
+    // Only auto-scroll if we have multiple spotlights and not hovering
+    if (!config?.spotlights || config.spotlights.length <= 1 || isHovering) {
+      return;
+    }
+
+    // Set up auto-scroll interval (5 seconds)
+    autoScrollInterval.current = setInterval(() => {
+      setCurrentSpotlight((prev) => (prev + 1) % config.spotlights!.length);
+    }, 5000);
+
+    // Cleanup on unmount or when dependencies change
+    return () => {
+      if (autoScrollInterval.current) {
+        clearInterval(autoScrollInterval.current);
+      }
+    };
+  }, [currentSpotlight, isHovering, config?.spotlights]);
+
   // Guard clause just in case, though parent should handle validity
   if (!config) return null;
 
@@ -27,27 +47,6 @@ export default function Home({ config }: HomeProps) {
     if (!config?.spotlights) return;
     setCurrentSpotlight((prev) => (prev - 1 + config.spotlights!.length) % config.spotlights!.length);
   };
-
-  // Auto-scroll effect
-  useEffect(() => {
-    // Only auto-scroll if we have multiple spotlights and not hovering
-    if (!config?.spotlights || config.spotlights.length <= 1 || isHovering) {
-      return;
-    }
-
-    // Set up auto-scroll interval (5 seconds)
-    autoScrollInterval.current = setInterval(() => {
-      nextSpotlight();
-    }, 5000);
-
-    // Cleanup on unmount or when dependencies change
-    return () => {
-      if (autoScrollInterval.current) {
-        clearInterval(autoScrollInterval.current);
-      }
-    };
-  }, [currentSpotlight, isHovering, config?.spotlights]);
-
 
   const spotlight = config.spotlights?.[currentSpotlight];
 
