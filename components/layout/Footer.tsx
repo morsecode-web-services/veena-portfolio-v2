@@ -10,6 +10,7 @@ import {
 } from 'react-icons/fa';
 import type { SiteConfig } from '@/types';
 import Image from 'next/image';
+import { analytics } from '@/components/GoogleAnalytics';
 
 const socialMediaIcons = {
   youtube: FaYoutube,
@@ -76,6 +77,7 @@ export default function Footer({ config }: FooterProps) {
                   href={url}
                   target="_blank"
                   rel="noopener noreferrer"
+                  onClick={() => analytics.socialMediaClick(platform, 'footer')}
                   className="text-gray-400 hover:text-white active:text-gray-300 transition-colors duration-200 touch-manipulation p-1.5"
                   aria-label={`Visit our ${platform.charAt(0).toUpperCase() + platform.slice(1)} page (opens in new tab)`}
                 >

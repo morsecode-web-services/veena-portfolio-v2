@@ -88,6 +88,8 @@ export const viewport = {
 };
 
 import { Providers } from '@/components/Providers';
+import GoogleAnalytics from '@/components/GoogleAnalytics';
+import MicrosoftClarity from '@/components/MicrosoftClarity';
 import siteConfig from '@/public/config/site-config.json';
 import { validateConfig } from '@/lib/config';
 
@@ -103,6 +105,8 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} ${playfair.variable}`}>
       <head>
+        <GoogleAnalytics />
+        <MicrosoftClarity />
         {/* Preconnect to external resources for faster loading */}
         <link rel="preconnect" href="https://www.youtube.com" />
         <link rel="preconnect" href="https://www.youtube-nocookie.com" />

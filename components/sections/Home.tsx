@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { m, AnimatePresence } from 'framer-motion';
 import ImageWithFallback from '@/components/ui/ImageWithFallback';
 import VideoEmbed from '@/components/ui/VideoEmbed';
@@ -12,6 +12,8 @@ interface HomeProps {
 
 export default function Home({ config }: HomeProps) {
   const [currentSpotlight, setCurrentSpotlight] = useState(0);
+  const [isHovering, setIsHovering] = useState(false);
+  const autoScrollInterval = useRef<NodeJS.Timeout | null>(null);
 
   // Guard clause just in case, though parent should handle validity
   if (!config) return null;
@@ -25,6 +27,27 @@ export default function Home({ config }: HomeProps) {
     if (!config?.spotlights) return;
     setCurrentSpotlight((prev) => (prev - 1 + config.spotlights!.length) % config.spotlights!.length);
   };
+
+  // Auto-scroll effect
+  useEffect(() => {
+    // Only auto-scroll if we have multiple spotlights and not hovering
+    if (!config?.spotlights || config.spotlights.length <= 1 || isHovering) {
+      return;
+    }
+
+    // Set up auto-scroll interval (5 seconds)
+    autoScrollInterval.current = setInterval(() => {
+      nextSpotlight();
+    }, 5000);
+
+    // Cleanup on unmount or when dependencies change
+    return () => {
+      if (autoScrollInterval.current) {
+        clearInterval(autoScrollInterval.current);
+      }
+    };
+  }, [currentSpotlight, isHovering, config?.spotlights]);
+
 
   const spotlight = config.spotlights?.[currentSpotlight];
 
@@ -85,7 +108,7 @@ export default function Home({ config }: HomeProps) {
 
         {/* Viral Spotlight Carousel */}
         {spotlight && (
-          <div className="mb-12 sm:mb-24 md:mb-32 relative">
+          <div className="mb-12 sm:mb-24 md:mb-32 relative" onMouseEnter={() => setIsHovering(true)} onMouseLeave={() => setIsHovering(false)}>
             {/* initial={false} to prevent entry animation on first mount (LCP optimization) */}
             <AnimatePresence mode="wait" initial={false}>
               <m.div

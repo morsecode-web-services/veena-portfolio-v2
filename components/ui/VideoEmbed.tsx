@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect, useId } from 'react';
+import { useState, useEffect, useId, useCallback } from 'react';
 import { m, AnimatePresence } from 'framer-motion';
 import { useVideo } from '@/context/VideoContext';
-import Image from 'next/image'; // Added Image import
+import Image from 'next/image';
+import { analytics } from '@/components/GoogleAnalytics';
 
 interface VideoEmbedProps {
   src: string;
@@ -48,13 +49,13 @@ export default function VideoEmbed({
 
   const isPlaying = activeVideoId === instanceId;
 
-  const setIsPlaying = (playing: boolean) => {
+  const setIsPlaying = useCallback((playing: boolean) => {
     if (playing) {
       setActiveVideo(instanceId);
-    } else if (isPlaying) {
+    } else if (activeVideoId === instanceId) {
       setActiveVideo(null);
     }
-  };
+  }, [instanceId, activeVideoId, setActiveVideo]);
 
   useEffect(() => {
     // Try to extract YouTube video ID and convert to embed URL
@@ -81,8 +82,14 @@ export default function VideoEmbed({
 
     setHasError(false);
     setAttempts(0);
-    setIsPlaying(false);
-  }, [src, setIsPlaying]);
+  }, [src]);
+
+  // Track video play event when isPlaying changes to true
+  useEffect(() => {
+    if (isPlaying) {
+      analytics.videoPlay(title, src, 'youtube');
+    }
+  }, [isPlaying, title, src]);
 
   const handleThumbnailError = () => {
     // Fallback to hqdefault if maxresdefault fails (404)

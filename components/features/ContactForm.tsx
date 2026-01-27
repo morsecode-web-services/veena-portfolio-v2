@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { sendContactEmail } from '@/lib/email-service';
 import { m } from 'framer-motion';
+import { analytics } from '@/components/GoogleAnalytics';
 
 // Zod validation schema
 const contactFormSchema = z.object({
@@ -58,6 +59,9 @@ export default function ContactForm() {
         }
       );
 
+      // Track successful form submission
+      analytics.contactFormSubmit(true);
+
       setSubmitStatus('success');
       setLastSubmitTime(now);
       reset();
@@ -71,19 +75,24 @@ export default function ContactForm() {
       setSubmitStatus('error');
 
       // Set user-friendly error message based on error type
+      let errorMsg = '';
       if (error instanceof Error) {
         if (error.message.includes('timeout')) {
-          setErrorMessage('The request timed out. Please check your internet connection and try again.');
+          errorMsg = 'The request timed out. Please check your internet connection and try again.';
         } else if (error.message.includes('network') || error.message.includes('Network')) {
-          setErrorMessage('Network error. Please check your internet connection and try again.');
+          errorMsg = 'Network error. Please check your internet connection and try again.';
         } else if (error.message.includes('validation')) {
-          setErrorMessage('Please check that all fields are filled correctly.');
+          errorMsg = 'Please check that all fields are filled correctly.';
         } else {
-          setErrorMessage('Unable to send your message. Please try again later or contact directly via social media.');
+          errorMsg = 'Unable to send your message. Please try again later or contact directly via social media.';
         }
       } else {
-        setErrorMessage('An unexpected error occurred. Please try again later.');
+        errorMsg = 'An unexpected error occurred. Please try again later.';
       }
+      setErrorMessage(errorMsg);
+
+      // Track failed form submission
+      analytics.contactFormSubmit(false, errorMsg);
     } finally {
       setIsSubmitting(false);
     }
@@ -101,6 +110,7 @@ export default function ContactForm() {
             id="name"
             type="text"
             {...register('name')}
+            onFocus={() => analytics.contactFormStart()}
             className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-navy-500 focus:border-transparent transition-all text-xs sm:text-sm ${errors.name ? 'border-red-500' : 'border-gray-300'
               }`}
             placeholder="Your full name"

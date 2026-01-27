@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { m, AnimatePresence } from 'framer-motion';
 import { FaFilePdf, FaSpinner } from 'react-icons/fa';
 import { generatePDF } from '@/lib/pdf-generator';
+import { analytics } from '@/components/GoogleAnalytics';
 
 interface HeaderPDFButtonProps {
     showLabel?: boolean;
@@ -28,6 +29,9 @@ export default function HeaderPDFButton({ showLabel = false }: HeaderPDFButtonPr
             if (!result.success) {
                 setError(result.error || 'Failed');
                 setTimeout(() => setError(null), 3000);
+            } else {
+                // Track successful PDF download
+                analytics.pdfDownload('portfolio.pdf');
             }
         } catch (err) {
             setError('Error');
