@@ -172,10 +172,11 @@ export function validateConfig(data: unknown):
  * Get the base path for the application
  * This handles both development and production environments
  */
-function getBasePath(): string {
+export function getBasePath(): string {
   // Respect the environment variable if set (baked in at build time)
   if (process.env.NEXT_PUBLIC_BASE_PATH) {
-    return process.env.NEXT_PUBLIC_BASE_PATH;
+    const bp = process.env.NEXT_PUBLIC_BASE_PATH;
+    return bp.startsWith('/') ? bp : `/${bp}`;
   }
 
   // Fallback runtime detection for GitHub Pages subpaths
@@ -194,6 +195,26 @@ function getBasePath(): string {
   }
 
   return '';
+}
+
+/**
+ * Normalizes an asset path by prepending the base path if necessary
+ */
+export function getAssetPath(path: string | undefined): string {
+  if (!path) return '';
+  if (path.startsWith('http') || path.startsWith('data:') || path.startsWith('blob:')) {
+    return path;
+  }
+
+  const basePath = getBasePath().replace(/\/$/, '');
+  const sanitizedPath = path.startsWith('/') ? path : `/${path}`;
+
+  // Avoid duplication if basePath is already present
+  if (basePath && sanitizedPath.startsWith(basePath)) {
+    return sanitizedPath;
+  }
+
+  return `${basePath}${sanitizedPath}`;
 }
 
 /**
@@ -256,4 +277,4 @@ export function loadConfigSync(configData: unknown): SiteConfig {
   }
 }
 
-export { SiteConfigSchema, defaultConfig, getBasePath };
+export { SiteConfigSchema, defaultConfig };

@@ -1,5 +1,6 @@
 import jsPDF from 'jspdf';
 import QRCode from 'qrcode';
+import { getBasePath, getAssetPath } from './config';
 
 export interface PDFGenerationOptions {
   onProgress?: (progress: number) => void;
@@ -43,7 +44,6 @@ export async function generatePDF(
     onProgress?.(5);
 
     // Load config data
-    const { getBasePath } = await import('./config');
     const basePath = getBasePath().replace(/\/$/, '');
     const configPath = '/config/site-config.json'.replace(/^\//, '');
     const fullPath = basePath ? `${basePath}/${configPath}` : `/${configPath}`;
@@ -336,14 +336,19 @@ async function renderCoverPage(pdf: jsPDF, config: any, pageWidth: number, pageH
   // 0. Logo (Top-Left, above the name)
   let currentY = MARGIN + 15;
   if (config.artist.logo) {
-    const logoData = await loadImg(config.artist.logo);
-    if (logoData) {
-      const logoWidth = 20; // Consistent with header logo size (approx)
-      const props = pdf.getImageProperties(logoData);
-      const logoHeight = (props.height / props.width) * logoWidth;
+    const logoUrl = getAssetPath(config.artist.logo);
+    try {
+      const logoData = await loadImg(logoUrl);
+      if (logoData) {
+        const logoWidth = 20; // Consistent with header logo size (approx)
+        const props = pdf.getImageProperties(logoData);
+        const logoHeight = (props.height / props.width) * logoWidth;
 
-      pdf.addImage(logoData, 'PNG', MARGIN + 10, currentY, logoWidth, logoHeight);
-      currentY += logoHeight + 10;
+        pdf.addImage(logoData, 'PNG', MARGIN + 10, currentY, logoWidth, logoHeight);
+        currentY += logoHeight + 10;
+      }
+    } catch (e) {
+      console.warn("Failed to load cover page logo", e);
     }
   }
 
@@ -421,7 +426,7 @@ async function renderCoverPage(pdf: jsPDF, config: any, pageWidth: number, pageH
   pdf.text(new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'long' }).toUpperCase(), MARGIN + 10, currentY);
 
   // Contact Info Preview (Optional)
-  const contactText = config.artist.email || 'morsecode.in';
+  const contactText = config.artist.email || 'aishwaryamanikarnike.com';
   pdf.text(contactText, MARGIN + 10, pageHeight - MARGIN - 10);
 }
 

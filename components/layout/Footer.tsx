@@ -10,6 +10,7 @@ import {
 } from 'react-icons/fa';
 import type { SiteConfig } from '@/types';
 import Image from 'next/image';
+import { getAssetPath } from '@/lib/config';
 import { analytics } from '@/components/GoogleAnalytics';
 
 const socialMediaIcons = {
@@ -41,7 +42,7 @@ export default function Footer({ config }: FooterProps) {
               className="relative w-12 h-12 md:w-16 md:h-16"
             >
               <Image
-                src={config.artist.logo}
+                src={getAssetPath(config.artist.logo)}
                 alt={`${config.artist.name} Logo`}
                 fill
                 className="object-contain brightness-0 invert opacity-80 hover:opacity-100 transition-opacity duration-300"

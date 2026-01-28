@@ -6,6 +6,7 @@ import { debounce } from '@/lib/utils';
 import Navigation from './Navigation';
 import HeaderPDFButton from './HeaderPDFButton';
 import Image from 'next/image';
+import { getAssetPath } from '@/lib/config';
 import type { SiteConfig } from '@/types';
 
 interface HeaderProps {
@@ -80,7 +81,7 @@ export default function Header({ config }: HeaderProps) {
               {logo && (
                 <div className="relative w-8 h-8 md:w-10 md:h-10 transition-transform duration-300 group-hover:scale-110">
                   <Image
-                    src={logo}
+                    src={getAssetPath(logo)}
                     alt={`${artistName} Logo`}
                     fill
                     className="object-contain"

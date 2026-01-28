@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import ImageWithFallback from '@/components/ui/ImageWithFallback';
 import { m, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
+import { getAssetPath } from '@/lib/config';
 import type { GalleryImage } from '@/types';
 
 interface ImageGalleryProps {
@@ -138,7 +139,7 @@ export default function ImageGallery({ images }: ImageGalleryProps) {
             }}
           >
             <Image
-              src={image.src}
+              src={getAssetPath(image.src)}
               alt={image.alt}
               fill
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"

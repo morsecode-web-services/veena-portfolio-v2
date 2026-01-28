@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { m } from 'framer-motion';
 import Image from 'next/image';
 import { useIntersectionObserver } from '@/hooks/useIntersectionObserver';
+import { getAssetPath } from '@/lib/config';
 import type { SiteConfig } from '@/types';
 
 interface AboutProps {
@@ -42,7 +43,7 @@ export default function About({ config }: AboutProps) {
             <div className="relative aspect-[4/5] sm:aspect-square lg:aspect-[3/4] rounded-2xl overflow-hidden shadow-premium-xl group" style={{ minHeight: '400px' }}>
               <div className="absolute inset-0 bg-navy-900/10 group-hover:bg-transparent transition-colors duration-500 z-10"></div>
               <Image
-                src={config.home.images.veena}
+                src={getAssetPath(config.home.images.veena)}
                 alt={config.artist.name}
                 width={800}
                 height={1000}

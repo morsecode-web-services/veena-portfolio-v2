@@ -17,21 +17,9 @@ const playfair = Playfair_Display({
   variable: '--font-playfair',
 });
 
-const jsonLd = {
-  '@context': 'https://schema.org',
-  '@type': 'MusicGroup',
-  name: 'Aishwarya Manikarnike',
-  url: 'https://morsecode.in',
-  image: 'https://morsecode.in/images/home/veena-performance.jpg',
-  description: 'Official website of Veena musician Aishwarya Manikarnike. Showcasing classical Indian music performances, recordings, and artistic journey.',
-  sameAs: [
-    'https://www.youtube.com/@aishwaryamanikarnike',
-    'https://www.instagram.com/aishwaryamanikarnike'
-  ]
-};
-
+// Metadata
 export const metadata: Metadata = {
-  metadataBase: new URL('https://morsecode.in'),
+  metadataBase: new URL('https://www.aishwaryamanikarnike.com'),
   title: {
     default: 'Aishwarya Manikarnike - Veena Musician',
     template: '%s | Aishwarya Manikarnike'
@@ -43,7 +31,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Aishwarya Manikarnike - Veena Musician',
     description: 'Official website of Veena musician Aishwarya Manikarnike',
-    url: 'https://morsecode.in',
+    url: 'https://www.aishwaryamanikarnike.com',
     siteName: 'Aishwarya Manikarnike',
     locale: 'en_US',
     type: 'website',
@@ -93,9 +81,92 @@ import MicrosoftClarity from '@/components/MicrosoftClarity';
 import siteConfig from '@/public/config/site-config.json';
 import { validateConfig } from '@/lib/config';
 
-// Validate config at build time (optional in layout as it runs on server)
+// Validate config
 const configValidation = validateConfig(siteConfig);
 const config = configValidation.success ? configValidation.data : undefined;
+
+// Generate Enhanced JSON-LD
+const generateJsonLd = (config: any) => {
+  if (!config) return null;
+
+  const siteUrl = 'https://www.aishwaryamanikarnike.com';
+
+  // 1. Person Schema
+  const personSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'Person',
+    '@id': `${siteUrl}/#person`,
+    name: config.artist.name,
+    url: siteUrl,
+    image: `${siteUrl}${config.artist.logo}`,
+    description: config.artist.briefBio,
+    jobTitle: 'Musician',
+    knowsAbout: ['Carnatic Music', 'Saraswati Veena', 'Vocal Music'],
+    sameAs: [
+      config.socialMedia.youtube,
+      config.socialMedia.instagram,
+      config.socialMedia.linkedin,
+    ].filter(Boolean)
+  };
+
+  // 2. MusicGroup Schema
+  const musicGroupSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'MusicGroup',
+    '@id': `${siteUrl}/#musicgroup`,
+    name: config.artist.name,
+    url: siteUrl,
+    image: `${siteUrl}/images/home/veena-performance.jpg`,
+    description: personSchema.description,
+    member: [{
+      '@type': 'OrganizationRole',
+      member: { '@id': `${siteUrl}/#person` },
+      roleName: 'Lead Musician'
+    }],
+    sameAs: personSchema.sameAs
+  };
+
+  // 3. VideoObject Schemas
+  const videoSchemas: any[] = [];
+
+  const addVideoSchema = (title: string, url: string) => {
+    const videoId = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&?]{11})/)?.[1];
+    if (videoId) {
+      videoSchemas.push({
+        '@context': 'https://schema.org',
+        '@type': 'VideoObject',
+        name: title,
+        description: `${title} - Performance by Aishwarya Manikarnike`,
+        thumbnailUrl: [
+          `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,
+          `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`
+        ],
+        uploadDate: '2024-01-01T08:00:00+08:00',
+        contentUrl: url,
+        embedUrl: `https://www.youtube.com/embed/${videoId}`,
+        author: { '@id': `${siteUrl}/#person` }
+      });
+    }
+  };
+
+  config.home.featuredVideos.forEach((v: any, i: number) => {
+    const title = typeof v === 'string' ? `Featured Video ${i + 1}` : v.title;
+    const url = typeof v === 'string' ? v : v.url;
+    addVideoSchema(title, url);
+  });
+
+  config.music.categories.forEach((cat: any) => {
+    cat.subcategories?.forEach((sub: any) => {
+      sub.videos?.forEach((vid: any) => {
+        addVideoSchema(vid.title, vid.url);
+      });
+    });
+  });
+
+  return [personSchema, musicGroupSchema, ...videoSchemas];
+};
+
+const jsonLdData = generateJsonLd(config);
 
 export default function RootLayout({
   children,
@@ -116,10 +187,12 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="https://www.youtube-nocookie.com" />
         <link rel="dns-prefetch" href="https://i.ytimg.com" />
         <link rel="dns-prefetch" href="https://img.youtube.com" />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-        />
+        {jsonLdData && (
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdData) }}
+          />
+        )}
       </head>
       <body className="font-sans antialiased text-navy-900 bg-cream-50">
         {/* Skip Navigation Links for Accessibility */}

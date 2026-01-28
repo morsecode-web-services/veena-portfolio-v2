@@ -8,6 +8,6 @@ export default function robots(): MetadataRoute.Robots {
             userAgent: '*',
             allow: '/',
         },
-        sitemap: 'https://morsecode.in/sitemap.xml',
+        sitemap: 'https://www.aishwaryamanikarnike.com/sitemap.xml',
     };
 }

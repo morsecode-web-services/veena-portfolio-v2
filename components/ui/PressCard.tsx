@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import { PressArticle } from '@/types';
 import { FiExternalLink } from 'react-icons/fi';
+import { getAssetPath } from '@/lib/config';
 
 interface PressCardProps {
   article: PressArticle;
@@ -31,7 +32,7 @@ export default function PressCard({ article }: PressCardProps) {
         {article.imageUrl && (
           <div className="relative w-full h-40 overflow-hidden bg-gray-100">
             <Image
-              src={article.imageUrl}
+              src={getAssetPath(article.imageUrl)}
               alt={article.title}
               fill
               className="object-cover group-hover:scale-105 transition-transform duration-500"
