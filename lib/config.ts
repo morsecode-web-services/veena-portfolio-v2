@@ -173,21 +173,22 @@ export function validateConfig(data: unknown):
  * This handles both development and production environments
  */
 export function getBasePath(): string {
-  // Respect the environment variable if set (baked in at build time)
+  // 1. Build-time environment variable (primary source)
   if (process.env.NEXT_PUBLIC_BASE_PATH) {
     const bp = process.env.NEXT_PUBLIC_BASE_PATH;
     return bp.startsWith('/') ? bp : `/${bp}`;
   }
 
-  // Fallback runtime detection for GitHub Pages subpaths
+  // 2. Client-side runtime detection (fallback for GitHub Pages)
   if (typeof window !== 'undefined') {
     const hostname = window.location.hostname;
     const pathname = window.location.pathname;
 
-    // Check for standard github.io subpath (usually repo name)
+    // Check if we are on a github.io domain and NOT on a custom domain pointing there
+    // If there's a subpath that looks like a repo name
     if (hostname.includes('github.io')) {
       const pathParts = pathname.split('/').filter(Boolean);
-      if (pathParts.length > 0) {
+      if (pathParts.length > 0 && !hostname.startsWith(pathParts[0])) {
         // If it's a subpath deployment, the first part is usually the repo name
         return `/${pathParts[0]}`;
       }
