@@ -14,7 +14,7 @@ export const mockEvents: Event[] = [
         map_url: 'https://maps.google.com',
         is_published: true,
         category: 'Performance',
-        image_url: '/images/home/veena-performance.jpg'
+        image_url: '/images/gallery/gallery-1.jpg'
     },
     {
         id: '2',
@@ -32,11 +32,49 @@ export const mockEvents: Event[] = [
         id: '3',
         created_at: new Date().toISOString(),
         title: 'Heritage Series: Vocal Recital',
-        date: '2025-12-10', // Past event
+        date: '2025-12-10',
         time: '17:00',
         venue: 'Chowdiah Memorial Hall',
         city: 'Bengaluru',
         description: 'A special vocal recital as part of the Heritage Arts festival.',
+        is_published: true,
+        category: 'Performance',
+        image_url: '/images/gallery/gallery-2.jpg'
+    },
+    {
+        id: '4',
+        created_at: new Date().toISOString(),
+        title: 'Three Generation Veena Trio',
+        date: '2024-11-05',
+        time: '18:00',
+        venue: 'Bangalore Gayana Samaja',
+        city: 'Bengaluru',
+        description: 'A rare collaboration featuring three generations of Vainikas.',
+        is_published: true,
+        category: 'Performance',
+        image_url: '/images/gallery/gallery-5.jpg'
+    },
+    {
+        id: '5',
+        created_at: new Date().toISOString(),
+        title: 'Navaratri Utsavam',
+        date: '2024-10-12',
+        time: '19:00',
+        venue: 'Mysore Palace',
+        city: 'Mysuru',
+        description: 'A grand Veena concert at the historic Mysore Palace during Dussehra.',
+        is_published: true,
+        category: 'Performance'
+    },
+    {
+        id: '6',
+        created_at: new Date().toISOString(),
+        title: 'Tyagaraja Aradhana',
+        date: '2023-01-25',
+        time: '09:00',
+        venue: 'Thiruvaiyaru',
+        city: 'Thanjavur',
+        description: 'Participation in the annual Tyagaraja Aradhana festival.',
         is_published: true,
         category: 'Performance'
     }
