@@ -48,7 +48,7 @@ export function EventForm({ initialData, onSubmit, loading }: EventFormProps) {
         handleSubmit,
         setValue,
         watch,
-        formState: { errors },
+        formState: { errors, isDirty },
     } = useForm<EventFormSchema>({
         resolver: zodResolver(eventSchema) as any,
         defaultValues: {
@@ -232,7 +232,15 @@ export function EventForm({ initialData, onSubmit, loading }: EventFormProps) {
             <div className="flex items-center justify-end gap-3 pt-4">
                 <button
                     type="button"
-                    onClick={() => router.back()}
+                    onClick={() => {
+                        if (isDirty) {
+                            if (confirm('You have unsaved changes. Are you sure you want to discard them?')) {
+                                router.back();
+                            }
+                        } else {
+                            router.back();
+                        }
+                    }}
                     className="px-6 py-3 border border-gray-200 text-gray-600 font-bold rounded-xl hover:bg-gray-50 transition-colors uppercase tracking-widest text-xs"
                 >
                     Cancel

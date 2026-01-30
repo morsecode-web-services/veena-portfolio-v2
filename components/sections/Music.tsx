@@ -48,12 +48,10 @@ export default function Music({ config }: MusicProps) {
                 <button
                   key={category.id}
                   onClick={() => setSelectedMainCategoryId(category.id)}
-                  className="px-6 py-2.5 rounded-full text-sm font-bold transition-all duration-300 border-2 shadow-md hover:-translate-y-0.5 tracking-wide"
-                  style={{
-                    backgroundColor: isActive ? '#14213d' : '#ffffff',
-                    color: isActive ? '#ffffff' : '#14213d',
-                    borderColor: isActive ? '#b8860b' : '#e5e7eb',
-                  }}
+                  className={`px-6 py-2.5 rounded-full text-sm font-bold transition-all duration-300 border-2 shadow-md hover:-translate-y-0.5 tracking-wide ${isActive
+                      ? 'bg-navy-950 text-white border-gold-500'
+                      : 'bg-white text-navy-950 border-gray-200'
+                    }`}
                 >
                   {category.name}
                 </button>

@@ -16,8 +16,10 @@ import {
     Trash2,
     Eye,
     EyeOff,
-    Filter
+    Filter,
+    Globe
 } from 'lucide-react';
+import Image from 'next/image';
 import { format } from 'date-fns';
 
 export default function EventsPage() {
@@ -115,13 +117,23 @@ export default function EventsPage() {
                     <h1 className="text-2xl font-serif font-bold text-gray-900">Performance Schedule</h1>
                     <p className="text-sm text-gray-500">Manage your concert dates and event details</p>
                 </div>
-                <Link
-                    href="/admin/events/new"
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-navy-900 text-white rounded-lg hover:bg-navy-800 transition-colors font-bold text-sm"
-                >
-                    <Plus className="h-4 w-4" />
-                    Add Event
-                </Link>
+                <div className="flex gap-3">
+                    <Link
+                        href="/"
+                        target="_blank"
+                        className="inline-flex items-center gap-2 px-4 py-2 border border-gray-200 text-gray-600 rounded-lg hover:bg-gray-50 transition-colors font-bold text-sm"
+                    >
+                        <Globe className="h-4 w-4" />
+                        View Site
+                    </Link>
+                    <Link
+                        href="/admin/events/new"
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-navy-900 text-white rounded-lg hover:bg-navy-800 transition-colors font-bold text-sm"
+                    >
+                        <Plus className="h-4 w-4" />
+                        Add Event
+                    </Link>
+                </div>
             </div>
 
             {/* Search and Filters */}
@@ -154,23 +166,39 @@ export default function EventsPage() {
                     <div className="overflow-x-auto">
                         <table className="w-full text-left">
                             <thead>
-                                <tr className="bg-gray-50 border-b border-gray-100">
-                                    <th className="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest">Event</th>
-                                    <th className="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest">Date & Time</th>
-                                    <th className="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest">Location</th>
-                                    <th className="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest">Status</th>
-                                    <th className="px-6 py-4 text-right"></th>
+                                <tr className="bg-gray-50/50 border-b border-gray-100">
+                                    <th className="px-6 py-5 text-[10px] font-black text-navy-900/40 uppercase tracking-[0.2em]">Event Details</th>
+                                    <th className="px-6 py-5 text-[10px] font-black text-navy-900/40 uppercase tracking-[0.2em]">Date & Time</th>
+                                    <th className="px-6 py-5 text-[10px] font-black text-navy-900/40 uppercase tracking-[0.2em]">Location</th>
+                                    <th className="px-6 py-5 text-[10px] font-black text-navy-900/40 uppercase tracking-[0.2em]">Status</th>
+                                    <th className="px-6 py-5 text-right"></th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100">
                                 {filteredEvents.map((event) => (
                                     <tr key={event.id} className="hover:bg-gray-50/50 transition-colors group">
                                         <td className="px-6 py-4">
-                                            <div>
-                                                <div className="font-bold text-navy-900 group-hover:text-navy-600 transition-colors font-serif">
-                                                    {event.title}
+                                            <div className="flex items-center gap-4">
+                                                {event.image_url ? (
+                                                    <div className="relative w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 border border-gray-100">
+                                                        <Image
+                                                            src={event.image_url}
+                                                            alt={event.title}
+                                                            fill
+                                                            className="object-cover"
+                                                        />
+                                                    </div>
+                                                ) : (
+                                                    <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0 border border-gray-100">
+                                                        <Calendar className="h-5 w-5 text-gray-300" />
+                                                    </div>
+                                                )}
+                                                <div>
+                                                    <div className="font-bold text-navy-900 group-hover:text-navy-600 transition-colors font-serif line-clamp-1">
+                                                        {event.title}
+                                                    </div>
+                                                    <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{event.category}</div>
                                                 </div>
-                                                <div className="text-xs text-gray-400 capitalize">{event.category}</div>
                                             </div>
                                         </td>
                                         <td className="px-6 py-4">
@@ -209,6 +237,16 @@ export default function EventsPage() {
                                         </td>
                                         <td className="px-6 py-4 text-right">
                                             <div className="flex justify-end gap-2">
+                                                {event.is_published && (
+                                                    <Link
+                                                        href="/#schedule"
+                                                        target="_blank"
+                                                        className="p-1.5 text-gray-400 hover:text-navy-600 transition-colors"
+                                                        title="View Live"
+                                                    >
+                                                        <ExternalLink className="h-4 w-4" />
+                                                    </Link>
+                                                )}
                                                 <Link
                                                     href={`/admin/events/edit?id=${event.id}`}
                                                     className="p-1.5 text-gray-400 hover:text-navy-600 transition-colors"
