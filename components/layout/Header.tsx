@@ -17,15 +17,6 @@ interface HeaderProps {
 export default function Header({ config }: HeaderProps) {
   const pathname = usePathname();
   const [isScrolled, setIsScrolled] = useState(false);
-
-  // Hide header on admin routes
-  if (pathname?.startsWith('/admin')) {
-    return null;
-  }
-
-  const logo = config?.artist.logo;
-  const artistName = config?.artist.name || 'Aishwarya Manikarnike';
-
   const headerRef = useRef<HTMLElement>(null);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -64,6 +55,14 @@ export default function Header({ config }: HeaderProps) {
       resizeObserver.disconnect();
     };
   }, [debouncedHandleScroll]);
+
+  // Hide header on admin routes
+  if (pathname?.startsWith('/admin')) {
+    return null;
+  }
+
+  const logo = config?.artist.logo;
+  const artistName = config?.artist.name || 'Aishwarya Manikarnike';
 
   return (
     <m.header

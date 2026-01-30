@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { EventForm } from '@/components/admin/EventForm';
@@ -14,13 +14,8 @@ export default function EditEventPage() {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
 
-    useEffect(() => {
-        if (id) {
-            fetchEvent();
-        }
-    }, [id]);
-
-    async function fetchEvent() {
+    const fetchEvent = useCallback(async () => {
+        if (!id) return;
         try {
             setLoading(true);
             const { data, error } = await supabase
@@ -38,7 +33,11 @@ export default function EditEventPage() {
         } finally {
             setLoading(false);
         }
-    }
+    }, [id, router]);
+
+    useEffect(() => {
+        fetchEvent();
+    }, [fetchEvent]);
 
     const handleSubmit = async (data: any) => {
         try {

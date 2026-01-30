@@ -3,6 +3,7 @@
 import React, { useState, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { ImageIcon, X, Upload, Loader2 } from 'lucide-react';
+import Image from 'next/image';
 
 interface ImageUploadProps {
     value?: string;
@@ -70,10 +71,11 @@ export function ImageUpload({ value, onChange, bucket = 'events' }: ImageUploadP
                 >
                     {value ? (
                         <>
-                            <img
+                            <Image
                                 src={value}
                                 alt="Uploaded"
-                                className="w-full h-full object-cover rounded-2xl"
+                                fill
+                                className="object-cover rounded-2xl"
                             />
                             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl flex items-center justify-center">
                                 <Upload className="text-white h-8 w-8" />
