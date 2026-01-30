@@ -61,6 +61,7 @@ const Contact = dynamic(() => import('@/components/sections/Contact'), {
 
 // About component is high up, load normally via dynamic imports (SSR enabled)
 const About = dynamic(() => import('@/components/sections/About'));
+const Schedule = dynamic(() => import('@/components/sections/Schedule'));
 
 
 export default function Page() {
@@ -104,22 +105,29 @@ export default function Page() {
         </SectionErrorBoundary>
       </div>
 
-      {/* Press Section - Sophisticated gray tone */}
+      {/* Schedule Section - Soft gray background */}
       <div className="py-8 sm:py-11 md:py-14 bg-cream-50">
+        <SectionErrorBoundary sectionName="Schedule">
+          <Schedule />
+        </SectionErrorBoundary>
+      </div>
+
+      {/* Press Section - Sophisticated gray tone */}
+      <div className="py-8 sm:py-11 md:py-14 bg-white">
         <SectionErrorBoundary sectionName="Press">
           <Press config={config} />
         </SectionErrorBoundary>
       </div>
 
       {/* FAQ Section - Return to white for clarity */}
-      <div className="py-8 sm:py-11 md:py-20 bg-white">
+      <div className="py-8 sm:py-11 md:py-20 bg-cream-50">
         <SectionErrorBoundary sectionName="FAQ">
           <FAQ config={config} />
         </SectionErrorBoundary>
       </div>
 
       {/* Contact Section - Elegant navy accent background */}
-      <div className="py-8 sm:py-11 md:py-20 bg-cream-50">
+      <div className="py-8 sm:py-11 md:py-20 bg-white">
         <SectionErrorBoundary sectionName="Contact">
           <Contact />
         </SectionErrorBoundary>

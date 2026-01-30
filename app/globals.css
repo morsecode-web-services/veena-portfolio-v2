@@ -176,12 +176,24 @@ html {
 }
 
 /* Refined color utilities with WCAG AA compliance */
+.text-navy-950 {
+  color: #0a1428;
+}
+
 .text-navy-900 {
   color: rgb(20, 33, 61);
 }
 
 .text-navy-600 {
   color: rgb(51, 65, 85);
+}
+
+.bg-navy-950 {
+  background-color: #0a1428;
+}
+
+.bg-navy-900 {
+  background-color: rgb(20, 33, 61);
 }
 
 .bg-cream-50 {

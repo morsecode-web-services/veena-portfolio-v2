@@ -1,16 +1,17 @@
-'use client';
-
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { m, AnimatePresence } from 'framer-motion';
 import { FaBars, FaTimes } from 'react-icons/fa';
 import HeaderPDFButton from './HeaderPDFButton';
+import Link from 'next/link';
+import { useRouter, usePathname } from 'next/navigation';
 
 const navItems = [
   { id: 'home', label: 'Home' },
   { id: 'about', label: 'About' },
   { id: 'gallery', label: 'Gallery' },
   { id: 'music', label: 'Music' },
+  { id: 'schedule', label: 'Schedule' },
   { id: 'press', label: 'Press' },
   { id: 'faq', label: 'FAQ' },
   { id: 'contact', label: 'Contact' },
@@ -20,9 +21,12 @@ export default function Navigation() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState('home');
   const [mounted, setMounted] = useState(false);
+  const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     setMounted(true);
+
     const handleScroll = () => {
       requestAnimationFrame(() => {
         const sections = navItems.map((item) => item.id);
@@ -46,10 +50,16 @@ export default function Navigation() {
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [pathname]);
 
-  const scrollToSection = (sectionId: string) => {
-    const element = document.getElementById(sectionId);
+  const handleNavClick = (item: typeof navItems[0]) => {
+    if (pathname !== '/') {
+      router.push(`/#${item.id}`);
+      setIsMenuOpen(false);
+      return;
+    }
+
+    const element = document.getElementById(item.id);
     if (element) {
       const offset = 80; // Header height offset
       const elementPosition = element.offsetTop - offset;
@@ -73,7 +83,7 @@ export default function Navigation() {
         role="navigation"
         aria-label="Main navigation"
       >
-        <ul className="flex space-x-6" role="menubar">
+        <ul className="flex space-x-4 lg:space-x-6" role="menubar">
           {navItems.map((item, index) => (
             <m.li
               key={item.id}
@@ -83,8 +93,8 @@ export default function Navigation() {
               role="none"
             >
               <button
-                onClick={() => scrollToSection(item.id)}
-                className="relative text-xs font-medium transition-all duration-300 hover:text-gold-600 min-h-[44px] min-w-[44px] flex items-center justify-center px-3"
+                onClick={() => handleNavClick(item)}
+                className="relative text-[11px] lg:text-xs font-bold transition-all duration-300 hover:text-gold-600 min-h-[44px] flex items-center justify-center px-1.5 lg:px-3 uppercase tracking-wider"
                 style={{ color: activeSection === item.id ? '#8B6914' : '#334155' }}
                 role="menuitem"
                 aria-label={`Navigate to ${item.label} section`}
@@ -159,7 +169,7 @@ export default function Navigation() {
                     {navItems.map((item) => (
                       <li key={item.id} role="none">
                         <button
-                          onClick={() => scrollToSection(item.id)}
+                          onClick={() => handleNavClick(item)}
                           className={`text-base font-medium py-3.5 px-2 transition-colors hover:text-gold-600 w-full text-left flex items-center justify-between ${activeSection === item.id
                             ? 'text-gold-600'
                             : 'text-gray-700'
