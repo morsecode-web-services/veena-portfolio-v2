@@ -94,7 +94,7 @@ export default function Navigation() {
             >
               <button
                 onClick={() => handleNavClick(item)}
-                className="relative text-[11px] lg:text-xs font-bold transition-all duration-300 hover:text-gold-600 min-h-[44px] flex items-center justify-center px-1.5 lg:px-3 uppercase tracking-wider"
+                className="relative text-[11px] lg:text-xs font-medium transition-all duration-300 hover:text-gold-600 min-h-[44px] flex items-center justify-center px-1.5 lg:px-3"
                 style={{ color: activeSection === item.id ? '#8B6914' : '#334155' }}
                 role="menuitem"
                 aria-label={`Navigate to ${item.label} section`}

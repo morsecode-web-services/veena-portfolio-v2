@@ -194,7 +194,7 @@ export default function RootLayout({
           />
         )}
       </head>
-      <body className="font-sans antialiased text-navy-900 bg-cream-50">
+      <body className="font-sans antialiased">
         {/* Skip Navigation Links for Accessibility */}
         <a
           href="#main-content"

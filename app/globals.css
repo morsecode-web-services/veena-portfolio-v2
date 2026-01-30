@@ -67,14 +67,11 @@ section {
 }
 
 /* Professional typography - refined for quiet luxury */
-h1,
-h2,
-h3 {
+.section-heading {
   font-family: var(--font-serif);
   font-weight: 700;
   line-height: 1.2;
   letter-spacing: -0.02em;
-  /* Tighter for elegance */
   color: rgb(var(--color-navy));
 }
 
