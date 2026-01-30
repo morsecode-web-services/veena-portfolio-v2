@@ -114,7 +114,7 @@ export default function EventsPage() {
         <div className="space-y-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <h1 className="text-2xl font-serif font-bold text-gray-900">Performance Schedule</h1>
+                    <h1 className="text-2xl font-serif font-bold text-gray-900">Events Management</h1>
                     <p className="text-sm text-gray-500">Manage your concert dates and event details</p>
                 </div>
                 <div className="flex gap-3">

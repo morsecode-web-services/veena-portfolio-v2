@@ -91,7 +91,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
     const navItems = [
         { name: 'Dashboard', href: '/admin/events', icon: LayoutDashboard },
-        { name: 'Schedule', href: '/admin/events', icon: Calendar },
+        { name: 'Events', href: '/admin/events', icon: Calendar },
         { name: 'Public Site', href: '/', icon: Home },
     ];
 

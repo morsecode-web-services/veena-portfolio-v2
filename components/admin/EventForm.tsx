@@ -54,6 +54,7 @@ export function EventForm({ initialData, onSubmit, loading }: EventFormProps) {
         defaultValues: {
             category: 'Performance',
             is_published: true,
+            date: new Date().toISOString().split('T')[0],
             ...(initialData as any),
         },
     });
@@ -175,12 +176,18 @@ export function EventForm({ initialData, onSubmit, loading }: EventFormProps) {
                         <label className="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide flex items-center gap-2">
                             <Info className="h-4 w-4 text-navy-400" /> Description (Optional)
                         </label>
-                        <textarea
-                            {...register('description')}
-                            rows={4}
-                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-navy-500 transition-all resize-none"
-                            placeholder="Add details about the concert, accompanists, etc..."
-                        ></textarea>
+                        <div className="relative">
+                            <textarea
+                                {...register('description')}
+                                rows={4}
+                                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-navy-500 transition-all resize-none"
+                                placeholder="Add details about the concert, accompanists, etc..."
+                                maxLength={500}
+                            ></textarea>
+                            <div className="absolute bottom-3 right-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest pointer-events-none">
+                                {watch('description')?.length || 0} / 500
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

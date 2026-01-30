@@ -105,9 +105,9 @@ export default function Page() {
         </SectionErrorBoundary>
       </div>
 
-      {/* Schedule Section - Soft gray background */}
+      {/* Events Section - Soft gray background */}
       <div className="py-8 sm:py-11 md:py-14 bg-cream-50">
-        <SectionErrorBoundary sectionName="Schedule">
+        <SectionErrorBoundary sectionName="Events">
           <Schedule />
         </SectionErrorBoundary>
       </div>

@@ -37,12 +37,13 @@ export default function FAQItem({ item, isOpen, onToggle, index }: FAQItemProps)
       transition={{ duration: 0.5, delay: index * 0.1 }}
       className="border-b border-gray-200 last:border-b-0"
     >
-      <button
+      <m.button
         onClick={onToggle}
         onKeyDown={handleKeyDown}
+        whileHover={{ backgroundColor: 'rgba(255, 253, 246, 0.8)' }}
         aria-expanded={isOpen}
         aria-controls={`faq-answer-${index}`}
-        className="w-full text-left py-4 px-5 flex items-center justify-between hover:bg-cream-50 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gold-600 focus:ring-inset"
+        className="w-full text-left py-4 px-5 flex items-center justify-between transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gold-600 focus:ring-inset"
       >
         <h3 className="text-base md:text-lg font-serif font-semibold text-navy-900 pr-6" id={`faq-question-${index}`}>
           {item.question}
@@ -66,7 +67,7 @@ export default function FAQItem({ item, isOpen, onToggle, index }: FAQItemProps)
             />
           </svg>
         </m.div>
-      </button>
+      </m.button>
 
       <m.div
         initial={false}
