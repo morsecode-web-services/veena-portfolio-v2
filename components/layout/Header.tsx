@@ -8,13 +8,21 @@ import HeaderPDFButton from './HeaderPDFButton';
 import Image from 'next/image';
 import { getAssetPath } from '@/lib/config';
 import type { SiteConfig } from '@/types';
+import { usePathname } from 'next/navigation';
 
 interface HeaderProps {
   config?: SiteConfig;
 }
 
 export default function Header({ config }: HeaderProps) {
+  const pathname = usePathname();
   const [isScrolled, setIsScrolled] = useState(false);
+
+  // Hide header on admin routes
+  if (pathname?.startsWith('/admin')) {
+    return null;
+  }
+
   const logo = config?.artist.logo;
   const artistName = config?.artist.name || 'Aishwarya Manikarnike';
 

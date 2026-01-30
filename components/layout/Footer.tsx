@@ -21,12 +21,20 @@ const socialMediaIcons = {
   linkedin: FaLinkedin,
 };
 
+import { usePathname } from 'next/navigation';
+
 interface FooterProps {
   config?: SiteConfig;
 }
 
 export default function Footer({ config }: FooterProps) {
+  const pathname = usePathname();
   const socialMedia = config?.socialMedia || {};
+
+  // Hide footer on admin routes
+  if (pathname?.startsWith('/admin')) {
+    return null;
+  }
 
   return (
     <footer className="bg-gradient-navy text-white py-6 sm:py-8 md:py-10 border-t border-premium" role="contentinfo">
