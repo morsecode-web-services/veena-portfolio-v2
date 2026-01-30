@@ -239,7 +239,7 @@ export default function EventsPage() {
                                             <div className="flex justify-end gap-2">
                                                 {event.is_published && (
                                                     <Link
-                                                        href="/#schedule"
+                                                        href="/#events"
                                                         target="_blank"
                                                         className="p-1.5 text-gray-400 hover:text-navy-600 transition-colors"
                                                         title="View Live"

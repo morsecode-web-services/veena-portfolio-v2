@@ -88,7 +88,7 @@ export default function Schedule() {
     }, [upcomingEvents]);
 
     return (
-        <section id="schedule" className="relative py-24 px-4 sm:px-6 md:px-8 bg-white overflow-hidden" aria-label="Schedule">
+        <section id="events" className="relative py-24 px-4 sm:px-6 md:px-8 bg-white overflow-hidden" aria-label="Events">
             {/* Minimal Background */}
             <div className="absolute -top-24 -left-24 w-64 h-64 bg-gold-100/10 rounded-full blur-[80px] pointer-events-none" />
 
@@ -108,7 +108,7 @@ export default function Schedule() {
                     className="text-center mb-10 sm:mb-12"
                 >
                     <h2 className="text-2xl sm:text-3xl md:text-4xl font-serif font-bold text-navy-900 mb-2 md:mb-3 px-4">
-                        {activeTab === 'upcoming' ? 'Concert Schedule' : 'Past Performances'}
+                        {activeTab === 'upcoming' ? 'Upcoming Events' : 'Past Performances'}
                     </h2>
                     <div className="w-20 sm:w-24 h-1 bg-gold-400 mx-auto rounded-full"></div>
                 </m.div>

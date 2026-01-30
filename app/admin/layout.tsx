@@ -32,27 +32,36 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                 return;
             }
 
-            const { data: { session } } = await supabase.auth.getSession();
+            try {
+                const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
-            if (!session) {
+                if (sessionError || !session) {
+                    if (sessionError) console.error('Session error:', sessionError);
+                    router.push('/admin/login');
+                    return;
+                }
+
+                // Verify role
+                const { data: profile, error: profileError } = await supabase
+                    .from('profiles')
+                    .select('role')
+                    .eq('id', session.user.id)
+                    .single();
+
+                if (profileError || !profile || (profile.role !== 'admin' && profile.role !== 'editor')) {
+                    if (profileError) console.error('Profile error:', profileError);
+                    await supabase.auth.signOut();
+                    router.push('/admin/login');
+                    return;
+                }
+
+                setCheckingAuth(false);
+            } catch (err) {
+                console.error('Unexpected auth check error:', err);
+                // Clear poisoned session data
+                await supabase.auth.signOut().catch(() => { });
                 router.push('/admin/login');
-                return;
             }
-
-            // Verify role
-            const { data: profile } = await supabase
-                .from('profiles')
-                .select('role')
-                .eq('id', session.user.id)
-                .single();
-
-            if (!profile || (profile.role !== 'admin' && profile.role !== 'editor')) {
-                await supabase.auth.signOut();
-                router.push('/admin/login');
-                return;
-            }
-
-            setCheckingAuth(false);
         }
 
         checkAuth();

@@ -272,9 +272,11 @@ export default function ImageGallery({ images }: ImageGalleryProps) {
                 />
               </div>
               {selectedImage.caption && (
-                <div className="mt-2 sm:mt-3 text-center px-4">
-                  <p className="text-white text-xs sm:text-sm md:text-base">{selectedImage.caption}</p>
-                  <p className="text-gray-400 text-[10px] sm:text-xs mt-1">
+                <div className="mt-4 sm:mt-6 text-center max-w-2xl mx-auto px-4">
+                  <p className="text-white text-sm sm:text-base md:text-lg font-medium tracking-wide">
+                    {selectedImage.caption}
+                  </p>
+                  <p className="text-gray-400 text-xs sm:text-sm mt-2 font-mono">
                     {currentIndex + 1} / {images.length}
                   </p>
                 </div>

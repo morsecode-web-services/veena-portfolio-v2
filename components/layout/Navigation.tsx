@@ -11,7 +11,7 @@ const navItems = [
   { id: 'about', label: 'About' },
   { id: 'gallery', label: 'Gallery' },
   { id: 'music', label: 'Music' },
-  { id: 'schedule', label: 'Schedule' },
+  { id: 'events', label: 'Events' },
   { id: 'press', label: 'Press' },
   { id: 'faq', label: 'FAQ' },
   { id: 'contact', label: 'Contact' },
@@ -30,21 +30,18 @@ export default function Navigation() {
     const handleScroll = () => {
       requestAnimationFrame(() => {
         const sections = navItems.map((item) => item.id);
-        const scrollPosition = window.scrollY + 100;
+        const scrollPosition = window.scrollY + 120; // Slightly larger offset for trigger
+
+        let currentSection = sections[0];
 
         for (const sectionId of sections) {
           const element = document.getElementById(sectionId);
-          if (element) {
-            const { offsetTop, offsetHeight } = element;
-            if (
-              scrollPosition >= offsetTop &&
-              scrollPosition < offsetTop + offsetHeight
-            ) {
-              setActiveSection(sectionId);
-              break;
-            }
+          if (element && scrollPosition >= element.offsetTop) {
+            currentSection = sectionId;
           }
         }
+
+        setActiveSection(currentSection);
       });
     };
 

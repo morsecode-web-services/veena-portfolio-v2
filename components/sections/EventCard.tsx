@@ -168,7 +168,7 @@ export const EventCard: React.FC<EventCardProps> = ({ event, isPast, viewMode = 
                         )}
                     </div>
 
-                    {(hasBooking || hasMap) && (
+                    {(hasBooking || hasMap) ? (
                         <div className="mt-2 pt-4 flex items-center justify-between">
                             {hasBooking && !isPast ? (
                                 <a
@@ -179,6 +179,10 @@ export const EventCard: React.FC<EventCardProps> = ({ event, isPast, viewMode = 
                                 >
                                     Tickets <ArrowRight className="h-3 w-3" />
                                 </a>
+                            ) : !isPast ? (
+                                <span className="text-[11px] font-black text-gold-600 uppercase tracking-widest bg-gold-50 px-2 py-1 rounded">
+                                    Entry Free
+                                </span>
                             ) : <div></div>}
 
                             {hasMap && (
@@ -191,6 +195,12 @@ export const EventCard: React.FC<EventCardProps> = ({ event, isPast, viewMode = 
                                     <ExternalLink className="h-4 w-4" />
                                 </a>
                             )}
+                        </div>
+                    ) : !isPast && (
+                        <div className="mt-2 pt-4 flex items-center justify-between">
+                            <span className="text-[11px] font-black text-gold-600 uppercase tracking-widest bg-gold-50 px-2 py-1 rounded">
+                                Entry Free
+                            </span>
                         </div>
                     )}
                 </div>
@@ -205,35 +215,52 @@ export const EventCard: React.FC<EventCardProps> = ({ event, isPast, viewMode = 
                         className="fixed inset-0 z-[100] flex items-center justify-center bg-navy-950/90 backdrop-blur-sm p-4"
                         onClick={() => setIsLightboxOpen(false)}
                     >
-                        <m.div
-                            initial={{ scale: 0.95, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0.95, opacity: 0 }}
-                            className="relative max-w-4xl w-full rounded-xl overflow-hidden bg-white shadow-2xl"
-                            onClick={(e) => e.stopPropagation()}
-                        >
-                            <div className="relative aspect-video">
-                                <Image
-                                    src={event.image_url!}
-                                    alt={event.title}
-                                    fill
-                                    className="object-contain bg-navy-50"
-                                />
-                            </div>
-                            <div className="p-6">
-                                <h4 className="text-xl font-serif font-bold text-navy-900">{event.title}</h4>
-                                <p className="text-sm text-navy-500">{event.venue} — {event.city}</p>
-                            </div>
-                            <button
-                                className="absolute top-4 right-4 p-2 rounded-full bg-navy-900/10 hover:bg-navy-900/20 text-navy-900 transition-colors"
-                                onClick={() => setIsLightboxOpen(false)}
-                            >
-                                <X className="h-5 w-5" />
-                            </button>
-                        </m.div>
+                        <LightboxContent
+                            event={event}
+                            onClose={() => setIsLightboxOpen(false)}
+                        />
                     </m.div>
                 )}
             </AnimatePresence>
         </>
+    );
+};
+
+const LightboxContent: React.FC<{ event: Event; onClose: () => void }> = ({ event, onClose }) => {
+    useEffect(() => {
+        const handleEsc = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') onClose();
+        };
+        window.addEventListener('keydown', handleEsc);
+        return () => window.removeEventListener('keydown', handleEsc);
+    }, [onClose]);
+
+    return (
+        <m.div
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.95, opacity: 0 }}
+            className="relative max-w-4xl w-full rounded-xl overflow-hidden bg-white shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+        >
+            <div className="relative aspect-video">
+                <Image
+                    src={event.image_url!}
+                    alt={event.title}
+                    fill
+                    className="object-contain bg-navy-50"
+                />
+            </div>
+            <div className="p-6">
+                <h4 className="text-xl font-serif font-bold text-navy-900">{event.title}</h4>
+                <p className="text-sm text-navy-500">{event.venue} — {event.city}</p>
+            </div>
+            <button
+                className="absolute top-4 right-4 p-2 rounded-full bg-navy-900/10 hover:bg-navy-900/20 text-navy-900 transition-colors"
+                onClick={onClose}
+            >
+                <X className="h-5 w-5" />
+            </button>
+        </m.div>
     );
 };
