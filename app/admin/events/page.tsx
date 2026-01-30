@@ -64,6 +64,31 @@ export default function EventsPage() {
         if (!confirm('Are you sure you want to delete this event?')) return;
 
         try {
+            // 1. Find the event to get its image_url
+            const eventToDelete = events.find(e => e.id === id);
+
+            // 2. If it has an image, delete it from storage first
+            if (eventToDelete?.image_url) {
+                try {
+                    // Extract filename from URL (format: .../public/events/filename.png)
+                    const urlParts = eventToDelete.image_url.split('/');
+                    const fileName = urlParts[urlParts.length - 1];
+
+                    if (fileName) {
+                        const { error: storageError } = await supabase.storage
+                            .from('events')
+                            .remove([fileName]);
+
+                        if (storageError) {
+                            console.warn('Storage cleanup failed, proceeding with DB deletion:', storageError);
+                        }
+                    }
+                } catch (err) {
+                    console.error('Error parsing image URL for cleanup:', err);
+                }
+            }
+
+            // 3. Delete from database
             const { error } = await supabase
                 .from('events')
                 .delete()
@@ -73,6 +98,7 @@ export default function EventsPage() {
             setEvents(events.filter(e => e.id !== id));
         } catch (error) {
             console.error('Error deleting event:', error);
+            alert('Failed to delete event. Please try again.');
         }
     }
 
