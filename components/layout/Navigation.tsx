@@ -1,28 +1,45 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { m, AnimatePresence } from 'framer-motion';
 import { FaBars, FaTimes } from 'react-icons/fa';
 import HeaderPDFButton from './HeaderPDFButton';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
+import { SiteConfig } from '@/types';
 
-const navItems = [
-  { id: 'home', label: 'Home' },
-  { id: 'about', label: 'About' },
-  { id: 'gallery', label: 'Gallery' },
-  { id: 'music', label: 'Music' },
-  { id: 'events', label: 'Events' },
-  { id: 'press', label: 'Press' },
-  { id: 'faq', label: 'FAQ' },
-  { id: 'contact', label: 'Contact' },
-];
+interface NavigationProps {
+  config?: SiteConfig;
+}
 
-export default function Navigation() {
+export default function Navigation({ config }: NavigationProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState('home');
   const [mounted, setMounted] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
+
+  const navItems = useMemo(() => {
+    // Default fallback if no config
+    const defaultItems = [
+      { id: 'home', label: 'Home' },
+      { id: 'about', label: 'About' },
+      { id: 'gallery', label: 'Gallery' },
+      { id: 'music', label: 'Music' },
+      { id: 'events', label: 'Events' },
+      { id: 'press', label: 'Press' },
+      { id: 'faq', label: 'FAQ' },
+      { id: 'contact', label: 'Contact' },
+    ];
+
+    if (!config?.layoutOrder) return defaultItems;
+
+    return config.layoutOrder
+      .filter(section => !config.sections || config.sections[section] !== false)
+      .map(section => ({
+        id: section.toLowerCase(),
+        label: section
+      }));
+  }, [config]);
 
   useEffect(() => {
     setMounted(true);
@@ -47,9 +64,9 @@ export default function Navigation() {
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [pathname]);
+  }, [pathname, navItems]);
 
-  const handleNavClick = (item: typeof navItems[0]) => {
+  const handleNavClick = (item: { id: string, label: string }) => {
     if (pathname !== '/') {
       router.push(`/#${item.id}`);
       setIsMenuOpen(false);

@@ -77,6 +77,7 @@ const SiteConfigSchema = z.object({
     logo: z.string().optional(),
   }),
   home: z.object({
+    heroTitle: z.string().optional(),
     images: z.object({
       veena: z.string().min(1),
       vocal: z.string().min(1),
@@ -110,6 +111,12 @@ const SiteConfigSchema = z.object({
       mobile: z.boolean(),
     }),
   }).optional(),
+  layoutOrder: z.array(z.string()).optional(),
+  sections: z.record(z.boolean()).optional(),
+  blog: z.object({
+    title: z.string(),
+    subtitle: z.string(),
+  }).optional(),
 });
 
 // Default fallback configuration
@@ -121,6 +128,7 @@ const defaultConfig: SiteConfig = {
     fullBio: ['Full biography not available.'],
   },
   home: {
+    heroTitle: 'Music is the mediator between the spiritual and the sensual life.',
     images: {
       veena: '/images/placeholder.jpg',
       vocal: '/images/placeholder.jpg',
@@ -146,6 +154,21 @@ const defaultConfig: SiteConfig = {
       desktop: true,
       mobile: false,
     },
+  },
+  layoutOrder: ['Home', 'About', 'Gallery', 'Music', 'Events', 'Press', 'FAQ', 'Contact'],
+  sections: {
+    Home: true,
+    About: true,
+    Gallery: true,
+    Music: true,
+    Events: true,
+    Press: true,
+    FAQ: true,
+    Contact: true,
+  },
+  blog: {
+    title: 'Deep Dives into the Ocean of Swaras',
+    subtitle: 'Journal & Musings',
   },
 };
 
@@ -227,13 +250,34 @@ export async function loadConfig(
   configPath: string = '/config/site-config.json'
 ): Promise<SiteConfig> {
   try {
-    // Handle base path for GitHub Pages deployment
-    const basePath = getBasePath().replace(/\/$/, ''); // Remove trailing slash
-    const sanitizedConfigPath = configPath.replace(/^\//, ''); // Remove leading slash
-    const fullPath = basePath ? `${basePath}/${sanitizedConfigPath}` : `/${sanitizedConfigPath}`;
+    // 1. Server-side: Read file directly from filesystem
+    if (typeof window === 'undefined') {
+      const { readFile } = await import('fs/promises');
+      const path = await import('path');
 
-    // Error log for easier debugging on live site (visible in console)
-    // console.warn(`[Config] Attempting to load from: ${fullPath}`);
+      const filePath = path.join(process.cwd(), 'public', configPath.replace(/^\//, ''));
+
+      try {
+        const fileContents = await readFile(filePath, 'utf-8');
+        const data = JSON.parse(fileContents);
+        const validation = validateConfig(data);
+
+        if (!validation.success) {
+          console.error('[Config] Server-side Validation Failed:', validation.error.format());
+          return defaultConfig;
+        }
+
+        return validation.data!;
+      } catch (fsError) {
+        console.error(`[Config] Failed to read file at ${filePath}:`, fsError);
+        return defaultConfig;
+      }
+    }
+
+    // 2. Client-side: Use fetch
+    const basePath = getBasePath().replace(/\/$/, '');
+    const sanitizedConfigPath = configPath.replace(/^\//, '');
+    const fullPath = basePath ? `${basePath}/${sanitizedConfigPath}` : `/${sanitizedConfigPath}`;
 
     const response = await fetch(fullPath);
 

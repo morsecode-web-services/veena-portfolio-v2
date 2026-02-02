@@ -45,7 +45,7 @@ interface BlogFormProps {
 
 export function BlogForm({ initialData, onSubmit, loading }: BlogFormProps) {
     const router = useRouter();
-    const [showSeo, setShowSeo] = useState(false);
+    const [showSeo, setShowSeo] = React.useState(true);
     const [keywordInput, setKeywordInput] = useState('');
 
     const {

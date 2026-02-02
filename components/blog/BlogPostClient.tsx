@@ -3,12 +3,8 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Blog } from '@/types/blog';
-import Image from 'next/image';
-import Link from 'next/link';
-import { Calendar, User, ArrowLeft } from 'lucide-react';
-import { format } from 'date-fns';
-import ShareButtons from '@/components/blog/ShareButtons';
 import BlogPostRenderer from '@/components/blog/BlogPostRenderer';
+import BlogInteraction from '@/components/blog/BlogInteraction';
 
 interface BlogPostClientProps {
     initialBlog: Blog;
@@ -55,12 +51,13 @@ export default function BlogPostClient({ initialBlog, slug }: BlogPostClientProp
     };
 
     return (
-        <>
+        <div className="bg-white">
             <script
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
             />
             <BlogPostRenderer blog={blog} />
-        </>
+            <BlogInteraction blogId={blog.id} initialLikes={blog.likes || 0} />
+        </div>
     );
 }

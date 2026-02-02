@@ -110,26 +110,25 @@ export default function BlogPostRenderer({ blog, previewMode = false }: BlogPost
                             dangerouslySetInnerHTML={{ __html: blog.content }}
                         />
 
-                        {/* Footer Section */}
-                        <footer className="mt-20 pt-12 border-t border-gray-100">
-                            <div className="bg-gradient-to-br from-navy-900 via-navy-950 to-navy-900 rounded-3xl p-10 md:p-16 text-center space-y-8 shadow-2xl border border-navy-800/50 relative overflow-hidden">
-                                {/* Decorative gradient overlay */}
-                                <div className="absolute inset-0 bg-gradient-to-t from-gold-900/10 to-transparent pointer-events-none" />
+                        {/* Footer Section - Minimal & Premium */}
+                        <footer className="mt-24 mb-12">
+                            <div className="flex flex-col items-center text-center space-y-8">
+                                <div className="w-16 h-[1px] bg-gold-400/50"></div>
 
-                                <div className="relative z-10 space-y-8">
-                                    <h4 className="text-3xl md:text-4xl font-serif font-bold text-gold-400 italic leading-tight">&ldquo;Music is the mediator between the spiritual and the sensual life.&rdquo;</h4>
-                                    <p className="text-navy-100 text-base md:text-lg max-w-md mx-auto leading-relaxed">Explore more about the rich traditions of Indian Classical Music</p>
-                                    <div className="pt-6">
-                                        <Link
-                                            href="/#contact"
-                                            className="inline-block px-10 py-4 text-navy-900 font-black uppercase tracking-widest text-xs rounded-full hover:brightness-110 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 transform"
-                                            style={{
-                                                background: 'linear-gradient(to right, #D4AF37, #B8860B)'
-                                            }}
-                                        >
-                                            Get in Touch
-                                        </Link>
-                                    </div>
+                                <blockquote className="max-w-2xl">
+                                    <p className="text-2xl md:text-3xl font-serif text-navy-900 italic leading-relaxed">
+                                        &ldquo;Music is the mediator between the spiritual and the sensual life.&rdquo;
+                                    </p>
+                                </blockquote>
+
+                                <div className="flex flex-col items-center gap-4">
+                                    <span className="text-xs font-black text-gray-400 uppercase tracking-[0.2em]">Interested in collaboration?</span>
+                                    <Link
+                                        href="/#contact"
+                                        className="group relative inline-flex items-center gap-3 px-8 py-3 bg-navy-900 text-white rounded-full transition-all hover:bg-gold-500 hover:text-navy-900"
+                                    >
+                                        <span className="text-xs font-black uppercase tracking-widest">Get in Touch</span>
+                                    </Link>
                                 </div>
                             </div>
                         </footer>

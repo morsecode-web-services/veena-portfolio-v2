@@ -103,7 +103,7 @@ export default function Header({ config }: HeaderProps) {
           </m.div>
 
           <div className="flex items-center gap-4">
-            <Navigation />
+            <Navigation config={config} />
             <m.div
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}

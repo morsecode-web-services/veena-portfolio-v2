@@ -66,50 +66,86 @@ export const EventCard: React.FC<EventCardProps> = ({ event, isPast, viewMode = 
 
     if (viewMode === 'timeline') {
         return (
-            <m.div
-                variants={itemVariants}
-                className="group flex gap-4 sm:gap-6"
-            >
-                {/* Minimal Date Column */}
-                <div className="w-16 sm:w-20 pt-1 text-right flex-shrink-0 opacity-60 group-hover:opacity-100 transition-opacity">
-                    <span className="block text-sm font-bold text-navy-900 leading-tight">{dateInfo?.month} {dateInfo?.day}</span>
-                    <span className="block text-[10px] text-navy-400 font-medium uppercase tracking-wider">{dateInfo?.weekday}</span>
-                </div>
-
-                {/* Timeline Track */}
-                <div className="relative flex flex-col items-center">
-                    {/* Minimal Solid Dot */}
-                    <div className="w-2 h-2 rounded-full bg-navy-200 mt-2 group-hover:bg-gold-500 transition-colors duration-300 z-10" />
-                    {/* Continuous Line */}
-                    <div className="w-px bg-navy-50 absolute top-2 bottom-0 left-1/2 -ml-[0.5px] -z-0" />
-                </div>
-
-                {/* Content */}
-                <div className="pb-8 pt-0.5 flex-grow">
-                    <h3 className="text-lg font-serif font-bold text-navy-900 mb-2 leading-tight group-hover:text-navy-700 transition-colors">
-                        {event.title}
-                    </h3>
-
-                    <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-navy-500 mb-2">
-                        <div className="flex items-center gap-1.5">
-                            <MapPin className="h-3.5 w-3.5 text-navy-300" />
-                            <span>{event.venue || event.city}</span>
-                        </div>
+            <>
+                <m.div
+                    variants={itemVariants}
+                    className="group flex gap-4 sm:gap-6"
+                >
+                    {/* Minimal Date Column */}
+                    <div className="w-16 sm:w-20 pt-1 text-right flex-shrink-0 opacity-60 group-hover:opacity-100 transition-opacity">
+                        <span className="block text-sm font-bold text-navy-900 leading-tight">{dateInfo?.month} {dateInfo?.day}</span>
+                        <span className="block text-[10px] text-navy-400 font-medium uppercase tracking-wider">{dateInfo?.weekday}</span>
                     </div>
 
-                    {hasMap && (
-                        <a
-                            href={event.map_url!}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 text-[10px] font-bold text-navy-400 hover:text-gold-600 transition-colors uppercase tracking-widest mt-1"
+                    {/* Timeline Track */}
+                    <div className="relative flex flex-col items-center">
+                        {/* Minimal Solid Dot */}
+                        <div className="w-2 h-2 rounded-full bg-navy-200 mt-2 group-hover:bg-gold-500 transition-colors duration-300 z-10" />
+                        {/* Continuous Line */}
+                        <div className="w-px bg-navy-50 absolute top-2 bottom-0 left-1/2 -ml-[0.5px] -z-0" />
+                    </div>
+
+                    {/* Content */}
+                    <div className="pb-8 pt-0.5 flex-grow">
+                        {hasImage && (
+                            <div
+                                className="relative w-16 h-10 mb-3 rounded-md overflow-hidden cursor-zoom-in border border-navy-100 shadow-sm group-hover:shadow-md transition-all"
+                                onClick={() => setIsLightboxOpen(true)}
+                            >
+                                <Image
+                                    src={event.image_url!}
+                                    alt={event.title}
+                                    fill
+                                    className="object-cover"
+                                />
+                                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                                    <Maximize2 className="h-3 w-3 text-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-md" />
+                                </div>
+                            </div>
+                        )}
+
+                        <h3 className="text-lg font-serif font-bold text-navy-900 mb-2 leading-tight group-hover:text-navy-700 transition-colors">
+                            {event.title}
+                        </h3>
+
+                        <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-navy-500 mb-2">
+                            <div className="flex items-center gap-1.5">
+                                <MapPin className="h-3.5 w-3.5 text-navy-300" />
+                                <span>{event.venue || event.city}</span>
+                            </div>
+                        </div>
+
+                        {hasMap && (
+                            <a
+                                href={event.map_url!}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 text-[10px] font-bold text-navy-400 hover:text-gold-600 transition-colors uppercase tracking-widest mt-1"
+                            >
+                                <ExternalLink className="h-3 w-3" />
+                                <span>Details</span>
+                            </a>
+                        )}
+                    </div>
+                </m.div>
+
+                <AnimatePresence>
+                    {isLightboxOpen && hasImage && (
+                        <m.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="fixed inset-0 z-[100] flex items-center justify-center bg-navy-950/90 backdrop-blur-sm p-4"
+                            onClick={() => setIsLightboxOpen(false)}
                         >
-                            <ExternalLink className="h-3 w-3" />
-                            <span>Details</span>
-                        </a>
+                            <LightboxContent
+                                event={event}
+                                onClose={() => setIsLightboxOpen(false)}
+                            />
+                        </m.div>
                     )}
-                </div>
-            </m.div>
+                </AnimatePresence>
+            </>
         );
     }
 

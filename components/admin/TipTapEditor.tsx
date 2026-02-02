@@ -10,9 +10,14 @@ import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
 import Link from '@tiptap/extension-link';
 import Placeholder from '@tiptap/extension-placeholder';
+import Underline from '@tiptap/extension-underline';
+import TextAlign from '@tiptap/extension-text-align';
+import Subscript from '@tiptap/extension-subscript';
+import Superscript from '@tiptap/extension-superscript';
 import {
     Bold,
     Italic,
+    Underline as UnderlineIcon,
     List,
     ListOrdered,
     Quote,
@@ -22,7 +27,11 @@ import {
     Link as LinkIcon,
     Undo,
     Redo,
-    Code, // Added Code icon
+    AlignLeft,
+    AlignCenter,
+    AlignRight,
+    Subscript as SubscriptIcon,
+    Superscript as SuperscriptIcon
 } from 'lucide-react';
 import { useCallback, useEffect, useState, useMemo } from 'react';
 import { supabase } from '@/lib/supabase';
@@ -48,10 +57,8 @@ function EditorToolbar() {
             const file = (e.target as HTMLInputElement).files?.[0];
             if (!file) return;
 
-            // ... (in handleUpload)
-
             try {
-                // Validate file size (max 5MB original check, though compression helps)
+                // Validate file size
                 const maxSize = 5 * 1024 * 1024;
                 if (file.size > maxSize) {
                     alert('Image size must be less than 5MB. Please choose a smaller image.');
@@ -104,75 +111,50 @@ function EditorToolbar() {
 
     if (!editor) return null;
 
+    const Button = ({ onClick, isActive, title, icon: Icon }: any) => (
+        <button
+            type="button"
+            onClick={onClick}
+            className={`p-2 rounded hover:bg-white hover:shadow-sm transition-all ${isActive ? 'text-navy-900 bg-white shadow-sm scale-105' : 'text-gray-500'}`}
+            title={title}
+        >
+            <Icon className="h-4 w-4" />
+        </button>
+    );
+
+    const Divider = () => <div className="w-px h-6 bg-gray-200 mx-1 self-center" />;
+
     return (
         <div className="bg-gray-50/80 backdrop-blur-sm border-b border-gray-100 p-2 flex flex-wrap gap-1 sticky top-0 z-10">
-            <button
-                type="button"
-                onClick={() => editor.chain().focus().toggleBold().run()}
-                className={`p-2 rounded hover:bg-white hover:shadow-sm transition-all ${editor.isActive('bold') ? 'text-navy-900 bg-white shadow-sm scale-105' : 'text-gray-500'}`}
-                title="Bold"
-            >
-                <Bold className="h-4 w-4" />
-            </button>
-            <button
-                type="button"
-                onClick={() => editor.chain().focus().toggleItalic().run()}
-                className={`p-2 rounded hover:bg-white hover:shadow-sm transition-all ${editor.isActive('italic') ? 'text-navy-900 bg-white shadow-sm scale-105' : 'text-gray-500'}`}
-                title="Italic"
-            >
-                <Italic className="h-4 w-4" />
-            </button>
-            <div className="w-px h-6 bg-gray-200 mx-1 self-center" />
-            <button
-                type="button"
-                onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-                className={`p-2 rounded hover:bg-white hover:shadow-sm transition-all ${editor.isActive('heading', { level: 1 }) ? 'text-navy-900 bg-white shadow-sm scale-105' : 'text-gray-500'}`}
-                title="H1"
-            >
-                <Heading1 className="h-4 w-4" />
-            </button>
-            <button
-                type="button"
-                onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-                className={`p-2 rounded hover:bg-white hover:shadow-sm transition-all ${editor.isActive('heading', { level: 2 }) ? 'text-navy-900 bg-white shadow-sm scale-105' : 'text-gray-500'}`}
-                title="H2"
-            >
-                <Heading2 className="h-4 w-4" />
-            </button>
-            <div className="w-px h-6 bg-gray-200 mx-1 self-center" />
-            <button
-                type="button"
-                onClick={() => editor.chain().focus().toggleBulletList().run()}
-                className={`p-2 rounded hover:bg-white hover:shadow-sm transition-all ${editor.isActive('bulletList') ? 'text-navy-900 bg-white shadow-sm scale-105' : 'text-gray-500'}`}
-                title="Bullet List"
-            >
-                <List className="h-4 w-4" />
-            </button>
-            <button
-                type="button"
-                onClick={() => editor.chain().focus().toggleOrderedList().run()}
-                className={`p-2 rounded hover:bg-white hover:shadow-sm transition-all ${editor.isActive('orderedList') ? 'text-navy-900 bg-white shadow-sm scale-105' : 'text-gray-500'}`}
-                title="Ordered List"
-            >
-                <ListOrdered className="h-4 w-4" />
-            </button>
-            <button
-                type="button"
-                onClick={() => editor.chain().focus().toggleBlockquote().run()}
-                className={`p-2 rounded hover:bg-white hover:shadow-sm transition-all ${editor.isActive('blockquote') ? 'text-navy-900 bg-white shadow-sm scale-105' : 'text-gray-500'}`}
-                title="Quote"
-            >
-                <Quote className="h-4 w-4" />
-            </button>
-            <div className="w-px h-6 bg-gray-200 mx-1 self-center" />
-            <button
-                type="button"
-                onClick={addImage}
-                className="p-2 rounded hover:bg-white hover:shadow-sm transition-all text-gray-500"
-                title="Add Image"
-            >
-                <ImageIcon className="h-4 w-4" />
-            </button>
+            <Button onClick={() => editor.chain().focus().toggleBold().run()} isActive={editor.isActive('bold')} title="Bold" icon={Bold} />
+            <Button onClick={() => editor.chain().focus().toggleItalic().run()} isActive={editor.isActive('italic')} title="Italic" icon={Italic} />
+            <Button onClick={() => editor.chain().focus().toggleUnderline().run()} isActive={editor.isActive('underline')} title="Underline" icon={UnderlineIcon} />
+
+            <Divider />
+
+            <Button onClick={() => editor.chain().focus().setTextAlign('left').run()} isActive={editor.isActive({ textAlign: 'left' })} title="Align Left" icon={AlignLeft} />
+            <Button onClick={() => editor.chain().focus().setTextAlign('center').run()} isActive={editor.isActive({ textAlign: 'center' })} title="Align Center" icon={AlignCenter} />
+            <Button onClick={() => editor.chain().focus().setTextAlign('right').run()} isActive={editor.isActive({ textAlign: 'right' })} title="Align Right" icon={AlignRight} />
+
+            <Divider />
+
+            <Button onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()} isActive={editor.isActive('heading', { level: 1 })} title="H1" icon={Heading1} />
+            <Button onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} isActive={editor.isActive('heading', { level: 2 })} title="H2" icon={Heading2} />
+
+            <Divider />
+
+            <Button onClick={() => editor.chain().focus().toggleBulletList().run()} isActive={editor.isActive('bulletList')} title="Bullet List" icon={List} />
+            <Button onClick={() => editor.chain().focus().toggleOrderedList().run()} isActive={editor.isActive('orderedList')} title="Ordered List" icon={ListOrdered} />
+            <Button onClick={() => editor.chain().focus().toggleBlockquote().run()} isActive={editor.isActive('blockquote')} title="Quote" icon={Quote} />
+
+            <Divider />
+
+            <Button onClick={() => editor.chain().focus().toggleSubscript().run()} isActive={editor.isActive('subscript')} title="Subscript" icon={SubscriptIcon} />
+            <Button onClick={() => editor.chain().focus().toggleSuperscript().run()} isActive={editor.isActive('superscript')} title="Superscript" icon={SuperscriptIcon} />
+
+            <Divider />
+
+            <Button onClick={addImage} isActive={false} title="Add Image" icon={ImageIcon} />
             <button
                 type="button"
                 onClick={() => {
@@ -186,23 +168,10 @@ function EditorToolbar() {
             >
                 <LinkIcon className="h-4 w-4" />
             </button>
+
             <div className="ml-auto flex gap-1">
-                <button
-                    type="button"
-                    onClick={() => editor.chain().focus().undo().run()}
-                    className="p-2 rounded hover:bg-white hover:shadow-sm transition-all text-gray-400"
-                    title="Undo"
-                >
-                    <Undo className="h-4 w-4" />
-                </button>
-                <button
-                    type="button"
-                    onClick={() => editor.chain().focus().redo().run()}
-                    className="p-2 rounded hover:bg-white hover:shadow-sm transition-all text-gray-400"
-                    title="Redo"
-                >
-                    <Redo className="h-4 w-4" />
-                </button>
+                <Button onClick={() => editor.chain().focus().undo().run()} isActive={false} title="Undo" icon={Undo} />
+                <Button onClick={() => editor.chain().focus().redo().run()} isActive={false} title="Redo" icon={Redo} />
             </div>
         </div>
     );
@@ -215,32 +184,10 @@ function EditorBubbleMenu() {
     return (
         <BubbleMenu>
             <div className="bg-navy-950 text-white rounded-lg shadow-xl p-1 flex items-center gap-0.5 border border-navy-800">
-                <button
-                    type="button"
-                    onClick={() => editor.chain().focus().toggleBold().run()}
-                    className={`p-1.5 rounded hover:bg-navy-800 transition-colors ${editor.isActive('bold') ? 'text-gold-400' : 'text-navy-100'}`}
-                >
-                    <Bold className="h-3.5 w-3.5" />
-                </button>
-                <button
-                    type="button"
-                    onClick={() => editor.chain().focus().toggleItalic().run()}
-                    className={`p-1.5 rounded hover:bg-navy-800 transition-colors ${editor.isActive('italic') ? 'text-gold-400' : 'text-navy-100'}`}
-                >
-                    <Italic className="h-3.5 w-3.5" />
-                </button>
-                <button
-                    type="button"
-                    onClick={() => {
-                        const url = window.prompt('Enter Link URL');
-                        if (url) {
-                            editor.chain().focus().setLink({ href: url }).run();
-                        }
-                    }}
-                    className={`p-1.5 rounded hover:bg-navy-800 transition-colors ${editor.isActive('link') ? 'text-gold-400' : 'text-navy-100'}`}
-                >
-                    <LinkIcon className="h-3.5 w-3.5" />
-                </button>
+                <button type="button" onClick={() => editor.chain().focus().toggleBold().run()} className={`p-1.5 rounded hover:bg-navy-800 transition-colors ${editor.isActive('bold') ? 'text-gold-400' : 'text-navy-100'}`}><Bold className="h-3.5 w-3.5" /></button>
+                <button type="button" onClick={() => editor.chain().focus().toggleItalic().run()} className={`p-1.5 rounded hover:bg-navy-800 transition-colors ${editor.isActive('italic') ? 'text-gold-400' : 'text-navy-100'}`}><Italic className="h-3.5 w-3.5" /></button>
+                <button type="button" onClick={() => editor.chain().focus().toggleUnderline().run()} className={`p-1.5 rounded hover:bg-navy-800 transition-colors ${editor.isActive('underline') ? 'text-gold-400' : 'text-navy-100'}`}><UnderlineIcon className="h-3.5 w-3.5" /></button>
+                <button type="button" onClick={() => { const url = window.prompt('Enter Link URL'); if (url) editor.chain().focus().setLink({ href: url }).run(); }} className={`p-1.5 rounded hover:bg-navy-800 transition-colors ${editor.isActive('link') ? 'text-gold-400' : 'text-navy-100'}`}><LinkIcon className="h-3.5 w-3.5" /></button>
             </div>
         </BubbleMenu>
     );
@@ -255,29 +202,25 @@ export default function TipTapEditor({ content, onChange }: TipTapEditorProps) {
 
     const extensions = useMemo(() => [
         StarterKit.configure({
-            bulletList: {
-                keepMarks: true,
-                keepAttributes: false,
-            },
-            orderedList: {
-                keepMarks: true,
-                keepAttributes: false,
-            },
+            bulletList: { keepMarks: true, keepAttributes: false },
+            orderedList: { keepMarks: true, keepAttributes: false },
         }),
         Image.configure({
-            HTMLAttributes: {
-                class: 'rounded-2xl shadow-lg border border-gray-100',
-            },
+            HTMLAttributes: { class: 'rounded-2xl shadow-lg border border-gray-100' },
         }),
         Link.configure({
             openOnClick: false,
-            HTMLAttributes: {
-                class: 'text-gold-600 underline',
-            },
+            HTMLAttributes: { class: 'text-gold-600 underline' },
         }),
         Placeholder.configure({
             placeholder: 'Write something amazing...',
         }),
+        Underline,
+        TextAlign.configure({
+            types: ['heading', 'paragraph'],
+        }),
+        Subscript,
+        Superscript,
     ], []);
 
     if (!mounted) {

@@ -15,6 +15,7 @@ export interface SiteConfig {
     logo?: string;
   };
   home: {
+    heroTitle?: string; // "Music is the mediator..."
     images: {
       veena: string;
       vocal: string;
@@ -60,6 +61,12 @@ export interface SiteConfig {
       desktop: boolean;
       mobile: boolean;
     };
+  };
+  layoutOrder?: string[];
+  sections?: Record<string, boolean>;
+  blog?: {
+    title: string;
+    subtitle: string;
   };
 }
 

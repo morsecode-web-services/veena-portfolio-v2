@@ -62,6 +62,7 @@
     "email": "contact@aishwaryamanikarnike.com"
   },
   "home": {
+    "heroTitle": "Music is the mediator between the spiritual and the sensual life.",
     "images": {
       "veena": "images/spotlight/veena.jpg",
       "vocal": "images/spotlight/vocal.jpg"
@@ -423,5 +424,29 @@
       "desktop": true,
       "mobile": false
     }
+  },
+  "layoutOrder": [
+    "Home",
+    "About",
+    "Gallery",
+    "Music",
+    "Events",
+    "Press",
+    "FAQ",
+    "Contact"
+  ],
+  "sections": {
+    "Home": true,
+    "About": true,
+    "Gallery": true,
+    "Music": true,
+    "Events": true,
+    "Press": true,
+    "FAQ": true,
+    "Contact": true
+  },
+  "blog": {
+    "title": "Deep Dives into the Ocean of Swaras",
+    "subtitle": "Journal & Musings"
   }
 }

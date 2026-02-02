@@ -6,6 +6,7 @@ import { Blog } from '@/types/blog';
 import { Calendar, User, ArrowRight, MessageSquare } from 'lucide-react';
 import { format } from 'date-fns';
 import { Metadata } from 'next';
+import { loadConfig } from '@/lib/config';
 
 export const metadata: Metadata = {
     title: 'Blog | Aishwarya Manikarnike',
@@ -33,15 +34,18 @@ async function getBlogs() {
 
 export default async function BlogListingPage() {
     const blogs = await getBlogs();
+    const config = await loadConfig();
 
     return (
         <main className="min-h-screen pt-32 pb-20 bg-white">
             <div className="max-w-7xl mx-auto px-6 lg:px-8">
                 {/* Header */}
                 <div className="max-w-3xl mb-16">
-                    <h2 className="text-[10px] font-black text-navy-400 uppercase tracking-[0.3em] mb-4">Journal & Musings</h2>
+                    <h2 className="text-[10px] font-black text-navy-400 uppercase tracking-[0.3em] mb-4">
+                        {config.blog?.subtitle || 'Journal & Musings'}
+                    </h2>
                     <h1 className="text-4xl md:text-5xl font-serif font-bold text-navy-900 leading-tight">
-                        Deep Dives into the <span className="text-gold-500 italic">Ocean of Swaras</span>
+                        {config.blog?.title || 'Deep Dives into the Ocean of Swaras'}
                     </h1>
                 </div>
 

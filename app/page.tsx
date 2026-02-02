@@ -75,63 +75,83 @@ export default function Page() {
 
   return (
     <main id="main-content" className="min-h-screen" role="main">
-      {/* Home Section - Hero with full viewport presence */}
-      <div className="pt-24 pb-10 sm:pt-28 sm:pb-12 md:pt-32 md:pb-16 bg-cream-50 relative overflow-hidden">
-        <MusicalBackground config={config} />
-        <div className="relative z-10">
-          <SectionErrorBoundary sectionName="Home">
-            <HomeSection config={config} />
-          </SectionErrorBoundary>
-        </div>
-      </div>
+      {/* Dynamic Sections based on Config */}
+      {config.layoutOrder?.map((sectionName) => {
+        // Skip if section is explicitly disabled in config
+        if (config.sections && config.sections[sectionName] === false) return null;
 
-      <div className="py-8 sm:py-11 md:py-14 bg-white">
-        <SectionErrorBoundary sectionName="About">
-          <About config={config} />
-        </SectionErrorBoundary>
-      </div>
-
-      {/* Gallery Section - Subtle background variation */}
-      <div className="py-8 sm:py-11 md:py-14 bg-cream-50">
-        <SectionErrorBoundary sectionName="Gallery">
-          <Gallery config={config} />
-        </SectionErrorBoundary>
-      </div>
-
-      {/* Music Section - Clean white background */}
-      <div className="py-8 sm:py-11 md:py-14 bg-white">
-        <SectionErrorBoundary sectionName="Music">
-          <Music config={config} />
-        </SectionErrorBoundary>
-      </div>
-
-      {/* Events Section - Soft gray background */}
-      <div className="py-8 sm:py-11 md:py-14 bg-cream-50">
-        <SectionErrorBoundary sectionName="Events">
-          <Schedule />
-        </SectionErrorBoundary>
-      </div>
-
-      {/* Press Section - Sophisticated gray tone */}
-      <div className="py-8 sm:py-11 md:py-14 bg-white">
-        <SectionErrorBoundary sectionName="Press">
-          <Press config={config} />
-        </SectionErrorBoundary>
-      </div>
-
-      {/* FAQ Section - Return to white for clarity */}
-      <div className="py-8 sm:py-11 md:py-20 bg-cream-50">
-        <SectionErrorBoundary sectionName="FAQ">
-          <FAQ config={config} />
-        </SectionErrorBoundary>
-      </div>
-
-      {/* Contact Section - Elegant navy accent background */}
-      <div className="py-8 sm:py-11 md:py-20 bg-white">
-        <SectionErrorBoundary sectionName="Contact">
-          <Contact />
-        </SectionErrorBoundary>
-      </div>
+        switch (sectionName) {
+          case 'Home':
+            return (
+              <div key="Home" className="pt-24 pb-10 sm:pt-28 sm:pb-12 md:pt-32 md:pb-16 bg-cream-50 relative overflow-hidden">
+                <MusicalBackground config={config} />
+                <div className="relative z-10">
+                  <SectionErrorBoundary sectionName="Home">
+                    <HomeSection config={config} />
+                  </SectionErrorBoundary>
+                </div>
+              </div>
+            );
+          case 'About':
+            return (
+              <div key="About" className="py-8 sm:py-11 md:py-14 bg-white">
+                <SectionErrorBoundary sectionName="About">
+                  <About config={config} />
+                </SectionErrorBoundary>
+              </div>
+            );
+          case 'Gallery':
+            return (
+              <div key="Gallery" className="py-8 sm:py-11 md:py-14 bg-cream-50">
+                <SectionErrorBoundary sectionName="Gallery">
+                  <Gallery config={config} />
+                </SectionErrorBoundary>
+              </div>
+            );
+          case 'Music':
+            return (
+              <div key="Music" className="py-8 sm:py-11 md:py-14 bg-white">
+                <SectionErrorBoundary sectionName="Music">
+                  <Music config={config} />
+                </SectionErrorBoundary>
+              </div>
+            );
+          case 'Events':
+            return (
+              <div key="Events" className="py-8 sm:py-11 md:py-14 bg-cream-50">
+                <SectionErrorBoundary sectionName="Events">
+                  <Schedule />
+                </SectionErrorBoundary>
+              </div>
+            );
+          case 'Press':
+            return (
+              <div key="Press" className="py-8 sm:py-11 md:py-14 bg-white">
+                <SectionErrorBoundary sectionName="Press">
+                  <Press config={config} />
+                </SectionErrorBoundary>
+              </div>
+            );
+          case 'FAQ':
+            return (
+              <div key="FAQ" className="py-8 sm:py-11 md:py-20 bg-cream-50">
+                <SectionErrorBoundary sectionName="FAQ">
+                  <FAQ config={config} />
+                </SectionErrorBoundary>
+              </div>
+            );
+          case 'Contact':
+            return (
+              <div key="Contact" className="py-8 sm:py-11 md:py-20 bg-white">
+                <SectionErrorBoundary sectionName="Contact">
+                  <Contact />
+                </SectionErrorBoundary>
+              </div>
+            );
+          default:
+            return null;
+        }
+      })}
 
       {/* Portfolio Download Section */}
       <div id="pdf-generator-section" className="py-8 sm:py-10 md:py-12 bg-white border-t border-gray-200">

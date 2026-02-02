@@ -13,6 +13,7 @@ export interface Blog {
     meta_title: string;
     meta_description: string;
     keywords: string[];
+    likes?: number;
 }
 
 export type NewBlog = Omit<Blog, 'id' | 'created_at' | 'updated_at'>;

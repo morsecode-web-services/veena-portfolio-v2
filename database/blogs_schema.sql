@@ -13,7 +13,8 @@ CREATE TABLE IF NOT EXISTS blogs (
   is_published BOOLEAN DEFAULT FALSE,
   meta_title TEXT,
   meta_description TEXT,
-  keywords TEXT[] DEFAULT '{}'
+  keywords TEXT[] DEFAULT '{}',
+  likes BIGINT DEFAULT 0
 );
 
 -- Enable RLS
@@ -25,6 +26,19 @@ CREATE POLICY "Public can view published blogs" ON blogs
 
 CREATE POLICY "Admin can manage all blogs" ON blogs
   USING (auth.role() = 'authenticated');
+
+-- RPC Function for incrementing likes
+CREATE OR REPLACE FUNCTION increment_blog_likes(blog_id UUID)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+  UPDATE blogs
+  SET likes = likes + 1
+  WHERE id = blog_id;
+END;
+$$;
 
 -- ============================================================================
 -- STORAGE BUCKET SETUP (Must be done via Supabase Dashboard)
