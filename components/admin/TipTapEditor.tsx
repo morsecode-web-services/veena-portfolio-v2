@@ -22,9 +22,12 @@ import {
     Link as LinkIcon,
     Undo,
     Redo,
+    Code, // Added Code icon
 } from 'lucide-react';
 import { useCallback, useEffect, useState, useMemo } from 'react';
 import { supabase } from '@/lib/supabase';
+import { getErrorMessage } from '@/utils/error-handling';
+import imageCompression from 'browser-image-compression';
 
 interface TipTapEditorProps {
     content: string;
@@ -45,12 +48,28 @@ function EditorToolbar() {
             const file = (e.target as HTMLInputElement).files?.[0];
             if (!file) return;
 
+            // ... (in handleUpload)
+
             try {
-                // Validate file size (max 5MB)
-                const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+                // Validate file size (max 5MB original check, though compression helps)
+                const maxSize = 5 * 1024 * 1024;
                 if (file.size > maxSize) {
                     alert('Image size must be less than 5MB. Please choose a smaller image.');
                     return;
+                }
+
+                // Compress image
+                const options = {
+                    maxSizeMB: 1,
+                    maxWidthOrHeight: 1920,
+                    useWebWorker: true
+                };
+
+                let uploadFile = file;
+                try {
+                    uploadFile = await imageCompression(file, options);
+                } catch (error) {
+                    console.error('Compression failed, using original file:', error);
                 }
 
                 const fileExt = file.name.split('.').pop();
@@ -59,8 +78,8 @@ function EditorToolbar() {
 
                 const { error: uploadError } = await supabase.storage
                     .from('blog-assets')
-                    .upload(filePath, file, {
-                        contentType: file.type,
+                    .upload(filePath, uploadFile, {
+                        contentType: uploadFile.type,
                         upsert: false
                     });
 
@@ -73,10 +92,10 @@ function EditorToolbar() {
                 if (data?.publicUrl) {
                     editor.chain().focus().setImage({ src: data.publicUrl }).run();
                 }
+
             } catch (error: any) {
                 console.error('Error uploading image:', error);
-                const errorMessage = error?.message || 'Failed to upload image. Please try again.';
-                alert(`Upload failed: ${errorMessage}`);
+                alert(getErrorMessage(error));
             }
         };
 

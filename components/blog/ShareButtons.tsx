@@ -29,11 +29,15 @@ export default function ShareButtons({ url, title }: ShareButtonsProps) {
         if (navigator.share) {
             try {
                 await navigator.share({
-                    title: title,
-                    url: url,
+                    title,
+                    text: 'Check out this article!',
+                    url,
                 });
-            } catch (err) {
-                console.error('Error sharing:', err);
+            } catch (error) {
+                // Ignore AbortError as it means the user cancelled the share
+                if (error instanceof Error && error.name !== 'AbortError') {
+                    console.error('Error sharing:', error);
+                }
             }
         } else {
             // Fallback: Copy to clipboard

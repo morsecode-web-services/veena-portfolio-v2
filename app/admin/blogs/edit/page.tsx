@@ -7,6 +7,9 @@ import { BlogForm } from '@/components/admin/BlogForm';
 import { Blog, NewBlog } from '@/types/blog';
 import { Loader2 } from 'lucide-react';
 
+import { getErrorMessage } from '@/utils/error-handling';
+import { ToastContainer, useToast } from '@/components/ui/Toast';
+
 function EditBlogContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -14,6 +17,7 @@ function EditBlogContent() {
     const [blog, setBlog] = useState<Blog | null>(null);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const { toasts, addToast, removeToast } = useToast();
 
     useEffect(() => {
         async function fetchBlog() {
@@ -29,6 +33,7 @@ function EditBlogContent() {
                 setBlog(data);
             } catch (error) {
                 console.error('Error fetching blog:', error);
+                // We typically don't show toast here as we redirect, but we could if we stay
                 router.push('/admin/blogs');
             } finally {
                 setLoading(false);
@@ -47,10 +52,16 @@ function EditBlogContent() {
                 .eq('id', id);
 
             if (error) throw error;
-            router.push('/admin/blogs');
+
+            addToast('Blog post updated successfully!', 'success');
+            // Small delay
+            setTimeout(() => {
+                router.push('/admin/blogs');
+            }, 1000);
         } catch (error) {
             console.error('Error updating blog:', error);
-            alert('Failed to update blog.');
+            const message = getErrorMessage(error);
+            addToast(message, 'error');
         } finally {
             setSaving(false);
         }
@@ -69,6 +80,7 @@ function EditBlogContent() {
 
     return (
         <div className="space-y-6">
+            <ToastContainer toasts={toasts} removeToast={removeToast} />
             <div>
                 <h1 className="text-2xl font-serif font-bold text-gray-900">Edit Post</h1>
                 <p className="text-sm text-gray-500">Refining: {blog.title}</p>

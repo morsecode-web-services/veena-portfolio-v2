@@ -1,9 +1,11 @@
 'use client';
 
+import { getErrorMessage } from '@/utils/error-handling';
 import React, { useState, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { ImageIcon, X, Upload, Loader2 } from 'lucide-react';
 import Image from 'next/image';
+import imageCompression from 'browser-image-compression';
 
 interface ImageUploadProps {
     value?: string;
@@ -12,25 +14,41 @@ interface ImageUploadProps {
 }
 
 export function ImageUpload({ value, onChange, bucket = 'events' }: ImageUploadProps) {
-    const [uploading, setUploading] = useState(false);
+    const [status, setStatus] = useState<'idle' | 'compressing' | 'uploading'>('idle');
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
         try {
-            setUploading(true);
-
             if (!event.target.files || event.target.files.length === 0) {
                 return;
             }
 
             const file = event.target.files[0];
+            setStatus('compressing');
+
+            // Compress image
+            const options = {
+                maxSizeMB: 1,
+                maxWidthOrHeight: 1920,
+                useWebWorker: true
+            };
+
+            let uploadFile = file;
+            try {
+                uploadFile = await imageCompression(file, options);
+            } catch (error) {
+                console.error('Compression failed, using original file:', error);
+            }
+
+            setStatus('uploading');
+
             const fileExt = file.name.split('.').pop();
             const fileName = `${Math.random().toString(36).substring(2)}_${Date.now()}.${fileExt}`;
             const filePath = `${fileName}`;
 
             const { error: uploadError } = await supabase.storage
                 .from(bucket)
-                .upload(filePath, file);
+                .upload(filePath, uploadFile);
 
             if (uploadError) throw uploadError;
 
@@ -41,13 +59,35 @@ export function ImageUpload({ value, onChange, bucket = 'events' }: ImageUploadP
             onChange(publicUrl);
         } catch (error) {
             console.error('Error uploading image:', error);
-            alert('Error uploading image!');
+            alert(getErrorMessage(error));
         } finally {
-            setUploading(false);
+            setStatus('idle');
         }
     };
 
-    const removeImage = () => {
+    const removeImage = async () => {
+        if (!value) return;
+
+        try {
+            // Extract storage path from public URL
+            const match = value.match(/\/([^\/]+\/[^\/]+)$/);
+            const filePath = match ? match[1] : value.split('/').pop();
+
+            if (filePath) {
+                // Delete from storage
+                const { error } = await supabase.storage
+                    .from(bucket)
+                    .remove([filePath]);
+
+                if (error) {
+                    console.warn('Could not delete image from storage:', error);
+                }
+            }
+        } catch (error) {
+            console.error('Error removing image:', error);
+        }
+
+        // Clear the form value
         onChange('');
         if (fileInputRef.current) {
             fileInputRef.current.value = '';
@@ -58,7 +98,7 @@ export function ImageUpload({ value, onChange, bucket = 'events' }: ImageUploadP
         <div className="space-y-4 w-full">
             <div className="flex items-center gap-4">
                 <div
-                    onClick={() => !uploading && fileInputRef.current?.click()}
+                    onClick={() => status === 'idle' && fileInputRef.current?.click()}
                     className={`
                         relative group cursor-pointer
                         w-40 h-40 rounded-2xl border-2 border-dashed
@@ -83,13 +123,13 @@ export function ImageUpload({ value, onChange, bucket = 'events' }: ImageUploadP
                         </>
                     ) : (
                         <>
-                            {uploading ? (
+                            {status !== 'idle' ? (
                                 <Loader2 className="h-8 w-8 text-navy-400 animate-spin" />
                             ) : (
                                 <ImageIcon className="h-8 w-8 text-gray-400" />
                             )}
                             <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">
-                                {uploading ? 'Uploading...' : 'Upload Image'}
+                                {status === 'compressing' ? 'Compressing...' : status === 'uploading' ? 'Uploading...' : 'Upload Image'}
                             </p>
                         </>
                     )}
@@ -112,7 +152,7 @@ export function ImageUpload({ value, onChange, bucket = 'events' }: ImageUploadP
                 onChange={handleUpload}
                 accept="image/*"
                 className="hidden"
-                disabled={uploading}
+                disabled={status !== 'idle'}
             />
 
             <p className="text-[10px] text-gray-400 uppercase tracking-widest font-medium">

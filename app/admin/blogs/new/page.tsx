@@ -6,9 +6,13 @@ import { supabase } from '@/lib/supabase';
 import { BlogForm } from '@/components/admin/BlogForm';
 import { NewBlog } from '@/types/blog';
 
+import { getErrorMessage } from '@/utils/error-handling';
+import { ToastContainer, useToast } from '@/components/ui/Toast';
+
 export default function NewBlogPage() {
     const router = useRouter();
     const [loading, setLoading] = useState(false);
+    const { toasts, addToast, removeToast } = useToast();
 
     const handleSubmit = async (data: NewBlog) => {
         try {
@@ -18,10 +22,16 @@ export default function NewBlogPage() {
                 .insert([data]);
 
             if (error) throw error;
-            router.push('/admin/blogs');
+
+            addToast('Blog post created successfully!', 'success');
+            // Small delay to let user see the success message
+            setTimeout(() => {
+                router.push('/admin/blogs');
+            }, 1000);
         } catch (error) {
             console.error('Error creating blog:', error);
-            alert('Failed to create blog. Please check your Supabase schema and try again.');
+            const message = getErrorMessage(error);
+            addToast(message, 'error');
         } finally {
             setLoading(false);
         }
@@ -29,6 +39,7 @@ export default function NewBlogPage() {
 
     return (
         <div className="space-y-6">
+            <ToastContainer toasts={toasts} removeToast={removeToast} />
             <div>
                 <h1 className="text-2xl font-serif font-bold text-gray-900">Create New Post</h1>
                 <p className="text-sm text-gray-500">Draft your next story with the Medium-style editor</p>

@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import React, { useState, useEffect } from 'react';
+import { format } from 'date-fns';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import {
@@ -13,6 +14,7 @@ import {
     Search as SeoIcon,
     ChevronDown,
     ChevronUp,
+    Eye,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { ImageUpload } from './ImageUpload';
@@ -51,6 +53,7 @@ export function BlogForm({ initialData, onSubmit, loading }: BlogFormProps) {
         handleSubmit,
         setValue,
         watch,
+        getValues,
         formState: { errors, isDirty },
     } = useForm<BlogFormSchema>({
         resolver: zodResolver(blogSchema) as any,
@@ -77,11 +80,26 @@ export function BlogForm({ initialData, onSubmit, loading }: BlogFormProps) {
     const [isMetaDescManuallyEdited, setIsMetaDescManuallyEdited] = useState(isEditMode);
     const [copySuccess, setCopySuccess] = useState(false);
 
+    // Watch form values
     const content = watch('content');
     const imageUrl = watch('image_url');
     const keywords = watch('keywords');
     const title = watch('title');
     const slug = watch('slug');
+
+    // Word count and reading time utilities
+    const getWordCount = (html: string): number => {
+        if (!html) return 0;
+        const text = html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+        return text.split(' ').filter(word => word.length > 0).length;
+    };
+
+    const getReadingTime = (wordCount: number): number => {
+        return Math.ceil(wordCount / 200); // 200 words per minute average
+    };
+
+    const wordCount = getWordCount(content);
+    const readingTime = getReadingTime(wordCount);
 
     // Auto-generate slug from title
     React.useEffect(() => {
@@ -121,6 +139,19 @@ export function BlogForm({ initialData, onSubmit, loading }: BlogFormProps) {
         }
     }, [content, title, setValue, watch, isExcerptManuallyEdited, isMetaTitleManuallyEdited, isMetaDescManuallyEdited]);
 
+    // Warn before leaving with unsaved changes
+    React.useEffect(() => {
+        const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+            if (isDirty) {
+                e.preventDefault();
+                e.returnValue = '';
+            }
+        };
+
+        window.addEventListener('beforeunload', handleBeforeUnload);
+        return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+    }, [isDirty]);
+
     const addKeyword = (e: React.KeyboardEvent) => {
         if (e.key === 'Enter' && keywordInput.trim()) {
             e.preventDefault();
@@ -136,8 +167,71 @@ export function BlogForm({ initialData, onSubmit, loading }: BlogFormProps) {
         setValue('keywords', newKeywords, { shouldDirty: true });
     };
 
+    // Auto-save logic
+    const [lastSaved, setLastSaved] = useState<Date | null>(null);
+
+    // Load draft on mount
+    useEffect(() => {
+        if (!initialData) { // Only for new posts for now to avoid conflicts
+            const savedDraft = localStorage.getItem('blog_draft_new');
+            if (savedDraft) {
+                try {
+                    const parsed = JSON.parse(savedDraft);
+                    const shouldRestore = window.confirm('Found an unsaved draft. Do you want to restore it?');
+                    if (shouldRestore) {
+                        Object.keys(parsed).forEach(key => {
+                            setValue(key as any, parsed[key], { shouldDirty: true });
+                        });
+                        // addToast('Draft restored!', 'info'); // Removed as addToast is not available
+                    } else {
+                        localStorage.removeItem('blog_draft_new');
+                    }
+                } catch (e) {
+                    console.error('Failed to parse draft', e);
+                }
+            }
+        }
+    }, [initialData, setValue]); // addToast is stable from hook usage in parent, but passing it down might be needed?
+    // Wait, addToast is not available here unless I pass it or use context.
+    // I will use alert for restore confirmation (window.confirm) and just console log for save success, 
+    // or rely on the "Last saved" text. I don't have addToast prop here.
+    // I can add `addToast` to props? Or just skip toast for auto-save actions to avoid spam.
+
+    // Save draft periodically
+    useEffect(() => {
+        const timer = setInterval(() => {
+            if (isDirty) {
+                const formData = getValues();
+                // Only save if we have at least a title or content
+                if (formData.title || formData.content) {
+                    localStorage.setItem('blog_draft_new', JSON.stringify(formData));
+                    setLastSaved(new Date());
+                }
+            }
+        }, 30000); // 30 seconds
+
+        return () => clearInterval(timer);
+    }, [isDirty, getValues]);
+
+    // Clear draft on successful submit
     const handleFormSubmit = async (data: BlogFormSchema) => {
         await onSubmit(data as NewBlog);
+        localStorage.removeItem('blog_draft_new');
+    };
+
+    const handlePreview = () => {
+        const formData = watch();
+        // Construct a partial Blog object for preview
+        const previewData = {
+            ...initialData, // Keep existing ID, dates, etc if editing
+            ...formData,
+            created_at: initialData?.created_at || new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            author: formData.author || 'You'
+        };
+
+        sessionStorage.setItem('blog_preview_data', JSON.stringify(previewData));
+        window.open('/admin/blogs/preview', '_blank');
     };
 
     return (
@@ -175,11 +269,43 @@ export function BlogForm({ initialData, onSubmit, loading }: BlogFormProps) {
                         </div>
                     </div>
 
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                            <span className="text-sm font-medium text-gray-600">Status</span>
+                            <span className="px-3 py-1 bg-green-100 text-green-700 text-xs font-bold uppercase tracking-widest rounded-full">
+                                {initialData ? 'Published' : 'Draft'}
+                            </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                            <span className="text-sm font-medium text-gray-600">Visibility</span>
+                            <span className="text-sm text-navy-900 font-bold">Public</span>
+                        </div>
+                        {lastSaved && (
+                            <div className="flex items-center justify-between pt-2">
+                                <span className="text-xs font-medium text-gray-400">Auto-saved</span>
+                                <span className="text-xs text-navy-900 font-medium">{format(lastSaved, 'h:mm a')}</span>
+                            </div>
+                        )}
+                    </div>
+
                     {/* Editor Section */}
                     <div>
-                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3">
-                            Post Content
-                        </label>
+                        <div className="flex items-center justify-between mb-3">
+                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">
+                                Post Content
+                            </label>
+                            {wordCount > 0 && (
+                                <div className="flex items-center gap-3 text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                                    <span className="flex items-center gap-1">
+                                        📝 {wordCount.toLocaleString()} words
+                                    </span>
+                                    <span className="text-gray-300">·</span>
+                                    <span className="flex items-center gap-1">
+                                        ⏱️ {readingTime} min read
+                                    </span>
+                                </div>
+                            )}
+                        </div>
                         <TipTapEditor
                             content={content}
                             onChange={(val) => {
@@ -341,6 +467,13 @@ export function BlogForm({ initialData, onSubmit, loading }: BlogFormProps) {
                     className="px-6 py-3 bg-white border border-gray-200 text-gray-600 font-bold rounded-xl hover:bg-gray-50 transition-colors uppercase tracking-widest text-[10px] shadow-sm"
                 >
                     Cancel
+                </button>
+                <button
+                    type="button"
+                    onClick={handlePreview}
+                    className="px-6 py-3 bg-white border border-navy-900 text-navy-900 font-bold rounded-xl hover:bg-navy-50 transition-colors uppercase tracking-widest text-[10px] shadow-sm flex items-center gap-2"
+                >
+                    <Eye className="h-4 w-4" /> Preview
                 </button>
                 <button
                     type="submit"
