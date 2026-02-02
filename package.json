@@ -20,6 +20,17 @@
     "@supabase/auth-helpers-nextjs": "^0.15.0",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.78.0",
+    "@tailwindcss/typography": "^0.5.19",
+    "@tiptap/core": "^3.18.0",
+    "@tiptap/extension-bubble-menu": "^3.18.0",
+    "@tiptap/extension-floating-menu": "^3.18.0",
+    "@tiptap/extension-image": "^3.18.0",
+    "@tiptap/extension-link": "^3.18.0",
+    "@tiptap/extension-placeholder": "^3.18.0",
+    "@tiptap/html": "^3.18.0",
+    "@tiptap/pm": "^3.18.0",
+    "@tiptap/react": "^3.18.0",
+    "@tiptap/starter-kit": "^3.18.0",
     "date-fns": "^4.1.0",
     "framer-motion": "^12.23.25",
     "html2canvas": "^1.4.1",
@@ -31,7 +42,7 @@
     "react-dom": "^18.3.1",
     "react-hook-form": "^7.68.0",
     "react-icons": "^5.5.0",
-    "zod": "^4.1.13"
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.17",
