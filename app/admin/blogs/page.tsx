@@ -62,10 +62,74 @@ export default function BlogsPage() {
         }
     }
 
+    // Helper function to extract image URLs from HTML content
+    function extractImageUrls(html: string): string[] {
+        const imgRegex = /<img[^>]+src="([^">]+)"/g;
+        const urls: string[] = [];
+        let match;
+
+        while ((match = imgRegex.exec(html)) !== null) {
+            urls.push(match[1]);
+        }
+
+        return urls;
+    }
+
+    // Helper function to convert public URL to storage path
+    function getStoragePath(publicUrl: string): string {
+        // Extract path from Supabase public URL
+        // Example: https://xxx.supabase.co/storage/v1/object/public/blog-assets/inline-images/abc.jpg
+        // Returns: inline-images/abc.jpg
+        const match = publicUrl.match(/\/blog-assets\/(.+)$/);
+        return match ? match[1] : '';
+    }
+
     async function deleteBlog(id: string) {
-        if (!confirm('Are you sure you want to delete this blog post? This action cannot be undone.')) return;
+        if (!confirm('Are you sure you want to delete this blog post? This will also delete all associated images and cannot be undone.')) return;
 
         try {
+            // 1. Fetch the blog to get image URLs
+            const { data: blog, error: fetchError } = await supabase
+                .from('blogs')
+                .select('content, image_url')
+                .eq('id', id)
+                .single();
+
+            if (fetchError) throw fetchError;
+
+            if (blog) {
+                // 2. Extract inline image URLs from content
+                const inlineImages = extractImageUrls(blog.content || '');
+
+                // 3. Collect all images to delete
+                const imagesToDelete: string[] = [];
+
+                // Add featured image
+                if (blog.image_url) {
+                    const featuredPath = getStoragePath(blog.image_url);
+                    if (featuredPath) imagesToDelete.push(featuredPath);
+                }
+
+                // Add inline images
+                inlineImages.forEach(url => {
+                    const path = getStoragePath(url);
+                    if (path) imagesToDelete.push(path);
+                });
+
+                // 4. Delete all images from storage
+                if (imagesToDelete.length > 0) {
+                    const { error: storageError } = await supabase.storage
+                        .from('blog-assets')
+                        .remove(imagesToDelete);
+
+                    if (storageError) {
+                        console.warn('Some images could not be deleted from storage:', storageError);
+                        // Continue with blog deletion even if storage cleanup fails
+                    }
+                }
+            }
+
+            // 5. Delete the blog post from database
             const { error } = await supabase
                 .from('blogs')
                 .delete()
