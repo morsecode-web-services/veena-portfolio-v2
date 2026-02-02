@@ -175,8 +175,8 @@ export default function Schedule() {
                                             <EventCard key={event.id} event={event} />
                                         ))
                                     ) : (
-                                        <div className="col-span-full py-20 text-center text-navy-400">
-                                            <p className="font-serif italic text-lg">New dates will be announced soon.</p>
+                                        <div className="col-span-full py-20 flex flex-col items-center justify-center text-center text-navy-400">
+                                            <p className="font-serif italic text-lg text-center">New dates will be announced soon.</p>
                                         </div>
                                     )}
                                 </m.div>

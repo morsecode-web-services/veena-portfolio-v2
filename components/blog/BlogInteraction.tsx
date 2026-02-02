@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { m, AnimatePresence } from 'framer-motion';
 import { Heart } from 'lucide-react';
+import { trackEvent } from '@/components/GoogleAnalytics';
 
 
 interface BlogInteractionProps {
@@ -26,6 +27,13 @@ export default function BlogInteraction({ blogId, initialLikes }: BlogInteractio
 
     const handleLike = async () => {
         if (hasLiked) return;
+
+        // Custom Event Tracking
+        trackEvent('blog_like', {
+            event_category: 'Engagement',
+            event_label: blogId,
+            blog_id: blogId
+        });
 
         // Optimistic update
         setLikes(prev => prev + 1);

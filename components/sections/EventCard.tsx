@@ -5,6 +5,7 @@ import { m, AnimatePresence } from 'framer-motion';
 import { MapPin, Clock, ExternalLink, Ticket, ArrowRight, X, Maximize2 } from 'lucide-react';
 import { Event } from '../../types/event';
 import Image from 'next/image';
+import { analytics } from '@/components/GoogleAnalytics';
 
 interface EventCardProps {
     event: Event;
@@ -120,6 +121,7 @@ export const EventCard: React.FC<EventCardProps> = ({ event, isPast, viewMode = 
                                 href={event.map_url!}
                                 target="_blank"
                                 rel="noopener noreferrer"
+                                onClick={() => analytics.externalLinkClick('Event Details Map', event.map_url!, 'map')}
                                 className="inline-flex items-center gap-1 text-[10px] font-bold text-navy-400 hover:text-gold-600 transition-colors uppercase tracking-widest mt-1"
                             >
                                 <ExternalLink className="h-3 w-3" />
@@ -211,6 +213,7 @@ export const EventCard: React.FC<EventCardProps> = ({ event, isPast, viewMode = 
                                     href={event.booking_url!}
                                     target="_blank"
                                     rel="noopener noreferrer"
+                                    onClick={() => analytics.externalLinkClick('Event Tickets', event.booking_url!, 'tickets')}
                                     className="text-[11px] font-bold text-navy-900 hover:text-gold-600 transition-colors uppercase tracking-widest flex items-center gap-2"
                                 >
                                     Tickets <ArrowRight className="h-3 w-3" />
@@ -226,6 +229,7 @@ export const EventCard: React.FC<EventCardProps> = ({ event, isPast, viewMode = 
                                     href={event.map_url!}
                                     target="_blank"
                                     rel="noopener noreferrer"
+                                    onClick={() => analytics.externalLinkClick('Event Map Icon', event.map_url!, 'map')}
                                     className="p-2 rounded-lg bg-navy-50 text-navy-400 hover:bg-navy-100 transition-colors"
                                 >
                                     <ExternalLink className="h-4 w-4" />

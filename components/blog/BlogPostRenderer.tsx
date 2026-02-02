@@ -4,7 +4,7 @@ import React from 'react';
 import { Blog } from '@/types/blog';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Calendar, User, ArrowLeft } from 'lucide-react';
+import { Calendar, User, ArrowLeft, Eye } from 'lucide-react';
 import { format } from 'date-fns';
 import ShareButtons from '@/components/blog/ShareButtons';
 
@@ -82,6 +82,15 @@ export default function BlogPostRenderer({ blog, previewMode = false }: BlogPost
                                     {Math.ceil(blog.content.replace(/<[^>]*>/g, ' ').split(/\s+/).filter(w => w.length > 0).length / 200)} min read
                                 </span>
                             </div>
+                            {blog.views !== undefined && (
+                                <div className="flex items-center gap-2">
+                                    <span className="text-gray-300">|</span>
+                                    <Eye className="h-4 w-4 text-gray-400" />
+                                    <span className="font-medium">
+                                        {blog.views.toLocaleString()} views
+                                    </span>
+                                </div>
+                            )}
                         </div>
 
                         {/* Share Buttons - only show in non-preview mode or valid URL */}

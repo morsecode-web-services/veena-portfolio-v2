@@ -14,6 +14,7 @@ export interface Blog {
     meta_description: string;
     keywords: string[];
     likes?: number;
+    views?: number;
 }
 
 export type NewBlog = Omit<Blog, 'id' | 'created_at' | 'updated_at'>;

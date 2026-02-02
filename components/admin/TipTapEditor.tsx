@@ -14,6 +14,9 @@ import Underline from '@tiptap/extension-underline';
 import TextAlign from '@tiptap/extension-text-align';
 import Subscript from '@tiptap/extension-subscript';
 import Superscript from '@tiptap/extension-superscript';
+import FontFamily from '@tiptap/extension-font-family';
+import { TextStyle } from '@tiptap/extension-text-style';
+import { FontSize } from './extensions/FontSize';
 import {
     Bold,
     Italic,
@@ -125,7 +128,48 @@ function EditorToolbar() {
     const Divider = () => <div className="w-px h-6 bg-gray-200 mx-1 self-center" />;
 
     return (
-        <div className="bg-gray-50/80 backdrop-blur-sm border-b border-gray-100 p-2 flex flex-wrap gap-1 sticky top-0 z-10">
+        <div className="bg-gray-50/80 backdrop-blur-sm border-b border-gray-100 p-2 flex flex-wrap gap-1 sticky top-0 z-10 items-center">
+
+            <select
+                className="h-8 text-xs border border-gray-200 rounded px-2 bg-white text-gray-600 focus:outline-none focus:border-navy-500 min-w-[100px]"
+                onChange={(e) => {
+                    const value = e.target.value;
+                    if (value) {
+                        editor.chain().focus().setFontFamily(value).run();
+                    } else {
+                        editor.chain().focus().unsetFontFamily().run();
+                    }
+                }}
+                value={editor.getAttributes('textStyle').fontFamily || ''}
+            >
+                <option value="">Default Font</option>
+                <option value="Inter, sans-serif">Sans Serif</option>
+                <option value="Merriweather, serif">Serif</option>
+                <option value="'JetBrains Mono', monospace">Monospace</option>
+                <option value="'Comic Sans MS', 'Comic Sans', cursive">Comic Sans</option>
+            </select>
+
+            <select
+                className="h-8 text-xs border border-gray-200 rounded px-2 bg-white text-gray-600 focus:outline-none focus:border-navy-500 w-[80px]"
+                onChange={(e) => {
+                    const value = e.target.value;
+                    if (value) {
+                        editor.chain().focus().setFontSize(value).run();
+                    } else {
+                        editor.chain().focus().unsetFontSize().run();
+                    }
+                }}
+                value={editor.getAttributes('textStyle').fontSize || ''}
+            >
+                <option value="">Size</option>
+                <option value="12px">Small</option>
+                <option value="16px">Normal</option>
+                <option value="20px">Large</option>
+                <option value="24px">Huge</option>
+                <option value="32px">Giant</option>
+            </select>
+
+            <Divider />
             <Button onClick={() => editor.chain().focus().toggleBold().run()} isActive={editor.isActive('bold')} title="Bold" icon={Bold} />
             <Button onClick={() => editor.chain().focus().toggleItalic().run()} isActive={editor.isActive('italic')} title="Italic" icon={Italic} />
             <Button onClick={() => editor.chain().focus().toggleUnderline().run()} isActive={editor.isActive('underline')} title="Underline" icon={UnderlineIcon} />
@@ -221,6 +265,9 @@ export default function TipTapEditor({ content, onChange }: TipTapEditorProps) {
         }),
         Subscript,
         Superscript,
+        TextStyle,
+        FontFamily,
+        FontSize,
     ], []);
 
     if (!mounted) {

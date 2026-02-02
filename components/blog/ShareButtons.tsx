@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { Twitter, Linkedin, Facebook, Link as LinkIcon, Share2 } from 'lucide-react';
+import { analytics, trackEvent } from '@/components/GoogleAnalytics';
 
 interface ShareButtonsProps {
     url: string;
@@ -14,18 +15,22 @@ export default function ShareButtons({ url, title }: ShareButtonsProps) {
     const encodedTitle = encodeURIComponent(title);
 
     const shareOnTwitter = () => {
+        analytics.socialMediaClick('twitter', 'blog_share');
         window.open(`https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedTitle}`, '_blank', 'width=600,height=400');
     };
 
     const shareOnLinkedIn = () => {
+        analytics.socialMediaClick('linkedin', 'blog_share');
         window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`, '_blank', 'width=600,height=400');
     };
 
     const shareOnFacebook = () => {
+        analytics.socialMediaClick('facebook', 'blog_share');
         window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`, '_blank', 'width=600,height=400');
     };
 
     const handleNativeShare = async () => {
+        trackEvent('share_start', { method: 'native', url });
         if (navigator.share) {
             try {
                 await navigator.share({
@@ -41,6 +46,7 @@ export default function ShareButtons({ url, title }: ShareButtonsProps) {
             }
         } else {
             // Fallback: Copy to clipboard
+            trackEvent('share_copy_link', { url });
             try {
                 await navigator.clipboard.writeText(url);
                 setCopied(true);
