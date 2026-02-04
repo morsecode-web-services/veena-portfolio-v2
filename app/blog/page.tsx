@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
+import ImageWithFallback from '@/components/ui/ImageWithFallback';
 import { supabase } from '@/lib/supabase';
 import { Blog } from '@/types/blog';
 import { Calendar, User, ArrowRight, MessageSquare } from 'lucide-react';
@@ -61,7 +61,7 @@ export default async function BlogListingPage() {
                                 <Link href={`/blog/${blog.slug}`} className="block">
                                     <div className="relative aspect-[16/10] rounded-2xl overflow-hidden mb-6 bg-gray-100 border border-gray-100 shadow-sm group-hover:shadow-md transition-shadow">
                                         {blog.image_url ? (
-                                            <Image
+                                            <ImageWithFallback
                                                 src={blog.image_url}
                                                 alt={blog.title}
                                                 fill

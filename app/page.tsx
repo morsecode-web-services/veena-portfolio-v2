@@ -5,67 +5,36 @@ import MusicalBackground from '@/components/ui/MusicalBackground';
 import PortfolioGeneratorWrapper from '@/components/features/PortfolioGeneratorWrapper';
 import siteConfig from '@/public/config/site-config.json';
 import { validateConfig } from '@/lib/config';
+import { supabase } from '@/lib/supabase'; // Use anon client for public fetch
+
+export const revalidate = 900; // Revalidate every 15 minutes
 
 // Code-split heavy components for better performance
-// Removed ssr: false to allow Server Components to render the shell HTML (improved LCP/SEO)
-// The JavaScript chunks will still be lazy-loaded
 const Gallery = dynamic(() => import('@/components/sections/Gallery'), {
-  loading: () => (
-    <div className="py-10 sm:py-12 md:py-16 px-4 sm:px-6 md:px-8">
-      <div className="max-w-7xl mx-auto text-center">
-        <div className="animate-pulse text-gray-600 text-sm">Loading gallery...</div>
-      </div>
-    </div>
-  ),
+  loading: () => <div className="py-16 text-center animate-pulse text-gray-600 text-sm">Loading gallery...</div>,
 });
 
 const Music = dynamic(() => import('@/components/sections/Music'), {
-  loading: () => (
-    <div className="py-12 sm:py-16 md:py-20 px-4 sm:px-6 md:px-8">
-      <div className="max-w-7xl mx-auto text-center">
-        <div className="animate-pulse text-gray-600">Loading music...</div>
-      </div>
-    </div>
-  ),
+  loading: () => <div className="py-20 text-center animate-pulse text-gray-600">Loading music...</div>,
 });
 
 const Press = dynamic(() => import('@/components/sections/Press'), {
-  loading: () => (
-    <div className="py-12 sm:py-16 md:py-20 px-4 sm:px-6 md:px-8">
-      <div className="max-w-7xl mx-auto text-center">
-        <div className="animate-pulse text-gray-600">Loading press...</div>
-      </div>
-    </div>
-  ),
+  loading: () => <div className="py-20 text-center animate-pulse text-gray-600">Loading press...</div>,
 });
 
 const FAQ = dynamic(() => import('@/components/sections/FAQ'), {
-  loading: () => (
-    <div className="py-12 sm:py-16 md:py-20 px-4 sm:px-6 md:px-8">
-      <div className="max-w-7xl mx-auto text-center">
-        <div className="animate-pulse text-gray-600">Loading FAQ...</div>
-      </div>
-    </div>
-  ),
+  loading: () => <div className="py-20 text-center animate-pulse text-gray-600">Loading FAQ...</div>,
 });
 
 const Contact = dynamic(() => import('@/components/sections/Contact'), {
-  loading: () => (
-    <div className="py-12 sm:py-16 md:py-20 px-4 sm:px-6 md:px-8">
-      <div className="max-w-7xl mx-auto text-center">
-        <div className="animate-pulse text-gray-600">Loading contact form...</div>
-      </div>
-    </div>
-  ),
+  loading: () => <div className="py-20 text-center animate-pulse text-gray-600">Loading contact form...</div>,
 });
 
-// About component is high up, load normally via dynamic imports (SSR enabled)
 const About = dynamic(() => import('@/components/sections/About'));
 const Schedule = dynamic(() => import('@/components/sections/Schedule'));
 
-
-export default function Page() {
-  // Validate config at build time
+export default async function Page() {
+  // Validate config
   const validation = validateConfig(siteConfig);
   if (!validation.success) {
     console.error('Config validation failed:', validation.error);
@@ -73,11 +42,26 @@ export default function Page() {
   }
   const config = validation.data;
 
+  let dbVideos: any[] = [];
+  try {
+    const { data, error } = await supabase
+      .from('videos')
+      .select('*')
+      .order('order_index', { ascending: true });
+
+    if (!error && data) {
+      dbVideos = data;
+    }
+  } catch (e) {
+    console.error('Failed to fetch videos from Supabase:', e);
+  }
+
+  const featuredVideos = dbVideos.filter(v => v.is_featured);
+
   return (
     <main id="main-content" className="min-h-screen" role="main">
       {/* Dynamic Sections based on Config */}
       {config.layoutOrder?.map((sectionName) => {
-        // Skip if section is explicitly disabled in config
         if (config.sections && config.sections[sectionName] === false) return null;
 
         switch (sectionName) {
@@ -87,7 +71,7 @@ export default function Page() {
                 <MusicalBackground config={config} />
                 <div className="relative z-10">
                   <SectionErrorBoundary sectionName="Home">
-                    <HomeSection config={config} />
+                    <HomeSection config={config} dbVideos={featuredVideos} />
                   </SectionErrorBoundary>
                 </div>
               </div>
@@ -112,7 +96,7 @@ export default function Page() {
             return (
               <div key="Music" className="py-8 sm:py-11 md:py-14 bg-white">
                 <SectionErrorBoundary sectionName="Music">
-                  <Music config={config} />
+                  <Music config={config} dbVideos={dbVideos || []} />
                 </SectionErrorBoundary>
               </div>
             );
@@ -156,14 +140,6 @@ export default function Page() {
       {/* Portfolio Download Section */}
       <div id="pdf-generator-section" className="py-8 sm:py-10 md:py-12 bg-white border-t border-gray-200">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 md:px-8">
-          <div className="text-center mb-6 sm:mb-7 md:mb-8">
-            <h2 className="text-xl sm:text-2xl md:text-3xl font-serif font-bold text-navy-900 mb-2 md:mb-3 px-4">
-              Download Portfolio
-            </h2>
-            <p className="text-sm sm:text-base text-gray-600 max-w-2xl mx-auto px-4 leading-relaxed">
-              Get a comprehensive PDF portfolio with all sections, images, and clickable links
-            </p>
-          </div>
           <SectionErrorBoundary sectionName="Portfolio Generator">
             <PortfolioGeneratorWrapper />
           </SectionErrorBoundary>

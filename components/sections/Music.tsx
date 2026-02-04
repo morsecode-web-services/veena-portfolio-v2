@@ -4,12 +4,15 @@ import { useState } from 'react';
 import { m, AnimatePresence } from 'framer-motion';
 import type { SiteConfig } from '@/types';
 import MusicCarousel from '@/components/features/MusicCarousel';
+import { Video } from '@/types/video';
+import { extractYoutubeId } from '@/lib/utils';
 
 interface MusicProps {
   config: SiteConfig;
+  dbVideos?: Video[];
 }
 
-export default function Music({ config }: MusicProps) {
+export default function Music({ config, dbVideos }: MusicProps) {
   // State for main category selection (Veena or Vocal)
   const [selectedMainCategoryId, setSelectedMainCategoryId] = useState<string>(
     config.music.categories.length > 0 ? config.music.categories[0].id : ''
@@ -49,8 +52,8 @@ export default function Music({ config }: MusicProps) {
                   key={category.id}
                   onClick={() => setSelectedMainCategoryId(category.id)}
                   className={`px-6 py-2.5 rounded-full text-sm font-bold transition-all duration-300 border-2 shadow-md hover:-translate-y-0.5 tracking-wide ${isActive
-                      ? 'bg-navy-950 text-white border-gold-500'
-                      : 'bg-white text-navy-950 border-gray-200'
+                    ? 'bg-navy-950 text-white border-gold-500'
+                    : 'bg-white text-navy-950 border-gray-200'
                     }`}
                 >
                   {category.name}
@@ -87,20 +90,55 @@ export default function Music({ config }: MusicProps) {
                 transition={{ duration: 0.5 }}
                 className="space-y-2"
               >
-                {selectedMainCategory.subcategories.map((subcategory) => (
-                  <m.div
-                    key={subcategory.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.4, delay: 0.1 }}
-                  >
-                    <MusicCarousel
-                      title={subcategory.name}
-                      description={subcategory.description}
-                      videos={subcategory.videos}
-                    />
-                  </m.div>
-                ))}
+                {selectedMainCategory.subcategories.map((subcategory) => {
+                  // Merge and deduplicate by YouTube ID
+                  const seenIds = new Set<string>();
+                  const subVideos: any[] = [];
+
+                  // 1. Add DB videos first (better metadata)
+                  const dbMatches = (dbVideos || []).filter(v =>
+                    v.category_id === selectedMainCategory.id &&
+                    v.subcategory_id === subcategory.id
+                  );
+
+                  dbMatches.forEach(v => {
+                    const id = extractYoutubeId(v.url);
+                    if (id) {
+                      seenIds.add(id);
+                      subVideos.push({
+                        url: v.url,
+                        title: v.title,
+                        thumbnail_url: v.thumbnail_url
+                      });
+                    }
+                  });
+
+                  // 2. Add config videos if they aren't already there
+                  (subcategory.videos || []).forEach(v => {
+                    const id = extractYoutubeId(v.url);
+                    if (id && !seenIds.has(id)) {
+                      seenIds.add(id);
+                      subVideos.push(v);
+                    }
+                  });
+
+                  if (subVideos.length === 0) return null;
+
+                  return (
+                    <m.div
+                      key={subcategory.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.4, delay: 0.1 }}
+                    >
+                      <MusicCarousel
+                        title={subcategory.name}
+                        description={subcategory.description}
+                        videos={subVideos as any}
+                      />
+                    </m.div>
+                  );
+                })}
               </m.div>
             </AnimatePresence>
           </div>

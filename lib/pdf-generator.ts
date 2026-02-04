@@ -1,6 +1,8 @@
 import jsPDF from 'jspdf';
 import QRCode from 'qrcode';
 import { getBasePath, getAssetPath } from './config';
+import { extractYoutubeId } from './utils';
+import { supabase } from './supabase';
 
 export interface PDFGenerationOptions {
   onProgress?: (progress: number) => void;
@@ -53,6 +55,12 @@ export async function generatePDF(
       throw new Error(`Failed to load site configuration from ${fullPath}`);
     }
     const config = await response.json();
+
+    // Fetch Videos from Supabase
+    const { data: dbVideos } = await supabase
+      .from('videos')
+      .select('*')
+      .order('order_index', { ascending: true });
 
     onProgress?.(10);
 
@@ -122,15 +130,15 @@ export async function generatePDF(
       cursor.y += (lines.length * size * LINE_HEIGHT_SCALE) + 3;
     };
 
-    const addLink = async (text: string, url: string, size: number = 12, withQR = false) => {
+    const addLink = async (text: string, url: string, size: number = 12, withQR = false, x = MARGIN) => {
       setFontBody(size);
       pdf.setTextColor(0, 102, 204);
 
-      pdf.text(text, MARGIN, cursor.y);
+      pdf.text(text, x, cursor.y);
 
       if (includeLinks) {
         const textWidth = pdf.getTextWidth(text);
-        pdf.link(MARGIN, cursor.y - size * 0.7, textWidth, size, { url });
+        pdf.link(x, cursor.y - size * 0.7, textWidth, size, { url });
       }
 
       const textHeight = size * LINE_HEIGHT_SCALE + 2;
@@ -199,7 +207,7 @@ export async function generatePDF(
     checkPageBreak(60);
     addHeader(pdf, 'Music', cursor, setFontHeader);
     cursor.y += 10;
-    await renderMusicSection(pdf, config.music, cursor, addLink);
+    await renderMusicSection(pdf, config.music, dbVideos || [], cursor, addLink, loadImage);
 
     // 5. Gallery
     onProgress?.(75);
@@ -210,26 +218,28 @@ export async function generatePDF(
     await renderGallery(pdf, config.gallery?.images || [], contentWidth, pageHeight, cursor, loadImage);
 
     // 6. Press
-    onProgress?.(85);
-    pdf.addPage();
-    cursor.y = MARGIN;
-    addHeader(pdf, 'Press & Recognition', cursor, setFontHeader);
-    cursor.y += 10;
-    if (config.press?.articles) {
-      config.press.articles.forEach((article: any) => {
-        checkPageBreak(30);
-        setFontSubheader(13);
-        pdf.text(article.title, MARGIN, cursor.y);
-        cursor.y += 6;
+    if (config.sections?.press) {
+      onProgress?.(85);
+      pdf.addPage();
+      cursor.y = MARGIN;
+      addHeader(pdf, 'Press & Recognition', cursor, setFontHeader);
+      cursor.y += 10;
+      if (config.press?.articles) {
+        config.press.articles.forEach((article: any) => {
+          checkPageBreak(30);
+          setFontSubheader(13);
+          pdf.text(article.title, MARGIN, cursor.y);
+          cursor.y += 6;
 
-        setFontAccent(10);
-        pdf.text(`${article.publication} - ${new Date(article.date).toLocaleDateString()}`, MARGIN, cursor.y);
-        cursor.y += 6;
+          setFontAccent(10);
+          pdf.text(`${article.publication} - ${new Date(article.date).toLocaleDateString()}`, MARGIN, cursor.y);
+          cursor.y += 6;
 
-        addText(article.excerpt, 10);
-        addLink(article.title, article.url, 10);
-        cursor.y += 5;
-      });
+          addText(article.excerpt, 10);
+          addLink(article.title, article.url, 10);
+          cursor.y += 5;
+        });
+      }
     }
 
     // 7. Contact
@@ -526,7 +536,7 @@ function renderAboutSection(pdf: jsPDF, config: any, width: number, cursor: Curs
   cursor.y += (lines.length * 12 * LINE_HEIGHT_SCALE) + 10; // Adjusted spacing
 }
 
-async function renderMusicSection(pdf: jsPDF, musicConfig: any, cursor: Cursor, linkFn: any) {
+async function renderMusicSection(pdf: jsPDF, musicConfig: any, dbVideos: any[], cursor: Cursor, linkFn: any, loadImageFn: any) {
   for (let i = 0; i < musicConfig.categories.length; i++) {
     const cat = musicConfig.categories[i];
 
@@ -564,17 +574,64 @@ async function renderMusicSection(pdf: jsPDF, musicConfig: any, cursor: Cursor, 
         pdf.text(sub.name, MARGIN + 2, cursor.y);
         cursor.y += 7;
 
-        if (sub.videos) {
-          for (const vid of sub.videos) {
-            if (cursor.y > 280) {
-              pdf.addPage();
-              cursor.y = MARGIN;
-            }
-            // Updated to size 12 for consistency
-            await linkFn(`• ${vid.title}`, vid.url, 12, false);
+        // Merge and deduplicate
+        const seenIds = new Set<string>();
+        const mergedVideos: any[] = [];
+
+        // 1. Add DB videos first
+        const dbMatches = dbVideos.filter(v => v.category_id === cat.id && v.subcategory_id === sub.id);
+        dbMatches.forEach(v => {
+          const id = extractYoutubeId(v.url);
+          if (id) {
+            seenIds.add(id);
+            mergedVideos.push({ title: v.title, url: v.url });
           }
+        });
+
+        // 2. Add config videos if unique
+        if (sub.videos) {
+          sub.videos.forEach((vid: any) => {
+            const id = extractYoutubeId(vid.url);
+            if (id && !seenIds.has(id)) {
+              seenIds.add(id);
+              mergedVideos.push(vid);
+            }
+          });
         }
-        cursor.y += 4;
+
+        for (const vid of mergedVideos) {
+          const thumbWidth = 35;
+          const thumbHeight = thumbWidth * 0.56; // 16:9
+          const textX = MARGIN + thumbWidth + 5;
+          const entryHeight = Math.max(thumbHeight + 5, 18);
+
+          if (cursor.y + entryHeight > pdf.internal.pageSize.getHeight() - MARGIN) {
+            pdf.addPage();
+            cursor.y = MARGIN;
+          }
+
+          // Render Thumbnail
+          const youtubeId = extractYoutubeId(vid.url);
+          const thumbUrl = vid.thumbnail_url || (youtubeId ? `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg` : null);
+
+          if (thumbUrl) {
+            try {
+              const thumbData = await loadImageFn(thumbUrl);
+              if (thumbData) {
+                // Adjust y to align with text center approx
+                pdf.addImage(thumbData, 'JPEG', MARGIN, cursor.y - 4, thumbWidth, thumbHeight);
+              }
+            } catch (e) {
+              console.warn("Failed to add thumbnail to PDF", e);
+            }
+          }
+
+          await linkFn(vid.title, vid.url, 11, false, textX);
+
+          // Ensure cursor advances significantly for the next item based on image height
+          cursor.y += (entryHeight - 11 * 0.4 - 3); // Compensate for addLink's internal y update
+        }
+        cursor.y += 6;
       }
     }
     cursor.y += 4;

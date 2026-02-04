@@ -5,12 +5,14 @@ import { m, AnimatePresence } from 'framer-motion';
 import ImageWithFallback from '@/components/ui/ImageWithFallback';
 import VideoEmbed from '@/components/ui/VideoEmbed';
 import type { SiteConfig } from '@/types';
+import { Video } from '@/types/video';
 
 interface HomeProps {
   config: SiteConfig;
+  dbVideos?: Video[];
 }
 
-export default function Home({ config }: HomeProps) {
+export default function Home({ config, dbVideos }: HomeProps) {
   const [currentSpotlight, setCurrentSpotlight] = useState(0);
   const [isHovering, setIsHovering] = useState(false);
   const autoScrollInterval = useRef<NodeJS.Timeout | null>(null);
@@ -233,7 +235,7 @@ export default function Home({ config }: HomeProps) {
         )}
 
         {/* Featured YouTube videos */}
-        {config.home.featuredVideos.length > 0 && (
+        {((dbVideos && dbVideos.length > 0) || (config.home.featuredVideos && config.home.featuredVideos.length > 0)) && (
           <m.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -245,9 +247,10 @@ export default function Home({ config }: HomeProps) {
               Featured Performances
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
-              {config.home.featuredVideos.map((video, index) => {
+              {(dbVideos && dbVideos.length > 0 ? dbVideos : config.home.featuredVideos).map((video, index) => {
                 const videoUrl = typeof video === 'string' ? video : video.url;
                 const videoTitle = typeof video === 'string' ? `Featured performance ${index + 1}` : video.title || `Featured performance ${index + 1}`;
+                const thumbnailUrl = typeof video === 'object' && 'thumbnail_url' in video ? (video as any).thumbnail_url : null;
 
                 return (
                   <m.div
@@ -264,6 +267,7 @@ export default function Home({ config }: HomeProps) {
                         <VideoEmbed
                           src={videoUrl}
                           title={videoTitle}
+                          thumbnailUrl={thumbnailUrl}
                           retryCount={2}
                         />
                       </div>

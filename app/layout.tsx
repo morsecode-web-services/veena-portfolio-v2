@@ -4,6 +4,12 @@ import './globals.css';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { Providers } from '@/components/Providers';
+import GoogleAnalytics from '@/components/GoogleAnalytics';
+import MicrosoftClarity from '@/components/MicrosoftClarity';
+import VideoModal from '@/components/ui/VideoModal';
+import siteConfig from '@/public/config/site-config.json';
+import { validateConfig } from '@/lib/config';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -75,12 +81,15 @@ export const viewport = {
   themeColor: '#14213d',
 };
 
+<<<<<<< Updated upstream
 import { Providers } from '@/components/Providers';
 import GoogleAnalytics from '@/components/GoogleAnalytics';
 import MicrosoftClarity from '@/components/MicrosoftClarity';
 import siteConfig from '@/public/config/site-config.json';
 import { validateConfig } from '@/lib/config';
 
+=======
+>>>>>>> Stashed changes
 // Validate config
 const configValidation = validateConfig(siteConfig);
 const config = configValidation.success ? configValidation.data : undefined;
@@ -209,9 +218,18 @@ export default function RootLayout({
           Skip to navigation
         </a>
         <Providers>
+<<<<<<< Updated upstream
           <Header config={config} />
           {children}
           <Footer config={config} />
+=======
+          <ErrorBoundary>
+            <Header config={config} />
+            {children}
+            <Footer config={config} />
+            <VideoModal />
+          </ErrorBoundary>
+>>>>>>> Stashed changes
         </Providers>
       </body>
     </html>

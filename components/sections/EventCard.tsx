@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { m, AnimatePresence } from 'framer-motion';
 import { MapPin, Clock, ExternalLink, Ticket, ArrowRight, X, Maximize2 } from 'lucide-react';
 import { Event } from '../../types/event';
-import Image from 'next/image';
+import ImageWithFallback from '@/components/ui/ImageWithFallback';
 import { analytics } from '@/components/GoogleAnalytics';
 
 interface EventCardProps {
@@ -93,7 +93,7 @@ export const EventCard: React.FC<EventCardProps> = ({ event, isPast, viewMode = 
                                 className="relative w-16 h-10 mb-3 rounded-md overflow-hidden cursor-zoom-in border border-navy-100 shadow-sm group-hover:shadow-md transition-all"
                                 onClick={() => setIsLightboxOpen(true)}
                             >
-                                <Image
+                                <ImageWithFallback
                                     src={event.image_url!}
                                     alt={event.title}
                                     fill
@@ -162,7 +162,7 @@ export const EventCard: React.FC<EventCardProps> = ({ event, isPast, viewMode = 
                         className="relative w-full h-56 overflow-hidden cursor-zoom-in"
                         onClick={() => setIsLightboxOpen(true)}
                     >
-                        <Image
+                        <ImageWithFallback
                             src={event.image_url!}
                             alt={event.title}
                             fill
@@ -284,7 +284,7 @@ const LightboxContent: React.FC<{ event: Event; onClose: () => void }> = ({ even
             onClick={(e) => e.stopPropagation()}
         >
             <div className="relative aspect-video">
-                <Image
+                <ImageWithFallback
                     src={event.image_url!}
                     alt={event.title}
                     fill

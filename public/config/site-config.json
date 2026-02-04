@@ -441,8 +441,8 @@
     "Gallery": true,
     "Music": true,
     "Events": true,
-    "Press": true,
-    "FAQ": true,
+    "Press": false,
+    "FAQ": false,
     "Contact": true
   },
   "blog": {

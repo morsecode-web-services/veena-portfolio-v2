@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Static export for GitHub Pages
-  output: 'export',
+  // Remove output: 'export' to support ISR on Netlify
 
   // Base path - set this to your repo name if deploying to username.github.io/repo-name
   // Leave empty string if deploying to username.github.io OR proper domain (Netlify/Vercel)
@@ -15,8 +15,28 @@ const nextConfig = {
   trailingSlash: true,
 
   images: {
-    // Disable image optimization for static export
-    unoptimized: true,
+    // Enable image optimization (required for remotePatterns)
+    unoptimized: false,
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'img.youtube.com',
+        port: '',
+        pathname: '/vi/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'i.ytimg.com',
+        port: '',
+        pathname: '/vi/**',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.supabase.co',
+        port: '',
+        pathname: '/storage/v1/object/public/**',
+      }
+    ],
   },
 
   // Enable compiler optimizations
