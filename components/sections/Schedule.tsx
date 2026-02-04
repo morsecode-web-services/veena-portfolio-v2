@@ -168,7 +168,7 @@ export default function Schedule() {
                                     variants={containerVariants}
                                     initial="hidden"
                                     animate={activeTab === 'upcoming' ? "visible" : "hidden"}
-                                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+                                    className="flex flex-wrap justify-center gap-8 w-full"
                                 >
                                     {upcomingEvents.length > 0 ? (
                                         upcomingEvents.map((event) => (

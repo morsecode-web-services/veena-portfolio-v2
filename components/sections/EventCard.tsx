@@ -155,7 +155,7 @@ export const EventCard: React.FC<EventCardProps> = ({ event, isPast, viewMode = 
         <>
             <m.div
                 variants={itemVariants}
-                className="group relative flex flex-col bg-white border border-navy-50 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden"
+                className="group relative flex flex-col bg-white border border-navy-50 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden w-full max-w-sm"
             >
                 {hasImage && (
                     <div
