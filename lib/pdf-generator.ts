@@ -163,9 +163,114 @@ export async function generatePDF(
       cursor.y += textHeight + spacing;
     };
 
-    const checkPageBreak = (neededSpace: number = 40) => {
+    const renderGrayscaleBackground = async (imageSrc: string) => {
+      try {
+        const bgOpacity = config.pdf?.backgroundOpacity ?? 0.12;
+        const bgBrightness = config.pdf?.backgroundBrightness ?? 0.8;
+
+        const imgData = await loadImage(imageSrc);
+        if (!imgData) return;
+
+        // Use canvas to convert to grayscale if in browser
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const img = new Image();
+
+        await new Promise((resolve, reject) => {
+          img.onload = resolve;
+          img.onerror = reject;
+          img.src = imgData;
+        });
+
+        canvas.width = img.width;
+        canvas.height = img.height;
+        ctx?.drawImage(img, 0, 0);
+
+        if (ctx) {
+          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          const data = imageData.data;
+          for (let i = 0; i < data.length; i += 4) {
+            // Weighted grayscale for more natural tones
+            const avg = (data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114);
+            // Apply configurable brightness adjustment
+            const adjustedAvg = avg * bgBrightness;
+            data[i] = adjustedAvg;
+            data[i + 1] = adjustedAvg;
+            data[i + 2] = adjustedAvg;
+          }
+          ctx.putImageData(imageData, 0, 0);
+        }
+
+        const grayscaleData = canvas.toDataURL('image/jpeg', 0.6);
+
+        // Add to PDF with configurable opacity
+        pdf.saveGraphicsState();
+        pdf.setGState(new (pdf as any).GState({ opacity: bgOpacity }));
+
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = pdf.internal.pageSize.getHeight();
+
+        // Cover full page, maintaining aspect ratio (center crop)
+        const imgProps = pdf.getImageProperties(grayscaleData);
+        const ratio = imgProps.width / imgProps.height;
+        const pageRatio = pdfWidth / pdfHeight;
+
+        let renderW, renderH, x, y;
+        if (ratio > pageRatio) {
+          renderH = pdfHeight;
+          renderW = pdfHeight * ratio;
+          x = (pdfWidth - renderW) / 2;
+          y = 0;
+        } else {
+          renderW = pdfWidth;
+          renderH = pdfWidth / ratio;
+          x = 0;
+          y = (pdfHeight - renderH) / 2;
+        }
+
+        pdf.addImage(grayscaleData, 'JPEG', x, y, renderW, renderH, undefined, 'FAST');
+
+        // Premium touch: subtle cream overlay to "feather" edges if background is present
+        pdf.saveGraphicsState();
+        pdf.setGState(new (pdf as any).GState({ opacity: 0.05 }));
+        pdf.setFillColor(COLORS.cream.r, COLORS.cream.g, COLORS.cream.b);
+        // Draw very thin rectangles at edges to fade the background
+        pdf.rect(0, 0, pageWidth, 5, 'F'); // Top
+        pdf.rect(0, pageHeight - 5, pageWidth, 5, 'F'); // Bottom
+        pdf.rect(0, 0, 5, pageHeight, 'F'); // Left
+        pdf.rect(pageWidth - 5, 0, 5, pageHeight, 'F'); // Right
+        pdf.restoreGraphicsState();
+
+        pdf.restoreGraphicsState();
+      } catch (e) {
+        console.warn("Failed to render background image", e);
+      }
+    };
+
+    const drawPremiumElements = () => {
+      // 1. Page Border (Subtle Gold)
+      pdf.setDrawColor(COLORS.gold.r, COLORS.gold.g, COLORS.gold.b);
+      pdf.setLineWidth(0.4);
+      // Main border frame
+      pdf.rect(5, 5, pageWidth - 10, pageHeight - 10);
+    };
+
+    let backgroundIndex = 0;
+    const galleryImages = config.gallery?.images || [];
+
+    const addNewPage = async () => {
+      pdf.addPage();
+      drawPremiumElements();
+      if (galleryImages.length > 0) {
+        const bgImg = galleryImages[backgroundIndex % galleryImages.length];
+        await renderGrayscaleBackground(bgImg.src);
+        backgroundIndex++;
+      }
+    };
+
+    const checkPageBreak = async (neededSpace: number = 40) => {
       if (cursor.y + neededSpace > pageHeight - MARGIN) {
-        pdf.addPage();
+        await addNewPage();
         cursor.y = MARGIN;
         return true;
       }
@@ -183,7 +288,7 @@ export async function generatePDF(
     await renderCoverPage(pdf, config, pageWidth, pageHeight, loadImage);
 
     // Start Content on new page
-    pdf.addPage();
+    await addNewPage();
     cursor.y = MARGIN;
 
     // 2. About
@@ -192,41 +297,41 @@ export async function generatePDF(
 
     // 3. Spotlights
     onProgress?.(45);
-    checkPageBreak(60);
+    await checkPageBreak(60);
     addHeader(pdf, 'Spotlights', cursor, setFontHeader);
     cursor.y += 15;
 
     if (config.spotlights) {
       for (const spotlight of config.spotlights) {
-        await renderSpotlight(pdf, spotlight, contentWidth, pageHeight, cursor, loadImage);
+        await renderSpotlight(pdf, spotlight, contentWidth, pageHeight, cursor, loadImage, addNewPage);
       }
     }
 
     // 4. Music
     onProgress?.(60);
-    checkPageBreak(60);
+    await checkPageBreak(60);
     addHeader(pdf, 'Music', cursor, setFontHeader);
     cursor.y += 10;
-    await renderMusicSection(pdf, config.music, dbVideos || [], cursor, addLink, loadImage);
+    await renderMusicSection(pdf, config.music, dbVideos || [], cursor, addLink, loadImage, addNewPage);
 
     // 5. Gallery
     onProgress?.(75);
-    pdf.addPage();
+    await addNewPage();
     cursor.y = MARGIN;
     addHeader(pdf, 'Performance Gallery', cursor, setFontHeader);
     cursor.y += 15;
-    await renderGallery(pdf, config.gallery?.images || [], contentWidth, pageHeight, cursor, loadImage);
+    await renderGallery(pdf, config.gallery?.images || [], contentWidth, pageHeight, cursor, loadImage, addNewPage);
 
     // 6. Press
     if (config.sections?.press) {
       onProgress?.(85);
-      pdf.addPage();
+      await addNewPage();
       cursor.y = MARGIN;
       addHeader(pdf, 'Press & Recognition', cursor, setFontHeader);
       cursor.y += 10;
       if (config.press?.articles) {
-        config.press.articles.forEach((article: any) => {
-          checkPageBreak(30);
+        for (const article of config.press.articles) {
+          await checkPageBreak(30);
           setFontSubheader(13);
           pdf.text(article.title, MARGIN, cursor.y);
           cursor.y += 6;
@@ -236,15 +341,15 @@ export async function generatePDF(
           cursor.y += 6;
 
           addText(article.excerpt, 10);
-          addLink(article.title, article.url, 10);
+          await addLink(article.title, article.url, 10);
           cursor.y += 5;
-        });
+        }
       }
     }
 
     // 7. Contact
     onProgress?.(95);
-    checkPageBreak(60);
+    await checkPageBreak(60);
     addHeader(pdf, 'Contact', cursor, setFontHeader);
     cursor.y += 10;
 
@@ -476,11 +581,17 @@ async function loadExternalImage(url: string, basePath: string): Promise<string 
 function addHeader(pdf: jsPDF, text: string, cursor: Cursor, setFontFn: (s: number) => void) {
   setFontFn(20);
   pdf.text(text, MARGIN, cursor.y);
+
+  // Gold flourish underline
+  const textWidth = pdf.getTextWidth(text);
+  pdf.setDrawColor(COLORS.gold.r, COLORS.gold.g, COLORS.gold.b);
+  pdf.setLineWidth(0.4);
+  pdf.line(MARGIN, cursor.y + 2, MARGIN + textWidth * 0.3, cursor.y + 2);
 }
 
-async function renderSpotlight(pdf: jsPDF, spotlight: any, width: number, pageHeight: number, cursor: Cursor, loadImg: any) {
+async function renderSpotlight(pdf: jsPDF, spotlight: any, width: number, pageHeight: number, cursor: Cursor, loadImg: any, addNewPage: any) {
   if (cursor.y > pageHeight - 80) {
-    pdf.addPage();
+    await addNewPage();
     cursor.y = MARGIN;
   }
 
@@ -503,7 +614,7 @@ async function renderSpotlight(pdf: jsPDF, spotlight: any, width: number, pageHe
     const imgHeight = (props.height / props.width) * imgWidth;
 
     if (cursor.y + imgHeight > pageHeight - MARGIN) {
-      pdf.addPage();
+      await addNewPage();
       cursor.y = MARGIN;
     }
 
@@ -536,17 +647,17 @@ function renderAboutSection(pdf: jsPDF, config: any, width: number, cursor: Curs
   cursor.y += (lines.length * 12 * LINE_HEIGHT_SCALE) + 10; // Adjusted spacing
 }
 
-async function renderMusicSection(pdf: jsPDF, musicConfig: any, dbVideos: any[], cursor: Cursor, linkFn: any, loadImageFn: any) {
+async function renderMusicSection(pdf: jsPDF, musicConfig: any, dbVideos: any[], cursor: Cursor, linkFn: any, loadImageFn: any, addNewPage: any) {
   for (let i = 0; i < musicConfig.categories.length; i++) {
     const cat = musicConfig.categories[i];
 
     // Force new page for second category onwards (e.g. Vocal)
     if (i > 0) {
-      pdf.addPage();
+      await addNewPage();
       cursor.y = MARGIN;
     } else if (cursor.y > 250) {
       // Safety break for first category
-      pdf.addPage();
+      await addNewPage();
       cursor.y = MARGIN;
     }
 
@@ -564,7 +675,7 @@ async function renderMusicSection(pdf: jsPDF, musicConfig: any, dbVideos: any[],
     if (cat.subcategories) {
       for (const sub of cat.subcategories) {
         if (cursor.y > 270) {
-          pdf.addPage();
+          await addNewPage();
           cursor.y = MARGIN;
         }
 
@@ -606,7 +717,7 @@ async function renderMusicSection(pdf: jsPDF, musicConfig: any, dbVideos: any[],
           const entryHeight = Math.max(thumbHeight + 5, 18);
 
           if (cursor.y + entryHeight > pdf.internal.pageSize.getHeight() - MARGIN) {
-            pdf.addPage();
+            await addNewPage();
             cursor.y = MARGIN;
           }
 
@@ -638,13 +749,13 @@ async function renderMusicSection(pdf: jsPDF, musicConfig: any, dbVideos: any[],
   }
 }
 
-async function renderGallery(pdf: jsPDF, images: any[], width: number, pageHeight: number, cursor: Cursor, loadImg: any) {
+async function renderGallery(pdf: jsPDF, images: any[], width: number, pageHeight: number, cursor: Cursor, loadImg: any, addNewPage: any) {
   const imgW = (width - 10) / 2;
   const imgH = imgW * 0.67;
 
   for (let i = 0; i < Math.min(images.length, 6); i += 2) {
     if (cursor.y + imgH > pageHeight - MARGIN) {
-      pdf.addPage();
+      await addNewPage();
       cursor.y = MARGIN;
     }
 

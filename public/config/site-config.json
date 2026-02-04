@@ -3,11 +3,11 @@
     "name": "Aishwarya Manikarnike",
     "logo": "/logo.png",
     "tagline": "A Legacy of Strings. A Future of Sound.",
-    "briefBio": "An ‘A’-Grade Veena Artist of All India Radio and Vidwat Antima rank-holding vocalist, Aishwarya Manikarnike has been immersed in artistic tradition within a musical family since childhood. She rejoices in Carnatic Music on the majestic Saraswati Veena and through sparkling vocals.",
+    "briefBio": "An \u2018A\u2019-Grade Veena Artist of All India Radio and Vidwat Antima rank-holding vocalist, Aishwarya Manikarnike has been immersed in artistic tradition within a musical family since childhood. She rejoices in Carnatic Music on the majestic Saraswati Veena and through sparkling vocals.",
     "fullBio": [
       {
         "type": "heading",
-        "content": "‘A’-Grade Veena Artist (AIR) | Vidwat Antima Rank-Holding Vocalist"
+        "content": "\u2018A\u2019-Grade Veena Artist (AIR) | Vidwat Antima Rank-Holding Vocalist"
       },
       {
         "type": "paragraph",
@@ -19,7 +19,7 @@
       },
       {
         "type": "paragraph",
-        "content": "Aishwarya’s foundation was laid under the rigorous tutelage of her grandmother, Karnataka Kalashree Veena Vid. Smt. M. K. Saraswathi (A-Top Grade, AIR), known for her mastery of the Gayaki style. Her training has been further enriched by her mother, Vid. Smt. Rajyashree Josyer Shrikanth (A-Grade, AIR), and her uncle, violinist Vid. G. Venkatesha Josyer. Currently, she continues her vocal advanced training under the esteemed Sangeetha Kalarathna Vid. M. S. Sheela, while also receiving guidance from mridangist Gaanakala Vid. H. S. Sudhindra and exploring Hindustani vocals under Smt. Geetha Hegde."
+        "content": "Aishwarya\u2019s foundation was laid under the rigorous tutelage of her grandmother, Karnataka Kalashree Veena Vid. Smt. M. K. Saraswathi (A-Top Grade, AIR), known for her mastery of the Gayaki style. Her training has been further enriched by her mother, Vid. Smt. Rajyashree Josyer Shrikanth (A-Grade, AIR), and her uncle, violinist Vid. G. Venkatesha Josyer. Currently, she continues her vocal advanced training under the esteemed Sangeetha Kalarathna Vid. M. S. Sheela, while also receiving guidance from mridangist Gaanakala Vid. H. S. Sudhindra and exploring Hindustani vocals under Smt. Geetha Hegde."
       },
       {
         "type": "heading",
@@ -27,15 +27,15 @@
       },
       {
         "type": "paragraph",
-        "content": "Aishwarya is a rare talent who holds high-level credentials in both voice and instrument. A milestone in her career was her 2024 elevation to ‘A’-Grade in Veena by All India Radio, following a series of national competition wins. Her academic prowess is equally notable; she secured the 3rd Rank at the State level in the Vidwat Antima examinations. Her contributions have been recognized with several prestigious awards, including:"
+        "content": "Aishwarya is a rare talent who holds high-level credentials in both voice and instrument. A milestone in her career was her 2024 elevation to \u2018A\u2019-Grade in Veena by All India Radio, following a series of national competition wins. Her academic prowess is equally notable; she secured the 3rd Rank at the State level in the Vidwat Antima examinations. Her contributions have been recognized with several prestigious awards, including:"
       },
       {
         "type": "list",
         "items": [
-          "Best Instrumentalist – The Madras Music Academy (Spirit of Youth)",
-          "Raga Laya Prabha Award – Sri Rama Lalitha Kala Mandira, Bengaluru",
-          "SAMA Yuva Puraskara – SAMA Arts Foundation",
-          "CCRT Scholarships – Awarded by the Indian Ministry of Culture (Junior and Young Artiste schemes)"
+          "Best Instrumentalist \u2013 The Madras Music Academy (Spirit of Youth)",
+          "Raga Laya Prabha Award \u2013 Sri Rama Lalitha Kala Mandira, Bengaluru",
+          "SAMA Yuva Puraskara \u2013 SAMA Arts Foundation",
+          "CCRT Scholarships \u2013 Awarded by the Indian Ministry of Culture (Junior and Young Artiste schemes)"
         ]
       },
       {
@@ -44,7 +44,7 @@
       },
       {
         "type": "paragraph",
-        "content": "Aishwarya’s performance career is highlighted by a historic appearance at the Rashtrapati Bhavan on Republic Day 2025, performing in the presence of the President and Prime Minister of India. As a soloist and a member of a unique Three-Generation Veena Trio alongside her mother and grandmother, she has graced premier stages including the Music Academy Chennai (HCL Series), Bangalore Gayana Samaja, Udupi Sri Krishna Temple, and TTD Nadaneerajanam."
+        "content": "Aishwarya\u2019s performance career is highlighted by a historic appearance at the Rashtrapati Bhavan on Republic Day 2025, performing in the presence of the President and Prime Minister of India. As a soloist and a member of a unique Three-Generation Veena Trio alongside her mother and grandmother, she has graced premier stages including the Music Academy Chennai (HCL Series), Bangalore Gayana Samaja, Udupi Sri Krishna Temple, and TTD Nadaneerajanam."
       },
       {
         "type": "paragraph",
@@ -56,7 +56,7 @@
       },
       {
         "type": "paragraph",
-        "content": "Whether through the resonant strings of the Saraswati Veena or her \"sparkling\" vocal delivery, Aishwarya’s music is a testament to a lifetime of devotion. By balancing her career in technology with her classical pursuits, she aspires to preserve and carry forward the vast treasure of Carnatic Classical art for generations to come."
+        "content": "Whether through the resonant strings of the Saraswati Veena or her \"sparkling\" vocal delivery, Aishwarya\u2019s music is a testament to a lifetime of devotion. By balancing her career in technology with her classical pursuits, she aspires to preserve and carry forward the vast treasure of Carnatic Classical art for generations to come."
       }
     ],
     "email": "contact@aishwaryamanikarnike.com"
@@ -448,5 +448,9 @@
   "blog": {
     "title": "Deep Dives into the Ocean of Swaras",
     "subtitle": "Journal & Musings"
+  },
+  "pdf": {
+    "backgroundOpacity": 0.4,
+    "backgroundBrightness": 0.8
   }
 }

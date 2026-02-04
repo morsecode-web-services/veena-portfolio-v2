@@ -68,6 +68,10 @@ export interface SiteConfig {
     title: string;
     subtitle: string;
   };
+  pdf?: {
+    backgroundOpacity?: number;
+    backgroundBrightness?: number;
+  };
 }
 
 export interface MusicVideo {
