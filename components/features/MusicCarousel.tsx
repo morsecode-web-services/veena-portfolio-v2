@@ -51,7 +51,7 @@ export default function MusicCarousel({ title, description, videos }: MusicCarou
     };
 
     return (
-        <div className="py-6 border-b border-gray-100 last:border-0 overflow-hidden">
+        <div className="py-6 overflow-hidden">
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 mb-4">
                 <div className="px-4 sm:px-0">
@@ -104,7 +104,7 @@ export default function MusicCarousel({ title, description, videos }: MusicCarou
                         transition={{ duration: 0.5, delay: index * 0.05 }}
                         className="flex-none w-[75vw] sm:w-[280px] md:w-[320px] snap-center"
                     >
-                        <div className="flex flex-col h-full bg-white rounded-xl overflow-hidden group border border-navy-100 hover:border-gold-500/30 transition-all duration-500 cursor-pointer">
+                        <div className="flex flex-col h-full bg-white rounded-xl overflow-hidden group shadow-premium hover:shadow-premium-md transition-all duration-500 cursor-pointer">
                             <div className="relative aspect-video">
                                 <VideoEmbed
                                     src={video.url}
@@ -112,12 +112,10 @@ export default function MusicCarousel({ title, description, videos }: MusicCarou
                                     thumbnailUrl={(video as any).thumbnail_url}
                                 />
                             </div>
-                            <div className="p-4 flex flex-col items-center justify-center text-center relative overflow-hidden bg-navy-50/20">
-                                <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-navy-200/30 to-transparent" />
+                            <div className="p-4 flex flex-col items-center justify-center text-center relative overflow-hidden">
                                 <h4 className="text-sm font-serif font-bold text-navy-900 group-hover:text-gold-600 transition-colors duration-300 leading-snug line-clamp-2">
                                     {video.title || 'Performance Video'}
                                 </h4>
-
                             </div>
                         </div>
                     </m.div>

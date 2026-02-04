@@ -259,9 +259,9 @@ export default function Home({ config, dbVideos }: HomeProps) {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.6, delay: 1.2 + index * 0.1, ease: [0.25, 0.1, 0.25, 1] }}
                     whileHover={{ y: -5, transition: { duration: 0.3 } }}
-                    className="rounded-lg overflow-hidden border border-premium transition-all duration-300"
+                    className="rounded-xl overflow-hidden shadow-premium hover:shadow-premium-md transition-all duration-300"
                   >
-                    <div className="flex flex-col h-full bg-white rounded-xl overflow-hidden border border-navy-100 hover:border-gold-500/30 transition-all duration-500 group/card">
+                    <div className="flex flex-col h-full bg-white rounded-xl overflow-hidden group/card hover:shadow-premium-lg transition-all duration-500">
                       {/* Video Top Section */}
                       <div className="relative aspect-video">
                         <VideoEmbed
@@ -272,11 +272,8 @@ export default function Home({ config, dbVideos }: HomeProps) {
                         />
                       </div>
 
-                      {/* Integrated Content Section - Soft Navy Tinted Background */}
-                      <div className="p-5 flex flex-col items-center justify-center text-center relative overflow-hidden bg-navy-50/30">
-                        {/* Subtle decorative top line */}
-                        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-navy-200/50 to-transparent" />
-
+                      {/* Integrated Content Section - Clean Look */}
+                      <div className="p-5 flex flex-col items-center justify-center text-center relative overflow-hidden">
                         <h3 className="text-sm sm:text-base font-serif font-bold text-navy-900 group-hover/card:text-gold-600 transition-colors duration-300 leading-snug">
                           {videoTitle}
                         </h3>

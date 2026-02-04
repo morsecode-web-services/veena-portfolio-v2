@@ -27,7 +27,7 @@ export default function VideoEmbed({
   retryCount = 2,
 }: VideoEmbedProps) {
   const instanceId = useId();
-  const { activeVideoId, setActiveVideo } = useVideo();
+  const { activeVideoId, setActiveVideo, openVideo } = useVideo();
   const [hasError, setHasError] = useState(false);
   const [attempts, setAttempts] = useState(0);
   const [isRetrying, setIsRetrying] = useState(false);
@@ -168,12 +168,12 @@ export default function VideoEmbed({
   }
 
   return (
-    <div className={`relative w-full bg-gray-900 rounded-lg overflow-hidden ${className}`} style={{ paddingBottom: '56.25%' }}>
-      {!isPlaying && thumbnailUrl ? (
+    <div className={`relative w-full bg-gray-900 rounded-lg overflow-hidden group/video ${className}`} style={{ paddingBottom: '56.25%' }}>
+      {thumbnailUrl ? (
         <button
-          onClick={() => setIsPlaying(true)}
+          onClick={() => openVideo(videoSrc, title)}
           className="absolute inset-0 w-full h-full flex items-center justify-center group cursor-pointer z-10"
-          aria-label={`Play video: ${title}`}
+          aria-label={`Open video in expanded view: ${title}`}
         >
           <Image
             src={thumbnailUrl}
@@ -184,45 +184,23 @@ export default function VideoEmbed({
             onError={handleThumbnailError}
           />
 
-          {/* Removed vignette overlay for cleaner look */}
-
-          {/* Premium Play Button */}
-          <div className="absolute inset-0 flex items-center justify-center z-20">
+          {/* Premium Play Button - Trigger modal expansion */}
+          <div className="absolute bottom-4 right-4 z-20">
             <m.div
-              whileHover={{ scale: 1.1 }}
+              whileHover={{ scale: 1.1, backgroundColor: 'rgb(184, 134, 11)' }}
               whileTap={{ scale: 0.95 }}
-              className="w-14 h-14 sm:w-16 sm:h-16 bg-white/10 backdrop-blur-md border border-white/30 rounded-full flex items-center justify-center shadow-2xl group-hover:bg-red-600 group-hover:border-red-500 transition-all duration-300"
+              className="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 backdrop-blur-md border border-white/30 rounded-full flex items-center justify-center shadow-2xl group-hover:!bg-gold-600 group-hover:border-gold-500 transition-all duration-300"
             >
-              <svg className="w-6 h-6 sm:w-8 sm:h-8 text-white ml-1 drop-shadow-lg" fill="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 sm:w-6 sm:h-6 text-white ml-1 drop-shadow-lg" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M8 5v14l11-7z" />
               </svg>
             </m.div>
           </div>
         </button>
       ) : (
-        <>
-          <AnimatePresence>
-            {isRetrying && (
-              <m.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="absolute inset-0 flex items-center justify-center bg-gray-900/75 rounded-lg z-10"
-              >
-                <div className="text-white text-sm">Loading video...</div>
-              </m.div>
-            )}
-          </AnimatePresence>
-          <iframe
-            src={videoSrc}
-            title={title}
-            className="absolute top-0 left-0 w-full h-full rounded-lg"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-            loading="lazy"
-            onError={handleIframeError}
-          />
-        </>
+        <div className="absolute inset-0 flex items-center justify-center bg-gray-900">
+          <p className="text-white text-xs">Video preview unavailable</p>
+        </div>
       )}
     </div>
   );
