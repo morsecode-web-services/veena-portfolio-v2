@@ -449,6 +449,10 @@
     "title": "Deep Dives into the Ocean of Swaras",
     "subtitle": "Journal & Musings"
   },
+  "contact": {
+    "imageUrl": "/images/gallery/gallery-1.jpg",
+    "imageAlt": "Aishwarya Manikarnike performing"
+  },
   "pdf": {
     "backgroundOpacity": 0.4,
     "backgroundBrightness": 0.8
