@@ -72,7 +72,7 @@ export default function Header({ config }: HeaderProps) {
       transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled
         ? 'bg-white shadow-premium-md border-b border-premium'
-        : 'bg-transparent'
+        : 'bg-gradient-to-b from-black/20 to-transparent'
         }`}
       role="banner"
     >
@@ -86,7 +86,7 @@ export default function Header({ config }: HeaderProps) {
           >
             <a href="#home" className="focus:outline-none focus:ring-2 focus:ring-blue-600 rounded flex items-center gap-2 md:gap-3 group">
               {logo && (
-                <div className="relative w-8 h-8 md:w-10 md:h-10 transition-transform duration-300 group-hover:scale-110">
+                <div className={`relative w-8 h-8 md:w-10 md:h-10 transition-transform duration-300 group-hover:scale-110 ${!isScrolled ? 'brightness-0 invert' : ''}`}>
                   <Image
                     src={getAssetPath(logo)}
                     alt={`${artistName} Logo`}
@@ -96,21 +96,25 @@ export default function Header({ config }: HeaderProps) {
                   />
                 </div>
               )}
-              <h1 className="text-base sm:text-lg md:text-xl font-serif font-bold text-navy-900 mb-0 group-hover:text-gold-600 transition-colors duration-300">
+              <h1 className={`text-base sm:text-lg md:text-xl font-serif font-bold mb-0 transition-colors duration-300 ${
+                isScrolled
+                  ? 'text-navy-900 group-hover:text-gold-600'
+                  : 'text-white group-hover:text-gold-300'
+              }`}>
                 {artistName}
               </h1>
             </a>
           </m.div>
 
           <div className="flex items-center gap-4">
-            <Navigation config={config} />
+            <Navigation config={config} isScrolled={isScrolled} />
             <m.div
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.6, delay: 0.4 }}
               className="hidden sm:block"
             >
-              <HeaderPDFButton />
+              <HeaderPDFButton isScrolled={isScrolled} />
             </m.div>
           </div>
         </div>

@@ -67,6 +67,15 @@ const SpotlightSchema = z.object({
   ctaLink: z.string().optional(),
 });
 
+const FeaturedCarouselItemSchema = z.object({
+  id: z.string().min(1),
+  image: z.string().min(1),
+  title: z.string().min(1),
+  description: z.string().min(1),
+  link: z.string().optional(),
+  linkText: z.string().optional(),
+});
+
 const SiteConfigSchema = z.object({
   artist: z.object({
     name: z.string().min(1),
@@ -78,11 +87,29 @@ const SiteConfigSchema = z.object({
   }),
   home: z.object({
     heroTitle: z.string().optional(),
+    heroBackground: z.string().optional(),
+    heroBackgroundPosition: z.string().optional(),
+    heroTagline: z.string().optional(),
+    heroStats: z.array(z.object({
+      label: z.string().min(1),
+      value: z.string().min(1),
+    })).optional(),
+    heroCta: z.object({
+      text: z.string().min(1),
+      link: z.string().min(1),
+    }).optional(),
     images: z.object({
       veena: z.string().min(1),
       vocal: z.string().min(1),
     }),
     featuredVideos: z.array(z.union([z.string().url(), MusicVideoSchema])),
+    featuredCarousel: z.object({
+      enabled: z.boolean(),
+      autoScrollInterval: z.number().optional(),
+      items: z.array(FeaturedCarouselItemSchema),
+      showUpcomingEvent: z.boolean().optional(),
+      eventLinkText: z.string().optional(),
+    }).optional(),
   }),
   spotlights: z.array(SpotlightSchema).optional(),
   gallery: z.object({
@@ -116,6 +143,14 @@ const SiteConfigSchema = z.object({
   blog: z.object({
     title: z.string(),
     subtitle: z.string(),
+  }).optional(),
+  pdf: z.object({
+    backgroundOpacity: z.number().optional(),
+    backgroundBrightness: z.number().optional(),
+  }).optional(),
+  contact: z.object({
+    imageUrl: z.string().optional(),
+    imageAlt: z.string().optional(),
   }).optional(),
 });
 

@@ -63,6 +63,23 @@
   },
   "home": {
     "heroTitle": "Music is the mediator between the spiritual and the sensual life.",
+    "heroBackground": "/images/home/hero-bg.jpg",
+    "heroBackgroundPosition": "center 35%",
+    "heroTagline": "Classical Veena Artiste",
+    "heroStats": [
+      {
+        "label": "Recognition",
+        "value": "'A'-Grade AIR Veena Artist"
+      },
+      {
+        "label": "Tradition",
+        "value": "Three-Generation Lineage"
+      }
+    ],
+    "heroCta": {
+      "text": "View Journey",
+      "link": "#about"
+    },
     "images": {
       "veena": "images/spotlight/veena.jpg",
       "vocal": "images/spotlight/vocal.jpg"
@@ -80,7 +97,39 @@
         "title": "Brahmakalasha - Veena Cover",
         "url": "https://youtu.be/rC1pyqeLQY0?si=-bGLk9AufFydiBPA"
       }
-    ]
+    ],
+    "featuredCarousel": {
+      "enabled": true,
+      "autoScrollInterval": 5000,
+      "showUpcomingEvent": true,
+      "eventLinkText": "View Event Details",
+      "items": [
+        {
+          "id": "featured-1",
+          "image": "/images/spotlight/veena.jpg",
+          "title": "The Divine Instrument",
+          "description": "Veena: The Sound of the Soul",
+          "link": "#music",
+          "linkText": "Explore Veena Recitals"
+        },
+        {
+          "id": "featured-2",
+          "image": "/images/gallery/gallery-5.jpg",
+          "title": "The 3 Generation Veena Trio",
+          "description": "A Musical Lineage on One Stage",
+          "link": "#music",
+          "linkText": "Watch Their Performance"
+        },
+        {
+          "id": "featured-3",
+          "image": "/images/spotlight/vocal.jpg",
+          "title": "The Voice of Tradition",
+          "description": "Vocal Excellence & Purity",
+          "link": "#music",
+          "linkText": "Listen to Vocals"
+        }
+      ]
+    }
   },
   "spotlights": [
     {

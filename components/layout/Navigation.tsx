@@ -9,9 +9,10 @@ import { SiteConfig } from '@/types';
 
 interface NavigationProps {
   config?: SiteConfig;
+  isScrolled?: boolean;
 }
 
-export default function Navigation({ config }: NavigationProps) {
+export default function Navigation({ config, isScrolled = false }: NavigationProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState('home');
   const [mounted, setMounted] = useState(false);
@@ -108,8 +109,13 @@ export default function Navigation({ config }: NavigationProps) {
             >
               <button
                 onClick={() => handleNavClick(item)}
-                className="relative text-[11px] lg:text-xs font-medium transition-all duration-300 hover:text-gold-600 min-h-[44px] flex items-center justify-center px-1.5 lg:px-3"
-                style={{ color: activeSection === item.id ? '#8B6914' : '#334155' }}
+                className={`relative text-[11px] lg:text-xs font-medium transition-all duration-300 min-h-[44px] flex items-center justify-center px-1.5 lg:px-3 ${
+                  activeSection === item.id
+                    ? 'text-gold-600'
+                    : isScrolled
+                    ? 'text-gray-700 hover:text-gold-600'
+                    : 'text-white hover:text-gold-300'
+                }`}
                 role="menuitem"
                 aria-label={`Navigate to ${item.label} section`}
                 aria-current={activeSection === item.id ? 'page' : undefined}
@@ -118,7 +124,7 @@ export default function Navigation({ config }: NavigationProps) {
                 {activeSection === item.id && (
                   <m.div
                     layoutId="activeSection"
-                    className="absolute -bottom-1 left-0 right-0 h-0.5 bg-gold-600"
+                    className={`absolute -bottom-1 left-0 right-0 h-0.5 ${isScrolled ? 'bg-gold-600' : 'bg-gold-300'}`}
                     transition={{ type: 'spring', stiffness: 380, damping: 30 }}
                     aria-hidden="true"
                   />
@@ -131,8 +137,13 @@ export default function Navigation({ config }: NavigationProps) {
 
       <button
         onClick={() => setIsMenuOpen(!isMenuOpen)}
-        className={`md:hidden transition-colors z-[10012] relative flex items-center justify-center ${isMenuOpen ? 'text-gold-600' : 'text-gray-700'
-          } hover:text-gold-600`}
+        className={`md:hidden transition-colors z-[10012] relative flex items-center justify-center ${
+          isMenuOpen
+            ? 'text-gold-600'
+            : isScrolled
+            ? 'text-gray-700 hover:text-gold-600'
+            : 'text-white hover:text-gold-300'
+        }`}
         aria-label={isMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
         aria-expanded={isMenuOpen}
         aria-controls="mobile-menu"

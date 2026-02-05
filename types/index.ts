@@ -5,6 +5,16 @@ export type BioBlock =
   | { type: 'heading'; content: string }
   | { type: 'list'; items: string[] };
 
+export interface FeaturedCarouselItem {
+  id: string;
+  type: 'custom' | 'event'; // Type discriminator
+  image: string;
+  title: string;
+  description: string;
+  link?: string;
+  linkText?: string;
+}
+
 export interface SiteConfig {
   artist: {
     name: string;
@@ -16,11 +26,36 @@ export interface SiteConfig {
   };
   home: {
     heroTitle?: string; // "Music is the mediator..."
+    heroBackground?: string; // Path to hero background image
+    heroBackgroundPosition?: string; // CSS object-position for hero background
+    heroTagline?: string; // Small tagline at top of hero
+    heroStats?: Array<{
+      label: string;
+      value: string;
+    }>; // Stats shown at bottom left of hero
+    heroCta?: {
+      text: string;
+      link: string;
+    }; // Main CTA button
     images: {
       veena: string;
       vocal: string;
     };
     featuredVideos: (string | MusicVideo)[];
+    featuredCarousel?: {
+      enabled: boolean;
+      autoScrollInterval?: number; // milliseconds, default 5000
+      items: Array<{
+        id: string;
+        image: string;
+        title: string;
+        description: string;
+        link?: string;
+        linkText?: string;
+      }>;
+      showUpcomingEvent?: boolean; // default true
+      eventLinkText?: string; // default "View Event Details"
+    };
   };
   spotlights: {
     id: string;

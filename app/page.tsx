@@ -67,13 +67,10 @@ export default async function Page() {
         switch (sectionName) {
           case 'Home':
             return (
-              <div key="Home" className="pt-24 pb-10 sm:pt-28 sm:pb-12 md:pt-32 md:pb-16 bg-cream-50 relative overflow-hidden">
-                <MusicalBackground config={config} />
-                <div className="relative z-10">
-                  <SectionErrorBoundary sectionName="Home">
-                    <HomeSection config={config} dbVideos={featuredVideos} />
-                  </SectionErrorBoundary>
-                </div>
+              <div key="Home" className="relative">
+                <SectionErrorBoundary sectionName="Home">
+                  <HomeSection config={config} dbVideos={featuredVideos} />
+                </SectionErrorBoundary>
               </div>
             );
           case 'About':

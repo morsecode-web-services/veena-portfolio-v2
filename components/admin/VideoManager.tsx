@@ -30,7 +30,7 @@ export function VideoManager() {
         } else {
             setSubcategory('');
         }
-    }, [category]);
+    }, [category, activeCategory]);
 
     useEffect(() => {
         fetchVideos();
