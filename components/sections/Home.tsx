@@ -149,14 +149,14 @@ export default function Home({ config, dbVideos }: HomeProps) {
           </m.div>
 
           {/* Center-Left Section - Large Name with staggered char animation */}
-          <div className="flex-1 flex items-center">
+          <div className="flex-1 flex items-center -translate-y-24 sm:translate-y-0">
             <div className="max-w-4xl">
               <m.h1
                 variants={nameVariants}
                 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-[6.5rem] font-serif font-bold text-white leading-[0.85] tracking-tighter"
               >
                 {config.artist.name.split(' ').map((word, wordIdx) => (
-                  <span key={wordIdx} className="block whitespace-nowrap overflow-hidden py-2">
+                  <span key={wordIdx} className="block whitespace-nowrap overflow-hidden py-1 sm:py-2">
                     {word.split('').map((char, charIdx) => (
                       <m.span
                         key={charIdx}
@@ -178,10 +178,10 @@ export default function Home({ config, dbVideos }: HomeProps) {
           </div>
 
           {/* Bottom Section - Stats and Featured Work */}
-          <div className="flex flex-col lg:flex-row justify-between items-end gap-12 lg:gap-16 pb-8 w-full">
+          <div className="flex flex-col lg:flex-row justify-between items-end gap-6 lg:gap-16 pb-16 sm:pb-8 w-full">
             {/* Bottom Left - Stats */}
             {heroStats.length > 0 && (
-              <m.div variants={itemVariants} className="lg:w-72 flex-shrink-0 space-y-8 sm:space-y-10">
+              <m.div variants={itemVariants} className="hidden lg:block lg:w-72 flex-shrink-0 space-y-8 sm:space-y-10">
                 {heroStats.map((stat, idx) => (
                   <div key={idx} className="group">
                     <p className="text-[10px] sm:text-xs tracking-[0.25em] text-gold-200/60 font-light uppercase mb-2 group-hover:text-gold-400/80 transition-colors">
@@ -258,10 +258,10 @@ export default function Home({ config, dbVideos }: HomeProps) {
           {/* Scroll Hint */}
           <m.div
             variants={itemVariants}
-            className="absolute bottom-10 left-0 right-0 flex flex-col items-center gap-2 pointer-events-none"
+            className="absolute bottom-4 sm:bottom-10 left-0 right-0 flex flex-col items-center gap-1 sm:gap-2 pointer-events-none"
           >
             <span className="text-[9px] tracking-[0.3em] text-gold-300/40 uppercase font-light">Scroll</span>
-            <div className="w-px h-12 bg-gradient-to-b from-gold-500/80 to-transparent">
+            <div className="w-px h-8 sm:h-12 bg-gradient-to-b from-gold-500/80 to-transparent">
               <m.div
                 animate={{ y: [0, 24, 0], opacity: [0, 1, 0] }}
                 transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}

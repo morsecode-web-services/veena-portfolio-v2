@@ -101,25 +101,25 @@ export function FeaturedCarousel({ items, autoScrollInterval = 5000 }: FeaturedC
           animate={{ opacity: 1, scale: 1, x: 0 }}
           exit={{ opacity: 0, scale: 1.02, x: -20 }}
           transition={{ duration: 0.7, ease: [0.25, 0.1, 0.25, 1] as any }}
-          className="flex flex-col sm:flex-row items-start sm:items-end justify-end gap-6 sm:gap-8 md:gap-10"
+          className="flex flex-col sm:flex-row items-start sm:items-end justify-end gap-2 sm:gap-8 md:gap-10"
         >
           {/* Text Content */}
-          <div className="space-y-4 sm:space-y-5 text-right flex-1">
+          <div className="space-y-0.5 sm:space-y-5 text-right flex-1">
             {/* Featured Work Label */}
-            <div className="flex items-center justify-end gap-4">
-              <p className="text-[10px] sm:text-[11px] tracking-[0.3em] text-gold-500 font-medium uppercase">
-                Featured Work
+            <div className="flex items-center justify-end gap-3 sm:gap-4">
+              <p className="text-[9px] sm:text-[11px] tracking-[0.3em] text-gold-500 font-medium uppercase">
+                {currentItem.type === 'event' ? 'Upcoming Event' : 'Featured Work'}
               </p>
-              <div className="h-px w-12 bg-gold-500/30"></div>
+              <div className="h-px w-8 sm:w-12 bg-gold-500/30"></div>
             </div>
 
             {/* Title */}
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-serif text-white leading-tight tracking-tight">
+            <h2 className="text-xl sm:text-3xl md:text-4xl font-serif text-white leading-tight tracking-tight">
               <span className="italic">{currentItem.title}</span>
             </h2>
 
             {/* Description */}
-            <p className="text-sm sm:text-base text-white/80 leading-relaxed max-w-lg font-light ml-auto">
+            <p className="text-xs sm:text-base text-white/80 leading-relaxed max-w-lg font-light ml-auto line-clamp-2 sm:line-clamp-none">
               {currentItem.description}
             </p>
 
@@ -129,7 +129,7 @@ export function FeaturedCarousel({ items, autoScrollInterval = 5000 }: FeaturedC
                 href={currentItem.link}
                 whileHover={{ x: -4 }}
                 transition={{ duration: 0.2 }}
-                className="inline-flex items-center gap-2.5 text-[11px] sm:text-xs text-gold-500 font-medium tracking-[0.15em] uppercase mt-3 group"
+                className="inline-flex items-center gap-2.5 text-[11px] sm:text-xs text-gold-500 font-medium tracking-[0.15em] uppercase mt-0.5 sm:mt-3 group"
               >
                 <span>{currentItem.linkText}</span>
                 <svg
@@ -146,7 +146,7 @@ export function FeaturedCarousel({ items, autoScrollInterval = 5000 }: FeaturedC
           </div>
 
           {/* Image Thumbnail */}
-          <div className="relative w-full h-40 sm:w-40 sm:h-40 md:w-44 md:h-44 rounded-md overflow-hidden border border-white/15 shadow-2xl flex-shrink-0 group/img">
+          <div className="relative w-full h-32 sm:w-40 sm:h-40 md:w-44 md:h-44 rounded-md overflow-hidden border border-white/15 shadow-2xl flex-shrink-0 group/img">
             <ImageWithFallback
               src={currentItem.image}
               alt={currentItem.title}
@@ -161,7 +161,7 @@ export function FeaturedCarousel({ items, autoScrollInterval = 5000 }: FeaturedC
 
       {/* Navigation Controls - Dot Indicators Only */}
       {items.length > 1 && (
-        <div className="flex items-center justify-center gap-3 mt-8" role="tablist" aria-label="Carousel navigation">
+        <div className="hidden sm:flex items-center justify-center gap-2 mt-4 sm:mt-8" role="tablist" aria-label="Carousel navigation">
           {items.map((item, index) => (
             <button
               key={item.id}
