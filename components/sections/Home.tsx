@@ -10,6 +10,7 @@ import type { SiteConfig, FeaturedCarouselItem } from '@/types';
 import { Video } from '@/types/video';
 import { useEvents } from '@/hooks/useEvents';
 import { getNextUpcomingEvent, formatEventDate } from '@/lib/events';
+import { getAssetPath } from '@/lib/config';
 
 interface HomeProps {
   config: SiteConfig;
@@ -115,7 +116,7 @@ export default function Home({ config, dbVideos }: HomeProps) {
             className="h-full w-full"
           >
             <Image
-              src={heroBackground}
+              src={getAssetPath(heroBackground)}
               alt="Hero background"
               fill
               className="object-cover"
