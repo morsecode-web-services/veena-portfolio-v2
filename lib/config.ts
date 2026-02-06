@@ -134,12 +134,6 @@ const SiteConfigSchema = z.object({
     twitter: z.string().url().optional(),
     linkedin: z.string().url().optional(),
   }),
-  features: z.object({
-    swaraAnimation: z.object({
-      desktop: z.boolean(),
-      mobile: z.boolean(),
-    }),
-  }).optional(),
   layoutOrder: z.array(z.string()).optional(),
   sections: z.record(z.boolean()).optional(),
   blog: z.object({
@@ -186,12 +180,6 @@ const defaultConfig: SiteConfig = {
     items: [],
   },
   socialMedia: {},
-  features: {
-    swaraAnimation: {
-      desktop: true,
-      mobile: false,
-    },
-  },
   layoutOrder: ['Home', 'About', 'Gallery', 'Music', 'Events', 'Press', 'FAQ', 'Contact'],
   sections: {
     Home: true,

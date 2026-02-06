@@ -35,7 +35,6 @@ The site is configured for GitHub Pages deployment with basePath and assetPrefix
 The entire public site is powered by a central configuration file at `public/config/site-config.json`. This JSON file defines:
 - Artist information and biography (supports structured blocks: paragraph, heading, list)
 - Section ordering and visibility (`layoutOrder`, `sections`)
-- Feature flags (e.g., `swaraAnimation` visibility by device)
 - Music layout mode: `"carousel"` (multi-select stacked) or `"grid"` (classic tabs)
 - All content sections: Home, About, Gallery, Music, Press, FAQ, Contact
 
@@ -84,7 +83,6 @@ The codebase uses a sophisticated path resolution system to handle multiple depl
 - `VideoPlayer.tsx`, `VideoEmbed.tsx`: YouTube video handling
 - `ImageWithFallback.tsx`: Image component with error handling
 - `ImageGallery.tsx`, `VideoModal.tsx`: Modals for media viewing
-- `MusicalBackground.tsx`: Animated musical notes (swara animation)
 
 **Admin** (`components/admin/`): CMS-specific components
 - `BlogForm.tsx`, `EventForm.tsx`: Forms for content management

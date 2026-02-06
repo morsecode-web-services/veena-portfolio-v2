@@ -198,17 +198,6 @@ Choose between two display modes for the Music section:
 }
 ```
 
-#### Swara Animation
-Control the floating musical notes animation visibility:
-```json
-"features": {
-  "swaraAnimation": {
-    "desktop": true,
-    "mobile": false
-  }
-}
-```
-
 #### Structured Biography
 The `artist.fullBio` field supports rich text formatting using blocks:
 ```json

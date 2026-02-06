@@ -463,12 +463,6 @@
     "youtube": "https://www.youtube.com/@aishwaryamanikarnike",
     "instagram": "https://www.instagram.com/aishwaryamanikarnike"
   },
-  "features": {
-    "swaraAnimation": {
-      "desktop": true,
-      "mobile": false
-    }
-  },
   "layoutOrder": [
     "Home",
     "About",

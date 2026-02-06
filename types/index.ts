@@ -94,12 +94,6 @@ export interface SiteConfig {
     twitter?: string;
     linkedin?: string;
   };
-  features?: {
-    swaraAnimation: {
-      desktop: boolean;
-      mobile: boolean;
-    };
-  };
   layoutOrder?: string[];
   sections?: Record<string, boolean>;
   blog?: {

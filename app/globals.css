@@ -240,9 +240,6 @@ p {
   background: linear-gradient(135deg, #14213d 0%, #243b53 100%);
 }
 
-.bg-gradient-gold {
-  background: linear-gradient(135deg, #b8860b 0%, #9d7209 100%);
-}
 
 .bg-gradient-subtle {
   background: linear-gradient(180deg, #ffffff 0%, #fafafa 100%);
@@ -288,9 +285,6 @@ p {
   }
 }
 
-.animate-pulse-slow {
-  animation: pulse-slow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
 
 /* Print Styles for PDF Generation */
 @media print {

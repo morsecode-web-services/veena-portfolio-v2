@@ -32,7 +32,7 @@ export default function FAQ({ config }: FAQProps) {
           <h2 className="text-2xl sm:text-3xl md:text-4xl font-serif font-bold text-navy-900 mb-2 md:mb-3 px-4">
             Frequently Asked Questions
           </h2>
-          <div className="w-20 sm:w-24 h-1 bg-gradient-gold mx-auto mb-3 sm:mb-4 md:mb-5 rounded-full"></div>
+          <div className="w-20 sm:w-24 h-1 bg-gradient-to-r from-gold-600 to-gold-700 mx-auto mb-3 sm:mb-4 md:mb-5 rounded-full"></div>
           <p className="text-sm sm:text-base text-slate-600 max-w-2xl mx-auto px-4 leading-relaxed">
             Find answers to common questions about performances, lessons, and bookings
           </p>

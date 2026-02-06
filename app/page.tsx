@@ -1,7 +1,6 @@
 import dynamic from 'next/dynamic';
 import { SectionErrorBoundary } from '@/components/ErrorBoundary';
 import HomeSection from '@/components/sections/Home';
-import MusicalBackground from '@/components/ui/MusicalBackground';
 import PortfolioGeneratorWrapper from '@/components/features/PortfolioGeneratorWrapper';
 import siteConfig from '@/public/config/site-config.json';
 import { validateConfig } from '@/lib/config';

@@ -61,7 +61,7 @@ export function SectionTitle({
 
       {showUnderline && (
         <div
-          className={`w-20 sm:w-24 h-1 bg-gradient-gold rounded-full ${underlineAlignment[alignment]}`}
+          className={`w-20 sm:w-24 h-1 bg-gradient-to-r from-gold-600 to-gold-700 rounded-full ${underlineAlignment[alignment]}`}
         />
       )}
 

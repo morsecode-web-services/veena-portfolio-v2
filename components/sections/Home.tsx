@@ -3,7 +3,6 @@
 import { m } from 'framer-motion';
 import { useMemo } from 'react';
 import Image from 'next/image';
-import ImageWithFallback from '@/components/ui/ImageWithFallback';
 import VideoEmbed from '@/components/ui/VideoEmbed';
 import { FeaturedCarousel } from '@/components/ui/FeaturedCarousel';
 import type { SiteConfig, FeaturedCarouselItem } from '@/types';
@@ -57,7 +56,6 @@ export default function Home({ config, dbVideos }: HomeProps) {
   // Guard clause just in case, though parent should handle validity
   if (!config) return null;
 
-  const spotlight = config.spotlights?.[0]; // Use first spotlight for featured work
   const carouselConfig = config.home.featuredCarousel;
   const heroBackground = config.home.heroBackground || '/images/home/hero-bg.jpg';
   const heroBackgroundPosition = config.home.heroBackgroundPosition || 'center 35%';
@@ -200,65 +198,14 @@ export default function Home({ config, dbVideos }: HomeProps) {
             )}
 
             {/* Bottom Right - Featured Carousel */}
-            {carouselItems.length > 0 ? (
+            {carouselItems.length > 0 && (
               <m.div variants={itemVariants} className="w-fit ml-auto max-w-2xl lg:max-w-4xl">
                 <FeaturedCarousel
                   items={carouselItems}
                   autoScrollInterval={carouselConfig?.autoScrollInterval}
                 />
               </m.div>
-            ) : spotlight ? (
-              // Fallback to static spotlight if carousel is disabled
-              <m.div variants={itemVariants} className="flex-1 max-w-2xl lg:max-w-3xl w-full flex flex-col sm:flex-row items-start sm:items-end gap-8">
-                <div className="flex-1 space-y-4 sm:space-y-6 text-right">
-                  {spotlight.subtitle && (
-                    <div className="flex items-center justify-end gap-4">
-                      <p className="text-xs tracking-[0.2em] text-gold-500 font-light uppercase">
-                        {spotlight.subtitle}
-                      </p>
-                      <div className="h-px w-12 bg-gold-500/30"></div>
-                    </div>
-                  )}
-
-                  <h2 className="text-2xl sm:text-3xl md:text-4xl font-serif text-white italic leading-tight">
-                    {spotlight.title}
-                  </h2>
-
-                  <p className="text-sm sm:text-base text-white/70 leading-relaxed max-w-lg ml-auto font-light">
-                    {spotlight.subtitle}
-                  </p>
-
-                  <m.a
-                    href={heroCta.link}
-                    whileHover={shouldReduceMotion ? {} : { x: -8 }}
-                    className="inline-flex items-center gap-3 text-xs sm:text-sm text-gold-400 font-semibold tracking-widest uppercase mt-4 group"
-                  >
-                    <span>{heroCta.text}</span>
-                    <svg
-                      className="w-5 h-5 transition-transform group-hover:-translate-x-1"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16l-4-4m0 0l4-4m-4 4h18" />
-                    </svg>
-                  </m.a>
-                </div>
-
-                {/* Small Thumbnail */}
-                <div className="relative w-40 h-40 sm:w-48 sm:h-48 md:w-56 md:h-56 rounded-sm overflow-hidden border border-white/10 shadow-2xl flex-shrink-0 group">
-                  <ImageWithFallback
-                    src={spotlight.imageUrl}
-                    alt={spotlight.title}
-                    fill
-                    className="object-cover transition-transform duration-1000 group-hover:scale-110"
-                    style={{ objectPosition: spotlight.imagePosition || 'center' }}
-                    sizes="(max-width: 640px) 160px, 224px"
-                  />
-                  <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors duration-500"></div>
-                </div>
-              </m.div>
-            ) : null}
+            )}
           </div>
 
           {/* Scroll Hint */}
