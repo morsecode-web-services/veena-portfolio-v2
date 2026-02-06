@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { m } from 'framer-motion';
 import FAQItem from '@/components/ui/FAQItem';
 import type { SiteConfig } from '@/types';
+import { Button } from '@/components/system/Button';
 
 interface FAQProps {
   config: SiteConfig;
@@ -32,7 +33,7 @@ export default function FAQ({ config }: FAQProps) {
             Frequently Asked Questions
           </h2>
           <div className="w-20 sm:w-24 h-1 bg-gradient-gold mx-auto mb-3 sm:mb-4 md:mb-5 rounded-full"></div>
-          <p className="text-sm sm:text-base text-gray-600 max-w-2xl mx-auto px-4 leading-relaxed">
+          <p className="text-sm sm:text-base text-slate-600 max-w-2xl mx-auto px-4 leading-relaxed">
             Find answers to common questions about performances, lessons, and bookings
           </p>
         </m.div>
@@ -64,18 +65,26 @@ export default function FAQ({ config }: FAQProps) {
           transition={{ duration: 0.6, delay: 0.4 }}
           className="text-center mt-8 sm:mt-10 md:mt-12 px-4"
         >
-          <p className="text-base sm:text-lg text-gray-700 mb-4">
+          <p className="text-base sm:text-lg text-charcoal-700 mb-4">
             Have a question that&apos;s not answered here?
           </p>
-          <m.a
-            href="#contact"
-            whileHover={{ scale: 1.05, y: -2 }}
-            whileTap={{ scale: 0.98 }}
-            transition={{ type: 'spring', stiffness: 400, damping: 17 }}
-            className="inline-flex items-center justify-center px-5 sm:px-6 py-2.5 bg-gold-600 text-white font-semibold rounded-md hover:bg-gold-700 active:bg-gold-800 transition-all duration-300 shadow-premium-md hover:shadow-premium-lg text-xs sm:text-sm touch-manipulation"
+          <Button
+            variant="secondary"
+            size="base"
+            onClick={() => {
+              const contactSection = document.getElementById('contact');
+              if (contactSection) {
+                const offset = 80;
+                const elementPosition = contactSection.offsetTop - offset;
+                window.scrollTo({
+                  top: elementPosition,
+                  behavior: 'smooth',
+                });
+              }
+            }}
           >
             Get in Touch
-          </m.a>
+          </Button>
         </m.div>
       </div>
     </section>

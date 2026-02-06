@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { m, AnimatePresence } from 'framer-motion';
 import { FaBars, FaTimes } from 'react-icons/fa';
@@ -18,6 +18,8 @@ export default function Navigation({ config, isScrolled = false }: NavigationPro
   const [mounted, setMounted] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
+  const hamburgerButtonRef = useRef<HTMLButtonElement>(null);
+  const mobileMenuRef = useRef<HTMLDivElement>(null);
 
   const navItems = useMemo(() => {
     // Default fallback if no config
@@ -41,6 +43,29 @@ export default function Navigation({ config, isScrolled = false }: NavigationPro
         label: section
       }));
   }, [config]);
+
+  // Body scroll lock when mobile menu is open
+  useEffect(() => {
+    if (isMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isMenuOpen]);
+
+  // Return focus to hamburger button when menu closes
+  useEffect(() => {
+    if (!isMenuOpen && hamburgerButtonRef.current && document.activeElement !== hamburgerButtonRef.current) {
+      // Only return focus if user closed the menu (not if they navigated)
+      const wasMenuClosed = !isMenuOpen;
+      if (wasMenuClosed && mounted) {
+        hamburgerButtonRef.current.focus();
+      }
+    }
+  }, [isMenuOpen, mounted]);
 
   useEffect(() => {
     setMounted(true);
@@ -109,11 +134,11 @@ export default function Navigation({ config, isScrolled = false }: NavigationPro
             >
               <button
                 onClick={() => handleNavClick(item)}
-                className={`relative text-[11px] lg:text-xs font-medium transition-all duration-300 min-h-[44px] flex items-center justify-center px-1.5 lg:px-3 ${
+                className={`relative text-xs font-medium transition-all duration-300 min-h-[44px] flex items-center justify-center px-1.5 lg:px-3 ${
                   activeSection === item.id
                     ? 'text-gold-600'
                     : isScrolled
-                    ? 'text-gray-700 hover:text-gold-600'
+                    ? 'text-charcoal-700 hover:text-gold-600'
                     : 'text-white hover:text-gold-300'
                 }`}
                 role="menuitem"
@@ -136,12 +161,13 @@ export default function Navigation({ config, isScrolled = false }: NavigationPro
       </m.nav>
 
       <button
+        ref={hamburgerButtonRef}
         onClick={() => setIsMenuOpen(!isMenuOpen)}
         className={`md:hidden transition-colors z-[10012] relative flex items-center justify-center ${
           isMenuOpen
             ? 'text-gold-600'
             : isScrolled
-            ? 'text-gray-700 hover:text-gold-600'
+            ? 'text-charcoal-700 hover:text-gold-600'
             : 'text-white hover:text-gold-300'
         }`}
         aria-label={isMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
@@ -168,18 +194,19 @@ export default function Navigation({ config, isScrolled = false }: NavigationPro
 
               {/* Slide-in Menu */}
               <m.nav
+                ref={mobileMenuRef}
                 id="mobile-menu"
                 initial={{ x: '100%' }}
                 animate={{ x: 0 }}
                 exit={{ x: '100%' }}
                 transition={{ type: 'tween', duration: 0.3 }}
-                className="fixed top-0 right-0 bottom-0 w-72 bg-white shadow-2xl z-[110] md:hidden overflow-hidden flex flex-col"
+                className="fixed top-0 right-0 bottom-0 w-72 max-w-[85vw] bg-white shadow-2xl z-[110] md:hidden overflow-hidden flex flex-col"
                 role="navigation"
                 aria-label="Mobile navigation"
               >
                 {/* Header inside mobile menu */}
-                <div className="flex items-center justify-between px-8 py-6 border-b border-gray-50">
-                  <span className="text-[10px] font-semibold text-gray-500 tracking-[0.2em] uppercase">Menu</span>
+                <div className="flex items-center justify-between px-8 py-6 border-b border-slate-50">
+                  <span className="text-xs font-semibold text-slate-500 tracking-[0.2em] uppercase">Menu</span>
                   <button
                     onClick={() => setIsMenuOpen(false)}
                     className="p-2 text-gold-600 hover:bg-gold-50 rounded-full transition-colors"
@@ -197,7 +224,7 @@ export default function Navigation({ config, isScrolled = false }: NavigationPro
                           onClick={() => handleNavClick(item)}
                           className={`text-base font-medium py-3.5 px-2 transition-colors hover:text-gold-600 w-full text-left flex items-center justify-between ${activeSection === item.id
                             ? 'text-gold-600'
-                            : 'text-gray-700'
+                            : 'text-charcoal-700'
                             }`}
                           role="menuitem"
                           aria-label={`Navigate to ${item.label} section`}

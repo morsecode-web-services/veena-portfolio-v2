@@ -6,6 +6,7 @@ import { MapPin, Clock, ExternalLink, Ticket, ArrowRight, X, Maximize2 } from 'l
 import { Event } from '../../types/event';
 import ImageWithFallback from '@/components/ui/ImageWithFallback';
 import { analytics } from '@/components/GoogleAnalytics';
+import { Card } from '@/components/system/Card';
 
 interface EventCardProps {
     event: Event;
@@ -75,7 +76,7 @@ export const EventCard: React.FC<EventCardProps> = ({ event, isPast, viewMode = 
                     {/* Minimal Date Column */}
                     <div className="w-16 sm:w-20 pt-1 text-right flex-shrink-0 opacity-60 group-hover:opacity-100 transition-opacity">
                         <span className="block text-sm font-bold text-navy-900 leading-tight">{dateInfo?.month} {dateInfo?.day}</span>
-                        <span className="block text-[10px] text-navy-400 font-medium uppercase tracking-wider">{dateInfo?.weekday}</span>
+                        <span className="block text-xs text-navy-400 font-medium uppercase tracking-wider">{dateInfo?.weekday}</span>
                     </div>
 
                     {/* Timeline Track */}
@@ -122,7 +123,7 @@ export const EventCard: React.FC<EventCardProps> = ({ event, isPast, viewMode = 
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 onClick={() => analytics.externalLinkClick('Event Details Map', event.map_url!, 'map')}
-                                className="inline-flex items-center gap-1 text-[10px] font-bold text-navy-400 hover:text-gold-600 transition-colors uppercase tracking-widest mt-1"
+                                className="inline-flex items-center gap-1 text-xs font-bold text-navy-400 hover:text-gold-600 transition-colors uppercase tracking-widest mt-1"
                             >
                                 <ExternalLink className="h-3 w-3" />
                                 <span>Details</span>
@@ -155,8 +156,9 @@ export const EventCard: React.FC<EventCardProps> = ({ event, isPast, viewMode = 
         <>
             <m.div
                 variants={itemVariants}
-                className="group relative flex flex-col bg-white border border-navy-50 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden w-full max-w-sm"
+                className="group w-full max-w-sm"
             >
+              <Card variant="outlined" padding="none" className="rounded-2xl overflow-hidden flex flex-col relative">
                 {hasImage && (
                     <div
                         className="relative w-full h-56 overflow-hidden cursor-zoom-in"
@@ -170,7 +172,7 @@ export const EventCard: React.FC<EventCardProps> = ({ event, isPast, viewMode = 
                         />
                         {/* Clean Date Badge */}
                         <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-sm px-3 py-2 rounded-lg shadow-sm border border-navy-50 text-center min-w-[50px]">
-                            <span className="block text-[10px] font-black text-navy-400 uppercase leading-none mb-1">{dateInfo?.month}</span>
+                            <span className="block text-xs font-black text-navy-400 uppercase leading-none mb-1">{dateInfo?.month}</span>
                             <span className="block text-xl font-serif font-bold text-navy-900 leading-none">{dateInfo?.day}</span>
                         </div>
                     </div>
@@ -185,7 +187,7 @@ export const EventCard: React.FC<EventCardProps> = ({ event, isPast, viewMode = 
                     )}
 
                     <div>
-                        <span className="text-[9px] font-bold text-gold-600 uppercase tracking-[0.2em] mb-1 block">
+                        <span className="text-xs font-bold text-gold-600 uppercase tracking-[0.2em] mb-1 block">
                             {event.category || 'Performance'}
                         </span>
                         <h3 className="text-xl font-serif font-bold text-navy-900 leading-tight">
@@ -214,12 +216,12 @@ export const EventCard: React.FC<EventCardProps> = ({ event, isPast, viewMode = 
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     onClick={() => analytics.externalLinkClick('Event Tickets', event.booking_url!, 'tickets')}
-                                    className="text-[11px] font-bold text-navy-900 hover:text-gold-600 transition-colors uppercase tracking-widest flex items-center gap-2"
+                                    className="text-xs font-bold text-navy-900 hover:text-gold-600 transition-colors uppercase tracking-widest flex items-center gap-2"
                                 >
                                     Tickets <ArrowRight className="h-3 w-3" />
                                 </a>
                             ) : !isPast ? (
-                                <span className="text-[11px] font-black text-gold-600 uppercase tracking-widest bg-gold-50 px-2 py-1 rounded">
+                                <span className="text-xs font-black text-gold-600 uppercase tracking-widest bg-gold-50 px-2 py-1 rounded">
                                     Entry Free
                                 </span>
                             ) : <div></div>}
@@ -238,12 +240,13 @@ export const EventCard: React.FC<EventCardProps> = ({ event, isPast, viewMode = 
                         </div>
                     ) : !isPast && (
                         <div className="mt-2 pt-4 flex items-center justify-between">
-                            <span className="text-[11px] font-black text-gold-600 uppercase tracking-widest bg-gold-50 px-2 py-1 rounded">
+                            <span className="text-xs font-black text-gold-600 uppercase tracking-widest bg-gold-50 px-2 py-1 rounded">
                                 Entry Free
                             </span>
                         </div>
                     )}
                 </div>
+              </Card>
             </m.div>
 
             <AnimatePresence>

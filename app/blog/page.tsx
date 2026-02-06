@@ -45,7 +45,7 @@ export default async function BlogListingPage() {
             <div className="max-w-7xl mx-auto px-6 lg:px-8">
                 {/* Header */}
                 <div className="max-w-3xl mb-16">
-                    <h2 className="text-[10px] font-black text-navy-400 uppercase tracking-[0.3em] mb-4">
+                    <h2 className="text-xs font-black text-navy-400 uppercase tracking-[0.3em] mb-4">
                         {config.blog?.subtitle || 'Journal & Musings'}
                     </h2>
                     <h1 className="text-4xl md:text-5xl font-serif font-bold text-navy-900 leading-tight">
@@ -73,18 +73,18 @@ export default async function BlogListingPage() {
                                             />
                                         ) : (
                                             <div className="absolute inset-0 flex items-center justify-center">
-                                                <span className="text-[10px] font-black text-gray-300 uppercase tracking-widest">No Preview</span>
+                                                <span className="text-xs font-black text-gray-300 uppercase tracking-widest">No Preview</span>
                                             </div>
                                         )}
                                         <div className="absolute top-4 left-4">
-                                            <span className="px-3 py-1 bg-white/90 backdrop-blur-sm text-[10px] font-black text-navy-900 uppercase tracking-widest rounded-full border border-white/20 shadow-sm">
+                                            <span className="px-3 py-1 bg-white/90 backdrop-blur-sm text-xs font-black text-navy-900 uppercase tracking-widest rounded-full border border-white/20 shadow-sm">
                                                 {blog.category}
                                             </span>
                                         </div>
                                     </div>
 
                                     <div className="space-y-4">
-                                        <div className="flex items-center gap-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                                        <div className="flex items-center gap-4 text-xs font-black text-gray-400 uppercase tracking-widest">
                                             <div className="flex items-center gap-1.5">
                                                 <Calendar className="h-3 w-3" />
                                                 {format(new Date(blog.created_at), 'MMMM dd, yyyy')}
@@ -103,7 +103,7 @@ export default async function BlogListingPage() {
                                             {blog.excerpt || 'Read more about this fascinating journey into music and art...'}
                                         </p>
 
-                                        <div className="pt-2 flex items-center gap-2 text-[10px] font-black text-navy-900 uppercase tracking-[0.2em] group-hover:gap-4 transition-all">
+                                        <div className="pt-2 flex items-center gap-2 text-xs font-black text-navy-900 uppercase tracking-[0.2em] group-hover:gap-4 transition-all">
                                             Read Full Story <ArrowRight className="h-3 w-3 text-gold-500" />
                                         </div>
                                     </div>

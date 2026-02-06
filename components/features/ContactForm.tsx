@@ -1,12 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { sendContactEmail } from '@/lib/email-service';
 import { m } from 'framer-motion';
 import { analytics } from '@/components/GoogleAnalytics';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { Button } from '@/components/system/Button';
 
 // Zod validation schema
 const contactFormSchema = z.object({
@@ -23,6 +25,10 @@ export default function ContactForm() {
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [lastSubmitTime, setLastSubmitTime] = useState<number>(0);
+  const shouldReduceMotion = useReducedMotion();
+  const successMessageRef = useRef<HTMLDivElement>(null);
+  const errorMessageRef = useRef<HTMLDivElement>(null);
+  const firstErrorFieldRef = useRef<HTMLInputElement | HTMLTextAreaElement | null>(null);
 
   const {
     register,
@@ -33,6 +39,30 @@ export default function ContactForm() {
     resolver: zodResolver(contactFormSchema),
     mode: 'onBlur',
   });
+
+  // Focus management for validation errors
+  useEffect(() => {
+    if (Object.keys(errors).length > 0) {
+      // Find the first field with an error
+      const firstErrorField = ['name', 'phone', 'email', 'purpose'].find(field => errors[field as keyof ContactFormData]);
+      if (firstErrorField) {
+        const element = document.getElementById(firstErrorField) as HTMLInputElement | HTMLTextAreaElement;
+        if (element) {
+          element.focus();
+          firstErrorFieldRef.current = element;
+        }
+      }
+    }
+  }, [errors]);
+
+  // Focus management for success/error messages
+  useEffect(() => {
+    if (submitStatus === 'success' && successMessageRef.current) {
+      successMessageRef.current.focus();
+    } else if (submitStatus === 'error' && errorMessageRef.current) {
+      errorMessageRef.current.focus();
+    }
+  }, [submitStatus]);
 
   const onSubmit = async (data: ContactFormData) => {
     // Rate limiting: prevent submissions within 30 seconds
@@ -103,7 +133,7 @@ export default function ContactForm() {
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 sm:space-y-5" aria-label="Contact form">
         {/* Name Field */}
         <div>
-          <label htmlFor="name" className="block text-[10px] sm:text-xs font-medium text-gray-700 mb-1.5">
+          <label htmlFor="name" className="block text-xs font-medium text-charcoal-700 mb-1.5">
             Name *
           </label>
           <input
@@ -111,7 +141,7 @@ export default function ContactForm() {
             type="text"
             {...register('name')}
             onFocus={() => analytics.contactFormStart()}
-            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-navy-500 focus:border-transparent transition-all text-xs sm:text-sm ${errors.name ? 'border-red-500' : 'border-gray-300'
+            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-navy-500 focus:border-transparent transition-all text-xs sm:text-sm ${errors.name ? 'border-red-500' : 'border-slate-300'
               }`}
             placeholder="Your full name"
             disabled={isSubmitting}
@@ -134,14 +164,14 @@ export default function ContactForm() {
 
         {/* Phone Field */}
         <div>
-          <label htmlFor="phone" className="block text-[10px] sm:text-xs font-medium text-gray-700 mb-1.5">
+          <label htmlFor="phone" className="block text-xs font-medium text-charcoal-700 mb-1.5">
             Phone Number *
           </label>
           <input
             id="phone"
             type="tel"
             {...register('phone')}
-            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-navy-500 focus:border-transparent transition-all text-xs sm:text-sm ${errors.phone ? 'border-red-500' : 'border-gray-300'
+            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-navy-500 focus:border-transparent transition-all text-xs sm:text-sm ${errors.phone ? 'border-red-500' : 'border-slate-300'
               }`}
             placeholder="+91 9876543210"
             disabled={isSubmitting}
@@ -164,14 +194,14 @@ export default function ContactForm() {
 
         {/* Email Field */}
         <div>
-          <label htmlFor="email" className="block text-[10px] sm:text-xs font-medium text-gray-700 mb-1.5">
+          <label htmlFor="email" className="block text-xs font-medium text-charcoal-700 mb-1.5">
             Email Address *
           </label>
           <input
             id="email"
             type="email"
             {...register('email')}
-            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-navy-500 focus:border-transparent transition-all text-xs sm:text-sm ${errors.email ? 'border-red-500' : 'border-gray-300'
+            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-navy-500 focus:border-transparent transition-all text-xs sm:text-sm ${errors.email ? 'border-red-500' : 'border-slate-300'
               }`}
             placeholder="your.email@example.com"
             disabled={isSubmitting}
@@ -194,14 +224,14 @@ export default function ContactForm() {
 
         {/* Purpose Field */}
         <div>
-          <label htmlFor="purpose" className="block text-[10px] sm:text-xs font-medium text-gray-700 mb-1.5">
+          <label htmlFor="purpose" className="block text-xs font-medium text-charcoal-700 mb-1.5">
             Purpose of Contact *
           </label>
           <textarea
             id="purpose"
             {...register('purpose')}
             rows={4}
-            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-navy-500 focus:border-transparent transition-all resize-none text-xs sm:text-sm ${errors.purpose ? 'border-red-500' : 'border-gray-300'
+            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-navy-500 focus:border-transparent transition-all resize-none text-xs sm:text-sm ${errors.purpose ? 'border-red-500' : 'border-slate-300'
               }`}
             placeholder="Please describe your inquiry, booking request, or collaboration opportunity..."
             disabled={isSubmitting}
@@ -224,56 +254,28 @@ export default function ContactForm() {
 
         {/* Submit Button */}
         <div>
-          <m.button
+          <Button
             type="submit"
+            variant="primary"
+            size="base"
+            fullWidth
+            isLoading={isSubmitting}
             disabled={isSubmitting}
-            whileHover={!isSubmitting ? { scale: 1.02, y: -2 } : {}}
-            whileTap={!isSubmitting ? { scale: 0.98 } : {}}
-            transition={{ type: 'spring', stiffness: 400, damping: 17 }}
-            className={`w-full py-2.5 sm:py-3 px-4 sm:px-5 rounded-lg font-medium text-white transition-all duration-300 text-xs sm:text-sm touch-manipulation shadow-premium-md ${isSubmitting
-              ? 'bg-gray-400 cursor-not-allowed'
-              : 'bg-navy-900 hover:bg-navy-800 active:bg-navy-950 hover:shadow-premium-lg'
-              }`}
-            style={!isSubmitting ? { backgroundColor: '#14213d', color: '#ffffff' } : { backgroundColor: '#9ca3af', color: '#ffffff' }}
           >
-            {isSubmitting ? (
-              <span className="flex items-center justify-center">
-                <svg
-                  className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  ></circle>
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  ></path>
-                </svg>
-                Sending...
-              </span>
-            ) : (
-              'Send Message'
-            )}
-          </m.button>
+            {isSubmitting ? 'Sending...' : 'Send Message'}
+          </Button>
         </div>
 
         {/* Success Message */}
         {submitStatus === 'success' && (
           <m.div
+            ref={successMessageRef}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             className="p-4 bg-green-50 border border-green-200 rounded-lg"
             role="status"
             aria-live="polite"
+            tabIndex={-1}
           >
             <div className="flex items-start">
               <svg
@@ -300,11 +302,13 @@ export default function ContactForm() {
         {/* Error Message */}
         {submitStatus === 'error' && (
           <m.div
+            ref={errorMessageRef}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             className="p-4 bg-red-50 border border-red-200 rounded-lg"
             role="alert"
             aria-live="assertive"
+            tabIndex={-1}
           >
             <div className="flex items-start">
               <svg

@@ -12,6 +12,7 @@ import type { SiteConfig } from '@/types';
 import Image from 'next/image';
 import { getAssetPath } from '@/lib/config';
 import { analytics } from '@/components/GoogleAnalytics';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 
 const socialMediaIcons = {
   youtube: FaYoutube,
@@ -30,6 +31,7 @@ interface FooterProps {
 export default function Footer({ config }: FooterProps) {
   const pathname = usePathname();
   const socialMedia = config?.socialMedia || {};
+  const shouldReduceMotion = useReducedMotion();
 
   // Hide footer on admin routes
   if (pathname?.startsWith('/admin')) {
@@ -43,10 +45,10 @@ export default function Footer({ config }: FooterProps) {
           {/* Logo */}
           {config?.artist.logo && (
             <m.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              whileInView={{ opacity: 1, scale: 1 }}
+              initial={shouldReduceMotion ? undefined : { opacity: 0, scale: 0.8 }}
+              whileInView={shouldReduceMotion ? undefined : { opacity: 1, scale: 1 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
+              transition={{ duration: shouldReduceMotion ? 0 : 0.6 }}
               className="relative w-12 h-12 md:w-16 md:h-16"
             >
               <Image
@@ -60,10 +62,10 @@ export default function Footer({ config }: FooterProps) {
 
           {/* Social Media Icons */}
           <m.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            initial={shouldReduceMotion ? undefined : { opacity: 0, y: 20 }}
+            whileInView={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
+            transition={{ duration: shouldReduceMotion ? 0 : 0.6 }}
             className="flex flex-wrap justify-center gap-3 sm:gap-4 md:gap-5"
             role="navigation"
             aria-label="Social media links"
@@ -77,17 +79,17 @@ export default function Footer({ config }: FooterProps) {
               return (
                 <m.a
                   key={platform}
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
+                  initial={shouldReduceMotion ? undefined : { opacity: 0, scale: 0.8 }}
+                  whileInView={shouldReduceMotion ? undefined : { opacity: 1, scale: 1 }}
                   viewport={{ once: true }}
-                  transition={{ duration: 0.3, delay: index * 0.1 }}
-                  whileHover={{ scale: 1.2, y: -3 }}
-                  whileTap={{ scale: 0.95 }}
+                  transition={{ duration: shouldReduceMotion ? 0 : 0.3, delay: shouldReduceMotion ? 0 : index * 0.1 }}
+                  whileHover={shouldReduceMotion ? {} : { scale: 1.2, y: -3 }}
+                  whileTap={shouldReduceMotion ? {} : { scale: 0.95 }}
                   href={url}
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={() => analytics.socialMediaClick(platform, 'footer')}
-                  className="text-gray-400 hover:text-white active:text-gray-300 transition-colors duration-200 touch-manipulation p-1.5"
+                  className="text-slate-400 hover:text-white active:text-gray-300 transition-colors duration-200 touch-manipulation p-1.5"
                   aria-label={`Visit our ${platform.charAt(0).toUpperCase() + platform.slice(1)} page (opens in new tab)`}
                 >
                   <Icon size={20} className="sm:w-6 sm:h-6" />
@@ -98,11 +100,11 @@ export default function Footer({ config }: FooterProps) {
 
           {/* Copyright */}
           <m.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
+            initial={shouldReduceMotion ? undefined : { opacity: 0 }}
+            whileInView={shouldReduceMotion ? undefined : { opacity: 1 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-            className="text-center text-gray-400 text-[10px] sm:text-xs px-4"
+            transition={{ duration: shouldReduceMotion ? 0 : 0.6, delay: shouldReduceMotion ? 0 : 0.3 }}
+            className="text-center text-slate-400 text-xs px-4"
           >
             <p>
               &copy; {new Date().getFullYear()}{' '}

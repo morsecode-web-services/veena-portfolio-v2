@@ -191,7 +191,7 @@ export default function VideoEmbed({
               whileTap={{ scale: 0.95 }}
               className="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 backdrop-blur-md border border-white/30 rounded-full flex items-center justify-center shadow-2xl group-hover:!bg-gold-600 group-hover:border-gold-500 transition-all duration-300"
             >
-              <svg className="w-4 h-4 sm:w-6 sm:h-6 text-white ml-1 drop-shadow-lg" fill="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 sm:w-6 sm:h-6 text-white drop-shadow-lg" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M8 5v14l11-7z" />
               </svg>
             </m.div>

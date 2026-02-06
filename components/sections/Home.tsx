@@ -11,6 +11,7 @@ import { Video } from '@/types/video';
 import { useEvents } from '@/hooks/useEvents';
 import { getNextUpcomingEvent, formatEventDate } from '@/lib/events';
 import { getAssetPath } from '@/lib/config';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 
 interface HomeProps {
   config: SiteConfig;
@@ -19,6 +20,7 @@ interface HomeProps {
 
 export default function Home({ config, dbVideos }: HomeProps) {
   const { events } = useEvents();
+  const shouldReduceMotion = useReducedMotion();
 
   // Build carousel items array
   const carouselItems = useMemo(() => {
@@ -111,9 +113,9 @@ export default function Home({ config, dbVideos }: HomeProps) {
         {/* Background Image with Enhanced Multi-layer Overlay */}
         <div className="absolute inset-0">
           <m.div
-            initial={{ scale: 1.1, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 1.5, ease: "easeOut" }}
+            initial={shouldReduceMotion ? undefined : { scale: 1.1, opacity: 0 }}
+            animate={shouldReduceMotion ? undefined : { scale: 1, opacity: 1 }}
+            transition={{ duration: shouldReduceMotion ? 0 : 1.5, ease: "easeOut" }}
             className="h-full w-full"
           >
             <Image
@@ -138,28 +140,28 @@ export default function Home({ config, dbVideos }: HomeProps) {
 
         {/* Content Overlay */}
         <m.div
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
+          variants={shouldReduceMotion ? {} : containerVariants}
+          initial={shouldReduceMotion ? undefined : "hidden"}
+          animate={shouldReduceMotion ? undefined : "visible"}
           className="relative h-full flex flex-col justify-between px-6 sm:px-12 md:px-16 lg:px-20 py-12 sm:py-16 md:py-20"
         >
           {/* Top Section - Small Tagline */}
-          <m.div variants={itemVariants} className="pt-8">
-            <p className="text-xs sm:text-sm md:text-base tracking-[0.4em] text-gold-500 font-light uppercase">
+          <m.div variants={itemVariants} className="pt-8 hidden sm:block">
+            <p className="text-xs sm:text-sm md:text-base tracking-[0.2em] sm:tracking-[0.3em] md:tracking-[0.4em] text-gold-500 font-light uppercase">
               {heroTagline}
             </p>
           </m.div>
 
           {/* Center-Left Section - Large Name with staggered char animation */}
-          <div className="flex-1 flex items-center -translate-y-24 sm:translate-y-0">
+          <div className="flex-1 flex items-center -translate-y-16 sm:translate-y-0">
             <div className="max-w-4xl">
               <m.h1
-                variants={nameVariants}
+                variants={shouldReduceMotion ? {} : nameVariants}
                 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-[6.5rem] font-serif font-bold text-white leading-[0.85] tracking-tighter"
               >
                 {config.artist.name.split(' ').map((word, wordIdx) => (
                   <span key={wordIdx} className="block whitespace-nowrap overflow-hidden py-1 sm:py-2">
-                    {word.split('').map((char, charIdx) => (
+                    {shouldReduceMotion ? word : word.split('').map((char, charIdx) => (
                       <m.span
                         key={charIdx}
                         variants={charVariants}
@@ -186,7 +188,7 @@ export default function Home({ config, dbVideos }: HomeProps) {
               <m.div variants={itemVariants} className="hidden lg:block lg:w-72 flex-shrink-0 space-y-8 sm:space-y-10">
                 {heroStats.map((stat, idx) => (
                   <div key={idx} className="group">
-                    <p className="text-[10px] sm:text-xs tracking-[0.25em] text-gold-200/60 font-light uppercase mb-2 group-hover:text-gold-400/80 transition-colors">
+                    <p className="text-xs tracking-[0.25em] text-gold-200/60 font-light uppercase mb-2 group-hover:text-gold-400/80 transition-colors">
                       {stat.label}
                     </p>
                     <p className="text-lg sm:text-xl md:text-2xl font-serif text-white italic border-l-2 border-white/10 pl-4 py-1">
@@ -211,7 +213,7 @@ export default function Home({ config, dbVideos }: HomeProps) {
                 <div className="flex-1 space-y-4 sm:space-y-6 text-right">
                   {spotlight.subtitle && (
                     <div className="flex items-center justify-end gap-4">
-                      <p className="text-[10px] sm:text-xs tracking-[0.2em] text-gold-500 font-light uppercase">
+                      <p className="text-xs tracking-[0.2em] text-gold-500 font-light uppercase">
                         {spotlight.subtitle}
                       </p>
                       <div className="h-px w-12 bg-gold-500/30"></div>
@@ -228,7 +230,7 @@ export default function Home({ config, dbVideos }: HomeProps) {
 
                   <m.a
                     href={heroCta.link}
-                    whileHover={{ x: -8 }}
+                    whileHover={shouldReduceMotion ? {} : { x: -8 }}
                     className="inline-flex items-center gap-3 text-xs sm:text-sm text-gold-400 font-semibold tracking-widest uppercase mt-4 group"
                   >
                     <span>{heroCta.text}</span>
@@ -264,11 +266,11 @@ export default function Home({ config, dbVideos }: HomeProps) {
             variants={itemVariants}
             className="absolute bottom-4 sm:bottom-10 left-0 right-0 flex flex-col items-center gap-1 sm:gap-2 pointer-events-none"
           >
-            <span className="text-[9px] tracking-[0.3em] text-gold-300/40 uppercase font-light">Scroll</span>
+            <span className="text-xs tracking-[0.3em] text-gold-300/40 uppercase font-light">Scroll</span>
             <div className="w-px h-8 sm:h-12 bg-gradient-to-b from-gold-500/80 to-transparent">
               <m.div
-                animate={{ y: [0, 24, 0], opacity: [0, 1, 0] }}
-                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                animate={shouldReduceMotion ? {} : { y: [0, 24, 0], opacity: [0, 1, 0] }}
+                transition={{ duration: shouldReduceMotion ? 0 : 2, repeat: shouldReduceMotion ? 0 : Infinity, ease: "easeInOut" }}
                 className="w-full h-1/2 bg-white"
               />
             </div>

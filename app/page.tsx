@@ -6,28 +6,65 @@ import PortfolioGeneratorWrapper from '@/components/features/PortfolioGeneratorW
 import siteConfig from '@/public/config/site-config.json';
 import { validateConfig } from '@/lib/config';
 import { supabase } from '@/lib/supabase'; // Use anon client for public fetch
+import { LoadingCard } from '@/components/system/LoadingCard';
 
 export const revalidate = 900; // Revalidate every 15 minutes
 
 // Code-split heavy components for better performance
 const Gallery = dynamic(() => import('@/components/sections/Gallery'), {
-  loading: () => <div className="py-16 text-center animate-pulse text-gray-600 text-sm">Loading gallery...</div>,
+  loading: () => (
+    <div className="py-16 px-4 sm:px-6 md:px-8">
+      <div className="max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-5">
+          <LoadingCard variant="gallery" count={6} />
+        </div>
+      </div>
+    </div>
+  ),
 });
 
 const Music = dynamic(() => import('@/components/sections/Music'), {
-  loading: () => <div className="py-20 text-center animate-pulse text-gray-600">Loading music...</div>,
+  loading: () => (
+    <div className="py-20 px-4 sm:px-6 md:px-8">
+      <div className="max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+          <LoadingCard variant="video" count={3} />
+        </div>
+      </div>
+    </div>
+  ),
 });
 
 const Press = dynamic(() => import('@/components/sections/Press'), {
-  loading: () => <div className="py-20 text-center animate-pulse text-gray-600">Loading press...</div>,
+  loading: () => (
+    <div className="py-20 px-4 sm:px-6 md:px-8">
+      <div className="max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
+          <LoadingCard variant="blog" count={3} />
+        </div>
+      </div>
+    </div>
+  ),
 });
 
 const FAQ = dynamic(() => import('@/components/sections/FAQ'), {
-  loading: () => <div className="py-20 text-center animate-pulse text-gray-600">Loading FAQ...</div>,
+  loading: () => (
+    <div className="py-20 px-4 sm:px-6 md:px-8">
+      <div className="max-w-3xl mx-auto space-y-4">
+        <LoadingCard variant="default" count={4} />
+      </div>
+    </div>
+  ),
 });
 
 const Contact = dynamic(() => import('@/components/sections/Contact'), {
-  loading: () => <div className="py-20 text-center animate-pulse text-gray-600">Loading contact form...</div>,
+  loading: () => (
+    <div className="py-20 px-4 sm:px-6 md:px-8">
+      <div className="max-w-2xl mx-auto">
+        <LoadingCard variant="default" count={1} />
+      </div>
+    </div>
+  ),
 });
 
 const About = dynamic(() => import('@/components/sections/About'));

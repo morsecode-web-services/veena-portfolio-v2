@@ -108,7 +108,7 @@ export function FeaturedCarousel({ items, autoScrollInterval = 5000 }: FeaturedC
             {/* Subtitle Label */}
             {currentItem.subtitle && (
               <div className="flex items-center justify-end gap-3 sm:gap-4">
-                <p className="text-[9px] sm:text-[11px] tracking-[0.3em] text-gold-500 font-medium uppercase">
+                <p className="text-xs tracking-[0.3em] text-gold-500 font-medium uppercase">
                   {currentItem.subtitle}
                 </p>
                 <div className="h-px w-8 sm:w-12 bg-gold-500/30"></div>
@@ -131,7 +131,7 @@ export function FeaturedCarousel({ items, autoScrollInterval = 5000 }: FeaturedC
                 href={currentItem.link}
                 whileHover={{ x: -4 }}
                 transition={{ duration: 0.2 }}
-                className="inline-flex items-center gap-2.5 text-[11px] sm:text-xs text-gold-500 font-medium tracking-[0.15em] uppercase mt-0.5 sm:mt-3 group"
+                className="inline-flex items-center gap-2.5 text-xs text-gold-500 font-medium tracking-[0.15em] uppercase mt-0.5 sm:mt-3 group"
               >
                 <span>{currentItem.linkText}</span>
                 <svg
@@ -168,14 +168,15 @@ export function FeaturedCarousel({ items, autoScrollInterval = 5000 }: FeaturedC
             <button
               key={item.id}
               onClick={() => goToSlide(index)}
-              className={`group p-2 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-white/40 rounded-full ${index === currentIndex ? 'opacity-100' : 'opacity-40 hover:opacity-70'
+              className={`group p-3 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-white/40 rounded-full min-w-[44px] min-h-[44px] flex items-center justify-center ${index === currentIndex ? 'opacity-100' : 'opacity-40 hover:opacity-70'
                 }`}
-              aria-label={`Go to slide ${index + 1}`}
+              aria-label={`View slide ${index + 1} of ${items.length}: ${item.title}`}
               aria-selected={index === currentIndex}
+              aria-current={index === currentIndex ? 'true' : 'false'}
               role="tab"
             >
               <div
-                className={`rounded-full bg-white transition-all duration-500 ease-out ${index === currentIndex ? 'w-10 h-1.5' : 'w-1.5 h-1.5'
+                className={`rounded-full bg-white transition-all duration-500 ease-out ${index === currentIndex ? 'w-10 h-2' : 'w-2 h-2'
                   }`}
               />
             </button>
