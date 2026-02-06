@@ -26,6 +26,45 @@ const COLORS = {
   lightGray: { r: 240, g: 240, b: 240 },
 };
 
+// Gradient schemes for different sections - light, fun pastels with elegant aesthetic
+const GRADIENT_SCHEMES = {
+  cover: {
+    start: { r: 255, g: 228, b: 230 },  // Soft blush pink
+    end: { r: 255, g: 250, b: 245 },    // Warm white
+    angle: 180, // vertical (top to bottom)
+  },
+  about: {
+    start: { r: 224, g: 242, b: 254 },  // Light sky blue
+    end: { r: 255, g: 255, b: 255 },    // Pure white
+    angle: 135, // diagonal
+  },
+  spotlights: {
+    start: { r: 237, g: 233, b: 254 },  // Soft lavender
+    end: { r: 252, g: 231, b: 243 },    // Light pink
+    angle: 180, // vertical
+  },
+  music: {
+    start: { r: 204, g: 251, b: 241 },  // Mint/teal
+    end: { r: 224, g: 242, b: 254 },    // Light blue
+    angle: 135, // diagonal
+  },
+  gallery: {
+    start: { r: 254, g: 235, b: 220 },  // Soft peach
+    end: { r: 255, g: 250, b: 245 },    // Warm white
+    angle: 180, // vertical
+  },
+  press: {
+    start: { r: 254, g: 215, b: 215 },  // Light coral/rose
+    end: { r: 255, g: 237, b: 240 },    // Blush white
+    angle: 135, // diagonal
+  },
+  contact: {
+    start: { r: 219, g: 234, b: 254 },  // Sky blue
+    end: { r: 237, g: 233, b: 254 },    // Lavender
+    angle: 180, // vertical
+  },
+};
+
 // Layout constants
 const MARGIN = 20;
 const LINE_HEIGHT_SCALE = 0.4;
@@ -123,11 +162,33 @@ export async function generatePDF(
       pdf.setTextColor(COLORS.gold.r, COLORS.gold.g, COLORS.gold.b);
     };
 
-    const addText = (text: string, size: number = 12, bold = false) => {
+    const calculateTextHeight = (
+      text: string,
+      fontSize: number,
+      maxWidth: number
+    ): number => {
+      const lines = pdf.splitTextToSize(text, maxWidth);
+      const lineHeight = fontSize * LINE_HEIGHT_SCALE + 1; // 1mm line spacing
+      return lines.length * lineHeight;
+    };
+
+    const addText = async (text: string, size: number = 12, bold = false) => {
       setFontBody(size, bold);
       const lines = pdf.splitTextToSize(text, contentWidth);
-      pdf.text(lines, MARGIN, cursor.y);
-      cursor.y += (lines.length * size * LINE_HEIGHT_SCALE) + 3;
+      const lineHeight = size * LINE_HEIGHT_SCALE + 1;
+
+      for (const line of lines) {
+        // Check before each line
+        if (cursor.y + lineHeight > pageHeight - MARGIN) {
+          await addNewPage();
+          cursor.y = MARGIN;
+        }
+
+        pdf.text(line, MARGIN, cursor.y);
+        cursor.y += lineHeight;
+      }
+
+      cursor.y += 3; // Extra spacing after paragraph
     };
 
     const addLink = async (text: string, url: string, size: number = 12, withQR = false, x = MARGIN) => {
@@ -163,7 +224,64 @@ export async function generatePDF(
       cursor.y += textHeight + spacing;
     };
 
-    const renderGrayscaleBackground = async (imageSrc: string) => {
+    const renderGradientBackground = (sectionType: keyof typeof GRADIENT_SCHEMES) => {
+      try {
+        const gradientOpacity = config.pdf?.gradients?.opacity ?? 0.6; // Increased from 0.3 to 0.6 for visibility
+        const scheme = GRADIENT_SCHEMES[sectionType];
+
+        console.log(`[PDF] Rendering gradient for section: ${sectionType}, opacity: ${gradientOpacity}`);
+
+        // Create canvas for gradient
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          console.warn('[PDF] Failed to get canvas context for gradient');
+          return;
+        }
+
+        // High resolution for quality
+        canvas.width = pageWidth * 10;
+        canvas.height = pageHeight * 10;
+
+        // Calculate gradient direction based on angle
+        let x0 = 0, y0 = 0, x1 = 0, y1 = canvas.height;
+        if (scheme.angle === 135) {
+          // Diagonal: top-left to bottom-right
+          x0 = 0;
+          y0 = 0;
+          x1 = canvas.width;
+          y1 = canvas.height;
+        } else if (scheme.angle === 180) {
+          // Vertical: top to bottom
+          x0 = 0;
+          y0 = 0;
+          x1 = 0;
+          y1 = canvas.height;
+        }
+
+        const gradient = ctx.createLinearGradient(x0, y0, x1, y1);
+
+        gradient.addColorStop(0, `rgb(${scheme.start.r}, ${scheme.start.g}, ${scheme.start.b})`);
+        gradient.addColorStop(1, `rgb(${scheme.end.r}, ${scheme.end.g}, ${scheme.end.b})`);
+
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        const gradientImage = canvas.toDataURL('image/png');
+
+        // Add to PDF with opacity
+        pdf.saveGraphicsState();
+        pdf.setGState(new (pdf as any).GState({ opacity: gradientOpacity }));
+        pdf.addImage(gradientImage, 'PNG', 0, 0, pageWidth, pageHeight, undefined, 'FAST');
+        pdf.restoreGraphicsState();
+
+        console.log(`[PDF] Gradient rendered successfully for ${sectionType}`);
+      } catch (e) {
+        console.error("[PDF] Failed to render gradient background", e);
+      }
+    };
+
+    const renderGrayscaleBackgroundLegacy = async (imageSrc: string) => {
       try {
         const bgOpacity = config.pdf?.backgroundOpacity ?? 0.12;
         const bgBrightness = config.pdf?.backgroundBrightness ?? 0.8;
@@ -257,19 +375,44 @@ export async function generatePDF(
 
     let backgroundIndex = 0;
     const galleryImages = config.gallery?.images || [];
+    let currentSection: keyof typeof GRADIENT_SCHEMES = 'cover';
 
-    const addNewPage = async () => {
+    const addNewPage = async (sectionType?: keyof typeof GRADIENT_SCHEMES) => {
+      if (sectionType) {
+        currentSection = sectionType;
+      }
       pdf.addPage();
-      drawPremiumElements();
-      if (galleryImages.length > 0) {
+
+      const useGradients = config.pdf?.gradients?.enabled ?? true; // Default to gradients
+
+      if (useGradients) {
+        renderGradientBackground(currentSection); // Gradient FIRST (background)
+      } else if (galleryImages.length > 0) {
+        // Legacy: grayscale image backgrounds
         const bgImg = galleryImages[backgroundIndex % galleryImages.length];
-        await renderGrayscaleBackground(bgImg.src);
+        await renderGrayscaleBackgroundLegacy(bgImg.src);
         backgroundIndex++;
       }
+
+      drawPremiumElements(); // Border AFTER (on top)
     };
 
-    const checkPageBreak = async (neededSpace: number = 40) => {
-      if (cursor.y + neededSpace > pageHeight - MARGIN) {
+    const checkPageBreak = async (
+      neededSpace: number = 40,
+      actualContent?: { text: string; fontSize: number; width: number }
+    ): Promise<boolean> => {
+      let requiredSpace = neededSpace;
+
+      // Calculate actual space if content provided
+      if (actualContent) {
+        requiredSpace = calculateTextHeight(
+          actualContent.text,
+          actualContent.fontSize,
+          actualContent.width
+        ) + 10; // Add 10mm buffer
+      }
+
+      if (cursor.y + requiredSpace > pageHeight - MARGIN) {
         await addNewPage();
         cursor.y = MARGIN;
         return true;
@@ -285,10 +428,17 @@ export async function generatePDF(
 
     // 1. Cover Page
     onProgress?.(15);
-    await renderCoverPage(pdf, config, pageWidth, pageHeight, loadImage);
+    currentSection = 'cover';
+    const useGradients = config.pdf?.gradients?.enabled ?? true;
+    console.log(`[PDF] Starting cover page, useGradients: ${useGradients}`);
+    if (useGradients) {
+      renderGradientBackground('cover');
+    }
+    drawPremiumElements(); // Add border to cover page too
+    await renderCoverPage(pdf, config, pageWidth, pageHeight, loadImage, useGradients);
 
     // Start Content on new page
-    await addNewPage();
+    await addNewPage('about');
     cursor.y = MARGIN;
 
     // 2. About
@@ -316,7 +466,7 @@ export async function generatePDF(
 
     // 5. Gallery
     onProgress?.(75);
-    await addNewPage();
+    await addNewPage('gallery');
     cursor.y = MARGIN;
     addHeader(pdf, 'Performance Gallery', cursor, setFontHeader);
     cursor.y += 15;
@@ -325,13 +475,25 @@ export async function generatePDF(
     // 6. Press
     if (config.sections?.press) {
       onProgress?.(85);
-      await addNewPage();
+      await addNewPage('press');
       cursor.y = MARGIN;
       addHeader(pdf, 'Press & Recognition', cursor, setFontHeader);
       cursor.y += 10;
       if (config.press?.articles) {
         for (const article of config.press.articles) {
-          await checkPageBreak(30);
+          // Calculate full article height
+          const titleHeight = 13;
+          const excerptLines = Math.ceil(article.excerpt.length / 100);
+          const excerptHeight = excerptLines * 12;
+          const metaHeight = 8; // Date + publication lines
+          const totalArticleHeight = titleHeight + excerptHeight + metaHeight + 10;
+
+          // Check if full article fits
+          if (cursor.y + totalArticleHeight > pageHeight - MARGIN) {
+            await addNewPage('press');
+            cursor.y = MARGIN;
+          }
+
           setFontSubheader(13);
           pdf.text(article.title, MARGIN, cursor.y);
           cursor.y += 6;
@@ -340,7 +502,7 @@ export async function generatePDF(
           pdf.text(`${article.publication} - ${new Date(article.date).toLocaleDateString()}`, MARGIN, cursor.y);
           cursor.y += 6;
 
-          addText(article.excerpt, 10);
+          await addText(article.excerpt, 10);
           await addLink(article.title, article.url, 10);
           cursor.y += 5;
         }
@@ -433,15 +595,17 @@ async function loadCustomFonts(pdf: jsPDF, basePath: string) {
   }
 }
 
-async function renderCoverPage(pdf: jsPDF, config: any, pageWidth: number, pageHeight: number, loadImg: any) {
-  // Background - Split design
-  // Top 2/3 Cream
-  pdf.setFillColor(COLORS.cream.r, COLORS.cream.g, COLORS.cream.b);
-  pdf.rect(0, 0, pageWidth, pageHeight * 0.65, 'F');
+async function renderCoverPage(pdf: jsPDF, config: any, pageWidth: number, pageHeight: number, loadImg: any, useGradients: boolean = true) {
+  // Background - Split design (only if gradients are disabled)
+  if (!useGradients) {
+    // Top 2/3 Cream
+    pdf.setFillColor(COLORS.cream.r, COLORS.cream.g, COLORS.cream.b);
+    pdf.rect(0, 0, pageWidth, pageHeight * 0.65, 'F');
 
-  // Bottom 1/3 Navy
-  pdf.setFillColor(COLORS.navy.r, COLORS.navy.g, COLORS.navy.b);
-  pdf.rect(0, pageHeight * 0.65, pageWidth, pageHeight * 0.35, 'F');
+    // Bottom 1/3 Navy
+    pdf.setFillColor(COLORS.navy.r, COLORS.navy.g, COLORS.navy.b);
+    pdf.rect(0, pageHeight * 0.65, pageWidth, pageHeight * 0.35, 'F');
+  }
 
   // Decorative Vertical Gold Line
   pdf.setDrawColor(COLORS.gold.r, COLORS.gold.g, COLORS.gold.b);
@@ -590,8 +754,14 @@ function addHeader(pdf: jsPDF, text: string, cursor: Cursor, setFontFn: (s: numb
 }
 
 async function renderSpotlight(pdf: jsPDF, spotlight: any, width: number, pageHeight: number, cursor: Cursor, loadImg: any, addNewPage: any) {
-  if (cursor.y > pageHeight - 80) {
-    await addNewPage();
+  // Calculate total spotlight height for better page break decisions
+  const spotlightTitleHeight = 16;
+  const spotlightDescHeight = spotlight.description ? Math.ceil(spotlight.description.length / 100) * 12 : 20;
+  const imageHeight = 100;
+  const totalSpotlightHeight = spotlightTitleHeight + spotlightDescHeight + imageHeight + 30;
+
+  if (cursor.y + totalSpotlightHeight > pageHeight - MARGIN) {
+    await addNewPage('spotlights');
     cursor.y = MARGIN;
   }
 
@@ -614,7 +784,7 @@ async function renderSpotlight(pdf: jsPDF, spotlight: any, width: number, pageHe
     const imgHeight = (props.height / props.width) * imgWidth;
 
     if (cursor.y + imgHeight > pageHeight - MARGIN) {
-      await addNewPage();
+      await addNewPage('spotlights');
       cursor.y = MARGIN;
     }
 
@@ -647,25 +817,104 @@ function renderAboutSection(pdf: jsPDF, config: any, width: number, cursor: Curs
   cursor.y += (lines.length * 12 * LINE_HEIGHT_SCALE) + 10; // Adjusted spacing
 }
 
+async function renderMusicCard(
+  pdf: jsPDF,
+  video: any,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  loadImageFn: any,
+  linkFn: any
+): Promise<void> {
+  const THUMB_HEIGHT = 45; // 16:9 ratio for 80mm width
+  const TITLE_HEIGHT = 10;
+
+  // 1. Card border (subtle gold accent)
+  pdf.setDrawColor(COLORS.gold.r, COLORS.gold.g, COLORS.gold.b);
+  pdf.setLineWidth(0.15);
+  pdf.rect(x, y, width, height);
+
+  // 2. Thumbnail area (top portion of card)
+  const youtubeId = extractYoutubeId(video.url);
+  const thumbUrl = video.thumbnail_url ||
+    (youtubeId ? `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg` : null);
+
+  if (thumbUrl) {
+    try {
+      const thumbData = await loadImageFn(thumbUrl);
+      if (thumbData) {
+        // Fill full width, maintain aspect ratio
+        pdf.addImage(thumbData, 'JPEG', x, y, width, THUMB_HEIGHT);
+      }
+    } catch (e) {
+      console.warn("Failed to load video thumbnail", e);
+    }
+  }
+
+  // 3. Separator line between thumbnail and title
+  pdf.setDrawColor(COLORS.slate.r, COLORS.slate.g, COLORS.slate.b);
+  pdf.setLineWidth(0.1);
+  pdf.line(x, y + THUMB_HEIGHT, x + width, y + THUMB_HEIGHT);
+
+  // 4. Title text area (below thumbnail)
+  pdf.setFontSize(9);
+  pdf.setTextColor(COLORS.navy.r, COLORS.navy.g, COLORS.navy.b);
+  try {
+    pdf.setFont('Inter', 'bold');
+  } catch {
+    pdf.setFont('helvetica', 'bold');
+  }
+
+  // Wrap title to fit width with padding
+  const titleLines = pdf.splitTextToSize(video.title, width - 6); // 3mm padding on each side
+  const displayLines = titleLines.slice(0, 2); // Max 2 lines
+
+  // Center text vertically in the title area
+  const lineHeight = 3.5;
+  const totalTextHeight = displayLines.length * lineHeight;
+  const titleStartY = y + THUMB_HEIGHT + (TITLE_HEIGHT - totalTextHeight) / 2 + lineHeight;
+
+  for (let i = 0; i < displayLines.length; i++) {
+    const line = displayLines[i];
+    const textWidth = pdf.getTextWidth(line);
+    const centeredX = x + (width - textWidth) / 2;
+    pdf.text(line, centeredX, titleStartY + (i * lineHeight));
+  }
+
+  // 5. Make entire card clickable
+  if (video.url) {
+    pdf.link(x, y, width, height, { url: video.url });
+  }
+}
+
 async function renderMusicSection(pdf: jsPDF, musicConfig: any, dbVideos: any[], cursor: Cursor, linkFn: any, loadImageFn: any, addNewPage: any) {
+  const CARD_WIDTH = 80;
+  const CARD_HEIGHT = 55; // 45mm thumbnail + 10mm title
+  const CARD_GAP = 10;
+  const CARDS_PER_ROW = 2;
+  const ROW_SPACING = 8;
+
   for (let i = 0; i < musicConfig.categories.length; i++) {
     const cat = musicConfig.categories[i];
 
-    // Force new page for second category onwards (e.g. Vocal)
+    // Force new page for second category onwards
     if (i > 0) {
-      await addNewPage();
+      await addNewPage('music');
       cursor.y = MARGIN;
-    } else if (cursor.y > 250) {
+    } else if (cursor.y > 200) {
       // Safety break for first category
-      await addNewPage();
+      await addNewPage('music');
       cursor.y = MARGIN;
     }
 
+    // Category header
     try { pdf.setFont('PlayfairDisplay', 'bold'); } catch { pdf.setFont('helvetica', 'bold'); }
     pdf.setFontSize(16);
     pdf.setTextColor(COLORS.navy.r, COLORS.navy.g, COLORS.navy.b);
     pdf.text(cat.name, MARGIN, cursor.y);
 
+    // Gold underline accent
     pdf.setDrawColor(COLORS.gold.r, COLORS.gold.g, COLORS.gold.b);
     pdf.setLineWidth(0.5);
     pdf.line(MARGIN, cursor.y + 2, MARGIN + 20, cursor.y + 2);
@@ -674,32 +923,36 @@ async function renderMusicSection(pdf: jsPDF, musicConfig: any, dbVideos: any[],
 
     if (cat.subcategories) {
       for (const sub of cat.subcategories) {
-        if (cursor.y > 270) {
-          await addNewPage();
+        // Check if we need a page break before subcategory header
+        if (cursor.y > 240) {
+          await addNewPage('music');
           cursor.y = MARGIN;
         }
 
+        // Subcategory header
         try { pdf.setFont('Inter', 'bold'); } catch { pdf.setFont('helvetica', 'bold'); }
         pdf.setFontSize(12);
         pdf.setTextColor(COLORS.slate.r, COLORS.slate.g, COLORS.slate.b);
         pdf.text(sub.name, MARGIN + 2, cursor.y);
-        cursor.y += 7;
+        cursor.y += 10;
 
-        // Merge and deduplicate
+        // Merge DB and config videos (deduplicate)
         const seenIds = new Set<string>();
         const mergedVideos: any[] = [];
 
-        // 1. Add DB videos first
-        const dbMatches = dbVideos.filter(v => v.category_id === cat.id && v.subcategory_id === sub.id);
+        // Add DB videos first
+        const dbMatches = dbVideos.filter(
+          v => v.category_id === cat.id && v.subcategory_id === sub.id
+        );
         dbMatches.forEach(v => {
           const id = extractYoutubeId(v.url);
           if (id) {
             seenIds.add(id);
-            mergedVideos.push({ title: v.title, url: v.url });
+            mergedVideos.push({ title: v.title, url: v.url, thumbnail_url: v.thumbnail_url });
           }
         });
 
-        // 2. Add config videos if unique
+        // Add config videos if unique
         if (sub.videos) {
           sub.videos.forEach((vid: any) => {
             const id = extractYoutubeId(vid.url);
@@ -710,42 +963,55 @@ async function renderMusicSection(pdf: jsPDF, musicConfig: any, dbVideos: any[],
           });
         }
 
+        // Render videos as grid
+        let startY = cursor.y; // Remember starting Y for this subcategory
+        let cardIndex = 0;
+        let maxY = startY; // Track the bottom of the lowest row
+
         for (const vid of mergedVideos) {
-          const thumbWidth = 35;
-          const thumbHeight = thumbWidth * 0.56; // 16:9
-          const textX = MARGIN + thumbWidth + 5;
-          const entryHeight = Math.max(thumbHeight + 5, 18);
+          const col = cardIndex % CARDS_PER_ROW;
+          const row = Math.floor(cardIndex / CARDS_PER_ROW);
 
-          if (cursor.y + entryHeight > pdf.internal.pageSize.getHeight() - MARGIN) {
-            await addNewPage();
+          const cardX = MARGIN + (col * (CARD_WIDTH + CARD_GAP));
+          const cardY = startY + (row * (CARD_HEIGHT + ROW_SPACING));
+
+          // Page break check: ensure full row fits on page
+          // Only check at start of new row (col === 0)
+          if (col === 0 && cardY + CARD_HEIGHT > pdf.internal.pageSize.getHeight() - MARGIN) {
+            await addNewPage('music');
             cursor.y = MARGIN;
+            cardIndex = 0; // Reset grid for new page
+            startY = cursor.y; // Reset start Y for new page
+            maxY = startY;
+            continue; // Skip to next iteration to recalculate positions
           }
 
-          // Render Thumbnail
-          const youtubeId = extractYoutubeId(vid.url);
-          const thumbUrl = vid.thumbnail_url || (youtubeId ? `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg` : null);
+          await renderMusicCard(
+            pdf,
+            vid,
+            cardX,
+            cardY,
+            CARD_WIDTH,
+            CARD_HEIGHT,
+            loadImageFn,
+            linkFn
+          );
 
-          if (thumbUrl) {
-            try {
-              const thumbData = await loadImageFn(thumbUrl);
-              if (thumbData) {
-                // Adjust y to align with text center approx
-                pdf.addImage(thumbData, 'JPEG', MARGIN, cursor.y - 4, thumbWidth, thumbHeight);
-              }
-            } catch (e) {
-              console.warn("Failed to add thumbnail to PDF", e);
-            }
-          }
-
-          await linkFn(vid.title, vid.url, 11, false, textX);
-
-          // Ensure cursor advances significantly for the next item based on image height
-          cursor.y += (entryHeight - 11 * 0.4 - 3); // Compensate for addLink's internal y update
+          // Track the maximum Y position
+          maxY = Math.max(maxY, cardY + CARD_HEIGHT);
+          cardIndex++;
         }
-        cursor.y += 6;
+
+        // Update cursor to after the last row
+        cursor.y = maxY + ROW_SPACING;
+
+        // Extra spacing after subcategory
+        cursor.y += 4;
       }
     }
-    cursor.y += 4;
+
+    // Extra spacing after category
+    cursor.y += 6;
   }
 }
 
@@ -755,7 +1021,7 @@ async function renderGallery(pdf: jsPDF, images: any[], width: number, pageHeigh
 
   for (let i = 0; i < Math.min(images.length, 6); i += 2) {
     if (cursor.y + imgH > pageHeight - MARGIN) {
-      await addNewPage();
+      await addNewPage('gallery');
       cursor.y = MARGIN;
     }
 

@@ -103,6 +103,10 @@ export interface SiteConfig {
   pdf?: {
     backgroundOpacity?: number;
     backgroundBrightness?: number;
+    gradients?: {
+      enabled?: boolean;    // Toggle: true = gradients, false = legacy grayscale images
+      opacity?: number;     // Override default opacity (0-1, default: 0.3)
+    };
   };
 }
 

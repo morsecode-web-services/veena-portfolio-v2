@@ -143,6 +143,10 @@ const SiteConfigSchema = z.object({
   pdf: z.object({
     backgroundOpacity: z.number().optional(),
     backgroundBrightness: z.number().optional(),
+    gradients: z.object({
+      enabled: z.boolean().optional(),
+      opacity: z.number().min(0).max(1).optional(),
+    }).optional(),
   }).optional(),
   contact: z.object({
     imageUrl: z.string().optional(),
