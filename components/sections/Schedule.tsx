@@ -67,7 +67,10 @@ export default function Schedule() {
                 'item': {
                     '@type': 'MusicEvent',
                     'name': event.title,
-                    'startDate': event.date + (event.time ? `T${event.time}` : ''),
+                    'startDate': event.date + (event.time ? `T${event.time}:00` : 'T19:00:00'),
+                    'image': event.image_url || 'https://www.aishwaryamanikarnike.com/images/events/default.jpg',
+                    'eventStatus': 'https://schema.org/EventScheduled',
+                    'eventAttendanceMode': 'https://schema.org/OfflineEventAttendanceMode',
                     'location': {
                         '@type': 'Place',
                         'name': event.venue,
@@ -76,12 +79,20 @@ export default function Schedule() {
                             'addressLocality': event.city,
                         }
                     },
-                    'description': event.description,
+                    'description': event.description || `${event.title} - Performance at ${event.venue}`,
                     'performer': {
                         '@type': 'Person',
-                        'name': 'Aishwarya Manikarnike'
+                        'name': 'Aishwarya Manikarnike',
+                        '@id': 'https://www.aishwaryamanikarnike.com/#person',
                     },
-                    'url': event.booking_url || undefined
+                    'url': event.booking_url,
+                    ...(event.booking_url && {
+                        'offers': {
+                            '@type': 'Offer',
+                            'url': event.booking_url,
+                            'availability': 'https://schema.org/InStock',
+                        }
+                    }),
                 }
             }))
         };

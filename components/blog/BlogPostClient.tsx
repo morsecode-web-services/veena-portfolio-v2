@@ -64,26 +64,68 @@ export default function BlogPostClient({ initialBlog, slug }: BlogPostClientProp
     const jsonLd = {
         '@context': 'https://schema.org',
         '@type': 'BlogPosting',
+        '@id': `https://www.aishwaryamanikarnike.com/blog/${slug}#article`,
         headline: blog.title,
+        alternativeHeadline: blog.meta_title || blog.title,
         image: blog.image_url,
+        articleSection: blog.category,
         datePublished: blog.created_at,
         dateModified: blog.updated_at,
         author: {
             '@type': 'Person',
             name: blog.author,
+            '@id': 'https://www.aishwaryamanikarnike.com/#person',
         },
         publisher: {
             '@type': 'Organization',
             name: 'Aishwarya Manikarnike',
+            logo: {
+                '@type': 'ImageObject',
+                url: 'https://www.aishwaryamanikarnike.com/logo.png',
+            }
         },
-        description: blog.excerpt,
+        description: blog.meta_description || blog.excerpt,
+        keywords: blog.keywords?.join(', '),
+        inLanguage: 'en',
+    };
+
+    // Breadcrumb Schema
+    const breadcrumbSchema = {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+            {
+                '@type': 'ListItem',
+                position: 1,
+                name: 'Home',
+                item: 'https://www.aishwaryamanikarnike.com',
+            },
+            {
+                '@type': 'ListItem',
+                position: 2,
+                name: 'Blog',
+                item: 'https://www.aishwaryamanikarnike.com/blog',
+            },
+            {
+                '@type': 'ListItem',
+                position: 3,
+                name: blog.title,
+                item: `https://www.aishwaryamanikarnike.com/blog/${slug}`,
+            },
+        ],
     };
 
     return (
         <div className="bg-white">
+            {/* BlogPosting Schema */}
             <script
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+            />
+            {/* Breadcrumb Schema */}
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
             />
             <BlogPostRenderer blog={blog} />
             <BlogInteraction blogId={blog.id} initialLikes={blog.likes || 0} />

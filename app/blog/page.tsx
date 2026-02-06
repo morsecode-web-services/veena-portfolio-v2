@@ -11,10 +11,14 @@ import { loadConfig } from '@/lib/config';
 export const metadata: Metadata = {
     title: 'Blog | Aishwarya Manikarnike',
     description: 'Insights and stories from the world of Indian Classical Music, Veena, and Art.',
+    alternates: {
+        canonical: 'https://www.aishwaryamanikarnike.com/blog',
+    },
     openGraph: {
         title: 'Blog | Aishwarya Manikarnike',
         description: 'Insights and stories from the world of Indian Classical Music, Veena, and Art.',
         type: 'website',
+        url: 'https://www.aishwaryamanikarnike.com/blog',
     }
 };
 
