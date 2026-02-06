@@ -102,44 +102,39 @@
       "enabled": true,
       "autoScrollInterval": 5000,
       "showUpcomingEvent": true,
+      "eventSubtitle": "Upcoming Event",
       "eventLinkText": "View Event Details",
       "items": [
         {
           "id": "featured-1",
-          "image": "/images/spotlight/veena.jpg",
-          "title": "The Divine Instrument",
-          "description": "Veena: The Sound of the Soul",
-          "link": "#music",
-          "linkText": "Explore Veena Recitals"
+          "image": "/images/spotlight/spotlight-1-optimized.jpg",
+          "title": "Performance in the presence of Hon. President",
+          "description": "A Carnatic ensemble at Rashtrapati Bhavan",
+          "subtitle": "Highlights",
+          "link": "#gallery",
+          "linkText": "View performance gallery"
         },
         {
           "id": "featured-2",
-          "image": "/images/gallery/gallery-5.jpg",
-          "title": "The 3 Generation Veena Trio",
-          "description": "A Musical Lineage on One Stage",
-          "link": "#music",
-          "linkText": "Watch Their Performance"
-        },
-        {
-          "id": "featured-3",
-          "image": "/images/spotlight/vocal.jpg",
-          "title": "The Voice of Tradition",
-          "description": "Vocal Excellence & Purity",
-          "link": "#music",
-          "linkText": "Listen to Vocals"
+          "image": "/images/spotlight/spotlight-2-optimized.jpg",
+          "title": "Vidwat Antima Rank Holder",
+          "description": "State rank #3 in Carnatic Classical",
+          "subtitle": "Featured recognitions",
+          "link": "#about",
+          "linkText": "Read More"
         }
       ]
     }
   },
   "spotlights": [
     {
-      "id": "veena",
-      "title": "The Divine Instrument",
-      "subtitle": "Veena: The Sound of the Soul",
-      "description": "The Veena is not just an instrument; it is the physical manifestation of the human voice. Aishwarya's mastery over the Saraswati Veena brings out the subtlest nuances of Gamakas, creating a soundscape that is both meditative and exhilarating.",
-      "imageUrl": "/images/spotlight/veena.jpg",
-      "ctaText": "Explore Veena Recitals",
-      "ctaLink": "#music",
+      "id": "rashtrapati-bhavan",
+      "title": "Performance in the presence of Hon. President",
+      "subtitle": "Highlights",
+      "description": "A Carnatic ensemble at Rashtrapati Bhavan",
+      "imageUrl": "/images/spotlight/spotlight-1-optimized.jpg",
+      "ctaText": "View performance gallery",
+      "ctaLink": "#gallery",
       "features": [
         {
           "title": "Gayaki Style",
@@ -156,13 +151,13 @@
       ]
     },
     {
-      "id": "trio",
-      "title": "The 3 Generation Veena Trio",
-      "subtitle": "A Musical Lineage on One Stage",
-      "description": "Witness a rare cultural phenomenon. Three generations of Veena artists performing together, weaving a tapestry of sound that spans decades of tradition and innovation.",
-      "imageUrl": "/images/gallery/gallery-5.jpg",
-      "ctaText": "Watch Their Performance",
-      "ctaLink": "#music",
+      "id": "vidwat-antima",
+      "title": "Vidwat Antima Rank Holder",
+      "subtitle": "Featured recognitions",
+      "description": "State rank #3 in Carnatic Classical",
+      "imageUrl": "/images/spotlight/spotlight-2-optimized.jpg",
+      "ctaText": "Read More",
+      "ctaLink": "#about",
       "features": [
         {
           "title": "Tradition",

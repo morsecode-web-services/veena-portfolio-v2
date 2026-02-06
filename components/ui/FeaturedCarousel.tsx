@@ -105,13 +105,15 @@ export function FeaturedCarousel({ items, autoScrollInterval = 5000 }: FeaturedC
         >
           {/* Text Content */}
           <div className="space-y-0.5 sm:space-y-5 text-right flex-1">
-            {/* Featured Work Label */}
-            <div className="flex items-center justify-end gap-3 sm:gap-4">
-              <p className="text-[9px] sm:text-[11px] tracking-[0.3em] text-gold-500 font-medium uppercase">
-                {currentItem.type === 'event' ? 'Upcoming Event' : 'Featured Work'}
-              </p>
-              <div className="h-px w-8 sm:w-12 bg-gold-500/30"></div>
-            </div>
+            {/* Subtitle Label */}
+            {currentItem.subtitle && (
+              <div className="flex items-center justify-end gap-3 sm:gap-4">
+                <p className="text-[9px] sm:text-[11px] tracking-[0.3em] text-gold-500 font-medium uppercase">
+                  {currentItem.subtitle}
+                </p>
+                <div className="h-px w-8 sm:w-12 bg-gold-500/30"></div>
+              </div>
+            )}
 
             {/* Title */}
             <h2 className="text-xl sm:text-3xl md:text-4xl font-serif text-white leading-tight tracking-tight">

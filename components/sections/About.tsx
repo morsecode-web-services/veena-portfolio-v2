@@ -59,6 +59,7 @@ export default function About({ config }: AboutProps) {
               <h3 className="text-sm font-serif font-bold text-navy-900 mb-4 uppercase tracking-wider flex items-center gap-2">
                 <span className="w-8 h-px bg-gold-500"></span>
                 Professional Highlights
+                <span className="w-8 h-px bg-gold-500"></span>
               </h3>
               <ul className="space-y-4">
                 {[
@@ -78,9 +79,6 @@ export default function About({ config }: AboutProps) {
 
           {/* Biography Text Column */}
           <div className="lg:col-span-7 xl:col-span-8 space-y-6 sm:space-y-8 relative">
-            {/* Decorative vertical line */}
-            <div className="absolute left-6 top-4 bottom-4 w-0.5 bg-gradient-to-b from-transparent via-gold-200 to-transparent opacity-50 hidden sm:block"></div>
-
             <div className="space-y-5">
               {config.artist.fullBio.map((block, index) => (
                 <BiographySubsection

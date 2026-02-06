@@ -42,6 +42,7 @@ export default function Home({ config, dbVideos }: HomeProps) {
           image: nextEvent.image_url || '/images/events/default.jpg',
           title: nextEvent.title,
           description: `${formatEventDate(nextEvent.date)} • ${nextEvent.venue}, ${nextEvent.city}`,
+          subtitle: carouselConfig.eventSubtitle || 'Upcoming Event',
           link: nextEvent.booking_url || '#events',
           linkText: carouselConfig.eventLinkText || 'View Event Details'
         });
@@ -208,12 +209,14 @@ export default function Home({ config, dbVideos }: HomeProps) {
               // Fallback to static spotlight if carousel is disabled
               <m.div variants={itemVariants} className="flex-1 max-w-2xl lg:max-w-3xl w-full flex flex-col sm:flex-row items-start sm:items-end gap-8">
                 <div className="flex-1 space-y-4 sm:space-y-6 text-right">
-                  <div className="flex items-center justify-end gap-4">
-                    <p className="text-[10px] sm:text-xs tracking-[0.2em] text-gold-500 font-light uppercase">
-                      Featured Work
-                    </p>
-                    <div className="h-px w-12 bg-gold-500/30"></div>
-                  </div>
+                  {spotlight.subtitle && (
+                    <div className="flex items-center justify-end gap-4">
+                      <p className="text-[10px] sm:text-xs tracking-[0.2em] text-gold-500 font-light uppercase">
+                        {spotlight.subtitle}
+                      </p>
+                      <div className="h-px w-12 bg-gold-500/30"></div>
+                    </div>
+                  )}
 
                   <h2 className="text-2xl sm:text-3xl md:text-4xl font-serif text-white italic leading-tight">
                     {spotlight.title}

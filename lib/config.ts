@@ -72,6 +72,7 @@ const FeaturedCarouselItemSchema = z.object({
   image: z.string().min(1),
   title: z.string().min(1),
   description: z.string().min(1),
+  subtitle: z.string().optional(),
   link: z.string().optional(),
   linkText: z.string().optional(),
 });
@@ -108,6 +109,7 @@ const SiteConfigSchema = z.object({
       autoScrollInterval: z.number().optional(),
       items: z.array(FeaturedCarouselItemSchema),
       showUpcomingEvent: z.boolean().optional(),
+      eventSubtitle: z.string().optional(),
       eventLinkText: z.string().optional(),
     }).optional(),
   }),

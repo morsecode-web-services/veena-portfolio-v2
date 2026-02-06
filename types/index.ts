@@ -11,6 +11,7 @@ export interface FeaturedCarouselItem {
   image: string;
   title: string;
   description: string;
+  subtitle?: string; // Optional gold label text (e.g., "Highlights", "Featured recognitions")
   link?: string;
   linkText?: string;
 }
@@ -50,10 +51,12 @@ export interface SiteConfig {
         image: string;
         title: string;
         description: string;
+        subtitle?: string;
         link?: string;
         linkText?: string;
       }>;
       showUpcomingEvent?: boolean; // default true
+      eventSubtitle?: string; // subtitle for event items, default "Upcoming Event"
       eventLinkText?: string; // default "View Event Details"
     };
   };
