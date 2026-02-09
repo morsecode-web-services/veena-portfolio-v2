@@ -15,8 +15,8 @@ const nextConfig = {
   trailingSlash: true,
 
   images: {
-    // Enable image optimization (required for remotePatterns)
-    unoptimized: false,
+    // Disable image optimization for Netlify (images already optimized)
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: 'https',
