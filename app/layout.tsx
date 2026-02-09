@@ -8,6 +8,7 @@ import { Providers } from '@/components/Providers';
 import GoogleAnalytics from '@/components/GoogleAnalytics';
 import MicrosoftClarity from '@/components/MicrosoftClarity';
 import VideoModal from '@/components/ui/VideoModal';
+import BackToTop from '@/components/ui/BackToTop';
 import siteConfig from '@/public/config/site-config.json';
 import { validateConfig } from '@/lib/config';
 
@@ -213,7 +214,9 @@ export default function RootLayout({
             <Header config={config} />
             {children}
             <Footer config={config} />
+            <Footer config={config} />
             <VideoModal />
+            <BackToTop />
           </ErrorBoundary>
         </Providers>
       </body>

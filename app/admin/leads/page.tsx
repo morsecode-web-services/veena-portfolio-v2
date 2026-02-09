@@ -35,7 +35,7 @@ export default function LeadsPage() {
 
   useEffect(() => {
     filterLeads();
-  }, [leads, inquiryFilter, statusFilter, searchQuery]);
+  }, [leads, inquiryFilter, statusFilter, searchQuery]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchLeads = async () => {
     setLoading(true);

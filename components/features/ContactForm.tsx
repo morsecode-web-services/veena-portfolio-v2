@@ -8,6 +8,7 @@ import { m } from 'framer-motion';
 import { analytics } from '@/components/GoogleAnalytics';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { Button } from '@/components/system/Button';
+import { useToast } from '@/context/ToastContext';
 import type { InquiryType } from '@/types';
 
 // Zod validation schema
@@ -25,13 +26,10 @@ type ContactFormData = z.infer<typeof contactFormSchema>;
 
 export default function ContactForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
-  const [errorMessage, setErrorMessage] = useState<string>('');
   const [lastSubmitTime, setLastSubmitTime] = useState<number>(0);
   const shouldReduceMotion = useReducedMotion();
-  const successMessageRef = useRef<HTMLDivElement>(null);
-  const errorMessageRef = useRef<HTMLDivElement>(null);
   const firstErrorFieldRef = useRef<HTMLInputElement | HTMLTextAreaElement | null>(null);
+  const { addToast } = useToast();
 
   const {
     register,
@@ -58,27 +56,15 @@ export default function ContactForm() {
     }
   }, [errors]);
 
-  // Focus management for success/error messages
-  useEffect(() => {
-    if (submitStatus === 'success' && successMessageRef.current) {
-      successMessageRef.current.focus();
-    } else if (submitStatus === 'error' && errorMessageRef.current) {
-      errorMessageRef.current.focus();
-    }
-  }, [submitStatus]);
-
   const onSubmit = async (data: ContactFormData) => {
     // Rate limiting: prevent submissions within 30 seconds
     const now = Date.now();
     if (now - lastSubmitTime < 30000) {
-      setSubmitStatus('error');
-      setErrorMessage('Please wait 30 seconds before submitting another message.');
+      addToast('Please wait 30 seconds before submitting another message.', 'error');
       return;
     }
 
     setIsSubmitting(true);
-    setSubmitStatus('idle');
-    setErrorMessage('');
 
     try {
       // Call API route to handle email sending and database storage
@@ -105,25 +91,20 @@ export default function ContactForm() {
       // Track successful form submission
       analytics.contactFormSubmit(true, undefined, data.inquiryType);
 
-      setSubmitStatus('success');
+      addToast('Message sent successfully! You will receive a confirmation email.', 'success');
       setLastSubmitTime(now);
       reset();
 
-      // Reset success message after 5 seconds
-      setTimeout(() => {
-        setSubmitStatus('idle');
-      }, 5000);
     } catch (error) {
       console.error('Form submission error:', error);
-      setSubmitStatus('error');
 
       // Set user-friendly error message
       const errorMsg =
         error instanceof Error
           ? error.message
-          : 'Unable to send your message. Please try again later or contact directly via social media.';
+          : 'Unable to send your message. Please try again later.';
 
-      setErrorMessage(errorMsg);
+      addToast(errorMsg, 'error');
 
       // Track failed form submission
       analytics.contactFormSubmit(false, errorMsg);
@@ -303,72 +284,6 @@ export default function ContactForm() {
             {isSubmitting ? 'Sending...' : 'Send Message'}
           </Button>
         </div>
-
-        {/* Success Message */}
-        {submitStatus === 'success' && (
-          <m.div
-            ref={successMessageRef}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="p-4 bg-green-50 border border-green-200 rounded-lg"
-            role="status"
-            aria-live="polite"
-            tabIndex={-1}
-          >
-            <div className="flex items-start">
-              <svg
-                className="w-5 h-5 text-green-600 mt-0.5 mr-3"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              <div>
-                <h3 className="text-sm font-medium text-green-800">Message sent successfully!</h3>
-                <p className="mt-1 text-sm text-green-700">
-                  Thank you for reaching out. Check your email for a confirmation message. I will respond to your inquiry within 24-48 hours.
-                </p>
-              </div>
-            </div>
-          </m.div>
-        )}
-
-        {/* Error Message */}
-        {submitStatus === 'error' && (
-          <m.div
-            ref={errorMessageRef}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="p-4 bg-red-50 border border-red-200 rounded-lg"
-            role="alert"
-            aria-live="assertive"
-            tabIndex={-1}
-          >
-            <div className="flex items-start">
-              <svg
-                className="w-5 h-5 text-red-600 mt-0.5 mr-3 flex-shrink-0"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              <div>
-                <h3 className="text-sm font-medium text-red-800">Unable to send message</h3>
-                <p className="mt-1 text-sm text-red-700">
-                  {errorMessage || 'There was an error submitting your message. Please try again later or contact directly via social media.'}
-                </p>
-              </div>
-            </div>
-          </m.div>
-        )}
       </form>
     </div>
   );
