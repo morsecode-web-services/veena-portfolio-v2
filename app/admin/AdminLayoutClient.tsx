@@ -12,7 +12,8 @@ import {
     Menu,
     X,
     FileText,
-    Users
+    Users,
+    Image as ImageIcon
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
@@ -95,6 +96,7 @@ export default function AdminLayoutClient({ children }: AdminLayoutClientProps) 
         { name: 'Dashboard', href: '/admin/events', icon: LayoutDashboard },
         { name: 'Events', href: '/admin/events', icon: Calendar },
         { name: 'Blog', href: '/admin/blogs', icon: FileText },
+        { name: 'Gallery', href: '/admin/gallery', icon: ImageIcon },
         { name: 'Videos', href: '/admin/videos', icon: LayoutDashboard }, // Using LayoutDashboard for now, could use Video
         { name: 'Leads', href: '/admin/leads', icon: Users },
         { name: 'Public Site', href: '/', icon: Home },

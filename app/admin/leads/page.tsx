@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import { useToast } from '@/context/ToastContext';
 import type { InquiryType } from '@/types';
 
 interface Lead {
@@ -29,9 +30,43 @@ export default function LeadsPage() {
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [showModal, setShowModal] = useState(false);
 
+  const { addToast } = useToast();
+
   useEffect(() => {
     fetchLeads();
-  }, []);
+
+    // Realtime subscription
+    const channel = supabase
+      .channel('leads_channel')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'leads',
+        },
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            const newLead = payload.new as Lead;
+            setLeads((prev) => [newLead, ...prev]);
+            addToast(`New lead from ${newLead.name}!`, 'success');
+          } else if (payload.eventType === 'UPDATE') {
+            const updatedLead = payload.new as Lead;
+            setLeads((prev) =>
+              prev.map((lead) => (lead.id === updatedLead.id ? updatedLead : lead))
+            );
+          } else if (payload.eventType === 'DELETE') {
+            const deletedId = payload.old.id; // Correctly get ID from payload.old
+            setLeads((prev) => prev.filter((lead) => lead.id !== deletedId));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     filterLeads();
@@ -46,6 +81,7 @@ export default function LeadsPage() {
 
     if (error) {
       console.error('Error fetching leads:', error);
+      addToast('Failed to fetch leads', 'error');
     } else {
       setLeads(data || []);
     }
