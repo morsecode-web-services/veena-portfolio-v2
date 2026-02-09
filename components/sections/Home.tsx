@@ -40,7 +40,7 @@ export default function Home({ config, dbVideos }: HomeProps) {
         items.push({
           id: `event-${nextEvent.id}`,
           type: 'event' as const,
-          image: nextEvent.image_url || '/images/events/default.jpg',
+          image: nextEvent.image_url || undefined,
           title: nextEvent.title,
           description: `${formatEventDate(nextEvent.date)} • ${nextEvent.venue}, ${nextEvent.city}`,
           subtitle: carouselConfig.eventSubtitle || 'Upcoming Event',

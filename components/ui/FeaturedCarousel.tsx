@@ -147,17 +147,21 @@ export function FeaturedCarousel({ items, autoScrollInterval = 5000 }: FeaturedC
             )}
           </div>
 
-          {/* Image Thumbnail */}
-          <div className="relative w-full h-32 sm:w-40 sm:h-40 md:w-44 md:h-44 rounded-md overflow-hidden border border-white/15 shadow-2xl flex-shrink-0 group/img">
-            <ImageWithFallback
-              src={currentItem.image}
-              alt={currentItem.title}
-              fill
-              className="object-cover transition-transform duration-700 group-hover/img:scale-105"
-              sizes="(max-width: 640px) 100vw, 176px"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover/img:opacity-100 transition-opacity duration-500"></div>
-          </div>
+          {/* Image Thumbnail - Show image or placeholder to maintain layout stability */}
+          {currentItem.image ? (
+            <div className="relative w-full h-32 sm:w-40 sm:h-40 md:w-44 md:h-44 rounded-md overflow-hidden border border-white/15 shadow-2xl flex-shrink-0 group/img">
+              <ImageWithFallback
+                src={currentItem.image}
+                alt={currentItem.title}
+                fill
+                className="object-cover transition-transform duration-700 group-hover/img:scale-105"
+                sizes="(max-width: 640px) 100vw, 176px"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover/img:opacity-100 transition-opacity duration-500"></div>
+            </div>
+          ) : (
+            <div className="relative w-full h-32 sm:w-40 sm:h-40 md:w-44 md:h-44 flex-shrink-0" aria-hidden="true" />
+          )}
         </m.div>
       </AnimatePresence>
 

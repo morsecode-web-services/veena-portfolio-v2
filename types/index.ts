@@ -8,7 +8,7 @@ export type BioBlock =
 export interface FeaturedCarouselItem {
   id: string;
   type: 'custom' | 'event'; // Type discriminator
-  image: string;
+  image?: string; // Optional - some items like events may not have images
   title: string;
   description: string;
   subtitle?: string; // Optional gold label text (e.g., "Highlights", "Featured recognitions")

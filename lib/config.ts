@@ -69,7 +69,7 @@ const SpotlightSchema = z.object({
 
 const FeaturedCarouselItemSchema = z.object({
   id: z.string().min(1),
-  image: z.string().min(1),
+  image: z.string().min(1).optional(),
   title: z.string().min(1),
   description: z.string().min(1),
   subtitle: z.string().optional(),
