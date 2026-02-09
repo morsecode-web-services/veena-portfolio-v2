@@ -11,15 +11,12 @@ const nextConfig = {
   // Asset prefix for GitHub Pages or other non-root deployments
   assetPrefix: process.env.NODE_ENV === 'production' ? (process.env.NEXT_PUBLIC_BASE_PATH || '') : '',
 
-  // Trailing slash for GitHub Pages compatibility
-  trailingSlash: true,
+  // Trailing slash removed - causes issues with Next.js Image on Netlify
+  trailingSlash: false,
 
   images: {
-    // Enable image optimization with Netlify plugin (best of both worlds)
-    unoptimized: false,
-    formats: ['image/avif', 'image/webp'],
-    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
-    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    // Serve images directly (already optimized by our script)
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: 'https',

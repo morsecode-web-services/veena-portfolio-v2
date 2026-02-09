@@ -1,13 +1,5 @@
 # Production configuration for Netlify
 
-[build]
-  command = "npm run build"
-  publish = ".next"
-
-# Next.js runtime for image optimization
-[[plugins]]
-  package = "@netlify/plugin-nextjs"
-
 # Cache configuration for static assets
 [[headers]]
   for = "/_next/static/*"
