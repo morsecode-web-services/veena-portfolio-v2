@@ -6,7 +6,7 @@ import ImageWithFallback from '@/components/ui/ImageWithFallback';
 import siteConfig from '@/public/config/site-config.json';
 
 export default function Contact() {
-  const contactImage = siteConfig?.contact?.imageUrl || '/images/gallery/gallery-1.jpg';
+  const contactImage = siteConfig?.contact?.imageUrl || '/images/contact/contact-image.jpg';
   const contactImageAlt = siteConfig?.contact?.imageAlt || 'Contact';
 
   return (

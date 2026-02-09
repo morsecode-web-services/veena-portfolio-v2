@@ -43,10 +43,13 @@ Edit `public/config/site-config.json` to customize:
 
 Place images in these folders:
 
+- `public/images/home/hero-bg.jpg` (hero background)
 - `public/images/home/veena-performance.jpg`
-- `public/images/home/vocal-performance.jpg`
+- `public/images/spotlight/veena.jpg` (veena spotlight image)
+- `public/images/spotlight/vocal.jpg` (vocal spotlight image)
 - `public/images/gallery/` (your performance photos)
 - `public/images/press/` (press article images)
+- `public/images/contact/contact-image.jpg` (contact section image)
 
 ### Update Video Links
 

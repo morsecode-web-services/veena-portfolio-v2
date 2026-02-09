@@ -642,6 +642,9 @@ export async function generatePDF(
     cursor.y += 15;
     await renderGallery(pdf, config.gallery?.images || [], contentWidth, pageHeight, cursor, loadImage, addNewPage);
 
+    // Add spacing after gallery
+    cursor.y += 20;
+
     // 6. Press
     if (config.sections?.press) {
       onProgress?.(85);
@@ -1462,7 +1465,7 @@ async function renderGallery(pdf: jsPDF, images: any[], width: number, pageHeigh
   const imgW = (width - 10) / 2;
   const imgH = imgW * 0.67;
 
-  for (let i = 0; i < Math.min(images.length, 6); i += 2) {
+  for (let i = 0; i < images.length; i += 2) {
     if (cursor.y + imgH > pageHeight - MARGIN) {
       await addNewPage('gallery');
       cursor.y = MARGIN;

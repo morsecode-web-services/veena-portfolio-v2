@@ -206,49 +206,73 @@
         "id": "1",
         "src": "/images/gallery/gallery-1.jpg",
         "alt": "Veena performance at concert hall",
-        "width": 1200,
-        "height": 800,
+        "width": 1920,
+        "height": 1440,
         "caption": "Concert performance"
       },
       {
         "id": "2",
         "src": "/images/gallery/gallery-2.jpg",
         "alt": "Vocal performance on stage",
-        "width": 1200,
-        "height": 800,
+        "width": 1468,
+        "height": 2202,
         "caption": "Musical recital"
       },
       {
         "id": "3",
         "src": "/images/gallery/gallery-3.jpg",
         "alt": "Stage performance with traditional attire",
-        "width": 1200,
-        "height": 800,
+        "width": 1280,
+        "height": 853,
         "caption": "Traditional presentation"
       },
       {
         "id": "4",
         "src": "/images/gallery/gallery-4.jpg",
         "alt": "Intimate performance setting",
-        "width": 1200,
-        "height": 800,
+        "width": 1920,
+        "height": 2560,
         "caption": "Chamber concert"
       },
       {
         "id": "5",
         "src": "/images/gallery/gallery-5.jpg",
         "alt": "Three-generation trio performance",
-        "width": 1200,
-        "height": 800,
+        "width": 1920,
+        "height": 1440,
         "caption": "Musical heritage"
       },
       {
         "id": "6",
         "src": "/images/gallery/gallery-6.jpg",
         "alt": "Classical music ensemble",
-        "width": 1200,
-        "height": 800,
+        "width": 1920,
+        "height": 1100,
         "caption": "Collaborative performance"
+      },
+      {
+        "id": "7",
+        "src": "/images/gallery/gallery-7.jpg",
+        "alt": "Classical performance moment",
+        "width": 983,
+        "height": 737,
+        "caption": "Performance highlights"
+      },
+      {
+        "id": "8",
+        "src": "/images/gallery/gallery-8.jpg",
+        "alt": "Musical event",
+        "width": 1920,
+        "height": 1280,
+        "caption": "Event showcase"
+      },
+      {
+        "id": "9",
+        "src": "/images/gallery/gallery-9.jpg",
+        "alt": "Artistic performance",
+        "width": 1280,
+        "height": 853,
+        "caption": "Artistic moment"
       }
     ]
   },
@@ -490,7 +514,7 @@
     "subtitle": "Journal & Musings"
   },
   "contact": {
-    "imageUrl": "/images/gallery/gallery-1.jpg",
+    "imageUrl": "/images/contact/contact-image.jpg",
     "imageAlt": "Aishwarya Manikarnike performing"
   },
   "pdf": {

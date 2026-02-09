@@ -12,7 +12,8 @@
     "test:watch": "vitest",
     "test:coverage": "vitest --run --coverage",
     "type-check": "tsc --noEmit",
-    "analyze": "ANALYZE=true next build"
+    "analyze": "ANALYZE=true next build",
+    "optimize-gallery": "node scripts/optimize-gallery.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

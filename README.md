@@ -61,9 +61,50 @@ Edit the configuration file at `public/config/site-config.json` to customize:
 
 Place your images in the appropriate directories:
 
-- `public/images/home/` - Home page images (veena-performance.jpg, vocal-performance.jpg)
+- `public/images/home/` - Home page images (hero-bg.jpg, veena-performance.jpg)
 - `public/images/gallery/` - Gallery images
 - `public/images/press/` - Press article images
+- `public/images/contact/` - Contact section image
+- `public/images/spotlight/` - Spotlight/featured images
+
+### 5. Optimize Images
+
+The project includes an automated image optimization script that compresses images for optimal web performance.
+
+**Optimize all gallery images (default):**
+```bash
+npm run optimize-gallery
+```
+
+**Optimize a single file in gallery:**
+```bash
+npm run optimize-gallery gallery-5.jpg
+```
+
+**Optimize images in a custom directory:**
+```bash
+node scripts/optimize-gallery.js public/images/contact
+```
+
+**Optimize a specific file anywhere:**
+```bash
+node scripts/optimize-gallery.js public/images/contact/contact-image.jpg
+```
+
+**View help:**
+```bash
+node scripts/optimize-gallery.js --help
+```
+
+The script will:
+- Resize images to max 1920px width (retina-ready)
+- Compress to 85% quality (excellent visual quality)
+- Convert HEIC/HEIF formats to JPEG
+- Generate progressive JPEGs for faster loading
+- Show file size savings report
+- Works with any directory or file path
+
+Typical results: **80-85% file size reduction** with no visible quality loss.
 
 ## Development
 
