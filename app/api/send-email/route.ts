@@ -8,8 +8,14 @@ import CollaborationInquiry from '@/emails/CollaborationInquiry';
 import GeneralInquiry from '@/emails/GeneralInquiry';
 import ContactNotification from '@/emails/ContactNotification';
 
-// Initialize Resend
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Initialize Resend (lazy initialization to avoid build errors)
+let resend: Resend | null = null;
+function getResend() {
+  if (!resend && process.env.RESEND_API_KEY) {
+    resend = new Resend(process.env.RESEND_API_KEY);
+  }
+  return resend;
+}
 
 // Initialize Supabase (server-side)
 const supabase = createClient(
@@ -105,7 +111,15 @@ export async function POST(request: Request) {
     );
 
     // 4. Send notification email to you
-    const notificationResult = await resend.emails.send({
+    const resendClient = getResend();
+    if (!resendClient) {
+      return NextResponse.json(
+        { error: 'Email service not configured' },
+        { status: 500 }
+      );
+    }
+
+    const notificationResult = await resendClient.emails.send({
       // from: 'Contact Form <noreply@aishwaryamanikarnike.com>',
       from: 'Contact Form <onboarding@resend.dev>', // Change to your domain after verification                           
       to: process.env.ADMIN_EMAIL || 'your@email.com', // Add this to .env.local
@@ -123,7 +137,7 @@ export async function POST(request: Request) {
     }
 
     // 5. Send auto-reply to user
-    const autoReplyResult = await resend.emails.send({
+    const autoReplyResult = await resendClient.emails.send({
       // from: 'Aishwarya Manikarnike <noreply@aishwaryamanikarnike.com>',
       from: 'Contact Form <onboarding@resend.dev>', // Change to your domain after verification                           
       to: email,
