@@ -4,17 +4,20 @@ import { useState, useRef, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { sendContactEmail } from '@/lib/email-service';
 import { m } from 'framer-motion';
 import { analytics } from '@/components/GoogleAnalytics';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { Button } from '@/components/system/Button';
+import type { InquiryType } from '@/types';
 
 // Zod validation schema
 const contactFormSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters').max(100, 'Name is too long'),
   phone: z.string().min(10, 'Please enter a valid phone number').regex(/^[+]?[(]?[0-9]{1,4}[)]?[-\s.]?[(]?[0-9]{1,4}[)]?[-\s.]?[0-9]{1,9}$/, 'Please enter a valid phone number'),
   email: z.string().email('Please enter a valid email address'),
+  inquiryType: z.enum(['performance', 'classes', 'collaboration', 'general'], {
+    required_error: 'Please select an inquiry type',
+  }),
   purpose: z.string().min(10, 'Please provide more details (at least 10 characters)').max(1000, 'Message is too long'),
 });
 
@@ -44,12 +47,12 @@ export default function ContactForm() {
   useEffect(() => {
     if (Object.keys(errors).length > 0) {
       // Find the first field with an error
-      const firstErrorField = ['name', 'phone', 'email', 'purpose'].find(field => errors[field as keyof ContactFormData]);
+      const firstErrorField = ['name', 'phone', 'email', 'inquiryType', 'purpose'].find(field => errors[field as keyof ContactFormData]);
       if (firstErrorField) {
-        const element = document.getElementById(firstErrorField) as HTMLInputElement | HTMLTextAreaElement;
+        const element = document.getElementById(firstErrorField) as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
         if (element) {
           element.focus();
-          firstErrorFieldRef.current = element;
+          firstErrorFieldRef.current = element as HTMLInputElement | HTMLTextAreaElement;
         }
       }
     }
@@ -78,19 +81,29 @@ export default function ContactForm() {
     setErrorMessage('');
 
     try {
-      await sendContactEmail(
-        {
-          ...data,
-          timestamp: new Date(),
+      // Call API route to handle email sending and database storage
+      const response = await fetch('/api/send-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-        {
-          timeout: 10000,
-          retries: 2,
-        }
-      );
+        body: JSON.stringify({
+          name: data.name,
+          email: data.email,
+          phone: data.phone,
+          inquiryType: data.inquiryType,
+          message: data.purpose,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to send message');
+      }
 
       // Track successful form submission
-      analytics.contactFormSubmit(true);
+      analytics.contactFormSubmit(true, undefined, data.inquiryType);
 
       setSubmitStatus('success');
       setLastSubmitTime(now);
@@ -104,21 +117,12 @@ export default function ContactForm() {
       console.error('Form submission error:', error);
       setSubmitStatus('error');
 
-      // Set user-friendly error message based on error type
-      let errorMsg = '';
-      if (error instanceof Error) {
-        if (error.message.includes('timeout')) {
-          errorMsg = 'The request timed out. Please check your internet connection and try again.';
-        } else if (error.message.includes('network') || error.message.includes('Network')) {
-          errorMsg = 'Network error. Please check your internet connection and try again.';
-        } else if (error.message.includes('validation')) {
-          errorMsg = 'Please check that all fields are filled correctly.';
-        } else {
-          errorMsg = 'Unable to send your message. Please try again later or contact directly via social media.';
-        }
-      } else {
-        errorMsg = 'An unexpected error occurred. Please try again later.';
-      }
+      // Set user-friendly error message
+      const errorMsg =
+        error instanceof Error
+          ? error.message
+          : 'Unable to send your message. Please try again later or contact directly via social media.';
+
       setErrorMessage(errorMsg);
 
       // Track failed form submission
@@ -222,6 +226,40 @@ export default function ContactForm() {
           )}
         </div>
 
+        {/* Inquiry Type Field */}
+        <div>
+          <label htmlFor="inquiryType" className="block text-xs font-medium text-charcoal-700 mb-1.5">
+            I&apos;m interested in *
+          </label>
+          <select
+            id="inquiryType"
+            {...register('inquiryType')}
+            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-navy-500 focus:border-transparent transition-all text-xs sm:text-sm ${errors.inquiryType ? 'border-red-500' : 'border-slate-300'
+              }`}
+            disabled={isSubmitting}
+            aria-required="true"
+            aria-invalid={errors.inquiryType ? 'true' : 'false'}
+            aria-describedby={errors.inquiryType ? 'inquiryType-error' : undefined}
+          >
+            <option value="">Select an option</option>
+            <option value="performance">Performance Booking</option>
+            <option value="classes">Private Classes</option>
+            <option value="collaboration">Collaboration Opportunity</option>
+            <option value="general">General Inquiry</option>
+          </select>
+          {errors.inquiryType && (
+            <m.p
+              id="inquiryType-error"
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mt-2 text-sm text-red-600"
+              role="alert"
+            >
+              {errors.inquiryType.message}
+            </m.p>
+          )}
+        </div>
+
         {/* Purpose Field */}
         <div>
           <label htmlFor="purpose" className="block text-xs font-medium text-charcoal-700 mb-1.5">
@@ -292,7 +330,7 @@ export default function ContactForm() {
               <div>
                 <h3 className="text-sm font-medium text-green-800">Message sent successfully!</h3>
                 <p className="mt-1 text-sm text-green-700">
-                  Thank you for reaching out. I will respond to your inquiry as soon as possible.
+                  Thank you for reaching out. Check your email for a confirmation message. I will respond to your inquiry within 24-48 hours.
                 </p>
               </div>
             </div>

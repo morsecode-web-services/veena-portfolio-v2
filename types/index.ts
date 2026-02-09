@@ -143,10 +143,17 @@ export interface FAQItem {
   answer: string;
 }
 
+export type InquiryType =
+  | 'performance'
+  | 'classes'
+  | 'collaboration'
+  | 'general';
+
 export interface ContactFormData {
   name: string;
   phone: string;
   email: string;
+  inquiryType: InquiryType;
   purpose: string;
   timestamp: Date;
 }
