@@ -494,7 +494,12 @@
     "imageAlt": "Aishwarya Manikarnike performing"
   },
   "pdf": {
-    "backgroundOpacity": 0.4,
-    "backgroundBrightness": 0.8
+    "backgroundStyle": "radial",
+    "backgroundOpacity": 0.6,
+    "backgroundBrightness": 0.8,
+    "gradients": {
+      "enabled": true,
+      "opacity": 0.85
+    }
   }
 }

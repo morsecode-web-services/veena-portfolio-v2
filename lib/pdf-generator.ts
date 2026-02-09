@@ -26,42 +26,42 @@ const COLORS = {
   lightGray: { r: 240, g: 240, b: 240 },
 };
 
-// Premium minimal gradient schemes with enhanced visibility
-// Each section gets unique color variation for visual interest
+// Vibrant gradient schemes for radial backgrounds - richer colors for artistic flair
+// Each section gets bold, distinctive color variation
 const GRADIENT_SCHEMES = {
   cover: {
-    start: { r: 250, g: 248, b: 245 },  // Cream
-    end: { r: 255, g: 255, b: 255 },    // White
+    start: { r: 245, g: 235, b: 220 },  // Warm rich cream
+    end: { r: 255, g: 250, b: 240 },    // Soft ivory
     angle: 180, // vertical (top to bottom)
   },
   about: {
-    start: { r: 235, g: 240, b: 248 },  // Light navy-tinted blue
-    end: { r: 255, g: 255, b: 255 },    // Pure white
+    start: { r: 210, g: 225, b: 245 },  // Rich light blue (navy tint)
+    end: { r: 250, g: 248, b: 245 },    // Cream
     angle: 135, // diagonal
   },
   featuredCarousel: {
-    start: { r: 255, g: 248, b: 235 },  // Light gold/warm cream
-    end: { r: 250, g: 248, b: 245 },    // Cream
+    start: { r: 255, g: 235, b: 205 },  // Rich gold/peachy cream
+    end: { r: 245, g: 240, b: 230 },    // Warm beige
     angle: 180, // vertical
   },
   music: {
-    start: { r: 250, g: 248, b: 245 },  // Cream
-    end: { r: 242, g: 244, b: 250 },    // Light navy tint
+    start: { r: 240, g: 230, b: 245 },  // Soft lavender
+    end: { r: 230, g: 240, b: 250 },    // Light sky blue
     angle: 135, // diagonal
   },
   gallery: {
-    start: { r: 252, g: 246, b: 238 },  // Warm cream
-    end: { r: 248, g: 252, b: 255 },    // Cool white
+    start: { r: 255, g: 240, b: 220 },  // Warm peach-cream
+    end: { r: 235, g: 245, b: 255 },    // Cool light blue
     angle: 180, // vertical
   },
   press: {
-    start: { r: 248, g: 245, b: 250 },  // Subtle lavender tint
-    end: { r: 255, g: 255, b: 255 },    // White
+    start: { r: 240, g: 230, b: 250 },  // Lavender-pink
+    end: { r: 250, g: 245, b: 240 },    // Warm cream
     angle: 135, // diagonal
   },
   contact: {
-    start: { r: 245, g: 248, b: 250 },  // Cool light blue
-    end: { r: 250, g: 248, b: 245 },    // Cream
+    start: { r: 225, g: 240, b: 250 },  // Sky blue
+    end: { r: 245, g: 238, b: 230 },    // Warm sand
     angle: 180, // vertical
   },
 };
@@ -283,6 +283,147 @@ export async function generatePDF(
       }
     };
 
+    const renderRadialGradientBackground = (sectionType: keyof typeof GRADIENT_SCHEMES) => {
+      try {
+        const gradientOpacity = config.pdf?.gradients?.opacity ?? 0.85; // Strong and vibrant for radial effect
+        const scheme = GRADIENT_SCHEMES[sectionType];
+
+        console.log(`[PDF] Rendering radial gradient for section: ${sectionType}, opacity: ${gradientOpacity}`);
+
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          console.warn('[PDF] Failed to get canvas context for radial gradient');
+          return;
+        }
+
+        canvas.width = pageWidth * 3;
+        canvas.height = pageHeight * 3;
+
+        // Create radial gradient with multiple color stops
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+        const radius = Math.sqrt(Math.pow(canvas.width, 2) + Math.pow(canvas.height, 2)) / 2;
+
+        const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
+
+        // Multi-stop gradient for richer effect
+        gradient.addColorStop(0, `rgba(${scheme.start.r}, ${scheme.start.g}, ${scheme.start.b}, 1)`);
+
+        // Add middle color stops for complexity
+        const midR = Math.round((scheme.start.r + scheme.end.r) / 2);
+        const midG = Math.round((scheme.start.g + scheme.end.g) / 2);
+        const midB = Math.round((scheme.start.b + scheme.end.b) / 2);
+        gradient.addColorStop(0.5, `rgba(${midR}, ${midG}, ${midB}, 0.9)`);
+
+        gradient.addColorStop(1, `rgba(${scheme.end.r}, ${scheme.end.g}, ${scheme.end.b}, 0.7)`);
+
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        const gradientImage = canvas.toDataURL('image/jpeg', 0.7);
+
+        pdf.saveGraphicsState();
+        pdf.setGState(new (pdf as any).GState({ opacity: gradientOpacity }));
+        pdf.addImage(gradientImage, 'JPEG', 0, 0, pageWidth, pageHeight, undefined, 'FAST');
+        pdf.restoreGraphicsState();
+
+        console.log(`[PDF] Radial gradient rendered successfully for ${sectionType}`);
+      } catch (e) {
+        console.error("[PDF] Failed to render radial gradient background", e);
+      }
+    };
+
+    const renderArtisticImageBackground = async (imageSrc: string, sectionType: keyof typeof GRADIENT_SCHEMES) => {
+      try {
+        const bgOpacity = config.pdf?.backgroundOpacity ?? 0.3;
+        const scheme = GRADIENT_SCHEMES[sectionType];
+
+        console.log(`[PDF] Rendering artistic image background for section: ${sectionType}`);
+
+        const imgData = await loadImage(imageSrc);
+        if (!imgData) return;
+
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const img = new Image();
+
+        await new Promise((resolve, reject) => {
+          img.onload = resolve;
+          img.onerror = reject;
+          img.src = imgData;
+        });
+
+        canvas.width = img.width;
+        canvas.height = img.height;
+        if (!ctx) return;
+
+        // Draw image with blur effect
+        ctx.filter = 'blur(8px)';
+        ctx.drawImage(img, 0, 0);
+        ctx.filter = 'none';
+
+        // Add color overlay based on section scheme
+        const overlayR = Math.round((scheme.start.r + scheme.end.r) / 2);
+        const overlayG = Math.round((scheme.start.g + scheme.end.g) / 2);
+        const overlayB = Math.round((scheme.start.b + scheme.end.b) / 2);
+
+        ctx.globalCompositeOperation = 'multiply';
+        ctx.fillStyle = `rgb(${overlayR}, ${overlayG}, ${overlayB})`;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Add brightness overlay
+        ctx.globalCompositeOperation = 'screen';
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        const processedData = canvas.toDataURL('image/jpeg', 0.6);
+
+        // Add to PDF with opacity
+        pdf.saveGraphicsState();
+        pdf.setGState(new (pdf as any).GState({ opacity: bgOpacity }));
+
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = pdf.internal.pageSize.getHeight();
+
+        // Cover full page, maintaining aspect ratio
+        const imgProps = pdf.getImageProperties(processedData);
+        const ratio = imgProps.width / imgProps.height;
+        const pageRatio = pdfWidth / pdfHeight;
+
+        let renderW, renderH, x, y;
+        if (ratio > pageRatio) {
+          renderH = pdfHeight;
+          renderW = pdfHeight * ratio;
+          x = (pdfWidth - renderW) / 2;
+          y = 0;
+        } else {
+          renderW = pdfWidth;
+          renderH = pdfWidth / ratio;
+          x = 0;
+          y = (pdfHeight - renderH) / 2;
+        }
+
+        pdf.addImage(processedData, 'JPEG', x, y, renderW, renderH, undefined, 'FAST');
+
+        // Add subtle cream edge vignette
+        pdf.saveGraphicsState();
+        pdf.setGState(new (pdf as any).GState({ opacity: 0.1 }));
+        pdf.setFillColor(COLORS.cream.r, COLORS.cream.g, COLORS.cream.b);
+        pdf.rect(0, 0, pageWidth, 8, 'F'); // Top
+        pdf.rect(0, pageHeight - 8, pageWidth, 8, 'F'); // Bottom
+        pdf.rect(0, 0, 8, pageHeight, 'F'); // Left
+        pdf.rect(pageWidth - 8, 0, 8, pageHeight, 'F'); // Right
+        pdf.restoreGraphicsState();
+
+        pdf.restoreGraphicsState();
+
+        console.log(`[PDF] Artistic image background rendered successfully for ${sectionType}`);
+      } catch (e) {
+        console.warn("Failed to render artistic image background", e);
+      }
+    };
+
     const renderGrayscaleBackgroundLegacy = async (imageSrc: string) => {
       try {
         const bgOpacity = config.pdf?.backgroundOpacity ?? 0.12;
@@ -385,10 +526,23 @@ export async function generatePDF(
       }
       pdf.addPage();
 
-      const useGradients = config.pdf?.gradients?.enabled ?? true; // Default to gradients
+      // Get background style from config
+      const backgroundStyle = config.pdf?.backgroundStyle || 'linear';
+      const useGradients = config.pdf?.gradients?.enabled ?? true;
 
       if (useGradients) {
-        renderGradientBackground(currentSection); // Gradient FIRST (background)
+        if (backgroundStyle === 'radial') {
+          // Option 5: Radial gradients with multi-stop colors
+          renderRadialGradientBackground(currentSection);
+        } else if (backgroundStyle === 'artistic-image' && galleryImages.length > 0) {
+          // Option 6: Artistic image backgrounds with blur and color overlay
+          const bgImg = galleryImages[backgroundIndex % galleryImages.length];
+          await renderArtisticImageBackground(bgImg.src, currentSection);
+          backgroundIndex++;
+        } else {
+          // Default: Linear gradients
+          renderGradientBackground(currentSection);
+        }
       } else if (galleryImages.length > 0) {
         // Legacy: grayscale image backgrounds
         const bgImg = galleryImages[backgroundIndex % galleryImages.length];
@@ -432,9 +586,17 @@ export async function generatePDF(
     onProgress?.(15);
     currentSection = 'cover';
     const useGradients = config.pdf?.gradients?.enabled ?? true;
-    console.log(`[PDF] Starting cover page, useGradients: ${useGradients}`);
+    const backgroundStyle = config.pdf?.backgroundStyle || 'linear';
+    console.log(`[PDF] Starting cover page, useGradients: ${useGradients}, style: ${backgroundStyle}`);
+
     if (useGradients) {
-      renderGradientBackground('cover');
+      if (backgroundStyle === 'radial') {
+        renderRadialGradientBackground('cover');
+      } else if (backgroundStyle === 'artistic-image' && galleryImages.length > 0) {
+        await renderArtisticImageBackground(galleryImages[0].src, 'cover');
+      } else {
+        renderGradientBackground('cover');
+      }
     }
     drawPremiumElements(); // Add border to cover page too
     await renderCoverPage(pdf, config, pageWidth, pageHeight, loadImage, useGradients);
