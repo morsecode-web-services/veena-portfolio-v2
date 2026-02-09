@@ -20,47 +20,48 @@ const COLORS = {
   gold: { r: 184, g: 134, b: 11 },    // #b8860b
   cream: { r: 250, g: 248, b: 245 },  // #faf8f5
   gray: { r: 107, g: 114, b: 128 },   // #6b7280
-  black: { r: 10, g: 10, b: 10 },     // #0a0a0a
+  charcoal: { r: 64, g: 64, b: 64 },  // #404040
   slate: { r: 51, g: 65, b: 85 },     // #334155
   white: { r: 255, g: 255, b: 255 },
   lightGray: { r: 240, g: 240, b: 240 },
 };
 
-// Gradient schemes for different sections - light, fun pastels with elegant aesthetic
+// Premium minimal gradient schemes with enhanced visibility
+// Each section gets unique color variation for visual interest
 const GRADIENT_SCHEMES = {
   cover: {
-    start: { r: 255, g: 228, b: 230 },  // Soft blush pink
-    end: { r: 255, g: 250, b: 245 },    // Warm white
+    start: { r: 250, g: 248, b: 245 },  // Cream
+    end: { r: 255, g: 255, b: 255 },    // White
     angle: 180, // vertical (top to bottom)
   },
   about: {
-    start: { r: 224, g: 242, b: 254 },  // Light sky blue
+    start: { r: 235, g: 240, b: 248 },  // Light navy-tinted blue
     end: { r: 255, g: 255, b: 255 },    // Pure white
     angle: 135, // diagonal
   },
-  spotlights: {
-    start: { r: 237, g: 233, b: 254 },  // Soft lavender
-    end: { r: 252, g: 231, b: 243 },    // Light pink
+  featuredCarousel: {
+    start: { r: 255, g: 248, b: 235 },  // Light gold/warm cream
+    end: { r: 250, g: 248, b: 245 },    // Cream
     angle: 180, // vertical
   },
   music: {
-    start: { r: 204, g: 251, b: 241 },  // Mint/teal
-    end: { r: 224, g: 242, b: 254 },    // Light blue
+    start: { r: 250, g: 248, b: 245 },  // Cream
+    end: { r: 242, g: 244, b: 250 },    // Light navy tint
     angle: 135, // diagonal
   },
   gallery: {
-    start: { r: 254, g: 235, b: 220 },  // Soft peach
-    end: { r: 255, g: 250, b: 245 },    // Warm white
+    start: { r: 252, g: 246, b: 238 },  // Warm cream
+    end: { r: 248, g: 252, b: 255 },    // Cool white
     angle: 180, // vertical
   },
   press: {
-    start: { r: 254, g: 215, b: 215 },  // Light coral/rose
-    end: { r: 255, g: 237, b: 240 },    // Blush white
+    start: { r: 248, g: 245, b: 250 },  // Subtle lavender tint
+    end: { r: 255, g: 255, b: 255 },    // White
     angle: 135, // diagonal
   },
   contact: {
-    start: { r: 219, g: 234, b: 254 },  // Sky blue
-    end: { r: 237, g: 233, b: 254 },    // Lavender
+    start: { r: 245, g: 248, b: 250 },  // Cool light blue
+    end: { r: 250, g: 248, b: 245 },    // Cream
     angle: 180, // vertical
   },
 };
@@ -149,7 +150,7 @@ export async function generatePDF(
         pdf.setFont('helvetica', bold ? 'bold' : 'normal');
       }
       pdf.setFontSize(size);
-      pdf.setTextColor(COLORS.black.r, COLORS.black.g, COLORS.black.b);
+      pdf.setTextColor(COLORS.charcoal.r, COLORS.charcoal.g, COLORS.charcoal.b);
     };
 
     const setFontAccent = (size: number = 10) => {
@@ -206,8 +207,8 @@ export async function generatePDF(
 
       if (withQR) {
         try {
-          // Increased resolution for better print quality
-          const qrDataUrl = await QRCode.toDataURL(url, { margin: 1, width: 200 });
+          // Reduced resolution for smaller file size (was 200)
+          const qrDataUrl = await QRCode.toDataURL(url, { margin: 1, width: 128 });
           // Increased physicial size on paper (mm)
           const qrSize = 25;
           const xPos = pageWidth - MARGIN - qrSize;
@@ -226,7 +227,7 @@ export async function generatePDF(
 
     const renderGradientBackground = (sectionType: keyof typeof GRADIENT_SCHEMES) => {
       try {
-        const gradientOpacity = config.pdf?.gradients?.opacity ?? 0.6; // Increased from 0.3 to 0.6 for visibility
+        const gradientOpacity = config.pdf?.gradients?.opacity ?? 0.65; // Enhanced visibility while maintaining elegance
         const scheme = GRADIENT_SCHEMES[sectionType];
 
         console.log(`[PDF] Rendering gradient for section: ${sectionType}, opacity: ${gradientOpacity}`);
@@ -239,9 +240,9 @@ export async function generatePDF(
           return;
         }
 
-        // High resolution for quality
-        canvas.width = pageWidth * 10;
-        canvas.height = pageHeight * 10;
+        // Reduced resolution to 3x for smaller file size (was 10x)
+        canvas.width = pageWidth * 3;
+        canvas.height = pageHeight * 3;
 
         // Calculate gradient direction based on angle
         let x0 = 0, y0 = 0, x1 = 0, y1 = canvas.height;
@@ -267,12 +268,13 @@ export async function generatePDF(
         ctx.fillStyle = gradient;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        const gradientImage = canvas.toDataURL('image/png');
+        // Use JPEG with 70% quality instead of PNG for much smaller file size
+        const gradientImage = canvas.toDataURL('image/jpeg', 0.7);
 
         // Add to PDF with opacity
         pdf.saveGraphicsState();
         pdf.setGState(new (pdf as any).GState({ opacity: gradientOpacity }));
-        pdf.addImage(gradientImage, 'PNG', 0, 0, pageWidth, pageHeight, undefined, 'FAST');
+        pdf.addImage(gradientImage, 'JPEG', 0, 0, pageWidth, pageHeight, undefined, 'FAST');
         pdf.restoreGraphicsState();
 
         console.log(`[PDF] Gradient rendered successfully for ${sectionType}`);
@@ -443,18 +445,24 @@ export async function generatePDF(
 
     // 2. About
     onProgress?.(30);
-    renderAboutSection(pdf, config, contentWidth, cursor, addHeader);
+    await renderAboutSection(pdf, config, contentWidth, pageHeight, cursor, addHeader, addNewPage);
 
-    // 3. Spotlights
+    // 3. Featured Carousel
     onProgress?.(45);
     await checkPageBreak(60);
-    addHeader(pdf, 'Spotlights', cursor, setFontHeader);
+    addHeader(pdf, 'Highlights', cursor, setFontHeader);
     cursor.y += 15;
 
-    if (config.spotlights) {
-      for (const spotlight of config.spotlights) {
-        await renderSpotlight(pdf, spotlight, contentWidth, pageHeight, cursor, loadImage, addNewPage);
-      }
+    if (config.home.featuredCarousel?.enabled && config.home.featuredCarousel.items) {
+      await renderFeaturedCarousel(
+        pdf,
+        config.home.featuredCarousel.items,
+        contentWidth,
+        pageHeight,
+        cursor,
+        loadImage,
+        addNewPage
+      );
     }
 
     // 4. Music
@@ -596,117 +604,103 @@ async function loadCustomFonts(pdf: jsPDF, basePath: string) {
 }
 
 async function renderCoverPage(pdf: jsPDF, config: any, pageWidth: number, pageHeight: number, loadImg: any, useGradients: boolean = true) {
-  // Background - Split design (only if gradients are disabled)
-  if (!useGradients) {
-    // Top 2/3 Cream
-    pdf.setFillColor(COLORS.cream.r, COLORS.cream.g, COLORS.cream.b);
-    pdf.rect(0, 0, pageWidth, pageHeight * 0.65, 'F');
+  // Premium minimal design with full-bleed hero image
 
-    // Bottom 1/3 Navy
-    pdf.setFillColor(COLORS.navy.r, COLORS.navy.g, COLORS.navy.b);
-    pdf.rect(0, pageHeight * 0.65, pageWidth, pageHeight * 0.35, 'F');
-  }
-
-  // Decorative Vertical Gold Line
-  pdf.setDrawColor(COLORS.gold.r, COLORS.gold.g, COLORS.gold.b);
-  pdf.setLineWidth(2);
-  pdf.line(MARGIN, MARGIN, MARGIN, pageHeight - MARGIN);
-
-  // 0. Logo (Top-Left, above the name)
-  let currentY = MARGIN + 15;
-  if (config.artist.logo) {
-    const logoUrl = getAssetPath(config.artist.logo);
-    try {
-      const logoData = await loadImg(logoUrl);
-      if (logoData) {
-        const logoWidth = 20; // Consistent with header logo size (approx)
-        const props = pdf.getImageProperties(logoData);
-        const logoHeight = (props.height / props.width) * logoWidth;
-
-        pdf.addImage(logoData, 'PNG', MARGIN + 10, currentY, logoWidth, logoHeight);
-        currentY += logoHeight + 10;
-      }
-    } catch (e) {
-      console.warn("Failed to load cover page logo", e);
-    }
-  }
-
-  currentY = Math.max(currentY, MARGIN + 40);
-
-  // 1. Artist Name (Large, Navy, Top-Left aligned next to gold line)
-  try { pdf.setFont('PlayfairDisplay', 'bold'); } catch { pdf.setFont('times', 'bold'); }
-  pdf.setFontSize(42);
-  pdf.setTextColor(COLORS.navy.r, COLORS.navy.g, COLORS.navy.b);
-
-  // Split name if too long
-  const nameParts = config.artist.name.split(' ');
-  if (nameParts.length > 2) {
-    pdf.text(nameParts.slice(0, -1).join(' '), MARGIN + 10, currentY);
-    currentY += 18;
-    pdf.text(nameParts.slice(-1)[0], MARGIN + 10, currentY);
-  } else {
-    pdf.text(config.artist.name, MARGIN + 10, currentY);
-  }
-
-  currentY += 10;
-
-  // Tagline (Gold, Serif)
-  try { pdf.setFont('PlayfairDisplay', 'normal'); } catch { pdf.setFont('times', 'italic'); }
-  pdf.setFontSize(16);
-  pdf.setTextColor(COLORS.gold.r, COLORS.gold.g, COLORS.gold.b);
-  pdf.text(config.artist.tagline, MARGIN + 10, currentY);
-
-  // 2. Hero Image (Centered in the layout, overlapping the split)
-  // Load primary image (Veena)
-  let heroImgUrl = config.home?.images?.veena;
-  // Fallback to first spotlight if no home image
-  if (!heroImgUrl && config.spotlights?.[0]) {
-    heroImgUrl = config.spotlights[0].imageUrl;
-  }
+  // 1. Load and add full-bleed hero image (use the hero background image)
+  let heroImgUrl = config.home?.heroBackground || '/images/home/hero-bg.jpg';
 
   if (heroImgUrl) {
     const imgData = await loadImg(heroImgUrl);
     if (imgData) {
-      const imgWidth = pageWidth * 0.5; // Half page width
       const props = pdf.getImageProperties(imgData);
-      const imgHeight = (props.height / props.width) * imgWidth;
+      const imgRatio = props.width / props.height;
+      const pageRatio = pageWidth / pageHeight;
 
-      // Position: Right aligned, somewhat overlapping the vertical center
-      const xPos = pageWidth - imgWidth - MARGIN;
-      const yPos = (pageHeight * 0.65) - (imgHeight * 0.6); // Overlap the split
+      let renderW, renderH, renderX, renderY;
 
-      // White border for the image
-      pdf.setDrawColor(255, 255, 255);
-      pdf.setLineWidth(3);
-      pdf.rect(xPos - 1.5, yPos - 1.5, imgWidth + 3, imgHeight + 3);
+      // Cover full page while maintaining aspect ratio
+      if (imgRatio > pageRatio) {
+        renderH = pageHeight;
+        renderW = pageHeight * imgRatio;
+        renderX = (pageWidth - renderW) / 2;
+        renderY = 0;
+      } else {
+        renderW = pageWidth;
+        renderH = pageWidth / imgRatio;
+        renderX = 0;
+        renderY = (pageHeight - renderH) / 2;
+      }
 
+      pdf.addImage(imgData, 'JPEG', renderX, renderY, renderW, renderH, undefined, 'MEDIUM');
 
-      pdf.addImage(imgData, 'JPEG', xPos, yPos, imgWidth, imgHeight);
+      // Subtle gradient overlays for text legibility
+      // Dark overlay at top for name
+      pdf.setFillColor(0, 0, 0);
+      pdf.setGState(new (pdf as any).GState({ opacity: 0.4 }));
+      pdf.rect(0, 0, pageWidth, 60, 'F');
+
+      // Dark overlay at bottom for portfolio text
+      pdf.setGState(new (pdf as any).GState({ opacity: 0.5 }));
+      pdf.rect(0, pageHeight - 50, pageWidth, 50, 'F');
+
+      pdf.setGState(new (pdf as any).GState({ opacity: 1 }));
     }
   }
 
-  // 3. Footer / Bottom Section (White text on Navy background)
-  currentY = pageHeight * 0.65 + 30;
+  // 2. Elegant thin gold line at top
+  pdf.setDrawColor(COLORS.gold.r, COLORS.gold.g, COLORS.gold.b);
+  pdf.setLineWidth(0.3);
+  pdf.line(MARGIN, MARGIN + 8, pageWidth - MARGIN, MARGIN + 8);
 
-  // "PORTFOLIO"
-  try { pdf.setFont('Inter', 'bold'); } catch { pdf.setFont('helvetica', 'bold'); }
-  pdf.setFontSize(14);
-  pdf.setTextColor(COLORS.white.r, COLORS.white.g, COLORS.white.b);
-  // pdf.setCharSpace(3); // Removed tracking as requested
-  pdf.text('PORTFOLIO', MARGIN + 10, currentY);
+  // 3. Artist Name (Top, centered, elegant serif)
+  try { pdf.setFont('PlayfairDisplay', 'bold'); } catch { pdf.setFont('times', 'bold'); }
+  pdf.setFontSize(32);
+  pdf.setTextColor(255, 255, 255);
 
-  currentY += 15;
-  // pdf.setCharSpace(0); // Removed tracking reset
+  const nameWidth = pdf.getTextWidth(config.artist.name);
+  const nameX = (pageWidth - nameWidth) / 2;
+  pdf.text(config.artist.name, nameX, MARGIN + 25);
 
-  // Date
+  // 4. Tagline (Small, gold, centered below name)
   try { pdf.setFont('Inter', 'normal'); } catch { pdf.setFont('helvetica', 'normal'); }
   pdf.setFontSize(10);
-  pdf.setTextColor(200, 200, 200);
-  pdf.text(new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'long' }).toUpperCase(), MARGIN + 10, currentY);
+  pdf.setTextColor(COLORS.gold.r, COLORS.gold.g, COLORS.gold.b);
 
-  // Contact Info Preview (Optional)
+  const taglineWidth = pdf.getTextWidth(config.artist.tagline.toUpperCase());
+  const taglineX = (pageWidth - taglineWidth) / 2;
+  pdf.text(config.artist.tagline.toUpperCase(), taglineX, MARGIN + 35);
+
+  // 5. Elegant thin gold line at bottom section
+  pdf.setDrawColor(COLORS.gold.r, COLORS.gold.g, COLORS.gold.b);
+  pdf.setLineWidth(0.3);
+  pdf.line(MARGIN, pageHeight - 40, pageWidth - MARGIN, pageHeight - 40);
+
+  // 6. "PORTFOLIO" - centered, elegant
+  try { pdf.setFont('Inter', 'bold'); } catch { pdf.setFont('helvetica', 'bold'); }
+  pdf.setFontSize(12);
+  pdf.setTextColor(255, 255, 255);
+
+  const portfolioText = 'PORTFOLIO';
+  const portfolioWidth = pdf.getTextWidth(portfolioText);
+  const portfolioX = (pageWidth - portfolioWidth) / 2;
+  pdf.text(portfolioText, portfolioX, pageHeight - 28);
+
+  // 7. Date - centered, subtle
+  try { pdf.setFont('Inter', 'normal'); } catch { pdf.setFont('helvetica', 'normal'); }
+  pdf.setFontSize(9);
+  pdf.setTextColor(200, 200, 200);
+
+  const dateText = new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'long' }).toUpperCase();
+  const dateWidth = pdf.getTextWidth(dateText);
+  const dateX = (pageWidth - dateWidth) / 2;
+  pdf.text(dateText, dateX, pageHeight - 18);
+
+  // 8. Contact - centered at very bottom
+  pdf.setFontSize(8);
   const contactText = config.artist.email || 'aishwaryamanikarnike.com';
-  pdf.text(contactText, MARGIN + 10, pageHeight - MARGIN - 10);
+  const contactWidth = pdf.getTextWidth(contactText);
+  const contactX = (pageWidth - contactWidth) / 2;
+  pdf.text(contactText, contactX, pageHeight - MARGIN - 5);
 }
 
 function addFooter(pdf: jsPDF, config: any, pageWidth: number, pageHeight: number) {
@@ -730,11 +724,62 @@ async function loadExternalImage(url: string, basePath: string): Promise<string 
     }
     const response = await fetch(finalUrl);
     const blob = await response.blob();
+
+    // Check if image is PNG (preserve transparency)
+    const isPNG = blob.type === 'image/png' || url.toLowerCase().endsWith('.png');
+
+    // Resize image to reduce file size
     return new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result as string);
-      reader.onerror = () => resolve(null);
-      reader.readAsDataURL(blob);
+      const img = new Image();
+      img.onload = () => {
+        // Create canvas to resize image
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+
+        if (!ctx) {
+          // Fallback to original if canvas fails
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.onerror = () => resolve(null);
+          reader.readAsDataURL(blob);
+          return;
+        }
+
+        // Limit max dimensions to 1200px (sufficient for PDF quality)
+        const MAX_WIDTH = 1200;
+        const MAX_HEIGHT = 1200;
+
+        let width = img.width;
+        let height = img.height;
+
+        if (width > MAX_WIDTH || height > MAX_HEIGHT) {
+          const ratio = Math.min(MAX_WIDTH / width, MAX_HEIGHT / height);
+          width = width * ratio;
+          height = height * ratio;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+
+        // For PNG, preserve transparency by not filling background
+        if (!isPNG) {
+          // For JPEG, fill with white background
+          ctx.fillStyle = '#FFFFFF';
+          ctx.fillRect(0, 0, width, height);
+        }
+
+        ctx.drawImage(img, 0, 0, width, height);
+
+        // Keep PNG format for transparency, use JPEG for others
+        if (isPNG) {
+          resolve(canvas.toDataURL('image/png'));
+        } else {
+          resolve(canvas.toDataURL('image/jpeg', 0.75));
+        }
+      };
+
+      img.onerror = () => resolve(null);
+      img.src = URL.createObjectURL(blob);
     });
   } catch (e) {
     console.error("Image load fail", e);
@@ -746,61 +791,127 @@ function addHeader(pdf: jsPDF, text: string, cursor: Cursor, setFontFn: (s: numb
   setFontFn(20);
   pdf.text(text, MARGIN, cursor.y);
 
-  // Gold flourish underline
+  // Gold underline spanning full text width
   const textWidth = pdf.getTextWidth(text);
   pdf.setDrawColor(COLORS.gold.r, COLORS.gold.g, COLORS.gold.b);
   pdf.setLineWidth(0.4);
-  pdf.line(MARGIN, cursor.y + 2, MARGIN + textWidth * 0.3, cursor.y + 2);
+  pdf.line(MARGIN, cursor.y + 2, MARGIN + textWidth, cursor.y + 2);
 }
 
-async function renderSpotlight(pdf: jsPDF, spotlight: any, width: number, pageHeight: number, cursor: Cursor, loadImg: any, addNewPage: any) {
-  // Calculate total spotlight height for better page break decisions
-  const spotlightTitleHeight = 16;
-  const spotlightDescHeight = spotlight.description ? Math.ceil(spotlight.description.length / 100) * 12 : 20;
-  const imageHeight = 100;
-  const totalSpotlightHeight = spotlightTitleHeight + spotlightDescHeight + imageHeight + 30;
+async function renderFeaturedCarousel(
+  pdf: jsPDF,
+  items: any[],
+  width: number,
+  pageHeight: number,
+  cursor: Cursor,
+  loadImg: any,
+  addNewPage: any
+) {
+  const IMAGE_WIDTH = 70; // Medium-sized images
+  const IMAGE_GAP = 10;
+  const ITEM_SPACING = 15;
 
-  if (cursor.y + totalSpotlightHeight > pageHeight - MARGIN) {
-    await addNewPage('spotlights');
-    cursor.y = MARGIN;
-  }
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i];
+    const isImageLeft = i % 2 === 0; // Alternating layout
 
-  pdf.setFontSize(16);
-  pdf.setTextColor(COLORS.navy.r, COLORS.navy.g, COLORS.navy.b);
-  try { pdf.setFont('PlayfairDisplay', 'bold'); } catch { pdf.setFont('helvetica', 'bold'); }
-  pdf.text(spotlight.title, MARGIN, cursor.y);
-  cursor.y += 8;
+    // Load image
+    let imgData = null;
+    let imgHeight = 0;
+    if (item.image) {
+      imgData = await loadImg(item.image);
+      if (imgData) {
+        const props = pdf.getImageProperties(imgData);
+        const aspectRatio = props.width / props.height;
+        imgHeight = IMAGE_WIDTH / aspectRatio;
+      }
+    }
 
-  pdf.setFontSize(12);
-  pdf.setTextColor(COLORS.gold.r, COLORS.gold.g, COLORS.gold.b);
-  try { pdf.setFont('Inter', 'normal'); } catch { pdf.setFont('helvetica', 'italic'); }
-  pdf.text(spotlight.subtitle, MARGIN, cursor.y);
-  cursor.y += 10;
+    // Use pdfDescription if available, otherwise fall back to description
+    const description = item.pdfDescription || item.description;
 
-  const imgData = await loadImg(spotlight.imageUrl);
-  if (imgData) {
-    const props = pdf.getImageProperties(imgData);
-    const imgWidth = width;
-    const imgHeight = (props.height / props.width) * imgWidth;
+    // Calculate required height for this item
+    const textWidth = width - IMAGE_WIDTH - IMAGE_GAP;
+    const titleHeight = 10;
 
-    if (cursor.y + imgHeight > pageHeight - MARGIN) {
-      await addNewPage('spotlights');
+    // Calculate description height (for justified text)
+    try { pdf.setFont('Inter', 'normal'); } catch { pdf.setFont('helvetica', 'normal'); }
+    pdf.setFontSize(11);
+    const descLines = pdf.splitTextToSize(description, textWidth);
+    const descHeight = descLines.length * 5.5; // Slightly more spacing for justified text
+
+    const totalTextHeight = titleHeight + descHeight;
+    const requiredHeight = Math.max(imgHeight, totalTextHeight) + ITEM_SPACING;
+
+    // Check page break
+    if (cursor.y + requiredHeight > pageHeight - MARGIN) {
+      await addNewPage('featuredCarousel');
       cursor.y = MARGIN;
     }
 
-    pdf.addImage(imgData, 'JPEG', MARGIN, cursor.y, imgWidth, imgHeight);
-    cursor.y += imgHeight + 8;
-  }
+    const startY = cursor.y;
 
-  try { pdf.setFont('Inter', 'normal'); } catch { pdf.setFont('helvetica', 'normal'); }
-  pdf.setFontSize(12); // Increased font
-  pdf.setTextColor(COLORS.black.r, COLORS.black.g, COLORS.black.b);
-  const lines = pdf.splitTextToSize(spotlight.description, width);
-  pdf.text(lines, MARGIN, cursor.y);
-  cursor.y += (lines.length * 12 * LINE_HEIGHT_SCALE) + 12; // Adjusted spacing
+    if (isImageLeft) {
+      // Image on left, text on right
+      if (imgData) {
+        pdf.addImage(imgData, 'JPEG', MARGIN, startY, IMAGE_WIDTH, imgHeight, undefined, 'MEDIUM');
+      }
+
+      const textX = MARGIN + IMAGE_WIDTH + IMAGE_GAP;
+      let textY = startY;
+
+      // Title (gold, large serif)
+      try { pdf.setFont('PlayfairDisplay', 'bold'); } catch { pdf.setFont('times', 'bold'); }
+      pdf.setFontSize(15);
+      pdf.setTextColor(COLORS.gold.r, COLORS.gold.g, COLORS.gold.b);
+      const titleLines = pdf.splitTextToSize(item.title, textWidth);
+      pdf.text(titleLines, textX, textY);
+      textY += titleLines.length * 6;
+
+      // Description (charcoal, justified)
+      try { pdf.setFont('Inter', 'normal'); } catch { pdf.setFont('helvetica', 'normal'); }
+      pdf.setFontSize(11);
+      pdf.setTextColor(COLORS.charcoal.r, COLORS.charcoal.g, COLORS.charcoal.b);
+      pdf.text(description, textX, textY, { maxWidth: textWidth, align: 'justify' });
+    } else {
+      // Image on right, text on left
+      const textX = MARGIN;
+      let textY = startY;
+
+      // Title (gold, large serif)
+      try { pdf.setFont('PlayfairDisplay', 'bold'); } catch { pdf.setFont('times', 'bold'); }
+      pdf.setFontSize(15);
+      pdf.setTextColor(COLORS.gold.r, COLORS.gold.g, COLORS.gold.b);
+      const titleLines = pdf.splitTextToSize(item.title, textWidth);
+      pdf.text(titleLines, textX, textY);
+      textY += titleLines.length * 6;
+
+      // Description (charcoal, justified)
+      try { pdf.setFont('Inter', 'normal'); } catch { pdf.setFont('helvetica', 'normal'); }
+      pdf.setFontSize(11);
+      pdf.setTextColor(COLORS.charcoal.r, COLORS.charcoal.g, COLORS.charcoal.b);
+      pdf.text(description, textX, textY, { maxWidth: textWidth, align: 'justify' });
+
+      // Image on right
+      if (imgData) {
+        const imgX = MARGIN + textWidth + IMAGE_GAP;
+        pdf.addImage(imgData, 'JPEG', imgX, startY, IMAGE_WIDTH, imgHeight, undefined, 'MEDIUM');
+      }
+    }
+
+    cursor.y += requiredHeight;
+  }
 }
 
-function renderAboutSection(pdf: jsPDF, config: any, width: number, cursor: Cursor, headerFn: any) {
+async function renderAboutSection(
+  pdf: jsPDF,
+  config: any,
+  width: number,
+  pageHeight: number,
+  cursor: Cursor,
+  headerFn: any,
+  addNewPage: any
+) {
   headerFn(pdf, 'About', cursor, (s: number) => {
     try { pdf.setFont('PlayfairDisplay', 'bold'); } catch { pdf.setFont('times', 'bold'); }
     pdf.setFontSize(s);
@@ -808,13 +919,92 @@ function renderAboutSection(pdf: jsPDF, config: any, width: number, cursor: Curs
   });
   cursor.y += 10;
 
-  try { pdf.setFont('Inter', 'normal'); } catch { pdf.setFont('helvetica', 'normal'); }
-  pdf.setFontSize(12); // Increased font
-  pdf.setTextColor(COLORS.black.r, COLORS.black.g, COLORS.black.b);
-  const bio = config.artist.briefBio;
-  const lines = pdf.splitTextToSize(bio, width);
-  pdf.text(lines, MARGIN, cursor.y);
-  cursor.y += (lines.length * 12 * LINE_HEIGHT_SCALE) + 10; // Adjusted spacing
+  const fullBio = config.artist.fullBio || [];
+
+  for (const block of fullBio) {
+    // Check if block is structured or legacy string format
+    if (typeof block === 'string') {
+      // Legacy format: render as paragraph (justified)
+      try { pdf.setFont('Inter', 'normal'); } catch { pdf.setFont('helvetica', 'normal'); }
+      pdf.setFontSize(11);
+      pdf.setTextColor(COLORS.charcoal.r, COLORS.charcoal.g, COLORS.charcoal.b);
+
+      const lines = pdf.splitTextToSize(block, width);
+      const blockHeight = lines.length * 5.5 + 8;
+
+      if (cursor.y + blockHeight > pageHeight - MARGIN) {
+        await addNewPage('about');
+        cursor.y = MARGIN;
+      }
+
+      pdf.text(block, MARGIN, cursor.y, { maxWidth: width, align: 'justify' });
+      cursor.y += blockHeight;
+      continue;
+    }
+
+    // Structured block format
+    if (block.type === 'heading') {
+      const headingHeight = 12;
+
+      if (cursor.y + headingHeight > pageHeight - MARGIN) {
+        await addNewPage('about');
+        cursor.y = MARGIN;
+      }
+
+      // Gold left border (1.4mm width)
+      pdf.setDrawColor(COLORS.gold.r, COLORS.gold.g, COLORS.gold.b);
+      pdf.setLineWidth(1.4);
+      pdf.line(MARGIN, cursor.y - 4, MARGIN, cursor.y + 5);
+
+      // Heading text
+      try { pdf.setFont('PlayfairDisplay', 'bold'); } catch { pdf.setFont('times', 'bold'); }
+      pdf.setFontSize(14);
+      pdf.setTextColor(COLORS.navy.r, COLORS.navy.g, COLORS.navy.b);
+      pdf.text(block.content, MARGIN + 4, cursor.y);
+      cursor.y += headingHeight;
+
+    } else if (block.type === 'paragraph') {
+      try { pdf.setFont('Inter', 'normal'); } catch { pdf.setFont('helvetica', 'normal'); }
+      pdf.setFontSize(11);
+      pdf.setTextColor(COLORS.charcoal.r, COLORS.charcoal.g, COLORS.charcoal.b);
+
+      const lines = pdf.splitTextToSize(block.content, width);
+      const blockHeight = lines.length * 5.5 + 8;
+
+      if (cursor.y + blockHeight > pageHeight - MARGIN) {
+        await addNewPage('about');
+        cursor.y = MARGIN;
+      }
+
+      pdf.text(block.content, MARGIN, cursor.y, { maxWidth: width, align: 'justify' });
+      cursor.y += blockHeight;
+
+    } else if (block.type === 'list') {
+      try { pdf.setFont('Inter', 'normal'); } catch { pdf.setFont('helvetica', 'normal'); }
+      pdf.setFontSize(11);
+      pdf.setTextColor(COLORS.charcoal.r, COLORS.charcoal.g, COLORS.charcoal.b);
+
+      for (const item of block.items) {
+        const itemLines = pdf.splitTextToSize(item, width - 8);
+        const itemHeight = itemLines.length * 5.5 + 2;
+
+        if (cursor.y + itemHeight > pageHeight - MARGIN) {
+          await addNewPage('about');
+          cursor.y = MARGIN;
+        }
+
+        // Gold bullet
+        pdf.setTextColor(COLORS.gold.r, COLORS.gold.g, COLORS.gold.b);
+        pdf.text('•', MARGIN, cursor.y);
+
+        // Item text (justified)
+        pdf.setTextColor(COLORS.charcoal.r, COLORS.charcoal.g, COLORS.charcoal.b);
+        pdf.text(item, MARGIN + 5, cursor.y, { maxWidth: width - 8, align: 'justify' });
+        cursor.y += itemHeight;
+      }
+      cursor.y += 5; // Extra spacing after list
+    }
+  }
 }
 
 async function renderMusicCard(
@@ -827,38 +1017,50 @@ async function renderMusicCard(
   loadImageFn: any,
   linkFn: any
 ): Promise<void> {
-  const THUMB_HEIGHT = 45; // 16:9 ratio for 80mm width
+  const THUMB_MAX_HEIGHT = 45; // Maximum height constraint
   const TITLE_HEIGHT = 10;
 
-  // 1. Card border (subtle gold accent)
-  pdf.setDrawColor(COLORS.gold.r, COLORS.gold.g, COLORS.gold.b);
-  pdf.setLineWidth(0.15);
-  pdf.rect(x, y, width, height);
-
-  // 2. Thumbnail area (top portion of card)
+  // 1. Thumbnail area - preserve aspect ratio
   const youtubeId = extractYoutubeId(video.url);
   const thumbUrl = video.thumbnail_url ||
     (youtubeId ? `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg` : null);
+
+  let actualThumbHeight = THUMB_MAX_HEIGHT;
+  let thumbWidth = width;
+  let thumbX = x;
 
   if (thumbUrl) {
     try {
       const thumbData = await loadImageFn(thumbUrl);
       if (thumbData) {
-        // Fill full width, maintain aspect ratio
-        pdf.addImage(thumbData, 'JPEG', x, y, width, THUMB_HEIGHT);
+        // Calculate actual aspect ratio from loaded image
+        const props = pdf.getImageProperties(thumbData);
+        const aspectRatio = props.width / props.height;
+
+        // Calculate height to preserve aspect ratio
+        actualThumbHeight = width / aspectRatio;
+
+        // Constrain to max height
+        if (actualThumbHeight > THUMB_MAX_HEIGHT) {
+          actualThumbHeight = THUMB_MAX_HEIGHT;
+          // Center-crop horizontally if needed
+          const constrainedWidth = THUMB_MAX_HEIGHT * aspectRatio;
+          const xOffset = (width - constrainedWidth) / 2;
+          thumbWidth = constrainedWidth;
+          thumbX = x + xOffset;
+          pdf.addImage(thumbData, 'JPEG', thumbX, y, thumbWidth, THUMB_MAX_HEIGHT, undefined, 'MEDIUM');
+        } else {
+          // Normal: full width, preserved aspect ratio
+          pdf.addImage(thumbData, 'JPEG', x, y, width, actualThumbHeight, undefined, 'MEDIUM');
+        }
       }
     } catch (e) {
       console.warn("Failed to load video thumbnail", e);
     }
   }
 
-  // 3. Separator line between thumbnail and title
-  pdf.setDrawColor(COLORS.slate.r, COLORS.slate.g, COLORS.slate.b);
-  pdf.setLineWidth(0.1);
-  pdf.line(x, y + THUMB_HEIGHT, x + width, y + THUMB_HEIGHT);
-
-  // 4. Title text area (below thumbnail)
-  pdf.setFontSize(9);
+  // 2. Title text area (below thumbnail) - matches actual thumbnail dimensions
+  pdf.setFontSize(8);
   pdf.setTextColor(COLORS.navy.r, COLORS.navy.g, COLORS.navy.b);
   try {
     pdf.setFont('Inter', 'bold');
@@ -866,23 +1068,73 @@ async function renderMusicCard(
     pdf.setFont('helvetica', 'bold');
   }
 
-  // Wrap title to fit width with padding
-  const titleLines = pdf.splitTextToSize(video.title, width - 6); // 3mm padding on each side
-  const displayLines = titleLines.slice(0, 2); // Max 2 lines
+  // Text width and position match actual thumbnail for perfect alignment
+  const TEXT_WIDTH = thumbWidth;
+  const TEXT_START_X = thumbX;
 
-  // Center text vertically in the title area
-  const lineHeight = 3.5;
-  const totalTextHeight = displayLines.length * lineHeight;
-  const titleStartY = y + THUMB_HEIGHT + (TITLE_HEIGHT - totalTextHeight) / 2 + lineHeight;
+  // Manually truncate text to fit
+  let line1 = '';
+  let line2 = '';
+  const words = video.title.split(' ');
 
-  for (let i = 0; i < displayLines.length; i++) {
-    const line = displayLines[i];
-    const textWidth = pdf.getTextWidth(line);
-    const centeredX = x + (width - textWidth) / 2;
-    pdf.text(line, centeredX, titleStartY + (i * lineHeight));
+  // Build first line
+  for (const word of words) {
+    const testLine = line1 ? line1 + ' ' + word : word;
+    if (pdf.getTextWidth(testLine) <= TEXT_WIDTH) {
+      line1 = testLine;
+    } else {
+      // Word doesn't fit, start second line
+      line2 = word;
+      break;
+    }
   }
 
-  // 5. Make entire card clickable
+  // Build second line with remaining words
+  const remainingWords = words.slice(line1.split(' ').length);
+  for (let i = 0; i < remainingWords.length; i++) {
+    const word = remainingWords[i];
+    const testLine = line2 ? line2 + ' ' + word : word;
+    if (pdf.getTextWidth(testLine) <= TEXT_WIDTH) {
+      line2 = testLine;
+    } else {
+      // Doesn't fit - truncate with ellipsis
+      if (i > 0) {
+        // Already have some words in line2, add ellipsis
+        while (pdf.getTextWidth(line2 + '...') > TEXT_WIDTH && line2.length > 0) {
+          line2 = line2.slice(0, -1).trim();
+        }
+        line2 = line2 + '...';
+      } else {
+        // First word itself is too long, truncate it
+        let truncWord = word;
+        while (pdf.getTextWidth(truncWord + '...') > TEXT_WIDTH && truncWord.length > 0) {
+          truncWord = truncWord.slice(0, -1);
+        }
+        line2 = truncWord + '...';
+      }
+      break;
+    }
+  }
+
+  // If there are more words after line2, add ellipsis
+  if (remainingWords.length > line2.split(' ').length && !line2.endsWith('...')) {
+    while (pdf.getTextWidth(line2 + '...') > TEXT_WIDTH && line2.length > 0) {
+      line2 = line2.slice(0, -1).trim();
+    }
+    line2 = line2 + '...';
+  }
+
+  const displayLines = [line1, line2].filter(l => l);
+
+  // Render text with small spacing below thumbnail
+  const lineHeight = 3.2;
+  const titleStartY = y + actualThumbHeight + 4; // 4mm spacing below thumbnail
+
+  for (let i = 0; i < displayLines.length; i++) {
+    pdf.text(displayLines[i], TEXT_START_X, titleStartY + (i * lineHeight));
+  }
+
+  // 3. Make entire card clickable
   if (video.url) {
     pdf.link(x, y, width, height, { url: video.url });
   }
@@ -897,6 +1149,25 @@ async function renderMusicSection(pdf: jsPDF, musicConfig: any, dbVideos: any[],
 
   for (let i = 0; i < musicConfig.categories.length; i++) {
     const cat = musicConfig.categories[i];
+
+    // Check if category has any videos before rendering
+    let hasVideos = false;
+    if (cat.subcategories) {
+      for (const sub of cat.subcategories) {
+        const dbMatches = dbVideos.filter(
+          v => v.category_id === cat.id && v.subcategory_id === sub.id
+        );
+        if (dbMatches.length > 0 || (sub.videos && sub.videos.length > 0)) {
+          hasVideos = true;
+          break;
+        }
+      }
+    }
+
+    // Skip empty categories
+    if (!hasVideos) {
+      continue;
+    }
 
     // Force new page for second category onwards
     if (i > 0) {
@@ -923,20 +1194,7 @@ async function renderMusicSection(pdf: jsPDF, musicConfig: any, dbVideos: any[],
 
     if (cat.subcategories) {
       for (const sub of cat.subcategories) {
-        // Check if we need a page break before subcategory header
-        if (cursor.y > 240) {
-          await addNewPage('music');
-          cursor.y = MARGIN;
-        }
-
-        // Subcategory header
-        try { pdf.setFont('Inter', 'bold'); } catch { pdf.setFont('helvetica', 'bold'); }
-        pdf.setFontSize(12);
-        pdf.setTextColor(COLORS.slate.r, COLORS.slate.g, COLORS.slate.b);
-        pdf.text(sub.name, MARGIN + 2, cursor.y);
-        cursor.y += 10;
-
-        // Merge DB and config videos (deduplicate)
+        // Merge DB and config videos (deduplicate) BEFORE rendering header
         const seenIds = new Set<string>();
         const mergedVideos: any[] = [];
 
@@ -963,6 +1221,24 @@ async function renderMusicSection(pdf: jsPDF, musicConfig: any, dbVideos: any[],
           });
         }
 
+        // Skip this subcategory if no videos
+        if (mergedVideos.length === 0) {
+          continue;
+        }
+
+        // Check if we need a page break before subcategory header
+        if (cursor.y > 240) {
+          await addNewPage('music');
+          cursor.y = MARGIN;
+        }
+
+        // Subcategory header (only if we have videos)
+        try { pdf.setFont('Inter', 'bold'); } catch { pdf.setFont('helvetica', 'bold'); }
+        pdf.setFontSize(12);
+        pdf.setTextColor(COLORS.slate.r, COLORS.slate.g, COLORS.slate.b);
+        pdf.text(sub.name, MARGIN + 2, cursor.y);
+        cursor.y += 10;
+
         // Render videos as grid
         let startY = cursor.y; // Remember starting Y for this subcategory
         let cardIndex = 0;
@@ -972,8 +1248,8 @@ async function renderMusicSection(pdf: jsPDF, musicConfig: any, dbVideos: any[],
           const col = cardIndex % CARDS_PER_ROW;
           const row = Math.floor(cardIndex / CARDS_PER_ROW);
 
-          const cardX = MARGIN + (col * (CARD_WIDTH + CARD_GAP));
-          const cardY = startY + (row * (CARD_HEIGHT + ROW_SPACING));
+          let cardX = MARGIN + (col * (CARD_WIDTH + CARD_GAP));
+          let cardY = startY + (row * (CARD_HEIGHT + ROW_SPACING));
 
           // Page break check: ensure full row fits on page
           // Only check at start of new row (col === 0)
@@ -983,7 +1259,12 @@ async function renderMusicSection(pdf: jsPDF, musicConfig: any, dbVideos: any[],
             cardIndex = 0; // Reset grid for new page
             startY = cursor.y; // Reset start Y for new page
             maxY = startY;
-            continue; // Skip to next iteration to recalculate positions
+
+            // Recalculate positions for this video on the new page
+            const newCol = cardIndex % CARDS_PER_ROW;
+            const newRow = Math.floor(cardIndex / CARDS_PER_ROW);
+            cardX = MARGIN + (newCol * (CARD_WIDTH + CARD_GAP));
+            cardY = startY + (newRow * (CARD_HEIGHT + ROW_SPACING));
           }
 
           await renderMusicCard(
@@ -1027,7 +1308,7 @@ async function renderGallery(pdf: jsPDF, images: any[], width: number, pageHeigh
 
     const img1 = await loadImg(images[i].src);
     if (img1) {
-      pdf.addImage(img1, 'JPEG', MARGIN, cursor.y, imgW, imgH);
+      pdf.addImage(img1, 'JPEG', MARGIN, cursor.y, imgW, imgH, undefined, 'MEDIUM');
       pdf.setFontSize(9);
       pdf.text(images[i].caption || '', MARGIN, cursor.y + imgH + 5);
     }
@@ -1035,7 +1316,7 @@ async function renderGallery(pdf: jsPDF, images: any[], width: number, pageHeigh
     if (i + 1 < images.length) {
       const img2 = await loadImg(images[i + 1].src);
       if (img2) {
-        pdf.addImage(img2, 'JPEG', MARGIN + imgW + 10, cursor.y, imgW, imgH);
+        pdf.addImage(img2, 'JPEG', MARGIN + imgW + 10, cursor.y, imgW, imgH, undefined, 'MEDIUM');
         pdf.text(images[i + 1].caption || '', MARGIN + imgW + 10, cursor.y + imgH + 5);
       }
     }
