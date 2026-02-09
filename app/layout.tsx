@@ -4,6 +4,12 @@ import './globals.css';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { Providers } from '@/components/Providers';
+import GoogleAnalytics from '@/components/GoogleAnalytics';
+import MicrosoftClarity from '@/components/MicrosoftClarity';
+import VideoModal from '@/components/ui/VideoModal';
+import siteConfig from '@/public/config/site-config.json';
+import { validateConfig } from '@/lib/config';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -74,13 +80,6 @@ export const viewport = {
   userScalable: true,
   themeColor: '#14213d',
 };
-
-import { Providers } from '@/components/Providers';
-import GoogleAnalytics from '@/components/GoogleAnalytics';
-import MicrosoftClarity from '@/components/MicrosoftClarity';
-import VideoModal from '@/components/ui/VideoModal';
-import siteConfig from '@/public/config/site-config.json';
-import { validateConfig } from '@/lib/config';
 
 // Validate config
 const configValidation = validateConfig(siteConfig);
@@ -210,10 +209,12 @@ export default function RootLayout({
           Skip to navigation
         </a>
         <Providers>
-          <Header config={config} />
-          {children}
-          <Footer config={config} />
-          <VideoModal />
+          <ErrorBoundary>
+            <Header config={config} />
+            {children}
+            <Footer config={config} />
+            <VideoModal />
+          </ErrorBoundary>
         </Providers>
       </body>
     </html>

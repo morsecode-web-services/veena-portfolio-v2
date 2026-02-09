@@ -1,287 +1,287 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { m, AnimatePresence } from 'framer-motion';
-import ImageWithFallback from '@/components/ui/ImageWithFallback';
+import { m } from 'framer-motion';
+import { useMemo } from 'react';
+import Image from 'next/image';
 import VideoEmbed from '@/components/ui/VideoEmbed';
-import type { SiteConfig } from '@/types';
+import { FeaturedCarousel } from '@/components/ui/FeaturedCarousel';
+import type { SiteConfig, FeaturedCarouselItem } from '@/types';
+import { Video } from '@/types/video';
+import { useEvents } from '@/hooks/useEvents';
+import { getNextUpcomingEvent, formatEventDate } from '@/lib/events';
+import { getAssetPath } from '@/lib/config';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 
 interface HomeProps {
   config: SiteConfig;
+  dbVideos?: Video[];
 }
 
-export default function Home({ config }: HomeProps) {
-  const [currentSpotlight, setCurrentSpotlight] = useState(0);
-  const [isHovering, setIsHovering] = useState(false);
-  const autoScrollInterval = useRef<NodeJS.Timeout | null>(null);
+export default function Home({ config, dbVideos }: HomeProps) {
+  const { events } = useEvents();
+  const shouldReduceMotion = useReducedMotion();
 
-  // Auto-scroll effect - must be before early return (Rules of Hooks)
-  useEffect(() => {
-    // Only auto-scroll if we have multiple spotlights and not hovering
-    if (!config?.spotlights || config.spotlights.length <= 1 || isHovering) {
-      return;
+  // Build carousel items array
+  const carouselItems = useMemo(() => {
+    if (!config?.home?.featuredCarousel?.enabled) {
+      return [];
     }
 
-    // Set up auto-scroll interval (5 seconds)
-    autoScrollInterval.current = setInterval(() => {
-      setCurrentSpotlight((prev) => (prev + 1) % config.spotlights!.length);
-    }, 5000);
+    const carouselConfig = config.home.featuredCarousel;
+    const items: FeaturedCarouselItem[] = carouselConfig.items.map(item => ({
+      ...item,
+      type: 'custom' as const
+    }));
 
-    // Cleanup on unmount or when dependencies change
-    return () => {
-      if (autoScrollInterval.current) {
-        clearInterval(autoScrollInterval.current);
+    // Add upcoming event if enabled
+    if (carouselConfig.showUpcomingEvent !== false) {
+      const nextEvent = getNextUpcomingEvent(events);
+      if (nextEvent) {
+        items.push({
+          id: `event-${nextEvent.id}`,
+          type: 'event' as const,
+          image: nextEvent.image_url || undefined,
+          title: nextEvent.title,
+          description: `${formatEventDate(nextEvent.date)} • ${nextEvent.venue}, ${nextEvent.city}`,
+          subtitle: carouselConfig.eventSubtitle || 'Upcoming Event',
+          link: nextEvent.booking_url || '#events',
+          linkText: carouselConfig.eventLinkText || 'View Event Details'
+        });
       }
-    };
-  }, [currentSpotlight, isHovering, config?.spotlights]);
+    }
+
+    return items;
+  }, [events, config]);
 
   // Guard clause just in case, though parent should handle validity
   if (!config) return null;
 
-  const nextSpotlight = () => {
-    if (!config?.spotlights) return;
-    setCurrentSpotlight((prev) => (prev + 1) % config.spotlights!.length);
+  const carouselConfig = config.home.featuredCarousel;
+  const heroBackground = config.home.heroBackground || '/images/home/hero-bg.jpg';
+  const heroBackgroundPosition = config.home.heroBackgroundPosition || 'center 35%';
+  const heroTagline = config.home.heroTagline || 'Classical Veena Artiste';
+  const heroStats = config.home.heroStats || [];
+  const heroCta = config.home.heroCta || { text: 'View Journey', link: '#about' };
+
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.15,
+        delayChildren: 0.3,
+      },
+    },
   };
 
-  const prevSpotlight = () => {
-    if (!config?.spotlights) return;
-    setCurrentSpotlight((prev) => (prev - 1 + config.spotlights!.length) % config.spotlights!.length);
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.8, ease: [0.25, 0.1, 0.25, 1] as any },
+    },
   };
 
-  const spotlight = config.spotlights?.[currentSpotlight];
+  const nameVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.08,
+      },
+      transitionEnd: { staggerChildren: 0 },
+      transitionOut: { duration: 0.8, ease: [0.25, 0.1, 0.25, 1] as any },
+    },
+  };
+
+  const charVariants = {
+    hidden: { opacity: 0, y: 40 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.8, ease: [0.25, 0.1, 0.25, 1] as any },
+    },
+  };
 
   return (
-    <section id="home" className="px-4 sm:px-6 md:px-8" aria-label="Home">
-      <div id="home-section" className="max-w-7xl mx-auto">
-        {/* Hero Title - STATIC RENDER for LCP Optimization (Removed m.div wrapper) */}
-        <div
-          className="flex flex-col items-center justify-center mb-6 sm:mb-8 md:mb-10"
-        >
-          <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-serif font-bold text-navy-900 mb-2 md:mb-3 text-center">
-            {config.artist.name}
-          </h1>
-          {/* Premium gold accent underline */}
-          <div className="w-20 sm:w-24 h-1 bg-gradient-gold mb-5 md:mb-6 rounded-full animate-pulse-slow"></div>
-          <p className="text-xs sm:text-sm md:text-base text-navy-600 font-light text-center max-w-2xl leading-relaxed mb-6">
-            {config.artist.briefBio}
-          </p>
+    <section id="home" aria-label="Home">
+      {/* Full-Height Hero Section with Background Image */}
+      <div className="relative h-screen min-h-[700px] w-full overflow-hidden">
+        {/* Background Image with Enhanced Multi-layer Overlay */}
+        <div className="absolute inset-0">
+          <m.div
+            initial={shouldReduceMotion ? undefined : { scale: 1.1, opacity: 0 }}
+            animate={shouldReduceMotion ? undefined : { scale: 1, opacity: 1 }}
+            transition={{ duration: shouldReduceMotion ? 0 : 1.5, ease: "easeOut" }}
+            className="h-full w-full"
+          >
+            <Image
+              src={getAssetPath(heroBackground)}
+              alt="Hero background"
+              fill
+              className="object-cover"
+              style={{ objectPosition: heroBackgroundPosition }}
+              priority
+              quality={90}
+              sizes="100vw"
+            />
+          </m.div>
+          {/* Layered Overlays for Depth and Contrast */}
+          <div className="absolute inset-0 bg-black/30"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent"></div>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-black/40"></div>
 
-          {/* Hero CTAs */}
-          <div className="flex flex-row gap-2 sm:gap-4 mt-3">
-            <m.a
-              href="#music"
-              whileHover={{ scale: 1.05, y: -2 }}
-              whileTap={{ scale: 0.98 }}
-              className="px-3 sm:px-6 py-2 sm:py-2.5 bg-gold-600 text-white rounded-full text-xs sm:text-sm font-semibold shadow-premium-lg hover:shadow-premium-xl transition-all duration-300 flex items-center gap-2 whitespace-nowrap group"
-            >
-              {/* Minimalist Musical Equalizer Indicator */}
-              <div className="flex items-end gap-[2px] h-2.5 w-3.5 mb-[1px]">
-                {[0, 1, 2].map((i) => (
-                  <m.div
-                    key={i}
-                    animate={{
-                      height: ['20%', '100%', '30%', '80%', '20%']
-                    }}
-                    transition={{
-                      duration: 1 + i * 0.2,
-                      repeat: Infinity,
-                      ease: "easeInOut",
-                      delay: i * 0.1
-                    }}
-                    className="w-0.5 bg-white rounded-full"
-                  />
-                ))}
-              </div>
-              Watch Showreel
-            </m.a>
-            <m.a
-              href="#contact"
-              whileHover={{ scale: 1.05, y: -2 }}
-              whileTap={{ scale: 0.98 }}
-              className="px-3 sm:px-6 py-2 sm:py-2.5 border-2 border-navy-900 text-navy-900 rounded-full text-xs sm:text-sm font-semibold hover:bg-navy-900 hover:text-white transition-all duration-300 whitespace-nowrap flex items-center justify-center"
-            >
-              Book Artiste
-            </m.a>
-          </div>
+          {/* Subtle vignette for focus */}
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_25%_50%,transparent_0%,rgba(0,0,0,0.4)_100%)]"></div>
         </div>
 
-        {/* Viral Spotlight Carousel */}
-        {spotlight && (
-          <div className="mb-12 sm:mb-24 md:mb-32 relative" onMouseEnter={() => setIsHovering(true)} onMouseLeave={() => setIsHovering(false)}>
-            {/* initial={false} to prevent entry animation on first mount (LCP optimization) */}
-            <AnimatePresence mode="wait" initial={false}>
-              <m.div
-                key={spotlight.id}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.5, ease: "easeInOut" }}
-                drag="x"
-                dragConstraints={{ left: 0, right: 0 }}
-                dragElastic={0.2}
-                onDragEnd={(e, { offset, velocity }) => {
-                  const swipeThreshold = 50;
-                  const swipeVelocityThreshold = 500;
+        {/* Content Overlay */}
+        <m.div
+          variants={shouldReduceMotion ? {} : containerVariants}
+          initial={shouldReduceMotion ? undefined : "hidden"}
+          animate={shouldReduceMotion ? undefined : "visible"}
+          className="relative h-full flex flex-col justify-between px-6 sm:px-12 md:px-16 lg:px-20 py-12 sm:py-16 md:py-20"
+        >
+          {/* Top Section - Small Tagline */}
+          <m.div variants={itemVariants} className="pt-8 hidden sm:block">
+            <p className="text-xs sm:text-sm md:text-base tracking-[0.2em] sm:tracking-[0.3em] md:tracking-[0.4em] text-gold-500 font-light uppercase">
+              {heroTagline}
+            </p>
+          </m.div>
 
-                  // Swipe left (next)
-                  if (offset.x < -swipeThreshold || velocity.x < -swipeVelocityThreshold) {
-                    nextSpotlight();
-                  }
-                  // Swipe right (previous)
-                  else if (offset.x > swipeThreshold || velocity.x > swipeVelocityThreshold) {
-                    prevSpotlight();
-                  }
-                }}
-                className="relative overflow-hidden rounded-2xl bg-white text-navy-900 shadow-premium-xl border border-premium cursor-grab active:cursor-grabbing"
+          {/* Center-Left Section - Large Name with staggered char animation */}
+          <div className="flex-1 flex items-center -translate-y-16 sm:translate-y-0">
+            <div className="max-w-4xl">
+              <m.h1
+                variants={shouldReduceMotion ? {} : nameVariants}
+                className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-[6.5rem] font-serif font-bold text-white leading-[0.85] tracking-tighter"
               >
-                {/* Subtle background pattern */}
-                <div className="absolute inset-0 opacity-5 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]"></div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-2">
-                  <div className="relative aspect-[16/10] sm:aspect-video lg:aspect-auto lg:h-[550px] pointer-events-none">
-                    <ImageWithFallback
-                      src={spotlight.imageUrl}
-                      alt={spotlight.title}
-                      fill
-                      className="object-cover"
-                      style={{ objectPosition: spotlight.imagePosition || 'center' }}
-                      priority={true}
-                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 100vw, 50vw"
-                    />
-                  </div>
-
-                  <div className="p-4 sm:p-8 md:p-12 flex flex-col justify-center relative z-10 bg-white pointer-events-none min-h-[500px]">
-                    <h2 className="text-xl sm:text-3xl lg:text-4xl font-serif font-bold mb-1.5 sm:mb-3 text-navy-900">
-                      {spotlight.title}
-                    </h2>
-                    <h3 className="text-base sm:text-lg text-gold-600 mb-3 sm:mb-5 font-serif italic">
-                      {spotlight.subtitle}
-                    </h3>
-                    <p className="text-gray-700 text-xs sm:text-sm md:text-base mb-5 sm:mb-6 leading-relaxed">
-                      {spotlight.description}
-                    </p>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8 border-t border-gray-200 pt-6 sm:pt-8">
-                      {spotlight.features.map((feature, idx) => (
-                        <div key={idx}>
-                          <h4 className="text-navy-900 font-bold mb-1 sm:mb-2 text-sm sm:text-base">{feature.title}</h4>
-                          <p className="text-xs sm:text-sm text-gray-600 leading-tight">{feature.description}</p>
-                        </div>
-                      ))}
-                    </div>
-
-                    {spotlight.ctaLink && (
-                      <m.a
-                        href={spotlight.ctaLink}
-                        whileHover={{ x: 5 }}
-                        className="inline-flex items-center text-gold-600 font-bold hover:text-gold-700 transition-colors text-sm sm:text-base pointer-events-auto"
+                {config.artist.name.split(' ').map((word, wordIdx) => (
+                  <span key={wordIdx} className="block whitespace-nowrap overflow-hidden py-1 sm:py-2">
+                    {shouldReduceMotion ? word : word.split('').map((char, charIdx) => (
+                      <m.span
+                        key={charIdx}
+                        variants={charVariants}
+                        className="inline-block"
                       >
-                        {spotlight.ctaText || 'Learn More'} <span className="ml-2">→</span>
-                      </m.a>
-                    )}
-                  </div>
-                </div>
-              </m.div>
-            </AnimatePresence>
+                        {char}
+                      </m.span>
+                    ))}
+                  </span>
+                ))}
+              </m.h1>
 
-            {/* Carousel Navigation - Explicit Inline Styles for Visibility and Z-Index */}
-            {config.spotlights && config.spotlights.length > 1 && (
-              <div className="absolute top-[22%] sm:top-1/2 -translate-y-1/2 left-0 right-0 flex justify-between pointer-events-none px-2 sm:px-4 z-50">
-                <button
-                  onClick={prevSpotlight}
-                  className="pointer-events-auto p-2 sm:p-3 rounded-full shadow-lg transition-transform hover:scale-110 border-2 border-white flex items-center justify-center transform hover:scale-110 active:scale-95"
-                  style={{ backgroundColor: '#14213d', color: '#ffffff', minWidth: '40px', minHeight: '40px' }}
-                  aria-label="Previous spotlight"
-                >
-                  <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                  </svg>
-                </button>
-                <button
-                  onClick={nextSpotlight}
-                  className="pointer-events-auto p-2 sm:p-3 rounded-full shadow-lg transition-transform hover:scale-110 border-2 border-white flex items-center justify-center transform hover:scale-110 active:scale-95"
-                  style={{ backgroundColor: '#14213d', color: '#ffffff', minWidth: '40px', minHeight: '40px' }}
-                  aria-label="Next spotlight"
-                >
-                  <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </button>
-              </div>
+              <m.div
+                variants={itemVariants}
+                className="h-1 w-24 bg-gold-500 mt-8 sm:mt-12"
+              ></m.div>
+            </div>
+          </div>
+
+          {/* Bottom Section - Stats and Featured Work */}
+          <div className="flex flex-col lg:flex-row justify-between items-end gap-6 lg:gap-16 pb-16 sm:pb-8 w-full">
+            {/* Bottom Left - Stats */}
+            {heroStats.length > 0 && (
+              <m.div variants={itemVariants} className="hidden lg:block lg:w-72 flex-shrink-0 space-y-8 sm:space-y-10">
+                {heroStats.map((stat, idx) => (
+                  <div key={idx} className="group">
+                    <p className="text-xs tracking-[0.25em] text-gold-200/60 font-light uppercase mb-2 group-hover:text-gold-400/80 transition-colors">
+                      {stat.label}
+                    </p>
+                    <p className="text-lg sm:text-xl md:text-2xl font-serif text-white italic border-l-2 border-white/10 pl-4 py-1">
+                      {stat.value}
+                    </p>
+                  </div>
+                ))}
+              </m.div>
             )}
 
-            {/* Carousel Dots */}
-            {config.spotlights && config.spotlights.length > 1 && (
-              <div className="flex justify-center gap-1.5 sm:gap-3 mt-3 sm:mt-8 relative z-20">
-                {config.spotlights.map((_, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => setCurrentSpotlight(idx)}
-                    className={`h-1 sm:h-2 rounded-full transition-all duration-300 ${currentSpotlight === idx ? 'w-3 sm:w-8' : 'w-1 sm:w-2 hover:bg-gray-400'
-                      }`}
-                    style={{
-                      backgroundColor: currentSpotlight === idx ? '#14213d' : '#cbd5e1',
-                      minWidth: '0',
-                      minHeight: '0'
-                    }}
-                    aria-label={`Go to slide ${idx + 1}`}
-                  />
-                ))}
-              </div>
+            {/* Bottom Right - Featured Carousel */}
+            {carouselItems.length > 0 && (
+              <m.div variants={itemVariants} className="w-fit ml-auto max-w-2xl lg:max-w-4xl">
+                <FeaturedCarousel
+                  items={carouselItems}
+                  autoScrollInterval={carouselConfig?.autoScrollInterval}
+                />
+              </m.div>
             )}
           </div>
-        )}
 
-        {/* Featured YouTube videos */}
-        {config.home.featuredVideos.length > 0 && (
+          {/* Scroll Hint */}
           <m.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
-            role="region"
-            aria-label="Featured performances"
+            variants={itemVariants}
+            className="absolute bottom-4 sm:bottom-10 left-0 right-0 flex flex-col items-center gap-1 sm:gap-2 pointer-events-none"
           >
-            <h2 className="text-xl sm:text-2xl md:text-3xl font-serif font-semibold text-navy-900 text-center mb-5 sm:mb-6 px-4">
-              Featured Performances
-            </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
-              {config.home.featuredVideos.map((video, index) => {
-                const videoUrl = typeof video === 'string' ? video : video.url;
-                const videoTitle = typeof video === 'string' ? `Featured performance ${index + 1}` : video.title || `Featured performance ${index + 1}`;
-
-                return (
-                  <m.div
-                    key={index}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6, delay: 1.2 + index * 0.1, ease: [0.25, 0.1, 0.25, 1] }}
-                    whileHover={{ y: -5, transition: { duration: 0.3 } }}
-                    className="rounded-xl overflow-hidden shadow-premium hover:shadow-premium-md transition-all duration-300"
-                  >
-                    <div className="flex flex-col h-full bg-white rounded-xl overflow-hidden group/card hover:shadow-premium-lg transition-all duration-500">
-                      {/* Video Top Section */}
-                      <div className="relative aspect-video">
-                        <VideoEmbed
-                          src={videoUrl}
-                          title={videoTitle}
-                          retryCount={2}
-                        />
-                      </div>
-
-                      {/* Integrated Content Section - Clean Look */}
-                      <div className="p-5 flex flex-col items-center justify-center text-center relative overflow-hidden">
-                        <h3 className="text-sm sm:text-base font-serif font-bold text-navy-900 group-hover/card:text-gold-600 transition-colors duration-300 leading-snug">
-                          {videoTitle}
-                        </h3>
-                      </div>
-                    </div>
-                  </m.div>
-                );
-              })}
+            <span className="text-xs tracking-[0.3em] text-gold-300/40 uppercase font-light">Scroll</span>
+            <div className="w-px h-8 sm:h-12 bg-gradient-to-b from-gold-500/80 to-transparent">
+              <m.div
+                animate={shouldReduceMotion ? {} : { y: [0, 24, 0], opacity: [0, 1, 0] }}
+                transition={{ duration: shouldReduceMotion ? 0 : 2, repeat: shouldReduceMotion ? 0 : Infinity, ease: "easeInOut" }}
+                className="w-full h-1/2 bg-white"
+              />
             </div>
           </m.div>
-        )}
+        </m.div>
       </div>
+
+
+      {/* Featured YouTube videos */}
+      {((dbVideos && dbVideos.length > 0) || (config.home.featuredVideos && config.home.featuredVideos.length > 0)) && (
+        <div className="px-4 sm:px-6 md:px-8 py-12 sm:py-16 md:py-20 bg-cream-50">
+          <div className="max-w-7xl mx-auto">
+            <m.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.2, ease: [0.25, 0.1, 0.25, 1] as any }}
+              role="region"
+              aria-label="Featured performances"
+            >
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-serif font-semibold text-navy-900 text-center mb-8 sm:mb-10 md:mb-12">
+                Featured Performances
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+                {(dbVideos && dbVideos.length > 0 ? dbVideos : config.home.featuredVideos).map((video, index) => {
+                  const videoUrl = typeof video === 'string' ? video : video.url;
+                  const videoTitle = typeof video === 'string' ? `Featured performance ${index + 1}` : video.title || `Featured performance ${index + 1}`;
+                  const thumbnailUrl = typeof video === 'object' && 'thumbnail_url' in video ? (video as any).thumbnail_url : null;
+
+                  return (
+                    <m.div
+                      key={index}
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.6, delay: index * 0.1, ease: [0.25, 0.1, 0.25, 1] as any }}
+                      whileHover={{ y: -5, transition: { duration: 0.3 } }}
+                      className="rounded-xl overflow-hidden shadow-premium hover:shadow-premium-md transition-all duration-300"
+                    >
+                      <div className="flex flex-col h-full bg-white rounded-xl overflow-hidden group/card hover:shadow-premium-lg transition-all duration-500">
+                        {/* Video Top Section */}
+                        <div className="relative aspect-video">
+                          <VideoEmbed
+                            src={videoUrl}
+                            title={videoTitle}
+                            thumbnailUrl={thumbnailUrl}
+                            retryCount={2}
+                          />
+                        </div>
+
+                        {/* Integrated Content Section - Clean Look */}
+                        <div className="p-5 flex flex-col items-center justify-center text-center relative overflow-hidden">
+                          <h3 className="text-sm sm:text-base font-serif font-bold text-navy-900 group-hover/card:text-gold-600 transition-colors duration-300 leading-snug">
+                            {videoTitle}
+                          </h3>
+                        </div>
+                      </div>
+                    </m.div>
+                  );
+                })}
+              </div>
+            </m.div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }

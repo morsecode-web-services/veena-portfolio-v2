@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import ImageWithFallback from '@/components/ui/ImageWithFallback';
 import { m, AnimatePresence } from 'framer-motion';
-import Image from 'next/image';
 import { getAssetPath } from '@/lib/config';
 import type { GalleryImage } from '@/types';
 
@@ -17,6 +16,8 @@ export default function ImageGallery({ images }: ImageGalleryProps) {
   const [touchStart, setTouchStart] = useState<number>(0);
   const [touchEnd, setTouchEnd] = useState<number>(0);
   const imageRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const modalRef = useRef<HTMLDivElement>(null);
+  const previousFocusRef = useRef<HTMLElement | null>(null);
 
   const navigateNext = useCallback(() => {
     setCurrentIndex((prevIndex) => {
@@ -34,7 +35,7 @@ export default function ImageGallery({ images }: ImageGalleryProps) {
     });
   }, [images]);
 
-  // Handle keyboard navigation
+  // Handle keyboard navigation and focus trap
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!selectedImage) return;
@@ -49,6 +50,31 @@ export default function ImageGallery({ images }: ImageGalleryProps) {
         case 'ArrowRight':
           navigateNext();
           break;
+        case 'Tab': {
+          // Trap focus within modal
+          if (!modalRef.current) return;
+
+          const focusableElements = modalRef.current.querySelectorAll(
+            'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+          );
+          const firstElement = focusableElements[0] as HTMLElement;
+          const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
+
+          if (e.shiftKey) {
+            // Shift + Tab
+            if (document.activeElement === firstElement) {
+              e.preventDefault();
+              lastElement?.focus();
+            }
+          } else {
+            // Tab
+            if (document.activeElement === lastElement) {
+              e.preventDefault();
+              firstElement?.focus();
+            }
+          }
+          break;
+        }
       }
     };
 
@@ -56,12 +82,27 @@ export default function ImageGallery({ images }: ImageGalleryProps) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [selectedImage, navigateNext, navigatePrevious]);
 
-  // Prevent body scroll when lightbox is open
+  // Prevent body scroll and manage focus when lightbox is open
   useEffect(() => {
     if (selectedImage) {
+      // Save the currently focused element
+      previousFocusRef.current = document.activeElement as HTMLElement;
+
       document.body.style.overflow = 'hidden';
+
+      // Focus the modal container after a brief delay to allow render
+      setTimeout(() => {
+        const firstButton = modalRef.current?.querySelector('button');
+        firstButton?.focus();
+      }, 100);
     } else {
       document.body.style.overflow = 'unset';
+
+      // Return focus to the previously focused element
+      if (previousFocusRef.current) {
+        previousFocusRef.current.focus();
+        previousFocusRef.current = null;
+      }
     }
     return () => {
       document.body.style.overflow = 'unset';
@@ -138,8 +179,8 @@ export default function ImageGallery({ images }: ImageGalleryProps) {
               }
             }}
           >
-            <Image
-              src={getAssetPath(image.src)}
+            <ImageWithFallback
+              src={image.src}
               alt={image.alt}
               fill
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
@@ -168,6 +209,7 @@ export default function ImageGallery({ images }: ImageGalleryProps) {
       <AnimatePresence>
         {selectedImage && (
           <m.div
+            ref={modalRef}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -176,11 +218,14 @@ export default function ImageGallery({ images }: ImageGalleryProps) {
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Image lightbox"
           >
             {/* Close button */}
             <button
               onClick={closeLightbox}
-              className="absolute top-2 sm:top-4 right-2 sm:right-4 z-10 text-white hover:text-gray-300 active:text-gray-400 transition-colors p-2 touch-manipulation"
+              className="absolute top-2 sm:top-4 right-2 sm:right-4 z-10 text-white hover:text-gray-300 active:text-slate-400 transition-colors p-3 min-w-[44px] min-h-[44px] flex items-center justify-center touch-manipulation"
               aria-label="Close image viewer (press Escape)"
             >
               <svg
@@ -204,7 +249,7 @@ export default function ImageGallery({ images }: ImageGalleryProps) {
                 e.stopPropagation();
                 navigatePrevious();
               }}
-              className="absolute left-2 sm:left-4 z-10 text-white hover:text-gray-300 active:text-gray-400 transition-colors p-2 touch-manipulation"
+              className="absolute left-2 sm:left-4 z-10 text-white hover:text-gray-300 active:text-slate-400 transition-colors p-3 min-w-[44px] min-h-[44px] flex items-center justify-center touch-manipulation"
               aria-label="Previous image (press left arrow)"
             >
               <svg
@@ -228,7 +273,7 @@ export default function ImageGallery({ images }: ImageGalleryProps) {
                 e.stopPropagation();
                 navigateNext();
               }}
-              className="absolute right-2 sm:right-4 z-10 text-white hover:text-gray-300 active:text-gray-400 transition-colors p-2 touch-manipulation"
+              className="absolute right-2 sm:right-4 z-10 text-white hover:text-gray-300 active:text-slate-400 transition-colors p-3 min-w-[44px] min-h-[44px] flex items-center justify-center touch-manipulation"
               aria-label="Next image (press right arrow)"
             >
               <svg
@@ -257,8 +302,21 @@ export default function ImageGallery({ images }: ImageGalleryProps) {
               onClick={(e) => e.stopPropagation()}
               role="dialog"
               aria-modal="true"
-              aria-label="Image viewer"
+              aria-labelledby="image-title"
             >
+              {/* Screen reader announcement */}
+              <div
+                role="status"
+                aria-live="polite"
+                aria-atomic="true"
+                className="sr-only"
+              >
+                Viewing image {currentIndex + 1} of {images.length}: {selectedImage.alt}
+              </div>
+              <h2 id="image-title" className="sr-only">
+                {selectedImage.caption || selectedImage.alt}
+              </h2>
+
               <div className="relative w-full h-full flex items-center justify-center">
                 <ImageWithFallback
                   src={selectedImage.src}
@@ -276,7 +334,7 @@ export default function ImageGallery({ images }: ImageGalleryProps) {
                   <p className="text-white text-sm sm:text-base md:text-lg font-medium tracking-wide">
                     {selectedImage.caption}
                   </p>
-                  <p className="text-gray-400 text-xs sm:text-sm mt-2 font-mono">
+                  <p className="text-slate-400 text-xs sm:text-sm mt-2 font-mono">
                     {currentIndex + 1} / {images.length}
                   </p>
                 </div>
@@ -284,7 +342,7 @@ export default function ImageGallery({ images }: ImageGalleryProps) {
             </m.div>
 
             {/* Instructions */}
-            <div className="absolute bottom-2 sm:bottom-4 left-1/2 transform -translate-x-1/2 text-gray-400 text-xs sm:text-sm px-4 text-center">
+            <div className="absolute bottom-2 sm:bottom-4 left-1/2 transform -translate-x-1/2 text-slate-400 text-xs sm:text-sm px-4 text-center">
               <p className="hidden md:block">Use arrow keys or click arrows to navigate • Press ESC to close</p>
               <p className="md:hidden">Swipe to navigate • Tap outside to close</p>
             </div>

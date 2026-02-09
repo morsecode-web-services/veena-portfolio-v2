@@ -51,7 +51,7 @@ export default function MusicCarousel({ title, description, videos }: MusicCarou
     };
 
     return (
-        <div className="py-6 border-b border-gray-100 last:border-0 overflow-hidden">
+        <div className="py-6 overflow-hidden">
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 mb-4">
                 <div className="px-4 sm:px-0">
@@ -68,20 +68,22 @@ export default function MusicCarousel({ title, description, videos }: MusicCarou
                     <button
                         onClick={() => scroll('left')}
                         disabled={!canScrollLeft}
-                        className="w-8 h-8 rounded-full border border-gray-200 lg:group-hover:opacity-100 flex items-center justify-center text-navy-900 hover:bg-navy-900 hover:text-white hover:border-navy-900 transition-all duration-300 disabled:opacity-30 disabled:cursor-not-allowed group shadow-sm bg-white"
-                        aria-label={`Previous ${title} videos`}
+                        className="w-11 h-11 rounded-full border border-gray-200 lg:group-hover:opacity-100 flex items-center justify-center text-navy-900 hover:bg-navy-900 hover:text-white hover:border-navy-900 transition-all duration-300 disabled:opacity-30 disabled:cursor-not-allowed group shadow-sm bg-white"
+                        aria-label={`Scroll left in ${title} category`}
+                        aria-controls={carouselId}
                     >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                         </svg>
                     </button>
                     <button
                         onClick={() => scroll('right')}
                         disabled={!canScrollRight}
-                        className="w-8 h-8 rounded-full border border-gray-200 lg:group-hover:opacity-100 flex items-center justify-center text-navy-900 hover:bg-navy-900 hover:text-white hover:border-navy-900 transition-all duration-300 disabled:opacity-30 disabled:cursor-not-allowed group shadow-sm bg-white"
-                        aria-label={`Next ${title} videos`}
+                        className="w-11 h-11 rounded-full border border-gray-200 lg:group-hover:opacity-100 flex items-center justify-center text-navy-900 hover:bg-navy-900 hover:text-white hover:border-navy-900 transition-all duration-300 disabled:opacity-30 disabled:cursor-not-allowed group shadow-sm bg-white"
+                        aria-label={`Scroll right in ${title} category`}
+                        aria-controls={carouselId}
                     >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                         </svg>
                     </button>
@@ -90,10 +92,13 @@ export default function MusicCarousel({ title, description, videos }: MusicCarou
 
             {/* Scroll Container */}
             <div
+                id={carouselId}
                 ref={scrollContainerRef}
                 onScroll={checkScroll}
                 className="flex gap-4 overflow-x-auto pb-6 pt-2 snap-x snap-mandatory scrollbar-hide scroll-smooth -mx-4 px-4 sm:mx-0 sm:px-0"
                 style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                role="region"
+                aria-label={`${title} video gallery`}
             >
                 {videos.map((video, index) => (
                     <m.div
@@ -106,7 +111,11 @@ export default function MusicCarousel({ title, description, videos }: MusicCarou
                     >
                         <div className="flex flex-col h-full bg-white rounded-xl overflow-hidden group shadow-premium hover:shadow-premium-md transition-all duration-500 cursor-pointer">
                             <div className="relative aspect-video">
-                                <VideoEmbed src={video.url} title={video.title || 'Performance Video'} />
+                                <VideoEmbed
+                                    src={video.url}
+                                    title={video.title || 'Performance Video'}
+                                    thumbnailUrl={(video as any).thumbnail_url}
+                                />
                             </div>
                             <div className="p-4 flex flex-col items-center justify-center text-center relative overflow-hidden">
                                 <h4 className="text-sm font-serif font-bold text-navy-900 group-hover:text-gold-600 transition-colors duration-300 leading-snug line-clamp-2">

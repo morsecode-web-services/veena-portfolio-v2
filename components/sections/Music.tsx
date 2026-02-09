@@ -4,12 +4,15 @@ import { useState } from 'react';
 import { m, AnimatePresence } from 'framer-motion';
 import type { SiteConfig } from '@/types';
 import MusicCarousel from '@/components/features/MusicCarousel';
+import { Video } from '@/types/video';
+import { extractYoutubeId } from '@/lib/utils';
 
 interface MusicProps {
   config: SiteConfig;
+  dbVideos?: Video[];
 }
 
-export default function Music({ config }: MusicProps) {
+export default function Music({ config, dbVideos }: MusicProps) {
   // State for main category selection (Veena or Vocal)
   const [selectedMainCategoryId, setSelectedMainCategoryId] = useState<string>(
     config.music.categories.length > 0 ? config.music.categories[0].id : ''
@@ -36,27 +39,36 @@ export default function Music({ config }: MusicProps) {
           </p>
         </m.div>
 
-        {/* Main Category Tabs (Veena / Vocal) */}
+        {/* Main Category Tabs (Veena / Vocal) - Minimal Style */}
         <div
-          className="sticky z-40 py-4 mb-4 -mx-4 px-4 bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-[0_4px_12px_-4px_rgba(0,0,0,0.05)]"
+          className="sticky z-40 py-6 mb-8 -mx-4 px-4 bg-white/95 backdrop-blur-md"
           style={{ top: 'var(--header-height, 70px)' }}
         >
-          <div className="max-w-7xl mx-auto flex flex-wrap justify-center gap-3 sm:gap-4">
-            {config.music.categories.map((category) => {
-              const isActive = selectedMainCategoryId === category.id;
-              return (
-                <button
-                  key={category.id}
-                  onClick={() => setSelectedMainCategoryId(category.id)}
-                  className={`px-6 py-2.5 rounded-full text-sm font-bold transition-all duration-300 border-2 shadow-md hover:-translate-y-0.5 tracking-wide ${isActive
-                      ? 'bg-navy-950 text-white border-gold-500'
-                      : 'bg-white text-navy-950 border-gray-200'
-                    }`}
-                >
-                  {category.name}
-                </button>
-              );
-            })}
+          <div className="flex justify-center">
+            <div className="flex gap-8">
+              {config.music.categories.map((category) => {
+                const isActive = selectedMainCategoryId === category.id;
+                return (
+                  <button
+                    key={category.id}
+                    onClick={() => setSelectedMainCategoryId(category.id)}
+                    className={`relative pb-4 text-sm font-bold transition-colors duration-300 ${isActive
+                      ? 'text-navy-950'
+                      : 'text-navy-400 hover:text-navy-600'
+                      }`}
+                  >
+                    {category.name.toUpperCase()}
+                    {isActive && (
+                      <m.div
+                        layoutId="musicTabUnderline"
+                        className="absolute bottom-0 left-0 right-0 h-0.5 bg-navy-950"
+                        transition={{ type: "spring", stiffness: 500, damping: 35 }}
+                      />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
 
@@ -87,20 +99,55 @@ export default function Music({ config }: MusicProps) {
                 transition={{ duration: 0.5 }}
                 className="space-y-2"
               >
-                {selectedMainCategory.subcategories.map((subcategory) => (
-                  <m.div
-                    key={subcategory.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.4, delay: 0.1 }}
-                  >
-                    <MusicCarousel
-                      title={subcategory.name}
-                      description={subcategory.description}
-                      videos={subcategory.videos}
-                    />
-                  </m.div>
-                ))}
+                {selectedMainCategory.subcategories.map((subcategory) => {
+                  // Merge and deduplicate by YouTube ID
+                  const seenIds = new Set<string>();
+                  const subVideos: any[] = [];
+
+                  // 1. Add DB videos first (better metadata)
+                  const dbMatches = (dbVideos || []).filter(v =>
+                    v.category_id === selectedMainCategory.id &&
+                    v.subcategory_id === subcategory.id
+                  );
+
+                  dbMatches.forEach(v => {
+                    const id = extractYoutubeId(v.url);
+                    if (id) {
+                      seenIds.add(id);
+                      subVideos.push({
+                        url: v.url,
+                        title: v.title,
+                        thumbnail_url: v.thumbnail_url
+                      });
+                    }
+                  });
+
+                  // 2. Add config videos if they aren't already there
+                  (subcategory.videos || []).forEach(v => {
+                    const id = extractYoutubeId(v.url);
+                    if (id && !seenIds.has(id)) {
+                      seenIds.add(id);
+                      subVideos.push(v);
+                    }
+                  });
+
+                  if (subVideos.length === 0) return null;
+
+                  return (
+                    <m.div
+                      key={subcategory.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.4, delay: 0.1 }}
+                    >
+                      <MusicCarousel
+                        title={subcategory.name}
+                        description={subcategory.description}
+                        videos={subVideos as any}
+                      />
+                    </m.div>
+                  );
+                })}
               </m.div>
             </AnimatePresence>
           </div>

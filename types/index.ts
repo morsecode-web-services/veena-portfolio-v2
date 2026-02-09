@@ -5,6 +5,17 @@ export type BioBlock =
   | { type: 'heading'; content: string }
   | { type: 'list'; items: string[] };
 
+export interface FeaturedCarouselItem {
+  id: string;
+  type: 'custom' | 'event'; // Type discriminator
+  image?: string; // Optional - some items like events may not have images
+  title: string;
+  description: string;
+  subtitle?: string; // Optional gold label text (e.g., "Highlights", "Featured recognitions")
+  link?: string;
+  linkText?: string;
+}
+
 export interface SiteConfig {
   artist: {
     name: string;
@@ -16,11 +27,38 @@ export interface SiteConfig {
   };
   home: {
     heroTitle?: string; // "Music is the mediator..."
+    heroBackground?: string; // Path to hero background image
+    heroBackgroundPosition?: string; // CSS object-position for hero background
+    heroTagline?: string; // Small tagline at top of hero
+    heroStats?: Array<{
+      label: string;
+      value: string;
+    }>; // Stats shown at bottom left of hero
+    heroCta?: {
+      text: string;
+      link: string;
+    }; // Main CTA button
     images: {
       veena: string;
       vocal: string;
     };
     featuredVideos: (string | MusicVideo)[];
+    featuredCarousel?: {
+      enabled: boolean;
+      autoScrollInterval?: number; // milliseconds, default 5000
+      items: Array<{
+        id: string;
+        image: string;
+        title: string;
+        description: string;
+        subtitle?: string;
+        link?: string;
+        linkText?: string;
+      }>;
+      showUpcomingEvent?: boolean; // default true
+      eventSubtitle?: string; // subtitle for event items, default "Upcoming Event"
+      eventLinkText?: string; // default "View Event Details"
+    };
   };
   spotlights: {
     id: string;
@@ -56,17 +94,19 @@ export interface SiteConfig {
     twitter?: string;
     linkedin?: string;
   };
-  features?: {
-    swaraAnimation: {
-      desktop: boolean;
-      mobile: boolean;
-    };
-  };
   layoutOrder?: string[];
   sections?: Record<string, boolean>;
   blog?: {
     title: string;
     subtitle: string;
+  };
+  pdf?: {
+    backgroundOpacity?: number;
+    backgroundBrightness?: number;
+    gradients?: {
+      enabled?: boolean;    // Toggle: true = gradients, false = legacy grayscale images
+      opacity?: number;     // Override default opacity (0-1, default: 0.3)
+    };
   };
 }
 
@@ -103,10 +143,17 @@ export interface FAQItem {
   answer: string;
 }
 
+export type InquiryType =
+  | 'performance'
+  | 'classes'
+  | 'collaboration'
+  | 'general';
+
 export interface ContactFormData {
   name: string;
   phone: string;
   email: string;
+  inquiryType: InquiryType;
   purpose: string;
   timestamp: Date;
 }

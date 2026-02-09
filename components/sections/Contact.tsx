@@ -2,8 +2,13 @@
 
 import { m } from 'framer-motion';
 import ContactForm from '@/components/features/ContactForm';
+import ImageWithFallback from '@/components/ui/ImageWithFallback';
+import siteConfig from '@/public/config/site-config.json';
 
 export default function Contact() {
+  const contactImage = siteConfig?.contact?.imageUrl || '/images/contact/contact-image.jpg';
+  const contactImageAlt = siteConfig?.contact?.imageAlt || 'Contact';
+
   return (
     <section id="contact" className="px-4 sm:px-6 md:px-8" aria-label="Contact">
       <div id="contact-section" className="max-w-6xl mx-auto">
@@ -23,16 +28,33 @@ export default function Contact() {
           </p>
         </m.div>
 
-        <m.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-50px' }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-        >
-          <ContactForm />
-        </m.div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-start">
+          {/* Left Column - Image */}
+          <m.div
+            initial={{ opacity: 0, x: -20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, margin: '-50px' }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+            className="relative aspect-[4/5] rounded-2xl overflow-hidden shadow-lg"
+          >
+            <ImageWithFallback
+              src={contactImage}
+              alt={contactImageAlt}
+              fill
+              className="object-cover"
+            />
+          </m.div>
 
-
+          {/* Right Column - Form */}
+          <m.div
+            initial={{ opacity: 0, x: 20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, margin: '-50px' }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          >
+            <ContactForm />
+          </m.div>
+        </div>
       </div>
     </section>
   );

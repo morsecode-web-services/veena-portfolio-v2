@@ -35,6 +35,9 @@ export async function generateMetadata(
         title: `${blog.meta_title || blog.title} | Aishwarya Manikarnike`,
         description: blog.meta_description || blog.excerpt || `Read ${blog.title} on Aishwarya's blog.`,
         keywords: blog.keywords?.join(', '),
+        alternates: {
+            canonical: `https://www.aishwaryamanikarnike.com/blog/${slug}`,
+        },
         openGraph: {
             title: blog.title,
             description: blog.meta_description || blog.excerpt,
@@ -42,6 +45,7 @@ export async function generateMetadata(
             type: 'article',
             publishedTime: blog.created_at,
             authors: [blog.author],
+            url: `https://www.aishwaryamanikarnike.com/blog/${slug}`,
         },
         twitter: {
             card: 'summary_large_image',

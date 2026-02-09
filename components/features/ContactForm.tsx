@@ -1,18 +1,23 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { sendContactEmail } from '@/lib/email-service';
 import { m } from 'framer-motion';
 import { analytics } from '@/components/GoogleAnalytics';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { Button } from '@/components/system/Button';
+import type { InquiryType } from '@/types';
 
 // Zod validation schema
 const contactFormSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters').max(100, 'Name is too long'),
   phone: z.string().min(10, 'Please enter a valid phone number').regex(/^[+]?[(]?[0-9]{1,4}[)]?[-\s.]?[(]?[0-9]{1,4}[)]?[-\s.]?[0-9]{1,9}$/, 'Please enter a valid phone number'),
   email: z.string().email('Please enter a valid email address'),
+  inquiryType: z.enum(['performance', 'classes', 'collaboration', 'general'], {
+    required_error: 'Please select an inquiry type',
+  }),
   purpose: z.string().min(10, 'Please provide more details (at least 10 characters)').max(1000, 'Message is too long'),
 });
 
@@ -23,6 +28,10 @@ export default function ContactForm() {
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [lastSubmitTime, setLastSubmitTime] = useState<number>(0);
+  const shouldReduceMotion = useReducedMotion();
+  const successMessageRef = useRef<HTMLDivElement>(null);
+  const errorMessageRef = useRef<HTMLDivElement>(null);
+  const firstErrorFieldRef = useRef<HTMLInputElement | HTMLTextAreaElement | null>(null);
 
   const {
     register,
@@ -33,6 +42,30 @@ export default function ContactForm() {
     resolver: zodResolver(contactFormSchema),
     mode: 'onBlur',
   });
+
+  // Focus management for validation errors
+  useEffect(() => {
+    if (Object.keys(errors).length > 0) {
+      // Find the first field with an error
+      const firstErrorField = ['name', 'phone', 'email', 'inquiryType', 'purpose'].find(field => errors[field as keyof ContactFormData]);
+      if (firstErrorField) {
+        const element = document.getElementById(firstErrorField) as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
+        if (element) {
+          element.focus();
+          firstErrorFieldRef.current = element as HTMLInputElement | HTMLTextAreaElement;
+        }
+      }
+    }
+  }, [errors]);
+
+  // Focus management for success/error messages
+  useEffect(() => {
+    if (submitStatus === 'success' && successMessageRef.current) {
+      successMessageRef.current.focus();
+    } else if (submitStatus === 'error' && errorMessageRef.current) {
+      errorMessageRef.current.focus();
+    }
+  }, [submitStatus]);
 
   const onSubmit = async (data: ContactFormData) => {
     // Rate limiting: prevent submissions within 30 seconds
@@ -48,19 +81,29 @@ export default function ContactForm() {
     setErrorMessage('');
 
     try {
-      await sendContactEmail(
-        {
-          ...data,
-          timestamp: new Date(),
+      // Call API route to handle email sending and database storage
+      const response = await fetch('/api/send-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-        {
-          timeout: 10000,
-          retries: 2,
-        }
-      );
+        body: JSON.stringify({
+          name: data.name,
+          email: data.email,
+          phone: data.phone,
+          inquiryType: data.inquiryType,
+          message: data.purpose,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to send message');
+      }
 
       // Track successful form submission
-      analytics.contactFormSubmit(true);
+      analytics.contactFormSubmit(true, undefined, data.inquiryType);
 
       setSubmitStatus('success');
       setLastSubmitTime(now);
@@ -74,21 +117,12 @@ export default function ContactForm() {
       console.error('Form submission error:', error);
       setSubmitStatus('error');
 
-      // Set user-friendly error message based on error type
-      let errorMsg = '';
-      if (error instanceof Error) {
-        if (error.message.includes('timeout')) {
-          errorMsg = 'The request timed out. Please check your internet connection and try again.';
-        } else if (error.message.includes('network') || error.message.includes('Network')) {
-          errorMsg = 'Network error. Please check your internet connection and try again.';
-        } else if (error.message.includes('validation')) {
-          errorMsg = 'Please check that all fields are filled correctly.';
-        } else {
-          errorMsg = 'Unable to send your message. Please try again later or contact directly via social media.';
-        }
-      } else {
-        errorMsg = 'An unexpected error occurred. Please try again later.';
-      }
+      // Set user-friendly error message
+      const errorMsg =
+        error instanceof Error
+          ? error.message
+          : 'Unable to send your message. Please try again later or contact directly via social media.';
+
       setErrorMessage(errorMsg);
 
       // Track failed form submission
@@ -103,7 +137,7 @@ export default function ContactForm() {
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 sm:space-y-5" aria-label="Contact form">
         {/* Name Field */}
         <div>
-          <label htmlFor="name" className="block text-[10px] sm:text-xs font-medium text-gray-700 mb-1.5">
+          <label htmlFor="name" className="block text-xs font-medium text-charcoal-700 mb-1.5">
             Name *
           </label>
           <input
@@ -111,7 +145,7 @@ export default function ContactForm() {
             type="text"
             {...register('name')}
             onFocus={() => analytics.contactFormStart()}
-            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-navy-500 focus:border-transparent transition-all text-xs sm:text-sm ${errors.name ? 'border-red-500' : 'border-gray-300'
+            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-navy-500 focus:border-transparent transition-all text-xs sm:text-sm ${errors.name ? 'border-red-500' : 'border-slate-300'
               }`}
             placeholder="Your full name"
             disabled={isSubmitting}
@@ -134,14 +168,14 @@ export default function ContactForm() {
 
         {/* Phone Field */}
         <div>
-          <label htmlFor="phone" className="block text-[10px] sm:text-xs font-medium text-gray-700 mb-1.5">
+          <label htmlFor="phone" className="block text-xs font-medium text-charcoal-700 mb-1.5">
             Phone Number *
           </label>
           <input
             id="phone"
             type="tel"
             {...register('phone')}
-            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-navy-500 focus:border-transparent transition-all text-xs sm:text-sm ${errors.phone ? 'border-red-500' : 'border-gray-300'
+            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-navy-500 focus:border-transparent transition-all text-xs sm:text-sm ${errors.phone ? 'border-red-500' : 'border-slate-300'
               }`}
             placeholder="+91 9876543210"
             disabled={isSubmitting}
@@ -164,14 +198,14 @@ export default function ContactForm() {
 
         {/* Email Field */}
         <div>
-          <label htmlFor="email" className="block text-[10px] sm:text-xs font-medium text-gray-700 mb-1.5">
+          <label htmlFor="email" className="block text-xs font-medium text-charcoal-700 mb-1.5">
             Email Address *
           </label>
           <input
             id="email"
             type="email"
             {...register('email')}
-            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-navy-500 focus:border-transparent transition-all text-xs sm:text-sm ${errors.email ? 'border-red-500' : 'border-gray-300'
+            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-navy-500 focus:border-transparent transition-all text-xs sm:text-sm ${errors.email ? 'border-red-500' : 'border-slate-300'
               }`}
             placeholder="your.email@example.com"
             disabled={isSubmitting}
@@ -192,16 +226,50 @@ export default function ContactForm() {
           )}
         </div>
 
+        {/* Inquiry Type Field */}
+        <div>
+          <label htmlFor="inquiryType" className="block text-xs font-medium text-charcoal-700 mb-1.5">
+            I&apos;m interested in *
+          </label>
+          <select
+            id="inquiryType"
+            {...register('inquiryType')}
+            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-navy-500 focus:border-transparent transition-all text-xs sm:text-sm ${errors.inquiryType ? 'border-red-500' : 'border-slate-300'
+              }`}
+            disabled={isSubmitting}
+            aria-required="true"
+            aria-invalid={errors.inquiryType ? 'true' : 'false'}
+            aria-describedby={errors.inquiryType ? 'inquiryType-error' : undefined}
+          >
+            <option value="">Select an option</option>
+            <option value="performance">Performance Booking</option>
+            <option value="classes">Private Classes</option>
+            <option value="collaboration">Collaboration Opportunity</option>
+            <option value="general">General Inquiry</option>
+          </select>
+          {errors.inquiryType && (
+            <m.p
+              id="inquiryType-error"
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mt-2 text-sm text-red-600"
+              role="alert"
+            >
+              {errors.inquiryType.message}
+            </m.p>
+          )}
+        </div>
+
         {/* Purpose Field */}
         <div>
-          <label htmlFor="purpose" className="block text-[10px] sm:text-xs font-medium text-gray-700 mb-1.5">
+          <label htmlFor="purpose" className="block text-xs font-medium text-charcoal-700 mb-1.5">
             Purpose of Contact *
           </label>
           <textarea
             id="purpose"
             {...register('purpose')}
             rows={4}
-            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-navy-500 focus:border-transparent transition-all resize-none text-xs sm:text-sm ${errors.purpose ? 'border-red-500' : 'border-gray-300'
+            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-navy-500 focus:border-transparent transition-all resize-none text-xs sm:text-sm ${errors.purpose ? 'border-red-500' : 'border-slate-300'
               }`}
             placeholder="Please describe your inquiry, booking request, or collaboration opportunity..."
             disabled={isSubmitting}
@@ -224,56 +292,28 @@ export default function ContactForm() {
 
         {/* Submit Button */}
         <div>
-          <m.button
+          <Button
             type="submit"
+            variant="primary"
+            size="base"
+            fullWidth
+            isLoading={isSubmitting}
             disabled={isSubmitting}
-            whileHover={!isSubmitting ? { scale: 1.02, y: -2 } : {}}
-            whileTap={!isSubmitting ? { scale: 0.98 } : {}}
-            transition={{ type: 'spring', stiffness: 400, damping: 17 }}
-            className={`w-full py-2.5 sm:py-3 px-4 sm:px-5 rounded-lg font-medium text-white transition-all duration-300 text-xs sm:text-sm touch-manipulation shadow-premium-md ${isSubmitting
-              ? 'bg-gray-400 cursor-not-allowed'
-              : 'bg-navy-900 hover:bg-navy-800 active:bg-navy-950 hover:shadow-premium-lg'
-              }`}
-            style={!isSubmitting ? { backgroundColor: '#14213d', color: '#ffffff' } : { backgroundColor: '#9ca3af', color: '#ffffff' }}
           >
-            {isSubmitting ? (
-              <span className="flex items-center justify-center">
-                <svg
-                  className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  ></circle>
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  ></path>
-                </svg>
-                Sending...
-              </span>
-            ) : (
-              'Send Message'
-            )}
-          </m.button>
+            {isSubmitting ? 'Sending...' : 'Send Message'}
+          </Button>
         </div>
 
         {/* Success Message */}
         {submitStatus === 'success' && (
           <m.div
+            ref={successMessageRef}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             className="p-4 bg-green-50 border border-green-200 rounded-lg"
             role="status"
             aria-live="polite"
+            tabIndex={-1}
           >
             <div className="flex items-start">
               <svg
@@ -290,7 +330,7 @@ export default function ContactForm() {
               <div>
                 <h3 className="text-sm font-medium text-green-800">Message sent successfully!</h3>
                 <p className="mt-1 text-sm text-green-700">
-                  Thank you for reaching out. I will respond to your inquiry as soon as possible.
+                  Thank you for reaching out. Check your email for a confirmation message. I will respond to your inquiry within 24-48 hours.
                 </p>
               </div>
             </div>
@@ -300,11 +340,13 @@ export default function ContactForm() {
         {/* Error Message */}
         {submitStatus === 'error' && (
           <m.div
+            ref={errorMessageRef}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             className="p-4 bg-red-50 border border-red-200 rounded-lg"
             role="alert"
             aria-live="assertive"
+            tabIndex={-1}
           >
             <div className="flex items-start">
               <svg

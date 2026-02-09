@@ -9,32 +9,20 @@ import { analytics } from '@/components/GoogleAnalytics';
 interface VideoEmbedProps {
   src: string;
   title: string;
+  thumbnailUrl?: string | null;
   className?: string;
   retryCount?: number;
 }
 
-const extractVideoId = (url: string): string | null => {
-  // Extract YouTube video ID from various URL formats
-  const patterns = [
-    /(?:youtube\.com\/embed\/|youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/live\/|youtube\.com\/shorts\/)([^&?/]+)/,
-    /youtube\.com\/v\/([^&?/]+)/,
-  ];
-
-  for (const pattern of patterns) {
-    const match = url.match(pattern);
-    if (match) return match[1];
-  }
-  return null;
-};
-
+import { extractYoutubeId } from '@/lib/utils';
 
 /**
  * Video embed component with error handling and retry logic
- * Handles failed video loads gracefully with fallback UI
  */
 export default function VideoEmbed({
   src,
   title,
+  thumbnailUrl: propThumbnailUrl,
   className = '',
   retryCount = 2,
 }: VideoEmbedProps) {
@@ -45,7 +33,7 @@ export default function VideoEmbed({
   const [isRetrying, setIsRetrying] = useState(false);
   const [videoSrc, setVideoSrc] = useState(src);
   const [videoId, setVideoId] = useState<string | null>(null);
-  const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
+  const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(propThumbnailUrl || null);
 
   const isPlaying = activeVideoId === instanceId;
 
@@ -59,7 +47,7 @@ export default function VideoEmbed({
 
   useEffect(() => {
     // Try to extract YouTube video ID and convert to embed URL
-    const extractedId = extractVideoId(src);
+    const extractedId = extractYoutubeId(src);
     setVideoId(extractedId);
 
     if (extractedId) {
@@ -72,17 +60,21 @@ export default function VideoEmbed({
       // Add autoplay=1 to the embed URL for when it loads after click
       const embedUrl = `https://www.youtube.com/embed/${extractedId}?autoplay=1${queryStr ? `&${queryStr}` : ''}`;
       setVideoSrc(embedUrl);
-      // Default to hqdefault (Standard Quality) avoids 404s on older videos
-      // maxresdefault often fails, causing console noise even with fallback logic
-      setThumbnailUrl(`https://img.youtube.com/vi/${extractedId}/hqdefault.jpg`);
+
+      // Use prop thumbnail if available, otherwise fallback to hqdefault
+      if (!propThumbnailUrl) {
+        setThumbnailUrl(`https://img.youtube.com/vi/${extractedId}/hqdefault.jpg`);
+      }
     } else {
       setVideoSrc(src);
-      setThumbnailUrl(null);
+      if (!propThumbnailUrl) {
+        setThumbnailUrl(null);
+      }
     }
 
     setHasError(false);
     setAttempts(0);
-  }, [src]);
+  }, [src, propThumbnailUrl]);
 
   // Track video play event when isPlaying changes to true
   useEffect(() => {
@@ -189,6 +181,7 @@ export default function VideoEmbed({
             fill
             className="object-cover group-hover:scale-105 transition-transform duration-700 opacity-90 group-hover:opacity-100"
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            onError={handleThumbnailError}
           />
 
           {/* Premium Play Button - Trigger modal expansion */}
@@ -198,7 +191,7 @@ export default function VideoEmbed({
               whileTap={{ scale: 0.95 }}
               className="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 backdrop-blur-md border border-white/30 rounded-full flex items-center justify-center shadow-2xl group-hover:!bg-gold-600 group-hover:border-gold-500 transition-all duration-300"
             >
-              <svg className="w-4 h-4 sm:w-6 sm:h-6 text-white ml-1 drop-shadow-lg" fill="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 sm:w-6 sm:h-6 text-white drop-shadow-lg" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M8 5v14l11-7z" />
               </svg>
             </m.div>

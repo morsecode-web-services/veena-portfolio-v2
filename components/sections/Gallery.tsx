@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { m } from 'framer-motion';
 import ImageGallery from '@/components/ui/ImageGallery';
 import type { SiteConfig } from '@/types';
+import { EmptyState } from '@/components/system/EmptyState';
 
 interface GalleryProps {
   config: SiteConfig;
@@ -26,7 +27,7 @@ export default function Gallery({ config }: GalleryProps) {
           <h2 className="text-2xl sm:text-3xl md:text-4xl font-serif font-bold text-navy-900 mb-2 md:mb-3 px-4">
             Performance Gallery
           </h2>
-          <p className="text-sm sm:text-base text-gray-600 max-w-2xl mx-auto px-4 leading-relaxed">
+          <p className="text-sm sm:text-base text-slate-600 max-w-2xl mx-auto px-4 leading-relaxed">
             A visual journey through memorable performances and musical moments
           </p>
         </m.div>
@@ -35,9 +36,7 @@ export default function Gallery({ config }: GalleryProps) {
         {config.gallery?.images && config.gallery.images.length > 0 ? (
           <ImageGallery images={config.gallery.images} />
         ) : (
-          <div className="text-center text-gray-500 px-4">
-            <p className="text-base sm:text-lg">No gallery images available at this time.</p>
-          </div>
+          <EmptyState variant="gallery" />
         )}
       </div>
     </section>

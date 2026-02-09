@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { m, AnimatePresence } from 'framer-motion';
 import { FaBars, FaTimes } from 'react-icons/fa';
@@ -9,14 +9,17 @@ import { SiteConfig } from '@/types';
 
 interface NavigationProps {
   config?: SiteConfig;
+  isScrolled?: boolean;
 }
 
-export default function Navigation({ config }: NavigationProps) {
+export default function Navigation({ config, isScrolled = false }: NavigationProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState('home');
   const [mounted, setMounted] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
+  const hamburgerButtonRef = useRef<HTMLButtonElement>(null);
+  const mobileMenuRef = useRef<HTMLDivElement>(null);
 
   const navItems = useMemo(() => {
     // Default fallback if no config
@@ -40,6 +43,29 @@ export default function Navigation({ config }: NavigationProps) {
         label: section
       }));
   }, [config]);
+
+  // Body scroll lock when mobile menu is open
+  useEffect(() => {
+    if (isMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isMenuOpen]);
+
+  // Return focus to hamburger button when menu closes
+  useEffect(() => {
+    if (!isMenuOpen && hamburgerButtonRef.current && document.activeElement !== hamburgerButtonRef.current) {
+      // Only return focus if user closed the menu (not if they navigated)
+      const wasMenuClosed = !isMenuOpen;
+      if (wasMenuClosed && mounted) {
+        hamburgerButtonRef.current.focus();
+      }
+    }
+  }, [isMenuOpen, mounted]);
 
   useEffect(() => {
     setMounted(true);
@@ -108,8 +134,13 @@ export default function Navigation({ config }: NavigationProps) {
             >
               <button
                 onClick={() => handleNavClick(item)}
-                className="relative text-[11px] lg:text-xs font-medium transition-all duration-300 hover:text-gold-600 min-h-[44px] flex items-center justify-center px-1.5 lg:px-3"
-                style={{ color: activeSection === item.id ? '#8B6914' : '#334155' }}
+                className={`relative text-xs font-medium transition-all duration-300 min-h-[44px] flex items-center justify-center px-1.5 lg:px-3 ${
+                  activeSection === item.id
+                    ? 'text-gold-600'
+                    : isScrolled
+                    ? 'text-charcoal-700 hover:text-gold-600'
+                    : 'text-white hover:text-gold-300'
+                }`}
                 role="menuitem"
                 aria-label={`Navigate to ${item.label} section`}
                 aria-current={activeSection === item.id ? 'page' : undefined}
@@ -118,7 +149,7 @@ export default function Navigation({ config }: NavigationProps) {
                 {activeSection === item.id && (
                   <m.div
                     layoutId="activeSection"
-                    className="absolute -bottom-1 left-0 right-0 h-0.5 bg-gold-600"
+                    className={`absolute -bottom-1 left-0 right-0 h-0.5 ${isScrolled ? 'bg-gold-600' : 'bg-gold-300'}`}
                     transition={{ type: 'spring', stiffness: 380, damping: 30 }}
                     aria-hidden="true"
                   />
@@ -130,9 +161,15 @@ export default function Navigation({ config }: NavigationProps) {
       </m.nav>
 
       <button
+        ref={hamburgerButtonRef}
         onClick={() => setIsMenuOpen(!isMenuOpen)}
-        className={`md:hidden transition-colors z-[10012] relative flex items-center justify-center ${isMenuOpen ? 'text-gold-600' : 'text-gray-700'
-          } hover:text-gold-600`}
+        className={`md:hidden transition-colors z-[10012] relative flex items-center justify-center ${
+          isMenuOpen
+            ? 'text-gold-600'
+            : isScrolled
+            ? 'text-charcoal-700 hover:text-gold-600'
+            : 'text-white hover:text-gold-300'
+        }`}
         aria-label={isMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
         aria-expanded={isMenuOpen}
         aria-controls="mobile-menu"
@@ -157,18 +194,19 @@ export default function Navigation({ config }: NavigationProps) {
 
               {/* Slide-in Menu */}
               <m.nav
+                ref={mobileMenuRef}
                 id="mobile-menu"
                 initial={{ x: '100%' }}
                 animate={{ x: 0 }}
                 exit={{ x: '100%' }}
                 transition={{ type: 'tween', duration: 0.3 }}
-                className="fixed top-0 right-0 bottom-0 w-72 bg-white shadow-2xl z-[110] md:hidden overflow-hidden flex flex-col"
+                className="fixed top-0 right-0 bottom-0 w-72 max-w-[85vw] bg-white shadow-2xl z-[110] md:hidden overflow-hidden flex flex-col"
                 role="navigation"
                 aria-label="Mobile navigation"
               >
                 {/* Header inside mobile menu */}
-                <div className="flex items-center justify-between px-8 py-6 border-b border-gray-50">
-                  <span className="text-[10px] font-semibold text-gray-500 tracking-[0.2em] uppercase">Menu</span>
+                <div className="flex items-center justify-between px-8 py-6 border-b border-slate-50">
+                  <span className="text-xs font-semibold text-slate-500 tracking-[0.2em] uppercase">Menu</span>
                   <button
                     onClick={() => setIsMenuOpen(false)}
                     className="p-2 text-gold-600 hover:bg-gold-50 rounded-full transition-colors"
@@ -186,7 +224,7 @@ export default function Navigation({ config }: NavigationProps) {
                           onClick={() => handleNavClick(item)}
                           className={`text-base font-medium py-3.5 px-2 transition-colors hover:text-gold-600 w-full text-left flex items-center justify-between ${activeSection === item.id
                             ? 'text-gold-600'
-                            : 'text-gray-700'
+                            : 'text-charcoal-700'
                             }`}
                           role="menuitem"
                           aria-label={`Navigate to ${item.label} section`}

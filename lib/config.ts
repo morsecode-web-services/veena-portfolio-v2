@@ -67,6 +67,16 @@ const SpotlightSchema = z.object({
   ctaLink: z.string().optional(),
 });
 
+const FeaturedCarouselItemSchema = z.object({
+  id: z.string().min(1),
+  image: z.string().min(1).optional(),
+  title: z.string().min(1),
+  description: z.string().min(1),
+  subtitle: z.string().optional(),
+  link: z.string().optional(),
+  linkText: z.string().optional(),
+});
+
 const SiteConfigSchema = z.object({
   artist: z.object({
     name: z.string().min(1),
@@ -78,11 +88,30 @@ const SiteConfigSchema = z.object({
   }),
   home: z.object({
     heroTitle: z.string().optional(),
+    heroBackground: z.string().optional(),
+    heroBackgroundPosition: z.string().optional(),
+    heroTagline: z.string().optional(),
+    heroStats: z.array(z.object({
+      label: z.string().min(1),
+      value: z.string().min(1),
+    })).optional(),
+    heroCta: z.object({
+      text: z.string().min(1),
+      link: z.string().min(1),
+    }).optional(),
     images: z.object({
       veena: z.string().min(1),
       vocal: z.string().min(1),
     }),
     featuredVideos: z.array(z.union([z.string().url(), MusicVideoSchema])),
+    featuredCarousel: z.object({
+      enabled: z.boolean(),
+      autoScrollInterval: z.number().optional(),
+      items: z.array(FeaturedCarouselItemSchema),
+      showUpcomingEvent: z.boolean().optional(),
+      eventSubtitle: z.string().optional(),
+      eventLinkText: z.string().optional(),
+    }).optional(),
   }),
   spotlights: z.array(SpotlightSchema).optional(),
   gallery: z.object({
@@ -105,17 +134,23 @@ const SiteConfigSchema = z.object({
     twitter: z.string().url().optional(),
     linkedin: z.string().url().optional(),
   }),
-  features: z.object({
-    swaraAnimation: z.object({
-      desktop: z.boolean(),
-      mobile: z.boolean(),
-    }),
-  }).optional(),
   layoutOrder: z.array(z.string()).optional(),
   sections: z.record(z.boolean()).optional(),
   blog: z.object({
     title: z.string(),
     subtitle: z.string(),
+  }).optional(),
+  pdf: z.object({
+    backgroundOpacity: z.number().optional(),
+    backgroundBrightness: z.number().optional(),
+    gradients: z.object({
+      enabled: z.boolean().optional(),
+      opacity: z.number().min(0).max(1).optional(),
+    }).optional(),
+  }).optional(),
+  contact: z.object({
+    imageUrl: z.string().optional(),
+    imageAlt: z.string().optional(),
   }).optional(),
 });
 
@@ -149,12 +184,6 @@ const defaultConfig: SiteConfig = {
     items: [],
   },
   socialMedia: {},
-  features: {
-    swaraAnimation: {
-      desktop: true,
-      mobile: false,
-    },
-  },
   layoutOrder: ['Home', 'About', 'Gallery', 'Music', 'Events', 'Press', 'FAQ', 'Contact'],
   sections: {
     Home: true,

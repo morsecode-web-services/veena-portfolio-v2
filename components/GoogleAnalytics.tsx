@@ -108,11 +108,12 @@ export const analytics = {
     },
 
     // Contact form
-    contactFormSubmit: (success: boolean, errorMessage?: string) => {
+    contactFormSubmit: (success: boolean, errorMessage?: string, inquiryType?: string) => {
         trackEvent('contact_form_submit', {
             event_category: 'Form',
             event_label: success ? 'Success' : 'Error',
             form_type: 'contact',
+            inquiry_type: inquiryType,
             success,
             error_message: errorMessage,
         });

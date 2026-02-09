@@ -8,9 +8,10 @@ import { analytics } from '@/components/GoogleAnalytics';
 
 interface HeaderPDFButtonProps {
     showLabel?: boolean;
+    isScrolled?: boolean;
 }
 
-export default function HeaderPDFButton({ showLabel = false }: HeaderPDFButtonProps) {
+export default function HeaderPDFButton({ showLabel = false, isScrolled = true }: HeaderPDFButtonProps) {
     const [isGenerating, setIsGenerating] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -52,7 +53,7 @@ export default function HeaderPDFButton({ showLabel = false }: HeaderPDFButtonPr
           flex items-center transition-all duration-300
           ${showLabel
                         ? 'gap-3 px-4 py-3 w-full text-left text-base font-medium'
-                        : 'justify-center w-8 h-8 rounded-full shadow-sm border border-gold-100'
+                        : `justify-center w-8 h-8 rounded-full shadow-sm border ${isScrolled ? 'border-gold-100' : 'border-white/30'}`
                     }
           ${isGenerating
                         ? 'text-gray-400 cursor-not-allowed'
@@ -60,7 +61,9 @@ export default function HeaderPDFButton({ showLabel = false }: HeaderPDFButtonPr
                             ? 'text-red-500 bg-red-50'
                             : showLabel
                                 ? 'text-gray-700 hover:text-gold-600'
-                                : 'text-gold-600 bg-white hover:bg-gold-50'
+                                : isScrolled
+                                ? 'text-gold-600 bg-white hover:bg-gold-50'
+                                : 'text-white bg-white/10 hover:bg-white/20'
                     }
         `}
                 aria-label={isGenerating ? 'Generating PDF...' : error ? error : 'Download Portfolio PDF'}

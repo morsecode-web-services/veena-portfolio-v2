@@ -6,6 +6,9 @@ import Image from 'next/image';
 import { useIntersectionObserver } from '@/hooks/useIntersectionObserver';
 import { getAssetPath } from '@/lib/config';
 import type { SiteConfig } from '@/types';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { SectionWrapper } from '@/components/system/SectionWrapper';
+import { SectionTitle } from '@/components/system/SectionTitle';
 
 interface AboutProps {
   config: SiteConfig;
@@ -13,31 +16,22 @@ interface AboutProps {
 
 export default function About({ config }: AboutProps) {
   // Config passed as prop, no loading state needed
+  const shouldReduceMotion = useReducedMotion();
 
   return (
-    <section id="about" className="px-4 sm:px-6 md:px-8" aria-label="About">
-      <div id="about-section" className="max-w-7xl mx-auto">
-        {/* Section Title */}
-        <m.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-100px' }}
-          transition={{ duration: 0.6 }}
-          className="text-center mb-10 sm:mb-12"
-        >
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-serif font-bold text-navy-900 mb-2 md:mb-3 px-4">
-            About {config.artist.name.split(' ')[0]}
-          </h2>
-          <div className="w-20 sm:w-24 h-1 bg-gradient-gold mx-auto rounded-full"></div>
-        </m.div>
+    <SectionWrapper id="about" spacing="base">
+      <SectionTitle
+        title={`About ${config.artist.name.split(' ')[0]}`}
+        alignment="center"
+      />
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
           {/* Portrait Image Column - Sticky on Desktop */}
           <m.div
-            initial={{ opacity: 0, x: -30 }}
-            whileInView={{ opacity: 1, x: 0 }}
+            initial={shouldReduceMotion ? undefined : { opacity: 0, x: -30 }}
+            whileInView={shouldReduceMotion ? undefined : { opacity: 1, x: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
+            transition={{ duration: shouldReduceMotion ? 0 : 0.8 }}
             className="lg:col-span-5 xl:col-span-4 lg:sticky lg:top-24"
           >
             <div className="relative aspect-[4/5] sm:aspect-square lg:aspect-[3/4] rounded-2xl overflow-hidden shadow-premium-xl group" style={{ minHeight: '400px' }}>
@@ -59,6 +53,7 @@ export default function About({ config }: AboutProps) {
               <h3 className="text-sm font-serif font-bold text-navy-900 mb-4 uppercase tracking-wider flex items-center gap-2">
                 <span className="w-8 h-px bg-gold-500"></span>
                 Professional Highlights
+                <span className="w-8 h-px bg-gold-500"></span>
               </h3>
               <ul className="space-y-4">
                 {[
@@ -68,7 +63,7 @@ export default function About({ config }: AboutProps) {
                   { label: "Awards", value: "Spirit of Youth (Best Instrumentalist)" }
                 ].map((fact, i) => (
                   <li key={fact.label} className="flex flex-col">
-                    <span className="text-[10px] text-gold-600 font-bold uppercase tracking-tight">{fact.label}</span>
+                    <span className="text-xs text-gold-600 font-bold uppercase tracking-tight">{fact.label}</span>
                     <span className="text-xs xl:text-sm text-navy-800 font-medium">{fact.value}</span>
                   </li>
                 ))}
@@ -78,9 +73,6 @@ export default function About({ config }: AboutProps) {
 
           {/* Biography Text Column */}
           <div className="lg:col-span-7 xl:col-span-8 space-y-6 sm:space-y-8 relative">
-            {/* Decorative vertical line */}
-            <div className="absolute left-6 top-4 bottom-4 w-0.5 bg-gradient-to-b from-transparent via-gold-200 to-transparent opacity-50 hidden sm:block"></div>
-
             <div className="space-y-5">
               {config.artist.fullBio.map((block, index) => (
                 <BiographySubsection
@@ -92,8 +84,7 @@ export default function About({ config }: AboutProps) {
             </div>
           </div>
         </div>
-      </div>
-    </section>
+    </SectionWrapper>
   );
 }
 
@@ -148,8 +139,8 @@ const BiographySubsection = ({ block, index }: BiographySubsectionProps) => {
       >
         <ul className="space-y-2">
           {contentBlock.items?.map((item, idx) => (
-            <li key={idx} className="flex items-start gap-2 text-sm sm:text-base text-gray-700">
-              <span className="text-gold-600 mt-1.5 text-[10px]">◆</span>
+            <li key={idx} className="flex items-start gap-2 text-sm sm:text-base text-charcoal-700">
+              <span className="text-gold-600 mt-1.5 text-xs">◆</span>
               <span>{item}</span>
             </li>
           ))}
@@ -167,7 +158,7 @@ const BiographySubsection = ({ block, index }: BiographySubsectionProps) => {
       transition={{ duration: 0.6, delay: getDelay() }}
       className="pl-5"
     >
-      <p className="text-sm sm:text-base text-gray-700 leading-relaxed font-light text-justify">
+      <p className="text-sm sm:text-base text-charcoal-700 leading-relaxed font-light text-justify">
         {contentBlock.content}
       </p>
     </m.div>
