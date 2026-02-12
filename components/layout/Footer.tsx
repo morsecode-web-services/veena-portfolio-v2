@@ -1,6 +1,7 @@
 'use client';
 
 import { m } from 'framer-motion';
+import { memo } from 'react';
 import {
   FaYoutube,
   FaFacebook,
@@ -28,7 +29,7 @@ interface FooterProps {
   config?: SiteConfig;
 }
 
-export default function Footer({ config }: FooterProps) {
+function Footer({ config }: FooterProps) {
   const pathname = usePathname();
   const socialMedia = config?.socialMedia || {};
   const shouldReduceMotion = useReducedMotion();
@@ -39,7 +40,7 @@ export default function Footer({ config }: FooterProps) {
   }
 
   return (
-    <footer className="bg-gradient-navy text-white py-6 sm:py-8 md:py-10 border-t border-premium" role="contentinfo">
+    <footer className="bg-gradient-navy text-white py-6 sm:py-8 md:py-10 border-t border-premium" role="contentinfo" suppressHydrationWarning>
       <div className="container mx-auto px-4 sm:px-6 md:px-8">
         <div className="flex flex-col items-center space-y-6 md:space-y-8">
           {/* Logo */}
@@ -117,3 +118,5 @@ export default function Footer({ config }: FooterProps) {
     </footer>
   );
 }
+
+export default memo(Footer);

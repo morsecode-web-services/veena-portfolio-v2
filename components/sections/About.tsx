@@ -25,65 +25,65 @@ export default function About({ config }: AboutProps) {
         alignment="center"
       />
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
-          {/* Portrait Image Column - Sticky on Desktop */}
-          <m.div
-            initial={shouldReduceMotion ? undefined : { opacity: 0, x: -30 }}
-            whileInView={shouldReduceMotion ? undefined : { opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: shouldReduceMotion ? 0 : 0.8 }}
-            className="lg:col-span-5 xl:col-span-4 lg:sticky lg:top-24"
-          >
-            <div className="relative aspect-[4/5] sm:aspect-square lg:aspect-[3/4] rounded-2xl overflow-hidden shadow-premium-xl group" style={{ minHeight: '400px' }}>
-              <div className="absolute inset-0 bg-navy-900/10 group-hover:bg-transparent transition-colors duration-500 z-10"></div>
-              <Image
-                src={getAssetPath(config.home.images.veena)}
-                alt={config.artist.name}
-                width={800}
-                height={1000}
-                priority
-                className="w-full h-full object-cover grayscale-[20%] group-hover:grayscale-0 transition-all duration-700 transform group-hover:scale-105"
-              />
-              {/* Decorative Frame */}
-              <div className="absolute inset-4 border border-white/30 rounded-xl z-20 pointer-events-none"></div>
-            </div>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
+        {/* Portrait Image Column - Sticky on Desktop */}
+        <m.div
+          initial={shouldReduceMotion ? undefined : { opacity: 0, x: -30 }}
+          whileInView={shouldReduceMotion ? undefined : { opacity: 1, x: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: shouldReduceMotion ? 0 : 0.8 }}
+          className="lg:col-span-5 xl:col-span-4 lg:sticky lg:top-24"
+        >
+          <div className="relative aspect-[4/5] sm:aspect-square lg:aspect-[3/4] rounded-2xl overflow-hidden shadow-premium-xl group" style={{ minHeight: '400px' }}>
+            <div className="absolute inset-0 bg-navy-900/10 group-hover:bg-transparent transition-colors duration-500 z-10"></div>
+            <Image
+              src={getAssetPath(config.home.images.veena)}
+              alt={config.artist.name}
+              width={800}
+              height={1000}
+              priority
+              className="w-full h-full object-cover grayscale-[20%] group-hover:grayscale-0 transition-all duration-700 transform group-hover:scale-105"
+            />
+            {/* Decorative Frame */}
+            <div className="absolute inset-4 border border-white/30 rounded-xl z-20 pointer-events-none"></div>
+          </div>
 
-            {/* Quick Facts Card - Desktop Only */}
-            <div className="mt-8 p-6 bg-navy-50 rounded-2xl border border-navy-100 hidden lg:block shadow-sm">
-              <h3 className="text-sm font-serif font-bold text-navy-900 mb-4 uppercase tracking-wider flex items-center gap-2">
-                <span className="w-8 h-px bg-gold-500"></span>
-                Professional Highlights
-                <span className="w-8 h-px bg-gold-500"></span>
-              </h3>
-              <ul className="space-y-4">
-                {[
-                  { label: "Grade", value: "‘A’-Grade Veena Artist (AIR)" },
-                  { label: "Rank", value: "3rd Rank State (Vidwat Antima)" },
-                  { label: "Legacy", value: "3rd Generation Musician" },
-                  { label: "Awards", value: "Spirit of Youth (Best Instrumentalist)" }
-                ].map((fact, i) => (
-                  <li key={fact.label} className="flex flex-col">
-                    <span className="text-xs text-gold-600 font-bold uppercase tracking-tight">{fact.label}</span>
-                    <span className="text-xs xl:text-sm text-navy-800 font-medium">{fact.value}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </m.div>
-
-          {/* Biography Text Column */}
-          <div className="lg:col-span-7 xl:col-span-8 space-y-6 sm:space-y-8 relative">
-            <div className="space-y-5">
-              {config.artist.fullBio.map((block, index) => (
-                <BiographySubsection
-                  key={index}
-                  block={block}
-                  index={index}
-                />
+          {/* Quick Facts Card - Desktop Only */}
+          <div className="mt-8 p-6 bg-navy-50 rounded-2xl border border-navy-100 hidden lg:block shadow-sm">
+            <h3 className="text-sm font-serif font-bold text-navy-900 mb-4 uppercase tracking-wider flex items-center gap-2">
+              <span className="w-8 h-px bg-gold-500"></span>
+              Professional Highlights
+              <span className="w-8 h-px bg-gold-500"></span>
+            </h3>
+            <ul className="space-y-4">
+              {[
+                { label: "Grade", value: "‘A’-Grade Veena Artist (AIR)" },
+                { label: "Rank", value: "3rd Rank State (Vidwat Antima)" },
+                { label: "Legacy", value: "3rd Generation Musician" },
+                { label: "Awards", value: "Spirit of Youth , The Music Academy (Best Instrumentalist)" }
+              ].map((fact, i) => (
+                <li key={fact.label} className="flex flex-col">
+                  <span className="text-xs text-gold-600 font-bold uppercase tracking-tight">{fact.label}</span>
+                  <span className="text-xs xl:text-sm text-navy-800 font-medium">{fact.value}</span>
+                </li>
               ))}
-            </div>
+            </ul>
+          </div>
+        </m.div>
+
+        {/* Biography Text Column */}
+        <div className="lg:col-span-7 xl:col-span-8 space-y-6 sm:space-y-8 relative">
+          <div className="space-y-5">
+            {config.artist.fullBio.map((block, index) => (
+              <BiographySubsection
+                key={index}
+                block={block}
+                index={index}
+              />
+            ))}
           </div>
         </div>
+      </div>
     </SectionWrapper>
   );
 }

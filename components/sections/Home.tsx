@@ -189,7 +189,7 @@ export default function Home({ config, dbVideos }: HomeProps) {
                     <p className="text-xs tracking-[0.25em] text-gold-200/60 font-light uppercase mb-2 group-hover:text-gold-400/80 transition-colors">
                       {stat.label}
                     </p>
-                    <p className="text-lg sm:text-xl md:text-2xl font-serif text-white italic border-l-2 border-white/10 pl-4 py-1">
+                    <p className="text-lg sm:text-xl md:text-2xl font-serif text-white italic border-l-2 border-white/10 pl-4 py-1 whitespace-pre-line">
                       {stat.value}
                     </p>
                   </div>

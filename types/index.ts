@@ -9,6 +9,8 @@ export interface FeaturedCarouselItem {
   id: string;
   type: 'custom' | 'event'; // Type discriminator
   image?: string; // Optional - some items like events may not have images
+  imagePosition?: string; // CSS object-position for desktop (default: "center")
+  imagePositionMobile?: string; // CSS object-position for mobile (default: same as imagePosition or "center")
   title: string;
   description: string;
   subtitle?: string; // Optional gold label text (e.g., "Highlights", "Featured recognitions")
@@ -49,6 +51,8 @@ export interface SiteConfig {
       items: Array<{
         id: string;
         image: string;
+        imagePosition?: string; // CSS object-position for desktop (default: "center")
+        imagePositionMobile?: string; // CSS object-position for mobile (default: same as imagePosition or "center")
         title: string;
         description: string;
         subtitle?: string;

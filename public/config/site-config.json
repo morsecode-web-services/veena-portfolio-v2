@@ -65,11 +65,11 @@
     "heroTitle": "Music is the mediator between the spiritual and the sensual life.",
     "heroBackground": "/images/home/hero-bg.jpg",
     "heroBackgroundPosition": "center 35%",
-    "heroTagline": "Classical Veena Artiste",
+    "heroTagline": "Classical Veena & Vocal Artiste",
     "heroStats": [
       {
         "label": "Recognition",
-        "value": "'A'-Grade AIR Veena Artist"
+        "value": "'A'-Graded Musician\nAll India Radio"
       },
       {
         "label": "Tradition",
@@ -108,6 +108,8 @@
         {
           "id": "featured-1",
           "image": "/images/spotlight/spotlight-1-optimized.jpg",
+          "imagePosition": "center",
+          "imagePositionMobile": "center top",
           "title": "Performance before Hon. President",
           "description": "A Carnatic ensemble at Rashtrapati Bhavan",
           "pdfDescription": "Historic performance at Rashtrapati Bhavan on Republic Day 2025, performing a Carnatic ensemble in the presence of the Hon. President and Prime Minister of India. This milestone represents the pinnacle of recognition for classical artistry at the national level.",
@@ -204,7 +206,7 @@
     "images": [
       {
         "id": "1",
-        "src": "/images/gallery/gallery-1.jpg",
+        "src": "/images/gallery/gallery-18.jpg",
         "alt": "Veena performance at concert hall",
         "width": 1920,
         "height": 1440,
@@ -212,7 +214,7 @@
       },
       {
         "id": "2",
-        "src": "/images/gallery/gallery-2.jpg",
+        "src": "/images/gallery/gallery-13.jpg",
         "alt": "Vocal performance on stage",
         "width": 1468,
         "height": 2202,
@@ -220,7 +222,7 @@
       },
       {
         "id": "3",
-        "src": "/images/gallery/gallery-3.jpg",
+        "src": "/images/gallery/gallery-12.jpg",
         "alt": "Stage performance with traditional attire",
         "width": 1280,
         "height": 853,
@@ -228,7 +230,7 @@
       },
       {
         "id": "4",
-        "src": "/images/gallery/gallery-4.jpg",
+        "src": "/images/gallery/gallery-14.jpg",
         "alt": "Intimate performance setting",
         "width": 1920,
         "height": 2560,
@@ -236,7 +238,7 @@
       },
       {
         "id": "5",
-        "src": "/images/gallery/gallery-5.jpg",
+        "src": "/images/gallery/gallery-15.jpg",
         "alt": "Three-generation trio performance",
         "width": 1920,
         "height": 1440,
@@ -244,7 +246,7 @@
       },
       {
         "id": "6",
-        "src": "/images/gallery/gallery-6.jpg",
+        "src": "/images/gallery/gallery-16.jpg",
         "alt": "Classical music ensemble",
         "width": 1920,
         "height": 1100,
@@ -252,7 +254,7 @@
       },
       {
         "id": "7",
-        "src": "/images/gallery/gallery-7.jpg",
+        "src": "/images/gallery/gallery-11.jpg",
         "alt": "Classical performance moment",
         "width": 983,
         "height": 737,
@@ -260,7 +262,7 @@
       },
       {
         "id": "8",
-        "src": "/images/gallery/gallery-8.jpg",
+        "src": "/images/gallery/gallery-19.jpg",
         "alt": "Musical event",
         "width": 1920,
         "height": 1280,
@@ -268,7 +270,7 @@
       },
       {
         "id": "9",
-        "src": "/images/gallery/gallery-9.jpg",
+        "src": "/images/gallery/gallery-17.jpg",
         "alt": "Artistic performance",
         "width": 1280,
         "height": 853,
@@ -487,7 +489,7 @@
   },
   "socialMedia": {
     "youtube": "https://www.youtube.com/@aishwaryamanikarnike",
-    "instagram": "https://www.instagram.com/aishwaryamanikarnike"
+    "instagram": "https://instagram.com/aishwaryamanikarnike"
   },
   "layoutOrder": [
     "Home",
