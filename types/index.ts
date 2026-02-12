@@ -170,3 +170,15 @@ export interface GalleryImage {
   height: number;
   caption?: string;
 }
+
+// Social Links Types
+export type DeviceType = 'ios' | 'android' | 'desktop';
+export type LinkTarget = '_blank' | '_self' | undefined;
+export type LinkType = 'app_scheme' | 'intent' | 'https';
+
+export interface SocialLinkConfig {
+  href: string;
+  target?: LinkTarget;
+  deviceType: DeviceType;
+  linkType: LinkType;
+}

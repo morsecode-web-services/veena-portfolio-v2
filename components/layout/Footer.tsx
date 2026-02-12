@@ -1,7 +1,7 @@
 'use client';
 
 import { m } from 'framer-motion';
-import { memo } from 'react';
+import { memo, useState, useEffect } from 'react';
 import {
   FaYoutube,
   FaFacebook,
@@ -14,6 +14,7 @@ import Image from 'next/image';
 import { getAssetPath } from '@/lib/config';
 import { analytics } from '@/components/GoogleAnalytics';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { detectDevice, getSocialLinkConfig, type DeviceType } from '@/lib/social-links';
 
 const socialMediaIcons = {
   youtube: FaYoutube,
@@ -33,6 +34,12 @@ function Footer({ config }: FooterProps) {
   const pathname = usePathname();
   const socialMedia = config?.socialMedia || {};
   const shouldReduceMotion = useReducedMotion();
+  const [deviceType, setDeviceType] = useState<DeviceType>('desktop');
+
+  // Detect device type on mount
+  useEffect(() => {
+    setDeviceType(detectDevice());
+  }, []);
 
   // Hide footer on admin routes
   if (pathname?.startsWith('/admin')) {
@@ -77,6 +84,16 @@ function Footer({ config }: FooterProps) {
                 socialMediaIcons[platform as keyof typeof socialMediaIcons];
               if (!Icon) return null;
 
+              // Get platform-specific link configuration
+              const linkConfig = platform === 'instagram'
+                ? getSocialLinkConfig('instagram', url, deviceType)
+                : { href: url, target: '_blank' as const, deviceType, linkType: 'https' as const };
+
+              // Determine aria-label based on target
+              const ariaLabel = linkConfig.target === '_blank'
+                ? `Visit our ${platform.charAt(0).toUpperCase() + platform.slice(1)} page (opens in new tab)`
+                : `Visit our ${platform.charAt(0).toUpperCase() + platform.slice(1)} page`;
+
               return (
                 <m.a
                   key={platform}
@@ -86,12 +103,13 @@ function Footer({ config }: FooterProps) {
                   transition={{ duration: shouldReduceMotion ? 0 : 0.3, delay: shouldReduceMotion ? 0 : index * 0.1 }}
                   whileHover={shouldReduceMotion ? {} : { scale: 1.2, y: -3 }}
                   whileTap={shouldReduceMotion ? {} : { scale: 0.95 }}
-                  href={url}
-                  target="_blank"
+                  href={linkConfig.href}
+                  target={linkConfig.target}
                   rel="noopener noreferrer"
-                  onClick={() => analytics.socialMediaClick(platform, 'footer')}
+                  onClick={() => analytics.socialMediaClick(platform, 'footer', linkConfig.deviceType, linkConfig.linkType)}
                   className="text-slate-400 hover:text-white active:text-gray-300 transition-colors duration-200 touch-manipulation p-1.5"
-                  aria-label={`Visit our ${platform.charAt(0).toUpperCase() + platform.slice(1)} page (opens in new tab)`}
+                  aria-label={ariaLabel}
+                  suppressHydrationWarning
                 >
                   <Icon size={20} className="sm:w-6 sm:h-6" />
                 </m.a>

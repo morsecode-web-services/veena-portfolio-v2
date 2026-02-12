@@ -80,12 +80,14 @@ export const analytics = {
     },
 
     // Social media links
-    socialMediaClick: (platform: string, location: string) => {
+    socialMediaClick: (platform: string, location: string, deviceType?: string, linkType?: string) => {
         trackEvent('social_click', {
             // GA4 recommended parameters
             social_network: platform,          // GA4 recommended: instagram, youtube, linkedin, etc.
             link_domain: platform,             // Helps identify the platform in reports
             link_location: location,           // Where the link was clicked: 'header', 'footer', etc.
+            device_type: deviceType,           // Device type: 'ios', 'android', 'desktop'
+            link_type: linkType,               // Link type: 'app_scheme', 'intent', 'https'
             // Legacy parameters for compatibility
             event_category: 'Social Media',
             event_label: platform,
