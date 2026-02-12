@@ -2,40 +2,80 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import type { InquiryType } from '@/types';
+import { Button } from '@/components/system/Button';
 
 interface Lead {
   id: string;
-  name: string;
-  email: string;
-  phone: string;
-  inquiry_type: InquiryType;
-  message: string;
+  name: string | null;
+  email: string | null;
+  phone: string | null;
+  inquiry_type: string | null;
+  message: string | null;
   status: 'new' | 'contacted' | 'converted' | 'archived';
+  form_slug: string | null;
+  form_data: Record<string, any>;
   created_at: string;
   updated_at: string;
 }
 
-type FilterType = InquiryType | 'all';
+interface FormField {
+  name: string;
+  label: string;
+  type: string;
+}
+
+interface FormConfig {
+  form_slug: string;
+  fields: FormField[];
+}
+
 type StatusFilter = Lead['status'] | 'all';
 
 export default function LeadsPage() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [filteredLeads, setFilteredLeads] = useState<Lead[]>([]);
+  const [configs, setConfigs] = useState<Record<string, FormConfig>>({});
   const [loading, setLoading] = useState(true);
-  const [inquiryFilter, setInquiryFilter] = useState<FilterType>('all');
+  const [slugFilter, setSlugFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
-  const [showModal, setShowModal] = useState(false);
+
+  // Helper for semantic discovery - shared across functions
+  const getField = (lead: Lead, type: string, keywords: string[]) => {
+    // 1. Try legacy columns
+    if (type === 'text' && lead.name && lead.name !== 'Anonymous') return lead.name;
+    if (type === 'email' && lead.email) return lead.email;
+    if (type === 'tel' && lead.phone) return lead.phone;
+
+    const config = lead.form_slug ? configs[lead.form_slug] : null;
+    if (!config) return null;
+
+    // 2. Try by type
+    const byType = config.fields.find(f => f.type === type);
+    if (byType && lead.form_data?.[byType.name]) return lead.form_data[byType.name];
+
+    // 3. Try by keywords
+    const byName = config.fields.find(f =>
+      keywords.some(kw =>
+        f.name.toLowerCase().includes(kw) ||
+        f.label.toLowerCase().includes(kw)
+      )
+    );
+    if (byName && lead.form_data?.[byName.name]) return lead.form_data[byName.name];
+
+    return null;
+  };
 
   useEffect(() => {
-    fetchLeads();
+    async function init() {
+      await Promise.all([fetchLeads(), fetchConfigs()]);
+    }
+    init();
   }, []);
 
   useEffect(() => {
     filterLeads();
-  }, [leads, inquiryFilter, statusFilter, searchQuery]);
+  }, [leads, slugFilter, statusFilter, searchQuery]);
 
   const fetchLeads = async () => {
     setLoading(true);
@@ -52,12 +92,23 @@ export default function LeadsPage() {
     setLoading(false);
   };
 
+  const fetchConfigs = async () => {
+    const { data } = await supabase.from('form_configs').select('form_slug, fields');
+    if (data) {
+      const configMap = data.reduce((acc, config) => {
+        acc[config.form_slug] = config;
+        return acc;
+      }, {} as Record<string, FormConfig>);
+      setConfigs(configMap);
+    }
+  };
+
   const filterLeads = () => {
     let filtered = [...leads];
 
-    // Filter by inquiry type
-    if (inquiryFilter !== 'all') {
-      filtered = filtered.filter(lead => lead.inquiry_type === inquiryFilter);
+    // Filter by form slug
+    if (slugFilter !== 'all') {
+      filtered = filtered.filter(lead => lead.form_slug === slugFilter);
     }
 
     // Filter by status
@@ -69,11 +120,19 @@ export default function LeadsPage() {
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(
-        lead =>
-          lead.name.toLowerCase().includes(query) ||
-          lead.email.toLowerCase().includes(query) ||
-          lead.phone.includes(query) ||
-          lead.message.toLowerCase().includes(query)
+        lead => {
+          const leadName = (getField(lead, 'text', ['name', 'full name']) || 'Anonymous').toLowerCase();
+          const leadEmail = (getField(lead, 'email', ['email', 'email address']) || '').toLowerCase();
+          const leadPhone = (getField(lead, 'tel', ['phone', 'contact', 'mobile', 'whatsapp']) || '');
+          const leadMessage = (lead.message || lead.form_data?.message || '').toLowerCase();
+          const jsonData = JSON.stringify(lead.form_data).toLowerCase();
+
+          return leadName.includes(query) ||
+            leadEmail.includes(query) ||
+            leadPhone.includes(query) ||
+            leadMessage.includes(query) ||
+            jsonData.includes(query);
+        }
       );
     }
 
@@ -94,22 +153,27 @@ export default function LeadsPage() {
       setLeads(leads.map(lead =>
         lead.id === leadId ? { ...lead, status: newStatus } : lead
       ));
-      if (selectedLead?.id === leadId) {
-        setSelectedLead({ ...selectedLead, status: newStatus });
-      }
     }
   };
 
   const exportToCSV = () => {
-    const headers = ['Date', 'Name', 'Email', 'Phone', 'Inquiry Type', 'Status', 'Message'];
+    // Collect all unique dynamic field names across filtered leads
+    const dynamicKeys = new Set<string>();
+    filteredLeads.forEach(lead => {
+      Object.keys(lead.form_data).forEach(key => dynamicKeys.add(key));
+    });
+    const dynamicHeaders = Array.from(dynamicKeys);
+
+    const headers = ['Date', 'Display Name', 'Email', 'Phone', 'Form', 'Status', ...dynamicHeaders, 'Legacy Message'];
     const rows = filteredLeads.map(lead => [
       new Date(lead.created_at).toLocaleDateString(),
-      lead.name,
-      lead.email,
-      lead.phone,
-      lead.inquiry_type,
+      getField(lead, 'text', ['name', 'full name']) || 'Anonymous',
+      getField(lead, 'email', ['email', 'email address']) || '',
+      getField(lead, 'tel', ['phone', 'contact', 'mobile', 'whatsapp']) || '',
+      lead.form_slug || lead.inquiry_type,
       lead.status,
-      `"${lead.message.replace(/"/g, '""')}"`, // Escape quotes
+      ...dynamicHeaders.map(key => `"${(lead.form_data[key] || '').toString().replace(/"/g, '""')}"`),
+      `"${(lead.message || '').replace(/"/g, '""')}"`,
     ]);
 
     const csv = [
@@ -126,103 +190,74 @@ export default function LeadsPage() {
     window.URL.revokeObjectURL(url);
   };
 
-  const getInquiryTypeColor = (type: InquiryType) => {
-    const colors = {
-      performance: 'bg-purple-100 text-purple-800',
-      classes: 'bg-blue-100 text-blue-800',
-      collaboration: 'bg-green-100 text-green-800',
-      general: 'bg-gray-100 text-gray-800',
-    };
-    return colors[type];
-  };
-
-  const getStatusColor = (status: Lead['status']) => {
-    const colors = {
-      new: 'bg-yellow-100 text-yellow-800',
-      contacted: 'bg-blue-100 text-blue-800',
-      converted: 'bg-green-100 text-green-800',
-      archived: 'bg-gray-100 text-gray-800',
-    };
-    return colors[status];
-  };
-
-  const getStatusIcon = (status: Lead['status']) => {
-    const icons = {
-      new: '🆕',
-      contacted: '📧',
-      converted: '✅',
-      archived: '📁',
-    };
-    return icons[status];
-  };
-
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-navy-900">Leads</h1>
-          <p className="text-slate-600 mt-1">
+          <h1 className="text-3xl font-bold text-navy-900 font-serif">Leads Tracker</h1>
+          <p className="text-slate-600 mt-1 text-sm font-medium">
             {filteredLeads.length} {filteredLeads.length === 1 ? 'lead' : 'leads'}
-            {inquiryFilter !== 'all' || statusFilter !== 'all' || searchQuery
+            {slugFilter !== 'all' || statusFilter !== 'all' || searchQuery
               ? ` (filtered from ${leads.length})`
               : ''}
           </p>
         </div>
         <button
           onClick={exportToCSV}
-          className="px-4 py-2 bg-gold-500 text-white rounded-lg hover:bg-gold-600 transition-colors flex items-center gap-2"
+          className="px-6 py-2.5 bg-navy-900 text-white rounded-xl hover:bg-navy-800 transition-all shadow-premium hover:shadow-premium-lg flex items-center gap-2 font-semibold text-sm"
           disabled={filteredLeads.length === 0}
         >
-          <span>📥</span>
           Export CSV
         </button>
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="bg-white rounded-2xl shadow-premium border border-slate-100 p-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           {/* Search */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Search
+          <div className="md:col-span-1">
+            <label className="block text-[10px] font-bold text-navy-400 uppercase tracking-widest mb-2">
+              Search Leads
             </label>
             <input
               type="text"
-              placeholder="Name, email, phone..."
+              placeholder="Name, email, or data..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy-500 focus:border-transparent"
+              className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-navy-500/10 focus:border-navy-500 outline-none text-sm transition-all"
             />
           </div>
 
-          {/* Inquiry Type Filter */}
+          {/* Form Filter */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Inquiry Type
+            <label className="block text-[10px] font-bold text-navy-400 uppercase tracking-widest mb-2">
+              Form Source
             </label>
             <select
-              value={inquiryFilter}
-              onChange={(e) => setInquiryFilter(e.target.value as FilterType)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy-500 focus:border-transparent"
+              value={slugFilter}
+              onChange={(e) => setSlugFilter(e.target.value)}
+              className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-navy-500/10 focus:border-navy-500 outline-none text-sm transition-all appearance-none bg-no-repeat bg-[length:16px_16px] bg-[right_1rem_center]"
+              style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23475569'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")` }}
             >
-              <option value="all">All Types</option>
-              <option value="performance">Performance</option>
-              <option value="classes">Classes</option>
-              <option value="collaboration">Collaboration</option>
-              <option value="general">General</option>
+              <option value="all">All Forms</option>
+              {Object.keys(configs).map(slug => (
+                <option key={slug} value={slug}>{slug.toUpperCase()}</option>
+              ))}
+              <option value="general">Legacy General</option>
             </select>
           </div>
 
           {/* Status Filter */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-[10px] font-bold text-navy-400 uppercase tracking-widest mb-2">
               Status
             </label>
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy-500 focus:border-transparent"
+              className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-navy-500/10 focus:border-navy-500 outline-none text-sm transition-all appearance-none bg-no-repeat bg-[length:16px_16px] bg-[right_1rem_center]"
+              style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23475569'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")` }}
             >
               <option value="all">All Statuses</option>
               <option value="new">New</option>
@@ -232,17 +267,17 @@ export default function LeadsPage() {
             </select>
           </div>
 
-          {/* Clear Filters */}
+          {/* Reset */}
           <div className="flex items-end">
             <button
               onClick={() => {
-                setInquiryFilter('all');
+                setSlugFilter('all');
                 setStatusFilter('all');
                 setSearchQuery('');
               }}
-              className="w-full px-3 py-2 text-sm text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+              className="w-full px-4 py-2.5 text-xs font-bold text-navy-600 bg-navy-50 rounded-xl hover:bg-navy-100 transition-all uppercase tracking-widest"
             >
-              Clear Filters
+              Clear All Filters
             </button>
           </div>
         </div>
@@ -250,225 +285,113 @@ export default function LeadsPage() {
 
       {/* Table */}
       {loading ? (
-        <div className="flex justify-center items-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-navy-500"></div>
+        <div className="flex justify-center items-center py-20 bg-white rounded-2xl shadow-premium">
+          <div className="animate-spin rounded-full h-10 w-10 border-4 border-navy-100 border-t-gold-500"></div>
         </div>
       ) : filteredLeads.length === 0 ? (
-        <div className="bg-white rounded-lg shadow-sm p-12 text-center">
-          <p className="text-gray-500 text-lg">No leads found</p>
-          {(inquiryFilter !== 'all' || statusFilter !== 'all' || searchQuery) && (
-            <button
-              onClick={() => {
-                setInquiryFilter('all');
-                setStatusFilter('all');
-                setSearchQuery('');
-              }}
-              className="mt-4 text-navy-500 hover:text-navy-600 underline"
-            >
-              Clear filters
-            </button>
-          )}
+        <div className="bg-white rounded-2xl shadow-premium p-20 text-center border border-slate-100">
+          <p className="text-navy-900 font-serif font-bold text-xl">No matching leads found</p>
+          <p className="text-slate-500 mt-2">Try adjusting your filters or search query.</p>
         </div>
       ) : (
-        <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+        <div className="bg-white rounded-2xl shadow-premium overflow-hidden border border-slate-100 animate-fade-in">
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+            <table className="min-w-full divide-y divide-slate-100">
+              <thead className="bg-slate-50/50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Date
+                  <th className="px-6 py-4 text-left text-[10px] font-bold text-navy-400 uppercase tracking-widest whitespace-nowrap">
+                    Submission
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Name
+                  <th className="px-6 py-4 text-left text-[10px] font-bold text-navy-400 uppercase tracking-widest whitespace-nowrap">
+                    Contact Info
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Contact
+                  <th className="px-6 py-4 text-left text-[10px] font-bold text-navy-400 uppercase tracking-widest whitespace-nowrap">
+                    Source
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Type
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  {/* Dynamic Headers */}
+                  {Array.from(new Set(filteredLeads.flatMap(l => Object.keys(l.form_data)))).map(key => {
+                    const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                    return (
+                      <th key={key} className="px-6 py-4 text-left text-[10px] font-bold text-navy-400 uppercase tracking-widest whitespace-nowrap">
+                        {label}
+                      </th>
+                    );
+                  })}
+                  <th className="px-6 py-4 text-left text-[10px] font-bold text-navy-400 uppercase tracking-widest whitespace-nowrap">
                     Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filteredLeads.map((lead) => (
-                  <tr key={lead.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {new Date(lead.created_at).toLocaleDateString('en-US', {
-                        month: 'short',
-                        day: 'numeric',
-                        year: 'numeric',
-                      })}
-                      <div className="text-xs text-gray-500">
-                        {new Date(lead.created_at).toLocaleTimeString('en-US', {
-                          hour: 'numeric',
-                          minute: '2-digit',
-                        })}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">{lead.name}</div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="text-sm text-gray-900">{lead.email}</div>
-                      <div className="text-sm text-gray-500">{lead.phone}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span
-                        className={`px-2 py-1 text-xs font-medium rounded-full ${getInquiryTypeColor(
-                          lead.inquiry_type
-                        )}`}
-                      >
-                        {lead.inquiry_type}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <select
-                        value={lead.status}
-                        onChange={(e) => updateLeadStatus(lead.id, e.target.value as Lead['status'])}
-                        className={`text-xs font-medium rounded-full px-2 py-1 border-0 cursor-pointer ${getStatusColor(
-                          lead.status
-                        )}`}
-                      >
-                        <option value="new">🆕 New</option>
-                        <option value="contacted">📧 Contacted</option>
-                        <option value="converted">✅ Converted</option>
-                        <option value="archived">📁 Archived</option>
-                      </select>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      <button
-                        onClick={() => {
-                          setSelectedLead(lead);
-                          setShowModal(true);
-                        }}
-                        className="text-navy-600 hover:text-navy-900 font-medium"
-                      >
-                        View Details
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+              <tbody className="bg-white divide-y divide-slate-50">
+                {filteredLeads.map((lead) => {
+                  const dynamicKeys = Array.from(new Set(filteredLeads.flatMap(l => Object.keys(l.form_data))));
+
+                  return (
+                    <tr key={lead.id} className="hover:bg-slate-50/50 transition-colors group">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-semibold text-navy-900">
+                          {new Date(lead.created_at).toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric',
+                          })}
+                        </div>
+                        <div className="text-[10px] text-slate-400 font-medium">
+                          {new Date(lead.created_at).toLocaleTimeString('en-US', {
+                            hour: 'numeric',
+                            minute: '2-digit',
+                          })}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-bold text-navy-900">
+                          {getField(lead, 'text', ['name', 'full name']) || 'Anonymous'}
+                        </div>
+                        <div className="text-xs text-slate-500">
+                          {getField(lead, 'email', ['email', 'email address']) || 'No email provided'}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span
+                          className={`px-2.5 py-1 text-[10px] font-bold rounded-lg uppercase tracking-wider ${lead.form_slug === 'classes' ? 'bg-blue-50 text-blue-600' :
+                            lead.form_slug === 'performance' ? 'bg-purple-50 text-purple-600' :
+                              'bg-slate-100 text-slate-500'
+                            }`}
+                        >
+                          {lead.form_slug || lead.inquiry_type}
+                        </span>
+                      </td>
+                      {/* Dynamic Columns Data */}
+                      {dynamicKeys.map(key => (
+                        <td key={key} className="px-6 py-4 text-sm text-slate-600 whitespace-nowrap max-w-[200px] truncate">
+                          {lead.form_data[key] || '-'}
+                        </td>
+                      ))}
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <select
+                          value={lead.status}
+                          onChange={(e) => updateLeadStatus(lead.id, e.target.value as Lead['status'])}
+                          className={`text-[10px] font-bold rounded-lg px-2.5 py-1.5 border-0 cursor-pointer focus:ring-2 focus:ring-navy-500/10 ${lead.status === 'new' ? 'bg-yellow-50 text-yellow-700' :
+                            lead.status === 'contacted' ? 'bg-blue-50 text-blue-700' :
+                              lead.status === 'converted' ? 'bg-green-50 text-green-700' :
+                                'bg-slate-50 text-slate-600'
+                            }`}
+                        >
+                          <option value="new">New</option>
+                          <option value="contacted">Contacted</option>
+                          <option value="converted">Converted</option>
+                          <option value="archived">Archived</option>
+                        </select>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
         </div>
       )}
 
-      {/* Lead Detail Modal */}
-      {showModal && selectedLead && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
-          onClick={() => setShowModal(false)}
-        >
-          <div
-            className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="p-6">
-              <div className="flex justify-between items-start mb-4">
-                <h2 className="text-2xl font-bold text-navy-900">Lead Details</h2>
-                <button
-                  onClick={() => setShowModal(false)}
-                  className="text-gray-400 hover:text-gray-600 text-2xl"
-                >
-                  ×
-                </button>
-              </div>
-
-              <div className="space-y-4">
-                {/* Status and Type */}
-                <div className="flex gap-2">
-                  <span
-                    className={`px-3 py-1 text-sm font-medium rounded-full ${getStatusColor(
-                      selectedLead.status
-                    )}`}
-                  >
-                    {getStatusIcon(selectedLead.status)} {selectedLead.status}
-                  </span>
-                  <span
-                    className={`px-3 py-1 text-sm font-medium rounded-full ${getInquiryTypeColor(
-                      selectedLead.inquiry_type
-                    )}`}
-                  >
-                    {selectedLead.inquiry_type}
-                  </span>
-                </div>
-
-                {/* Contact Info */}
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <h3 className="font-semibold text-gray-900 mb-2">Contact Information</h3>
-                  <div className="space-y-2 text-sm">
-                    <div>
-                      <span className="text-gray-600">Name:</span>{' '}
-                      <span className="text-gray-900 font-medium">{selectedLead.name}</span>
-                    </div>
-                    <div>
-                      <span className="text-gray-600">Email:</span>{' '}
-                      <a
-                        href={`mailto:${selectedLead.email}`}
-                        className="text-navy-600 hover:text-navy-800 underline"
-                      >
-                        {selectedLead.email}
-                      </a>
-                    </div>
-                    <div>
-                      <span className="text-gray-600">Phone:</span>{' '}
-                      <a
-                        href={`tel:${selectedLead.phone}`}
-                        className="text-navy-600 hover:text-navy-800 underline"
-                      >
-                        {selectedLead.phone}
-                      </a>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Message */}
-                <div>
-                  <h3 className="font-semibold text-gray-900 mb-2">Message</h3>
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <p className="text-gray-900 whitespace-pre-wrap">{selectedLead.message}</p>
-                  </div>
-                </div>
-
-                {/* Metadata */}
-                <div className="text-sm text-gray-500 pt-4 border-t">
-                  <div>
-                    Submitted: {new Date(selectedLead.created_at).toLocaleString('en-US')}
-                  </div>
-                  {selectedLead.updated_at !== selectedLead.created_at && (
-                    <div>
-                      Updated: {new Date(selectedLead.updated_at).toLocaleString('en-US')}
-                    </div>
-                  )}
-                </div>
-
-                {/* Actions */}
-                <div className="flex gap-2 pt-4">
-                  <a
-                    href={`mailto:${selectedLead.email}?subject=Re: Your ${selectedLead.inquiry_type} inquiry`}
-                    className="flex-1 px-4 py-2 bg-navy-500 text-white rounded-lg hover:bg-navy-600 transition-colors text-center"
-                  >
-                    Reply via Email
-                  </a>
-                  <button
-                    onClick={() => setShowModal(false)}
-                    className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
-                  >
-                    Close
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

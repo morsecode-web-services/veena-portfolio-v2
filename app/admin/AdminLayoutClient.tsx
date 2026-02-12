@@ -94,7 +94,8 @@ export default function AdminLayoutClient({ children }: AdminLayoutClientProps) 
     const navItems = [
         { name: 'Events', href: '/admin/events', icon: Calendar },
         { name: 'Blog', href: '/admin/blogs', icon: FileText },
-        { name: 'Videos', href: '/admin/videos', icon: LayoutDashboard }, // Using LayoutDashboard for now, could use Video
+        { name: 'Videos', href: '/admin/videos', icon: LayoutDashboard },
+        { name: 'Forms', href: '/admin/forms', icon: LayoutDashboard }, // Using LayoutDashboard for now
         { name: 'Leads', href: '/admin/leads', icon: Users },
         { name: 'Public Site', href: '/', icon: Home },
     ];

@@ -6,6 +6,8 @@ import type { SiteConfig } from '@/types';
 import MusicCarousel from '@/components/features/MusicCarousel';
 import { Video } from '@/types/video';
 import { extractYoutubeId } from '@/lib/utils';
+import { SectionWrapper } from '@/components/system/SectionWrapper';
+import { SectionTitle } from '@/components/system/SectionTitle';
 
 interface MusicProps {
   config: SiteConfig;
@@ -21,23 +23,14 @@ export default function Music({ config, dbVideos }: MusicProps) {
   const selectedMainCategory = config.music.categories.find(c => c.id === selectedMainCategoryId);
 
   return (
-    <section id="music" className="px-4 sm:px-6 md:px-8" aria-label="Music">
-      <div id="music-section" className="max-w-7xl mx-auto">
-        {/* Section Title */}
-        <m.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-100px' }}
-          transition={{ duration: 0.6 }}
-          className="text-center mb-8"
-        >
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-serif font-bold text-navy-900 mb-3 px-4">
-            Music
-          </h2>
-          <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto px-4">
-            Explore performances across different styles and traditions
-          </p>
-        </m.div>
+    <SectionWrapper id="music" background="white" spacing="base">
+      <SectionTitle
+        title="Music"
+        description="Explore performances across different styles and traditions"
+        alignment="center"
+      />
+
+      <div id="music-section">
 
         {/* Main Category Tabs (Veena / Vocal) - Minimal Style */}
         <div
@@ -153,6 +146,6 @@ export default function Music({ config, dbVideos }: MusicProps) {
           </div>
         )}
       </div>
-    </section>
+    </SectionWrapper>
   );
 }
