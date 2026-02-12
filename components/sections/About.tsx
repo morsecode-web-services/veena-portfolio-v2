@@ -39,10 +39,9 @@ export default function About({ config }: AboutProps) {
             <Image
               src={getAssetPath(config.home.images.veena)}
               alt={config.artist.name}
-              width={800}
-              height={1000}
-              priority
+              fill
               className="w-full h-full object-cover grayscale-[20%] group-hover:grayscale-0 transition-all duration-700 transform group-hover:scale-105"
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             />
             {/* Decorative Frame */}
             <div className="absolute inset-4 border border-white/30 rounded-xl z-20 pointer-events-none"></div>

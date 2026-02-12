@@ -87,11 +87,7 @@ export default function Home({ config, dbVideos }: HomeProps) {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
-      transition: {
-        staggerChildren: 0.08,
-      },
-      transitionEnd: { staggerChildren: 0 },
-      transitionOut: { duration: 0.8, ease: [0.25, 0.1, 0.25, 1] as any },
+      transition: { duration: 0.8, ease: "easeOut" },
     },
   };
 
@@ -123,8 +119,8 @@ export default function Home({ config, dbVideos }: HomeProps) {
               className="object-cover"
               style={{ objectPosition: heroBackgroundPosition }}
               priority
-              quality={90}
-              sizes="100vw"
+              quality={80}
+              sizes="(max-width: 768px) 100vw, 100vw"
             />
           </m.div>
           {/* Layered Overlays for Depth and Contrast */}
@@ -154,22 +150,10 @@ export default function Home({ config, dbVideos }: HomeProps) {
           <div className="flex-1 flex items-center -translate-y-16 sm:translate-y-0">
             <div className="max-w-4xl">
               <m.h1
-                variants={shouldReduceMotion ? {} : nameVariants}
+                variants={shouldReduceMotion ? {} : itemVariants}
                 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-[6.5rem] font-serif font-bold text-white leading-[0.85] tracking-tighter"
               >
-                {config.artist.name.split(' ').map((word, wordIdx) => (
-                  <span key={wordIdx} className="block whitespace-nowrap overflow-hidden py-1 sm:py-2">
-                    {shouldReduceMotion ? word : word.split('').map((char, charIdx) => (
-                      <m.span
-                        key={charIdx}
-                        variants={charVariants}
-                        className="inline-block"
-                      >
-                        {char}
-                      </m.span>
-                    ))}
-                  </span>
-                ))}
+                {config.artist.name}
               </m.h1>
 
               <m.div

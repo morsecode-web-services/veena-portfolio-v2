@@ -34,7 +34,7 @@ export default function Music({ config, dbVideos }: MusicProps) {
 
         {/* Main Category Tabs (Veena / Vocal) - Minimal Style */}
         <div
-          className="sticky z-40 py-6 mb-8 -mx-4 px-4 bg-white/95 backdrop-blur-md"
+          className="sticky z-40 py-6 mb-8 -mx-4 px-4 bg-white/98 border-b border-gray-100 shadow-sm"
           style={{ top: 'var(--header-height, 70px)' }}
         >
           <div className="flex justify-center">

@@ -44,12 +44,13 @@ export default function ImageWithFallback({
 
       // Add a small delay before retrying
       setTimeout(() => {
-        setImgSrc(`${src}?retry=${attempts + 1}`);
+        const retrySrc = `${src}${src.toString().includes('?') ? '&' : '?'}retry=${attempts + 1}`;
+        setImgSrc(getAssetPath(retrySrc));
         setIsRetrying(false);
       }, 1000 * (attempts + 1)); // Exponential backoff
-    } else if (imgSrc !== fallbackSrc) {
+    } else if (imgSrc !== getAssetPath(fallbackSrc)) {
       // Try fallback image
-      setImgSrc(fallbackSrc);
+      setImgSrc(getAssetPath(fallbackSrc));
       setAttempts(0);
     } else {
       // Both primary and fallback failed

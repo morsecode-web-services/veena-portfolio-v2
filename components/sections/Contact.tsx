@@ -129,9 +129,9 @@ export default function Contact() {
           initial={{ opacity: 0, x: -30 }}
           whileInView={{ opacity: 1, x: 0 }}
           viewport={{ once: true }}
-          className="lg:col-span-12 xl:col-span-5 space-y-8"
+          className="lg:col-span-12 xl:col-span-5 space-y-8 order-last xl:order-first"
         >
-          <div className="relative aspect-[16/9] lg:aspect-[4/5] rounded-[2rem] overflow-hidden shadow-premium-xl group">
+          <div className="relative aspect-square sm:aspect-[16/9] lg:aspect-[4/5] rounded-[2rem] overflow-hidden shadow-premium-xl group">
             <ImageWithFallback
               src={contactImage}
               alt={contactImageAlt}
@@ -146,14 +146,15 @@ export default function Contact() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="p-4 bg-white rounded-2xl border border-slate-100 shadow-premium flex flex-col items-center text-center">
-              <span className="text-xs font-bold text-navy-900 uppercase mb-1">Location</span>
-              <span className="text-xs text-slate-500">Bangalore, India</span>
+          <div className="flex flex-row justify-center gap-8 py-2 border-y border-slate-50">
+            <div className="flex flex-col items-center text-center">
+              <span className="text-[10px] font-black text-navy-400 uppercase tracking-widest mb-0.5">Location</span>
+              <span className="text-xs font-semibold text-navy-900">Bangalore, India</span>
             </div>
-            <div className="p-4 bg-white rounded-2xl border border-slate-100 shadow-premium flex flex-col items-center text-center">
-              <span className="text-xs font-bold text-navy-900 uppercase mb-1">Response</span>
-              <span className="text-xs text-slate-500">24-48 Hours</span>
+            <div className="w-px h-8 bg-slate-100 self-center" />
+            <div className="flex flex-col items-center text-center">
+              <span className="text-[10px] font-black text-navy-400 uppercase tracking-widest mb-0.5">Response</span>
+              <span className="text-xs font-semibold text-navy-900">24-48 Hours</span>
             </div>
           </div>
         </m.div>
@@ -163,7 +164,7 @@ export default function Contact() {
           initial={{ opacity: 0, x: 30 }}
           whileInView={{ opacity: 1, x: 0 }}
           viewport={{ once: true }}
-          className="lg:col-span-12 xl:col-span-7"
+          className="lg:col-span-12 xl:col-span-7 order-first xl:order-last"
         >
           {/* Tab Switcher */}
           {tabs.length > 0 && (

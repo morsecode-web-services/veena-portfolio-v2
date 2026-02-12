@@ -173,13 +173,12 @@ export default function ImageGallery({ images }: ImageGalleryProps) {
           return (
             <m.div
               key={image.id}
-              layout
               initial={isNewlyRevealed ? { opacity: 0, scale: 0.9 } : false}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
-              whileHover={{ scale: 1.05 }}
+              whileHover={{ scale: 1.02 }}
               transition={{
-                duration: 0.3,
+                duration: 0.2,
                 delay: isNewlyRevealed ?
                   (index - (visibleCount - GALLERY_CONFIG.LOAD_MORE_INCREMENT)) * 0.1 : 0
               }}

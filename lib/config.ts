@@ -238,13 +238,12 @@ export function getBasePath(): string {
     const hostname = window.location.hostname;
     const pathname = window.location.pathname;
 
-    // Check if we are on a github.io domain and NOT on a custom domain pointing there
-    // If there's a subpath that looks like a repo name
+    // Check if we are on a github.io domain or a subpath-based environment
     if (hostname.includes('github.io')) {
       const pathParts = pathname.split('/').filter(Boolean);
-      if (pathParts.length > 0 && !hostname.startsWith(pathParts[0])) {
-        // If it's a subpath deployment, the first part is usually the repo name
-        return `/${pathParts[0]}`;
+      // If the first part of the path is likely the repo name (not a known route or empty)
+      if (pathParts.length > 0 && pathParts[0] === 'veena-portfolio-v2') {
+        return '/veena-portfolio-v2';
       }
     }
   }
@@ -261,15 +260,20 @@ export function getAssetPath(path: string | undefined): string {
     return path;
   }
 
-  const basePath = getBasePath().replace(/\/$/, '');
-  const sanitizedPath = path.startsWith('/') ? path : `/${path}`;
+  // Ensure path starts with a single slash
+  const cleanPath = path.startsWith('/') ? path : `/${path}`;
 
-  // Avoid duplication if basePath is already present
-  if (basePath && sanitizedPath.startsWith(basePath)) {
-    return sanitizedPath;
+  // Get and sanitize base path
+  const basePath = getBasePath().replace(/\/$/, '');
+
+  if (!basePath) return cleanPath;
+
+  // If the path already starts with the base path, don't prepend it again
+  if (cleanPath.startsWith(basePath)) {
+    return cleanPath;
   }
 
-  return `${basePath}${sanitizedPath}`;
+  return `${basePath}${cleanPath}`;
 }
 
 /**
