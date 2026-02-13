@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { m, AnimatePresence } from 'framer-motion';
 import DynamicForm, { FormField } from '@/components/features/DynamicForm';
 import ImageWithFallback from '@/components/ui/ImageWithFallback';
@@ -25,7 +25,7 @@ export default function Contact() {
   const contactImage = siteConfig?.contact?.imageUrl || '/images/contact/contact-image.jpg';
   const contactImageAlt = siteConfig?.contact?.imageAlt || 'Contact';
 
-  const defaultConfigs: Record<string, FormConfig> = {
+  const defaultConfigs: Record<string, FormConfig> = useMemo(() => ({
     classes: {
       form_slug: 'classes',
       title: 'Join a Class',
@@ -50,7 +50,7 @@ export default function Contact() {
         { name: 'message', label: 'Details', type: 'textarea', required: true, placeholder: 'Tell me about the event or collaboration...' }
       ]
     }
-  };
+  }), []);
 
   useEffect(() => {
     async function fetchConfigs() {
@@ -87,7 +87,7 @@ export default function Contact() {
     }
 
     fetchConfigs();
-  }, []);
+  }, [defaultConfigs]);
 
   // Generate tabs dynamically from loaded configs
   const tabs = Object.values(configs).map(config => ({
@@ -113,7 +113,7 @@ export default function Contact() {
     } else if (Object.keys(configs).length > 0 && !configs[activeTab]) {
       setActiveTab(Object.keys(configs)[0] as any);
     }
-  }, [configs]);
+  }, [configs, activeTab]);
 
   return (
     <SectionWrapper id="contact" background="white" spacing="base">

@@ -93,7 +93,7 @@ export default function ConfigPage() {
         return (
             <div className="flex flex-col items-center justify-center min-h-[400px]">
                 <Loader2 className="h-8 w-8 animate-spin text-navy-900 mb-4" />
-                <p className="text-navy-600 font-medium italic">Loading Architect's Desk...</p>
+                <p className="text-navy-600 font-medium italic">Loading Architect&apos;s Desk...</p>
             </div>
         );
     }
@@ -223,7 +223,7 @@ export default function ConfigPage() {
                                                         const target = dir === 'up' ? idx - 1 : idx + 1;
                                                         if (target >= 0 && target < newBio.length) {
                                                             [newBio[idx], newBio[target]] = [newBio[target], newBio[idx]];
-                                                            setConfig({ ...config, artist: { ...config.artist, fullBio: newBio } });
+                                                            setConfig({ ...config, artist: { ...config.artist, fullBio: newBio as any } });
                                                         }
                                                     }}
                                                     isFirst={idx === 0}
@@ -234,7 +234,7 @@ export default function ConfigPage() {
                                                 variant="tertiary"
                                                 fullWidth
                                                 onClick={() => {
-                                                    const newBio = [...config.artist.fullBio, { type: 'paragraph', content: '' }];
+                                                    const newBio = [...config.artist.fullBio, { type: 'paragraph', content: '' }] as any;
                                                     setConfig({ ...config, artist: { ...config.artist, fullBio: newBio } });
                                                 }}
                                             >

@@ -338,10 +338,10 @@ export default function ImageGallery({ images }: ImageGalleryProps) {
             {/* Image container */}
             <m.div
               key={selectedImage.id}
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              transition={{ duration: 0.3 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
               className="relative max-w-7xl max-h-[90vh] w-full px-8 sm:px-12"
               onClick={(e) => e.stopPropagation()}
               role="dialog"

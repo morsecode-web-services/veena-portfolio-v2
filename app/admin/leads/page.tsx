@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/system/Button';
 
@@ -42,7 +42,7 @@ export default function LeadsPage() {
   const [lastViewedAt, setLastViewedAt] = useState<string | null>(null);
 
   // Helper for semantic discovery - shared across functions
-  const getField = (lead: Lead, type: string, keywords: string[]) => {
+  const getField = useCallback((lead: Lead, type: string, keywords: string[]) => {
     // 1. Try legacy columns
     if (type === 'text' && lead.name && lead.name !== 'Anonymous') return lead.name;
     if (type === 'email' && lead.email) return lead.email;
@@ -65,22 +65,10 @@ export default function LeadsPage() {
     if (byName && lead.form_data?.[byName.name]) return lead.form_data[byName.name];
 
     return null;
-  };
+  }, [configs]);
 
-  useEffect(() => {
-    async function init() {
-      await fetchLastViewed();
-      await Promise.all([fetchLeads(), fetchConfigs()]);
-      updateLastViewed();
-    }
-    init();
-  }, []);
 
-  useEffect(() => {
-    filterLeads();
-  }, [leads, slugFilter, statusFilter, searchQuery]);
-
-  const fetchLastViewed = async () => {
+  const fetchLastViewed = useCallback(async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (session?.user) {
       const { data: profile } = await supabase
@@ -93,9 +81,9 @@ export default function LeadsPage() {
         setLastViewedAt(profile.last_leads_viewed_at);
       }
     }
-  };
+  }, []);
 
-  const updateLastViewed = async () => {
+  const updateLastViewed = useCallback(async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (session?.user) {
       await supabase
@@ -103,9 +91,9 @@ export default function LeadsPage() {
         .update({ last_leads_viewed_at: new Date().toISOString() })
         .eq('id', session.user.id);
     }
-  };
+  }, []);
 
-  const fetchLeads = async () => {
+  const fetchLeads = useCallback(async () => {
     setLoading(true);
     const { data, error } = await supabase
       .from('leads')
@@ -118,9 +106,9 @@ export default function LeadsPage() {
       setLeads(data || []);
     }
     setLoading(false);
-  };
+  }, []);
 
-  const fetchConfigs = async () => {
+  const fetchConfigs = useCallback(async () => {
     const { data } = await supabase.from('form_configs').select('form_slug, fields');
     if (data) {
       const configMap = data.reduce((acc, config) => {
@@ -129,9 +117,9 @@ export default function LeadsPage() {
       }, {} as Record<string, FormConfig>);
       setConfigs(configMap);
     }
-  };
+  }, []);
 
-  const filterLeads = () => {
+  const filterLeads = useCallback(() => {
     let filtered = [...leads];
 
     // Filter by form slug (dashboard and all show everything)
@@ -165,7 +153,20 @@ export default function LeadsPage() {
     }
 
     setFilteredLeads(filtered);
-  };
+  }, [leads, slugFilter, statusFilter, searchQuery, getField]);
+
+  useEffect(() => {
+    async function init() {
+      await fetchLastViewed();
+      await Promise.all([fetchLeads(), fetchConfigs()]);
+      updateLastViewed();
+    }
+    init();
+  }, [fetchLastViewed, fetchLeads, fetchConfigs, updateLastViewed]);
+
+  useEffect(() => {
+    filterLeads();
+  }, [filterLeads]);
 
   const updateLeadStatus = async (leadId: string, newStatus: Lead['status']) => {
     const { error } = await supabase

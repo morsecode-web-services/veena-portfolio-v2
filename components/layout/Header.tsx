@@ -71,8 +71,8 @@ export default function Header({ config }: HeaderProps) {
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled
-        ? 'bg-white shadow-premium-md border-b border-premium'
-        : 'bg-gradient-to-b from-black/20 to-transparent'
+        ? 'bg-white shadow-premium-md border-b border-slate-200'
+        : 'bg-gradient-to-b from-black/40 to-transparent'
         }`}
       role="banner"
     >
@@ -96,11 +96,10 @@ export default function Header({ config }: HeaderProps) {
                   />
                 </div>
               )}
-              <h1 className={`text-base sm:text-lg md:text-xl font-serif font-bold mb-0 transition-colors duration-300 ${
-                isScrolled
-                  ? 'text-navy-900 group-hover:text-gold-600'
-                  : 'text-white group-hover:text-gold-300'
-              }`}>
+              <h1 className={`text-base sm:text-lg md:text-xl font-serif font-bold mb-0 transition-colors duration-300 ${isScrolled
+                ? 'text-navy-900 group-hover:text-gold-600'
+                : 'text-white group-hover:text-gold-300'
+                }`}>
                 {artistName}
               </h1>
             </a>

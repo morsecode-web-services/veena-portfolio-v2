@@ -7,6 +7,7 @@ import { z } from 'zod';
 import { m, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/system/Button';
 import { analytics } from '@/components/GoogleAnalytics';
+import { CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 
 export interface FormField {
     name: string;
@@ -82,7 +83,6 @@ export default function DynamicForm({ formSlug, fields, title, description }: Dy
                 body: JSON.stringify({
                     formSlug,
                     form_data: data,
-                    // Extract core fields for backward compatibility if they exist in the dynamic form
                     name: data.name || 'Anonymous',
                     email: data.email || null,
                     phone: data.phone || null,
@@ -98,8 +98,6 @@ export default function DynamicForm({ formSlug, fields, title, description }: Dy
             analytics.contactFormSubmit(true, undefined, formSlug);
             setSubmitStatus('success');
             reset();
-
-            setTimeout(() => setSubmitStatus('idle'), 5000);
         } catch (error) {
             console.error('Form submission error:', error);
             setSubmitStatus('error');
@@ -109,6 +107,19 @@ export default function DynamicForm({ formSlug, fields, title, description }: Dy
             setIsSubmitting(false);
         }
     };
+
+    if (submitStatus === 'success') {
+        return (
+            <div className="bg-white p-8 rounded-2xl shadow-premium border border-slate-100 text-center">
+                <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <CheckCircle2 size={32} />
+                </div>
+                <h3 className="text-xl font-bold text-navy-900 mb-2">Message Sent!</h3>
+                <p className="text-slate-600 mb-6">Thank you for reaching out. Aishwarya will get back to you shortly.</p>
+                <Button variant="ghost" onClick={() => setSubmitStatus('idle')}>Send Another Message</Button>
+            </div>
+        );
+    }
 
     return (
         <div className="bg-white p-6 sm:p-8 rounded-2xl shadow-premium border border-slate-100">
@@ -181,22 +192,6 @@ export default function DynamicForm({ formSlug, fields, title, description }: Dy
                 </Button>
 
                 <AnimatePresence>
-                    {submitStatus === 'success' && (
-                        <m.div
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -10 }}
-                            className="p-4 bg-green-50 border border-green-100 rounded-xl text-green-800 text-sm flex items-start gap-3"
-                        >
-                            <svg className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            <div>
-                                <span className="font-bold">Success!</span> Your inquiry has been sent. Check your inbox for a confirmation.
-                            </div>
-                        </m.div>
-                    )}
-
                     {submitStatus === 'error' && (
                         <m.div
                             initial={{ opacity: 0, y: 10 }}
@@ -204,9 +199,7 @@ export default function DynamicForm({ formSlug, fields, title, description }: Dy
                             exit={{ opacity: 0, y: -10 }}
                             className="p-4 bg-red-50 border border-red-100 rounded-xl text-red-800 text-sm flex items-start gap-3"
                         >
-                            <svg className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
+                            <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
                             <div>
                                 <span className="font-bold">Error:</span> {errorMessage}
                             </div>
