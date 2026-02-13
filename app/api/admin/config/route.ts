@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+export const dynamic = 'force-static';
 import { readFile, writeFile } from 'fs/promises';
 import path from 'path';
 import { validateConfig } from '@/lib/config';

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+export const dynamic = 'force-static';
 import { Resend } from 'resend';
 import { render } from '@react-email/render';
 import { createClient } from '@supabase/supabase-js';
