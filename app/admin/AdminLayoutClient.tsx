@@ -12,7 +12,9 @@ import {
     Menu,
     X,
     FileText,
-    Users
+    Users,
+    Settings,
+    PenTool
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
@@ -116,6 +118,7 @@ export default function AdminLayoutClient({ children }: AdminLayoutClientProps) 
         { name: 'Videos', href: '/admin/videos', icon: LayoutDashboard },
         { name: 'Forms', href: '/admin/forms', icon: LayoutDashboard }, // Using LayoutDashboard for now
         { name: 'Leads', href: '/admin/leads', icon: Users, badge: leadsCount },
+        { name: 'Architect', href: '/admin/config', icon: PenTool },
         { name: 'Public Site', href: '/', icon: Home },
     ];
 
