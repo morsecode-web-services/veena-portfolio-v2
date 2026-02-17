@@ -174,7 +174,7 @@ export async function POST(request: Request) {
     }
 
     const notificationResult = await resendClient.emails.send({
-      from: 'Contact Form <onboarding@resend.dev>',
+      from: 'Contact Form <official@email.aishwaryamanikarnike.com>',
       to: process.env.ADMIN_EMAIL || 'official@aishwaryamanikarnike.com',
       subject: `New ${effectiveSlug} inquiry from ${userName}`,
       html: notificationHtml,
@@ -192,10 +192,11 @@ export async function POST(request: Request) {
     // 5. Send auto-reply to user (if email exists)
     if (userEmail) {
       const autoReplyResult = await resendClient.emails.send({
-        from: 'Contact Form <onboarding@resend.dev>',
+        from: 'Aishwarya Manikarnike <official@email.aishwaryamanikarnike.com>',
         to: userEmail,
         subject: templateConfig.subject,
         html: autoReplyHtml,
+        replyTo: 'official@aishwaryamanikarnike.com',
       });
 
       if (autoReplyResult.error) {

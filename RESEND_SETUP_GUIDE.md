@@ -178,62 +178,58 @@ Send test submissions with different inquiry types and check your inbox.
 
 ---
 
-## 🌐 Domain Verification (Production - Optional)
+## 🌐 Domain Verification (Required for Production)
 
-Currently sending from `onboarding@resend.dev`. For production, verify your domain:
+The error you're seeing (`403 validation_error`) is because you're using the test domain `onboarding@resend.dev`. To fix this, you must verify your own domain.
 
-### Step 1: Add Domain in Resend
+### Step 1: Add Domain in Resend Dashboard
+1. Log in to [Resend Dashboard](https://resend.com/domains)
+2. Click **"Add Domain"**
+3. Domain: `aishwaryamanikarnike.com`
+4. Region: Choose the one closest to you (e.g., US East)
+5. Click **"Add"**
+6. **Keep this page open!** You will see a list of DNS records (MX, TXT).
 
-1. Resend Dashboard → **Domains** → **Add Domain**
-2. Enter: `aishwaryamanikarnike.com`
-3. Resend provides DNS records to add
+### Step 2: Configure GoDaddy DNS
+1. Log in to your [GoDaddy Domain Portfolio](https://dcc.godaddy.com/control/portfolio)
+2. Click on **`aishwaryamanikarnike.com`**
+3. Select **"DNS"** → **"DNS Records"**
+4. For each record shown in your Resend Dashboard, click **"Add New Record"** in GoDaddy:
 
-### Step 2: Add DNS Records
+| Type | Name (Host) | Value (Points to) | TTL |
+| :--- | :--- | :--- | :--- |
+| **MX** | `feedback` | `feedback-smtp.us-east-1.amazonses.com` (Example) | 1/2 Hour |
+| **TXT** | `resend._domainkey` | `p=MIGfMA0GCSqGSIb3DQEBAQUAA...` (Copy from Resend) | 1/2 Hour |
+| **TXT** | `@` (or leave blank) | `v=spf1 include:_spf.resend.com ~all` | 1/2 Hour |
 
-Go to your DNS provider (where domain is registered) and add:
+> [!IMPORTANT]
+> - Copy the exact values from **your** Resend dashboard.
+> - If GoDaddy says a record already exists (like SPF), append `include:_spf.resend.com` to the existing one.
+> - MX priority is usually 10.
 
-**SPF Record:**
-```
-Type: TXT
-Name: @
-Value: v=spf1 include:_spf.resend.com ~all
-```
+### Step 3: Verify in Resend
+1. Go back to your Resend Dashboard
+2. Click **"Verify"** (or refresh the page)
+3. Once it shows **"Verified"** (Green), you are ready to send!
 
-**DKIM Record:**
-```
-Type: TXT
-Name: resend._domainkey
-Value: [provided by Resend]
-```
-
-**DMARC Record (optional but recommended):**
-```
-Type: TXT
-Name: _dmarc
-Value: v=DMARC1; p=none
-```
-
-### Step 3: Wait for Verification
-
-- Takes 5-10 minutes
-- Resend will show "Verified" status
-- Refresh the Domains page
-
-### Step 4: Update API Route
-
-In `app/api/send-email/route.ts`, change these lines:
+### Step 4: Update API Route Code
+Since you verified the subdomain `email.aishwaryamanikarnike.com`, you **must** use that in the `from` field. We will set the `replyTo` so that any replies still go to your main inbox.
 
 ```typescript
-// FROM:
-from: 'Contact Form <onboarding@resend.dev>',
-from: 'Aishwarya Manikarnike <onboarding@resend.dev>',
+// Find these lines and update them:
+const notificationResult = await resendClient.emails.send({
+  from: 'Contact Form <official@email.aishwaryamanikarnike.com>', // MUST include "email."
+  to: process.env.ADMIN_EMAIL || 'official@aishwaryamanikarnike.com',
+  // ...
+});
 
-// TO:
-from: 'Contact Form <noreply@aishwaryamanikarnike.com>',
-from: 'Aishwarya Manikarnike <noreply@aishwaryamanikarnike.com>',
+const autoReplyResult = await resendClient.emails.send({
+  from: 'Aishwarya Manikarnike <official@email.aishwaryamanikarnike.com>', // MUST include "email."
+  to: userEmail,
+  replyTo: 'official@aishwaryamanikarnike.com', // Replies go to your main inbox
+  // ...
+});
 ```
-
-Redeploy your site.
 
 ---
 
