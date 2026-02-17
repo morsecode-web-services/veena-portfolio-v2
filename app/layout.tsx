@@ -213,8 +213,7 @@ export default function RootLayout({
           <ErrorBoundary>
             <Header config={config} />
             {children}
-            <Footer config={config} />
-            <Footer config={config} />
+            <Footer key="site-footer" config={config} />
             <VideoModal />
             <BackToTop />
           </ErrorBoundary>

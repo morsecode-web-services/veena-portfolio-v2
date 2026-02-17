@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { m, AnimatePresence } from 'framer-motion';
 import { FaBars, FaTimes } from 'react-icons/fa';
+import { Mail, Instagram, Youtube } from 'lucide-react';
 import HeaderPDFButton from './HeaderPDFButton';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
@@ -134,13 +135,12 @@ export default function Navigation({ config, isScrolled = false }: NavigationPro
             >
               <button
                 onClick={() => handleNavClick(item)}
-                className={`relative text-xs font-medium transition-all duration-300 min-h-[44px] flex items-center justify-center px-1.5 lg:px-3 ${
-                  activeSection === item.id
-                    ? 'text-gold-600'
-                    : isScrolled
+                className={`relative text-xs font-medium transition-all duration-300 min-h-[44px] flex items-center justify-center px-1.5 lg:px-3 ${activeSection === item.id
+                  ? 'text-gold-600'
+                  : isScrolled
                     ? 'text-charcoal-700 hover:text-gold-600'
                     : 'text-white hover:text-gold-300'
-                }`}
+                  }`}
                 role="menuitem"
                 aria-label={`Navigate to ${item.label} section`}
                 aria-current={activeSection === item.id ? 'page' : undefined}
@@ -163,13 +163,12 @@ export default function Navigation({ config, isScrolled = false }: NavigationPro
       <button
         ref={hamburgerButtonRef}
         onClick={() => setIsMenuOpen(!isMenuOpen)}
-        className={`md:hidden transition-colors z-[10012] relative flex items-center justify-center ${
-          isMenuOpen
-            ? 'text-gold-600'
-            : isScrolled
+        className={`md:hidden transition-colors z-[10012] relative flex items-center justify-center ${isMenuOpen
+          ? 'text-gold-600'
+          : isScrolled
             ? 'text-charcoal-700 hover:text-gold-600'
             : 'text-white hover:text-gold-300'
-        }`}
+          }`}
         aria-label={isMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
         aria-expanded={isMenuOpen}
         aria-controls="mobile-menu"
@@ -243,6 +242,50 @@ export default function Navigation({ config, isScrolled = false }: NavigationPro
                     <li role="none" className="pt-4 border-t border-gray-100 mt-4">
                       <HeaderPDFButton showLabel={true} />
                     </li>
+
+                    {/* Minimalist Quick Contact for mobile */}
+                    {config?.artist.email && (
+                      <li role="none" className="pt-10 mt-6 border-t border-slate-50 px-8">
+
+                        <a
+                          href={`mailto:${config.artist.email}`}
+                          className="flex items-center gap-4 text-[13px] font-medium text-navy-900 group/email mb-8"
+                          onClick={() => setIsMenuOpen(false)}
+                        >
+                          <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-gold-600/60 group-hover/email:text-gold-600 group-hover/email:bg-gold-50 transition-all duration-300 shrink-0">
+                            <Mail size={14} />
+                          </div>
+                          <span className="border-b border-navy-100 group-hover/email:border-gold-400 transition-colors pb-0.5 break-all leading-tight">
+                            {config.artist.email}
+                          </span>
+                        </a>
+
+                        <div className="flex gap-6 items-center pl-1">
+                          {config.socialMedia?.instagram && (
+                            <a
+                              href={config.socialMedia.instagram}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-slate-400 hover:text-gold-600 transition-all duration-300"
+                              aria-label="Instagram"
+                            >
+                              <Instagram size={20} />
+                            </a>
+                          )}
+                          {config.socialMedia?.youtube && (
+                            <a
+                              href={config.socialMedia.youtube}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-slate-400 hover:text-gold-600 transition-all duration-300"
+                              aria-label="YouTube"
+                            >
+                              <Youtube size={20} />
+                            </a>
+                          )}
+                        </div>
+                      </li>
+                    )}
                   </ul>
                 </div>
               </m.nav>

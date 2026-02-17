@@ -3,8 +3,10 @@
 import { useState } from 'react';
 import { m } from 'framer-motion';
 import FAQItem from '@/components/ui/FAQItem';
-import type { SiteConfig } from '@/types';
 import { Button } from '@/components/system/Button';
+import { SectionWrapper } from '@/components/system/SectionWrapper';
+import { SectionTitle } from '@/components/system/SectionTitle';
+import type { SiteConfig } from '@/types';
 
 interface FAQProps {
   config: SiteConfig;
@@ -19,24 +21,14 @@ export default function FAQ({ config }: FAQProps) {
   };
 
   return (
-    <section id="faq" className="px-4 sm:px-6 md:px-8" aria-label="Frequently asked questions">
-      <div id="faq-section" className="max-w-4xl mx-auto">
-        {/* Section Title */}
-        <m.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-100px' }}
-          transition={{ duration: 0.6 }}
-          className="text-center mb-6 sm:mb-8 md:mb-10"
-        >
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-serif font-bold text-navy-900 mb-2 md:mb-3 px-4">
-            Frequently Asked Questions
-          </h2>
-          <div className="w-20 sm:w-24 h-1 bg-gradient-to-r from-gold-600 to-gold-700 mx-auto mb-3 sm:mb-4 md:mb-5 rounded-full"></div>
-          <p className="text-sm sm:text-base text-slate-600 max-w-2xl mx-auto px-4 leading-relaxed">
-            Find answers to common questions about performances, lessons, and bookings
-          </p>
-        </m.div>
+    <SectionWrapper id="faq" background="cream" spacing="base">
+      <SectionTitle
+        title="Frequently Asked Questions"
+        description="Find answers to common questions about performances, lessons, and bookings"
+        alignment="center"
+      />
+
+      <div id="faq-section">
 
         {/* FAQ Accordion */}
         <m.div
@@ -87,6 +79,6 @@ export default function FAQ({ config }: FAQProps) {
           </Button>
         </m.div>
       </div>
-    </section>
+    </SectionWrapper>
   );
 }

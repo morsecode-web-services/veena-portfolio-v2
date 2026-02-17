@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+export const dynamic = 'force-static';
 import { Resend } from 'resend';
 import { render } from '@react-email/render';
 import { createClient } from '@supabase/supabase-js';
@@ -65,49 +66,102 @@ export async function POST(request: Request) {
 
     // Parse request body
     const body = await request.json();
-    const { name, email, phone, inquiryType, message } = body;
+    const { name, email, phone, inquiryType, message, formSlug, form_data } = body;
 
-    // Validate required fields
-    if (!name || !email || !phone || !inquiryType || !message) {
+    // Validate if either old style or new style dynamic form is used
+    if (!formSlug && (!name || !email || !phone || !inquiryType || !message)) {
       return NextResponse.json(
         { error: 'All fields are required' },
         { status: 400 }
       );
     }
 
-    // Validate inquiry type
-    if (!['performance', 'classes', 'collaboration', 'general'].includes(inquiryType)) {
-      return NextResponse.json(
-        { error: 'Invalid inquiry type' },
-        { status: 400 }
-      );
+    // Check if email notifications are enabled for this specific form
+    let emailEnabled = true; // Default to enabled for legacy forms
+    let formFields: any[] = [];
+    if (formSlug) {
+      const { data: config } = await supabase
+        .from('form_configs')
+        .select('email_notifications_enabled, fields')
+        .eq('form_slug', formSlug)
+        .single();
+
+      if (config) {
+        if (config.email_notifications_enabled === false) {
+          emailEnabled = false;
+        }
+        formFields = config.fields || [];
+      }
     }
+
+    // Helper to extract values semantically
+    const getFieldByTypeOrName = (type: string, nameKeywords: string[]) => {
+      // 1. Try to find by type
+      const byType = formFields.find((f: any) => f.type === type);
+      if (byType && form_data?.[byType.name]) return form_data[byType.name];
+
+      // 2. Try to find by name/label keywords
+      const byName = formFields.find((f: any) =>
+        nameKeywords.some(kw =>
+          f.name.toLowerCase().includes(kw) ||
+          f.label.toLowerCase().includes(kw)
+        )
+      );
+      if (byName && form_data?.[byName.name]) return form_data[byName.name];
+
+      // 3. Fallback to hardcoded keys
+      return form_data?.[type] || nameKeywords.map(kw => form_data?.[kw]).find(v => !!v);
+    };
+
+    const discoveredName = name || getFieldByTypeOrName('text', ['name', 'full name']);
+    const discoveredEmail = email || getFieldByTypeOrName('email', ['email', 'email address']);
+    const discoveredPhone = phone || getFieldByTypeOrName('tel', ['phone', 'contact', 'mobile', 'whatsapp']);
+    const discoveredMessage = message || form_data?.message || form_data?.comments || 'No message provided';
 
     // 1. Store lead in Supabase
     const { error: dbError } = await supabase.from('leads').insert([
       {
-        name,
-        email,
-        phone,
-        inquiry_type: inquiryType,
-        message,
+        form_slug: formSlug || 'general',
+        form_data: form_data || body,
+        status: 'new',
+        name: discoveredName || 'Anonymous',
       },
     ]);
 
     if (dbError) {
       console.error('Failed to store lead in Supabase:', dbError);
-      // Continue even if database insert fails (graceful degradation)
+    }
+
+    // If emails are disabled, store the lead but don't send anything
+    if (!emailEnabled) {
+      return NextResponse.json({
+        success: true,
+        message: 'Lead stored successfully (Email notifications disabled for this form)',
+      });
     }
 
     // 2. Get the appropriate auto-reply template
+    // Use formSlug if available, fallback to inquiryType
+    const effectiveSlug = formSlug || inquiryType || 'general';
     const templateConfig =
-      emailTemplates[inquiryType as keyof typeof emailTemplates] ||
+      emailTemplates[effectiveSlug as keyof typeof emailTemplates] ||
       emailTemplates.general;
 
     // 3. Render React component to HTML
-    const autoReplyHtml = await render(templateConfig.component({ name }));
+    const userName = discoveredName || 'Valued Visitor';
+    const userEmail = discoveredEmail;
+    const userPhone = discoveredPhone;
+    const userMessage = discoveredMessage;
+
+    const autoReplyHtml = await render(templateConfig.component({ name: userName }));
     const notificationHtml = await render(
-      ContactNotification({ name, email, phone, inquiryType, message })
+      ContactNotification({
+        name: userName,
+        email: userEmail,
+        phone: userPhone,
+        inquiryType: effectiveSlug,
+        message: userMessage
+      })
     );
 
     // 4. Send notification email to you
@@ -120,12 +174,11 @@ export async function POST(request: Request) {
     }
 
     const notificationResult = await resendClient.emails.send({
-      // from: 'Contact Form <noreply@aishwaryamanikarnike.com>',
-      from: 'Contact Form <onboarding@resend.dev>', // Change to your domain after verification                           
-      to: process.env.ADMIN_EMAIL || 'your@email.com', // Add this to .env.local
-      subject: `New ${inquiryType} inquiry from ${name}`,
+      from: 'Contact Form <official@email.aishwaryamanikarnike.com>',
+      to: process.env.ADMIN_EMAIL || 'official@aishwaryamanikarnike.com',
+      subject: `New ${effectiveSlug} inquiry from ${userName}`,
       html: notificationHtml,
-      replyTo: email, // Allow quick reply
+      replyTo: userEmail,
     });
 
     if (notificationResult.error) {
@@ -136,18 +189,19 @@ export async function POST(request: Request) {
       );
     }
 
-    // 5. Send auto-reply to user
-    const autoReplyResult = await resendClient.emails.send({
-      // from: 'Aishwarya Manikarnike <noreply@aishwaryamanikarnike.com>',
-      from: 'Contact Form <onboarding@resend.dev>', // Change to your domain after verification                           
-      to: email,
-      subject: templateConfig.subject,
-      html: autoReplyHtml,
-    });
+    // 5. Send auto-reply to user (if email exists)
+    if (userEmail) {
+      const autoReplyResult = await resendClient.emails.send({
+        from: 'Aishwarya Manikarnike <official@email.aishwaryamanikarnike.com>',
+        to: userEmail,
+        subject: templateConfig.subject,
+        html: autoReplyHtml,
+        replyTo: 'official@aishwaryamanikarnike.com',
+      });
 
-    if (autoReplyResult.error) {
-      console.error('Failed to send auto-reply:', autoReplyResult.error);
-      // Don't fail the request if auto-reply fails - notification is more important
+      if (autoReplyResult.error) {
+        console.error('Failed to send auto-reply:', autoReplyResult.error);
+      }
     }
 
     // Update rate limit

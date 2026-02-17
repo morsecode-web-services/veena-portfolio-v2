@@ -3,13 +3,11 @@ const nextConfig = {
   // Static export for GitHub Pages
   // Remove output: 'export' to support ISR on Netlify
 
-  // Base path - set this to your repo name if deploying to username.github.io/repo-name
-  // Leave empty string if deploying to username.github.io OR proper domain (Netlify/Vercel)
-  // Only use base path in production if specifically needed
-  basePath: process.env.NODE_ENV === 'production' ? (process.env.NEXT_PUBLIC_BASE_PATH || '') : '',
+  // Base path - Automatically handles GitHub Pages subfolders OR root domains (Netlify)
+  basePath: process.env.NEXT_PUBLIC_BASE_PATH || '',
 
-  // Asset prefix for GitHub Pages or other non-root deployments
-  assetPrefix: process.env.NODE_ENV === 'production' ? (process.env.NEXT_PUBLIC_BASE_PATH || '') : '',
+  // Asset prefix - Automatically handles GitHub Pages subfolders OR root domains (Netlify)
+  assetPrefix: process.env.NEXT_PUBLIC_BASE_PATH || '',
 
   // Trailing slash removed - causes issues with Next.js Image on Netlify
   trailingSlash: false,

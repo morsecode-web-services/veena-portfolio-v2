@@ -6,6 +6,11 @@ import { m, AnimatePresence } from 'framer-motion';
 import { getAssetPath } from '@/lib/config';
 import type { GalleryImage } from '@/types';
 
+const GALLERY_CONFIG = {
+  INITIAL_VISIBLE: 6,
+  LOAD_MORE_INCREMENT: 6,
+} as const;
+
 interface ImageGalleryProps {
   images: GalleryImage[];
 }
@@ -18,6 +23,19 @@ export default function ImageGallery({ images }: ImageGalleryProps) {
   const imageRefs = useRef<(HTMLDivElement | null)[]>([]);
   const modalRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
+
+  // Load More state
+  const [visibleCount, setVisibleCount] = useState<number>(GALLERY_CONFIG.INITIAL_VISIBLE);
+
+  const showLoadMore = images.length > visibleCount;
+  const visibleImages = images.slice(0, visibleCount);
+  const remainingImages = images.length - visibleCount;
+
+  const handleLoadMore = () => {
+    setVisibleCount(prev =>
+      Math.min(prev + GALLERY_CONFIG.LOAD_MORE_INCREMENT, images.length)
+    );
+  };
 
   const navigateNext = useCallback(() => {
     setCurrentIndex((prevIndex) => {
@@ -109,15 +127,6 @@ export default function ImageGallery({ images }: ImageGalleryProps) {
     };
   }, [selectedImage]);
 
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
   const openLightbox = (image: GalleryImage, index: number) => {
     setSelectedImage(image);
     setCurrentIndex(index);
@@ -158,52 +167,87 @@ export default function ImageGallery({ images }: ImageGalleryProps) {
     <>
       {/* Gallery Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-5">
-        {images.map((image, index) => (
-          <m.div
-            key={image.id}
-            layout
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            whileHover={{ scale: 1.05 }}
-            transition={{ duration: 0.3 }}
-            className="group relative aspect-[3/2] cursor-pointer overflow-hidden rounded-lg shadow-md hover:shadow-premium-lg"
-            onClick={() => openLightbox(image, index)}
-            role="button"
-            tabIndex={0}
-            aria-label={`View ${image.alt}`}
-            onKeyPress={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                openLightbox(image, index);
-              }
-            }}
-          >
-            <ImageWithFallback
-              src={image.src}
-              alt={image.alt}
-              fill
-              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-              className="object-cover transition-transform duration-500 group-hover:scale-110"
-              loading={index < 6 ? 'eager' : 'lazy'}
-              quality={85}
-            />
-            {/* Caption Overlay - Static on mobile, hover on desktop */}
-            <div
-              className={`absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent transition-opacity duration-300 pointer-events-none ${isMobile ? 'opacity-100' : 'opacity-0 md:group-hover:opacity-100'
-                }`}
+        {visibleImages.map((image, index) => {
+          const isNewlyRevealed = index >= visibleCount - GALLERY_CONFIG.LOAD_MORE_INCREMENT;
+
+          return (
+            <m.div
+              key={image.id}
+              initial={isNewlyRevealed ? { opacity: 0, scale: 0.9 } : false}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              whileHover={{ scale: 1.02 }}
+              transition={{
+                duration: 0.2,
+                delay: isNewlyRevealed ?
+                  (index - (visibleCount - GALLERY_CONFIG.LOAD_MORE_INCREMENT)) * 0.1 : 0
+              }}
+              className="group relative aspect-[3/2] cursor-pointer overflow-hidden rounded-lg shadow-md hover:shadow-premium-lg"
+              onClick={() => openLightbox(image, index)}
+              role="button"
+              tabIndex={0}
+              aria-label={`View ${image.alt}`}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  openLightbox(image, index);
+                }
+              }}
             >
-              <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4">
-                {image.caption && (
-                  <p className="text-white text-xs sm:text-sm font-medium leading-tight">
-                    {image.caption}
-                  </p>
-                )}
+              <ImageWithFallback
+                src={image.src}
+                alt={image.alt}
+                fill
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                className="object-cover transition-transform duration-500 group-hover:scale-110"
+                loading={index < 6 ? 'eager' : 'lazy'}
+                quality={85}
+              />
+              {/* Caption Overlay - Always visible */}
+              <div
+                className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent transition-opacity duration-300 pointer-events-none opacity-100"
+              >
+                <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4">
+                  {image.caption && (
+                    <p className="text-white text-xs sm:text-sm font-medium leading-tight">
+                      {image.caption}
+                    </p>
+                  )}
+                </div>
               </div>
-            </div>
-          </m.div>
-        ))}
+            </m.div>
+          );
+        })}
       </div>
+
+      {/* Load More Button */}
+      {showLoadMore && (
+        <m.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 20 }}
+          transition={{ duration: 0.4 }}
+          className="flex justify-center mt-12 sm:mt-16"
+        >
+          <button
+            onClick={handleLoadMore}
+            className="group relative py-3 px-1 flex flex-col items-center gap-2"
+            aria-label={`Load ${Math.min(GALLERY_CONFIG.LOAD_MORE_INCREMENT, remainingImages)} more images`}
+          >
+            <span className="block text-xs font-medium tracking-[0.25em] text-navy-600 uppercase group-hover:text-navy-900 transition-colors duration-300">
+              Load More
+            </span>
+            <svg
+              className="w-4 h-4 text-navy-400 group-hover:text-navy-900 group-hover:translate-y-1 transition-all duration-300"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+        </m.div>
+      )}
 
       {/* Lightbox Modal */}
       <AnimatePresence>
@@ -294,10 +338,10 @@ export default function ImageGallery({ images }: ImageGalleryProps) {
             {/* Image container */}
             <m.div
               key={selectedImage.id}
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              transition={{ duration: 0.3 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
               className="relative max-w-7xl max-h-[90vh] w-full px-8 sm:px-12"
               onClick={(e) => e.stopPropagation()}
               role="dialog"

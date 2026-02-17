@@ -249,6 +249,80 @@ The `artist.fullBio` field supports rich text formatting using blocks:
 ]
 ```
 
+#### Featured Carousel Image Positioning
+Control how images are positioned in the featured carousel on mobile and desktop. This is useful when images have important content that gets cropped on different screen sizes (e.g., faces being cut off on mobile).
+
+**Configuration:**
+```json
+"home": {
+  "featuredCarousel": {
+    "enabled": true,
+    "items": [
+      {
+        "id": "featured-1",
+        "image": "/images/spotlight/my-image.jpg",
+        "imagePosition": "center",           // Desktop position (optional)
+        "imagePositionMobile": "center top", // Mobile position (optional)
+        "title": "My Title",
+        "description": "Description text"
+      }
+    ]
+  }
+}
+```
+
+**Common Position Values:**
+
+| Value | Description |
+|-------|-------------|
+| `"center"` | Center both horizontally and vertically (default) |
+| `"top"` | Top center |
+| `"bottom"` | Bottom center |
+| `"left"` | Left center |
+| `"right"` | Right center |
+| `"center top"` | Horizontally centered, aligned to top |
+| `"center bottom"` | Horizontally centered, aligned to bottom |
+| `"left center"` | Vertically centered, aligned to left |
+| `"right center"` | Vertically centered, aligned to right |
+| `"top left"` | Top-left corner |
+| `"top right"` | Top-right corner |
+| `"bottom left"` | Bottom-left corner |
+| `"bottom right"` | Bottom-right corner |
+
+**Advanced Position Values:**
+
+| Value Type | Example | Description |
+|------------|---------|-------------|
+| Percentage | `"50% 25%"` | X% from left, Y% from top |
+| Pixels | `"10px 20px"` | Absolute pixel positioning |
+| Mixed | `"center 30%"` | Combine keywords with percentages |
+
+**Hero Stats with Line Breaks:**
+The `home.heroStats[].value` field supports line breaks using `\n`:
+```json
+"heroStats": [
+  {
+    "label": "Recognition",
+    "value": "'A'-Graded Musician\nAll India Radio"
+  }
+]
+```
+
+**Behavior:**
+- If only `imagePosition` is specified, it applies to both mobile and desktop
+- If only `imagePositionMobile` is specified, mobile uses it and desktop uses `"center"`
+- If both are specified, each viewport uses its respective value
+- If neither is specified, defaults to `"center"` for both
+
+**Typical Use Case:**
+```json
+{
+  "imagePosition": "center",
+  "imagePositionMobile": "center top"
+}
+```
+This keeps the image centered on desktop but shifts it to show the top portion on mobile, preventing heads or important content from being cropped.
+
 ## Deployment
 
 ### Deploy to Vercel (Recommended)

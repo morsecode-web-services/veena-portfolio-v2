@@ -1218,6 +1218,30 @@ async function renderMusicCard(
           // Normal: full width, preserved aspect ratio
           pdf.addImage(thumbData, 'JPEG', x, y, width, actualThumbHeight, undefined, 'MEDIUM');
         }
+
+        // Draw Play Button Overlay to indicate clickability
+        const centerX = thumbX + (thumbWidth / 2);
+        const centerY = y + (actualThumbHeight / 2);
+        const radius = 6;
+
+        // Semi-transparent dark circle background
+        pdf.saveGraphicsState();
+        pdf.setGState(new (pdf as any).GState({ opacity: 0.7 }));
+        pdf.setFillColor(0, 0, 0);
+        pdf.circle(centerX, centerY, radius, 'F');
+        pdf.restoreGraphicsState();
+
+        // White play triangle
+        pdf.setFillColor(255, 255, 255);
+        // Triangle coordinates: (x1,y1), (x2,y2), (x3,y3)
+        // Pointing right
+        const triangleSize = 2.5;
+        pdf.triangle(
+          centerX - 1.5, centerY - triangleSize, // Top left
+          centerX - 1.5, centerY + triangleSize, // Bottom left
+          centerX + 2.5, centerY,                // Right tip
+          'F'
+        );
       }
     } catch (e) {
       console.warn("Failed to load video thumbnail", e);
@@ -1241,53 +1265,74 @@ async function renderMusicCard(
   let line1 = '';
   let line2 = '';
   const words = video.title.split(' ');
+  let wordIndex = 0;
 
   // Build first line
-  for (const word of words) {
+  for (; wordIndex < words.length; wordIndex++) {
+    const word = words[wordIndex];
     const testLine = line1 ? line1 + ' ' + word : word;
     if (pdf.getTextWidth(testLine) <= TEXT_WIDTH) {
       line1 = testLine;
     } else {
-      // Word doesn't fit, start second line
-      line2 = word;
+      // Word doesn't fit in line 1, move to line 2
       break;
     }
   }
 
-  // Build second line with remaining words
-  const remainingWords = words.slice(line1.split(' ').length);
-  for (let i = 0; i < remainingWords.length; i++) {
-    const word = remainingWords[i];
-    const testLine = line2 ? line2 + ' ' + word : word;
-    if (pdf.getTextWidth(testLine) <= TEXT_WIDTH) {
-      line2 = testLine;
-    } else {
-      // Doesn't fit - truncate with ellipsis
-      if (i > 0) {
-        // Already have some words in line2, add ellipsis
-        while (pdf.getTextWidth(line2 + '...') > TEXT_WIDTH && line2.length > 0) {
-          line2 = line2.slice(0, -1).trim();
-        }
-        line2 = line2 + '...';
+  // Build second line
+  if (wordIndex < words.length) {
+    for (; wordIndex < words.length; wordIndex++) {
+      const word = words[wordIndex];
+      const testLine = line2 ? line2 + ' ' + word : word;
+
+      if (pdf.getTextWidth(testLine) <= TEXT_WIDTH) {
+        line2 = testLine;
       } else {
-        // First word itself is too long, truncate it
-        let truncWord = word;
-        while (pdf.getTextWidth(truncWord + '...') > TEXT_WIDTH && truncWord.length > 0) {
-          truncWord = truncWord.slice(0, -1);
+        // Doesn't fit in line 2. Truncate line 2 and exit.
+        if (line2) {
+          // Truncate existing line 2 content to make room for ellipsis
+          while (pdf.getTextWidth(line2 + '...') > TEXT_WIDTH && line2.length > 0) {
+            line2 = line2.slice(0, -1).trim();
+          }
+          line2 += '...';
+        } else {
+          // Even the single word didn't fit, truncate the word itself
+          let truncWord = word;
+          while (pdf.getTextWidth(truncWord + '...') > TEXT_WIDTH && truncWord.length > 0) {
+            truncWord = truncWord.slice(0, -1);
+          }
+          line2 = truncWord + '...';
         }
-        line2 = truncWord + '...';
+        // Advance index to signal we truncated due to overflow
+        wordIndex++;
+        break;
       }
-      break;
     }
+
+    // If we exited loop because of overflow (break) - already handled.
+    // If we exited loop because we ran out of words - check if there were actually more words
+    // (Wait, the loop iterates until words.length. If we broke, we added ellipsis.)
+
+    // There is a edge case: If the LAST word fit perfectly, but it was just barely fitting, 
+    // we don't need ellipsis.
+
+    // One final check: if there are still words remaining that we didn't even attempt 
+    // (e.g. we broke out), we effectively handled them with the ellipsis.
+    // However, if we broke out, `wordIndex` isn't fully at end, but we shouldn't care.
+    // But `wordIndex` is used in the for loop condition `wordIndex < words.length`.
+
+    // Re-verify the case where we just added the last word and it fits.
+    // Loop finishes. `line2` has content. No ellipsis. Correct.
+
+    // Case where we added a word, it filled the line. Next word causes overflow.
+    // Loop checks next word, conditional fails, we add ellipsis. Correct.
   }
 
-  // If there are more words after line2, add ellipsis
-  if (remainingWords.length > line2.split(' ').length && !line2.endsWith('...')) {
-    while (pdf.getTextWidth(line2 + '...') > TEXT_WIDTH && line2.length > 0) {
-      line2 = line2.slice(0, -1).trim();
-    }
-    line2 = line2 + '...';
-  }
+  // Append ellipsis if there are still words we completely ignored?
+  // The loop above only breaks when it encounters a word that doesn't fit.
+  // So if we break, we add ellipsis.
+  // If we don't break, we consumed all words.
+  // There is NO case "ignored words".
 
   const displayLines = [line1, line2].filter(l => l);
 

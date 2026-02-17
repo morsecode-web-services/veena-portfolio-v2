@@ -6,6 +6,9 @@ import { useEvents } from '@/hooks/useEvents';
 import { EventCard } from './EventCard';
 import { Music, Calendar, History, Loader2, Sparkles } from 'lucide-react';
 
+import { SectionWrapper } from '@/components/system/SectionWrapper';
+import { SectionTitle } from '@/components/system/SectionTitle';
+
 const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -99,7 +102,7 @@ export default function Schedule() {
     }, [upcomingEvents]);
 
     return (
-        <section id="events" className="relative py-24 px-4 sm:px-6 md:px-8 bg-white overflow-hidden" aria-label="Events">
+        <SectionWrapper id="events" background="cream" spacing="base" className="relative overflow-hidden">
             {/* Minimal Background */}
             <div className="absolute -top-24 -left-24 w-64 h-64 bg-gold-100/10 rounded-full blur-[80px] pointer-events-none" />
 
@@ -110,19 +113,11 @@ export default function Schedule() {
                 />
             )}
 
-            <div className="max-w-7xl mx-auto relative z-10">
-                <m.div
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true, margin: '-100px' }}
-                    transition={{ duration: 0.6 }}
-                    className="text-center mb-10 sm:mb-12"
-                >
-                    <h2 className="text-2xl sm:text-3xl md:text-4xl font-serif font-bold text-navy-900 mb-2 md:mb-3 px-4">
-                        {activeTab === 'upcoming' ? 'Upcoming Events' : 'Past Performances'}
-                    </h2>
-                    <div className="w-20 sm:w-24 h-1 bg-gold-400 mx-auto rounded-full"></div>
-                </m.div>
+            <div className="relative z-10">
+                <SectionTitle
+                    title={activeTab === 'upcoming' ? 'Upcoming Events' : 'Past Performances'}
+                    alignment="center"
+                />
 
                 {/* Minimal Tab Switcher - Centered */}
                 <div className="flex justify-center mb-12">
@@ -232,6 +227,6 @@ export default function Schedule() {
                     )}
                 </div>
             </div>
-        </section>
+        </SectionWrapper>
     );
 }

@@ -12,7 +12,9 @@ import {
     Menu,
     X,
     FileText,
-    Users
+    Users,
+    Settings,
+    PenTool
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
@@ -25,6 +27,8 @@ export default function AdminLayoutClient({ children }: AdminLayoutClientProps) 
     const router = useRouter();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [checkingAuth, setCheckingAuth] = useState(true);
+
+    const [leadsCount, setLeadsCount] = useState(0);
 
     useEffect(() => {
         async function checkAuth() {
@@ -43,10 +47,10 @@ export default function AdminLayoutClient({ children }: AdminLayoutClientProps) 
                     return;
                 }
 
-                // Verify role
+                // Verify role and get leads notification data
                 const { data: profile, error: profileError } = await supabase
                     .from('profiles')
-                    .select('role')
+                    .select('role, last_leads_viewed_at')
                     .eq('id', session.user.id)
                     .single();
 
@@ -55,6 +59,23 @@ export default function AdminLayoutClient({ children }: AdminLayoutClientProps) 
                     await supabase.auth.signOut();
                     router.push('/admin/login');
                     return;
+                }
+
+                // Check for new leads
+                if (profile.last_leads_viewed_at) {
+                    const { count, error: countError } = await supabase
+                        .from('leads')
+                        .select('*', { count: 'exact', head: true })
+                        .gt('created_at', profile.last_leads_viewed_at);
+
+                    if (!countError && count !== null) {
+                        setLeadsCount(count);
+                    }
+                } else {
+                    // If never viewed, show all new leads (or maybe just 0 to start cleanly)
+                    // For now, let's treat null as "checked everything just now" to avoid noise, 
+                    // or we could show total count. Let's show 0 to be less annoying initially.
+                    setLeadsCount(0);
                 }
 
                 setCheckingAuth(false);
@@ -92,11 +113,12 @@ export default function AdminLayoutClient({ children }: AdminLayoutClientProps) 
     };
 
     const navItems = [
-        { name: 'Dashboard', href: '/admin/events', icon: LayoutDashboard },
         { name: 'Events', href: '/admin/events', icon: Calendar },
         { name: 'Blog', href: '/admin/blogs', icon: FileText },
-        { name: 'Videos', href: '/admin/videos', icon: LayoutDashboard }, // Using LayoutDashboard for now, could use Video
-        { name: 'Leads', href: '/admin/leads', icon: Users },
+        { name: 'Videos', href: '/admin/videos', icon: LayoutDashboard },
+        { name: 'Forms', href: '/admin/forms', icon: LayoutDashboard }, // Using LayoutDashboard for now
+        { name: 'Leads', href: '/admin/leads', icon: Users, badge: leadsCount },
+        { name: 'Architect', href: '/admin/config', icon: PenTool },
         { name: 'Public Site', href: '/', icon: Home },
     ];
 
@@ -126,12 +148,15 @@ export default function AdminLayoutClient({ children }: AdminLayoutClientProps) 
                         {navItems.map((item) => {
                             const Icon = item.icon;
                             const isActive = pathname === item.href;
+                            // @ts-ignore - Adding dynamic badge property
+                            const badgeCount = item.badge ?? 0;
+
                             return (
                                 <Link
                                     key={item.name}
                                     href={item.href}
                                     className={`
-                    flex items-center gap-3 px-4 py-3 rounded-lg transition-colors
+                    flex items-center gap-3 px-4 py-3 rounded-lg transition-colors relative
                     ${isActive
                                             ? 'bg-navy-800 text-gold-400 border-l-4 border-gold-400'
                                             : 'text-navy-100 hover:bg-navy-900 hover:text-white'}
@@ -140,6 +165,11 @@ export default function AdminLayoutClient({ children }: AdminLayoutClientProps) 
                                 >
                                     <Icon className="h-5 w-5" />
                                     <span className="font-medium text-sm">{item.name}</span>
+                                    {badgeCount > 0 && (
+                                        <span className="absolute right-3 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
+                                            {badgeCount}
+                                        </span>
+                                    )}
                                 </Link>
                             );
                         })}

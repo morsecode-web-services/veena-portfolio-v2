@@ -111,7 +111,7 @@ export default async function Page() {
             );
           case 'About':
             return (
-              <div key="About" className="py-8 sm:py-11 md:py-14 bg-white">
+              <div key="About" className="bg-white">
                 <SectionErrorBoundary sectionName="About">
                   <About config={config} />
                 </SectionErrorBoundary>
@@ -119,7 +119,7 @@ export default async function Page() {
             );
           case 'Gallery':
             return (
-              <div key="Gallery" className="py-8 sm:py-11 md:py-14 bg-cream-50">
+              <div key="Gallery" className="bg-cream-50">
                 <SectionErrorBoundary sectionName="Gallery">
                   <Gallery config={config} />
                 </SectionErrorBoundary>
@@ -127,7 +127,7 @@ export default async function Page() {
             );
           case 'Music':
             return (
-              <div key="Music" className="py-8 sm:py-11 md:py-14 bg-white">
+              <div key="Music" className="bg-white">
                 <SectionErrorBoundary sectionName="Music">
                   <Music config={config} dbVideos={dbVideos || []} />
                 </SectionErrorBoundary>
@@ -135,7 +135,7 @@ export default async function Page() {
             );
           case 'Events':
             return (
-              <div key="Events" className="py-8 sm:py-11 md:py-14 bg-cream-50">
+              <div key="Events" className="bg-cream-50">
                 <SectionErrorBoundary sectionName="Events">
                   <Schedule />
                 </SectionErrorBoundary>
@@ -143,7 +143,7 @@ export default async function Page() {
             );
           case 'Press':
             return (
-              <div key="Press" className="py-8 sm:py-11 md:py-14 bg-white">
+              <div key="Press" className="bg-white">
                 <SectionErrorBoundary sectionName="Press">
                   <Press config={config} />
                 </SectionErrorBoundary>
@@ -151,7 +151,7 @@ export default async function Page() {
             );
           case 'FAQ':
             return (
-              <div key="FAQ" className="py-8 sm:py-11 md:py-20 bg-cream-50">
+              <div key="FAQ" className="bg-cream-50">
                 <SectionErrorBoundary sectionName="FAQ">
                   <FAQ config={config} />
                 </SectionErrorBoundary>
@@ -159,7 +159,7 @@ export default async function Page() {
             );
           case 'Contact':
             return (
-              <div key="Contact" className="py-8 sm:py-11 md:py-20 bg-white">
+              <div key="Contact" className="bg-white">
                 <SectionErrorBoundary sectionName="Contact">
                   <Contact />
                 </SectionErrorBoundary>

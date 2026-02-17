@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+export const dynamic = 'force-static';
 import { extractYoutubeId } from '@/lib/utils';
 
 export async function POST(request: Request) {

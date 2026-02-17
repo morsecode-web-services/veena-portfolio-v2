@@ -1,13 +1,12 @@
 {
   "artist": {
     "name": "Aishwarya Manikarnike",
-    "logo": "/logo.png",
     "tagline": "Classical Vainika & Vocalist",
-    "briefBio": "An \u2018A\u2019-Grade Veena Artist of All India Radio and Vidwat Antima rank-holding vocalist, Aishwarya Manikarnike has been immersed in artistic tradition within a musical family since childhood. She rejoices in Carnatic Music on the majestic Saraswati Veena and through sparkling vocals.",
+    "briefBio": "An ‘A’-Grade Veena Artist of All India Radio and Vidwat Antima rank-holding vocalist, Aishwarya Manikarnike has been immersed in artistic tradition within a musical family since childhood. She rejoices in Carnatic Music on the majestic Saraswati Veena and through sparkling vocals.",
     "fullBio": [
       {
         "type": "heading",
-        "content": "\u2018A\u2019-Grade Veena Artist (AIR) | Vidwat Antima Rank-Holding Vocalist"
+        "content": "‘A’-Grade Veena Artist (AIR) | Vidwat Antima Rank-Holding Vocalist"
       },
       {
         "type": "paragraph",
@@ -19,7 +18,7 @@
       },
       {
         "type": "paragraph",
-        "content": "Aishwarya\u2019s foundation was laid under the rigorous tutelage of her grandmother, Karnataka Kalashree Veena Vid. Smt. M. K. Saraswathi (A-Top Grade, AIR), known for her mastery of the Gayaki style. Her training has been further enriched by her mother, Vid. Smt. Rajyashree Josyer Shrikanth (A-Grade, AIR), and her uncle, violinist Vid. G. Venkatesha Josyer. Currently, she continues her vocal advanced training under the esteemed Sangeetha Kalarathna Vid. M. S. Sheela, while also receiving guidance from mridangist Gaanakala Vid. H. S. Sudhindra and exploring Hindustani vocals under Smt. Geetha Hegde."
+        "content": "Aishwarya’s foundation was laid under the rigorous tutelage of her grandmother, Karnataka Kalashree Veena Vid. Smt. M. K. Saraswathi (A-Top Grade, AIR), known for her mastery of the Gayaki style. Her training has been further enriched by her mother, Vid. Smt. Rajyashree Josyer Shrikanth (A-Grade, AIR), and her uncle, violinist Vid. G. Venkatesha Josyer. Currently, she continues her vocal advanced training under the esteemed Sangeetha Kalarathna Vid. M. S. Sheela, while also receiving guidance from mridangist Gaanakala Vid. H. S. Sudhindra and exploring Hindustani vocals under Smt. Geetha Hegde."
       },
       {
         "type": "heading",
@@ -27,15 +26,15 @@
       },
       {
         "type": "paragraph",
-        "content": "Aishwarya is a rare talent who holds high-level credentials in both voice and instrument. A milestone in her career was her 2024 elevation to \u2018A\u2019-Grade in Veena by All India Radio, following a series of national competition wins. Her academic prowess is equally notable; she secured the 3rd Rank at the State level in the Vidwat Antima examinations. Her contributions have been recognized with several prestigious awards, including:"
+        "content": "Aishwarya is a rare talent who holds high-level credentials in both voice and instrument. A milestone in her career was her 2024 elevation to ‘A’-Grade in Veena by All India Radio, following a series of national competition wins. Her academic prowess is equally notable; she secured the 3rd Rank at the State level in the Vidwat Antima examinations. Her contributions have been recognized with several prestigious awards, including:"
       },
       {
         "type": "list",
         "items": [
-          "Best Instrumentalist \u2013 The Madras Music Academy (Spirit of Youth)",
-          "Raga Laya Prabha Award \u2013 Sri Rama Lalitha Kala Mandira, Bengaluru",
-          "SAMA Yuva Puraskara \u2013 SAMA Arts Foundation",
-          "CCRT Scholarships \u2013 Awarded by the Indian Ministry of Culture (Junior and Young Artiste schemes)"
+          "Best Instrumentalist – The Madras Music Academy (Spirit of Youth)",
+          "Raga Laya Prabha Award – Sri Rama Lalitha Kala Mandira, Bengaluru",
+          "SAMA Yuva Puraskara – SAMA Arts Foundation",
+          "CCRT Scholarships – Awarded by the Indian Ministry of Culture (Junior and Young Artiste schemes)"
         ]
       },
       {
@@ -44,7 +43,7 @@
       },
       {
         "type": "paragraph",
-        "content": "Aishwarya\u2019s performance career is highlighted by a historic appearance at the Rashtrapati Bhavan on Republic Day 2025, performing in the presence of the President and Prime Minister of India. As a soloist and a member of a unique Three-Generation Veena Trio alongside her mother and grandmother, she has graced premier stages including the Music Academy Chennai (HCL Series), Bangalore Gayana Samaja, Udupi Sri Krishna Temple, and TTD Nadaneerajanam."
+        "content": "Aishwarya’s performance career is highlighted by a historic appearance at the Rashtrapati Bhavan on Republic Day 2025, performing in the presence of the President and Prime Minister of India. As a soloist and a member of a unique Three-Generation Veena Trio alongside her mother and grandmother, she has graced premier stages including the Music Academy Chennai (HCL Series), Bangalore Gayana Samaja, Udupi Sri Krishna Temple, and TTD Nadaneerajanam."
       },
       {
         "type": "paragraph",
@@ -56,20 +55,21 @@
       },
       {
         "type": "paragraph",
-        "content": "Whether through the resonant strings of the Saraswati Veena or her \"sparkling\" vocal delivery, Aishwarya\u2019s music is a testament to a lifetime of devotion. By balancing her career in technology with her classical pursuits, she aspires to preserve and carry forward the vast treasure of Carnatic Classical art for generations to come."
+        "content": "Whether through the resonant strings of the Saraswati Veena or her \"sparkling\" vocal delivery, Aishwarya’s music is a testament to a lifetime of devotion. By balancing her career in technology with her classical pursuits, she aspires to preserve and carry forward the vast treasure of Carnatic Classical art for generations to come."
       }
     ],
-    "email": "contact@aishwaryamanikarnike.com"
+    "email": "official@aishwaryamanikarnike.com",
+    "logo": "/logo.png"
   },
   "home": {
     "heroTitle": "Music is the mediator between the spiritual and the sensual life.",
     "heroBackground": "/images/home/hero-bg.jpg",
     "heroBackgroundPosition": "center 35%",
-    "heroTagline": "Classical Veena Artiste",
+    "heroTagline": "Classical Veena & Vocal Artiste",
     "heroStats": [
       {
         "label": "Recognition",
-        "value": "'A'-Grade AIR Veena Artist"
+        "value": "'A'-Graded Musician\nAll India Radio"
       },
       {
         "label": "Tradition",
@@ -101,16 +101,14 @@
     "featuredCarousel": {
       "enabled": true,
       "autoScrollInterval": 5000,
-      "showUpcomingEvent": true,
-      "eventSubtitle": "Upcoming Event",
-      "eventLinkText": "View Event Details",
       "items": [
         {
           "id": "featured-1",
           "image": "/images/spotlight/spotlight-1-optimized.jpg",
+          "imagePosition": "center",
+          "imagePositionMobile": "center top",
           "title": "Performance before Hon. President",
           "description": "A Carnatic ensemble at Rashtrapati Bhavan",
-          "pdfDescription": "Historic performance at Rashtrapati Bhavan on Republic Day 2025, performing a Carnatic ensemble in the presence of the Hon. President and Prime Minister of India. This milestone represents the pinnacle of recognition for classical artistry at the national level.",
           "subtitle": "Highlights",
           "link": "#gallery",
           "linkText": "View performance gallery"
@@ -120,12 +118,14 @@
           "image": "/images/spotlight/spotlight-2-optimized.jpg",
           "title": "Vidwat Antima Rank Holder",
           "description": "State rank #3 in Carnatic Classical",
-          "pdfDescription": "Secured the prestigious 3rd Rank at the State level in the Vidwat Antima examinations, demonstrating exceptional technical mastery and deep understanding of Carnatic Classical music theory and performance. This achievement reflects years of rigorous training under distinguished gurus.",
           "subtitle": "Featured recognitions",
           "link": "#about",
           "linkText": "Read More"
         }
-      ]
+      ],
+      "showUpcomingEvent": true,
+      "eventSubtitle": "Upcoming Event",
+      "eventLinkText": "View Event Details"
     }
   },
   "spotlights": [
@@ -135,8 +135,6 @@
       "subtitle": "Highlights",
       "description": "A Carnatic ensemble at Rashtrapati Bhavan",
       "imageUrl": "/images/spotlight/spotlight-1-optimized.jpg",
-      "ctaText": "View performance gallery",
-      "ctaLink": "#gallery",
       "features": [
         {
           "title": "Gayaki Style",
@@ -150,7 +148,9 @@
           "title": "Intricacy",
           "description": "Complex finger techniques that produce rapid, precise melodic patterns."
         }
-      ]
+      ],
+      "ctaText": "View performance gallery",
+      "ctaLink": "#gallery"
     },
     {
       "id": "vidwat-antima",
@@ -158,8 +158,6 @@
       "subtitle": "Featured recognitions",
       "description": "State rank #3 in Carnatic Classical",
       "imageUrl": "/images/spotlight/spotlight-2-optimized.jpg",
-      "ctaText": "Read More",
-      "ctaLink": "#about",
       "features": [
         {
           "title": "Tradition",
@@ -173,7 +171,9 @@
           "title": "Innovation",
           "description": "The energy of Aishwarya, pushing the boundaries and carrying the legacy forward."
         }
-      ]
+      ],
+      "ctaText": "Read More",
+      "ctaLink": "#about"
     },
     {
       "id": "vocal",
@@ -182,8 +182,6 @@
       "description": "Beyond the strings, Aishwarya is a gifted vocalist. Her singing is marked by impeccable pitch, clarity of diction, and a profound emotional connection to the Sahitya (lyrics). She brings the same depth to her vocal concerts as she does to her instrumental performances.",
       "imageUrl": "/images/spotlight/vocal.jpg",
       "imagePosition": "center 5%",
-      "ctaText": "Listen to Vocals",
-      "ctaLink": "#music",
       "features": [
         {
           "title": "Bhav",
@@ -197,14 +195,16 @@
           "title": "Repertoire",
           "description": "A vast collection of compositions ranging from classical kritis to devotional bhajans."
         }
-      ]
+      ],
+      "ctaText": "Listen to Vocals",
+      "ctaLink": "#music"
     }
   ],
   "gallery": {
     "images": [
       {
         "id": "1",
-        "src": "/images/gallery/gallery-1.jpg",
+        "src": "/images/gallery/gallery-18.jpg",
         "alt": "Veena performance at concert hall",
         "width": 1920,
         "height": 1440,
@@ -212,7 +212,7 @@
       },
       {
         "id": "2",
-        "src": "/images/gallery/gallery-2.jpg",
+        "src": "/images/gallery/gallery-13.jpg",
         "alt": "Vocal performance on stage",
         "width": 1468,
         "height": 2202,
@@ -220,7 +220,7 @@
       },
       {
         "id": "3",
-        "src": "/images/gallery/gallery-3.jpg",
+        "src": "/images/gallery/gallery-12.jpg",
         "alt": "Stage performance with traditional attire",
         "width": 1280,
         "height": 853,
@@ -228,7 +228,7 @@
       },
       {
         "id": "4",
-        "src": "/images/gallery/gallery-4.jpg",
+        "src": "/images/gallery/gallery-14.jpg",
         "alt": "Intimate performance setting",
         "width": 1920,
         "height": 2560,
@@ -236,7 +236,7 @@
       },
       {
         "id": "5",
-        "src": "/images/gallery/gallery-5.jpg",
+        "src": "/images/gallery/gallery-15.jpg",
         "alt": "Three-generation trio performance",
         "width": 1920,
         "height": 1440,
@@ -244,7 +244,7 @@
       },
       {
         "id": "6",
-        "src": "/images/gallery/gallery-6.jpg",
+        "src": "/images/gallery/gallery-16.jpg",
         "alt": "Classical music ensemble",
         "width": 1920,
         "height": 1100,
@@ -252,7 +252,7 @@
       },
       {
         "id": "7",
-        "src": "/images/gallery/gallery-7.jpg",
+        "src": "/images/gallery/gallery-11.jpg",
         "alt": "Classical performance moment",
         "width": 983,
         "height": 737,
@@ -260,7 +260,7 @@
       },
       {
         "id": "8",
-        "src": "/images/gallery/gallery-8.jpg",
+        "src": "/images/gallery/gallery-19.jpg",
         "alt": "Musical event",
         "width": 1920,
         "height": 1280,
@@ -268,7 +268,7 @@
       },
       {
         "id": "9",
-        "src": "/images/gallery/gallery-9.jpg",
+        "src": "/images/gallery/gallery-17.jpg",
         "alt": "Artistic performance",
         "width": 1280,
         "height": 853,
@@ -487,7 +487,7 @@
   },
   "socialMedia": {
     "youtube": "https://www.youtube.com/@aishwaryamanikarnike",
-    "instagram": "https://www.instagram.com/aishwaryamanikarnike"
+    "instagram": "https://www.instagram.com/aishwaryamanikarnike/"
   },
   "layoutOrder": [
     "Home",
@@ -513,17 +513,16 @@
     "title": "Deep Dives into the Ocean of Swaras",
     "subtitle": "Journal & Musings"
   },
-  "contact": {
-    "imageUrl": "/images/contact/contact-image.jpg",
-    "imageAlt": "Aishwarya Manikarnike performing"
-  },
   "pdf": {
-    "backgroundStyle": "radial",
     "backgroundOpacity": 0.6,
     "backgroundBrightness": 0.8,
     "gradients": {
       "enabled": true,
       "opacity": 0.85
     }
+  },
+  "contact": {
+    "imageUrl": "/images/contact/contact-image.jpg",
+    "imageAlt": "Aishwarya Manikarnike performing"
   }
 }

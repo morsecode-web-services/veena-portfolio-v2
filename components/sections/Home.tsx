@@ -61,7 +61,6 @@ export default function Home({ config, dbVideos }: HomeProps) {
   const heroBackgroundPosition = config.home.heroBackgroundPosition || 'center 35%';
   const heroTagline = config.home.heroTagline || 'Classical Veena Artiste';
   const heroStats = config.home.heroStats || [];
-  const heroCta = config.home.heroCta || { text: 'View Journey', link: '#about' };
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -83,32 +82,11 @@ export default function Home({ config, dbVideos }: HomeProps) {
     },
   };
 
-  const nameVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.08,
-      },
-      transitionEnd: { staggerChildren: 0 },
-      transitionOut: { duration: 0.8, ease: [0.25, 0.1, 0.25, 1] as any },
-    },
-  };
-
-  const charVariants = {
-    hidden: { opacity: 0, y: 40 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.8, ease: [0.25, 0.1, 0.25, 1] as any },
-    },
-  };
-
   return (
     <section id="home" aria-label="Home">
       {/* Full-Height Hero Section with Background Image */}
       <div className="relative h-screen min-h-[700px] w-full overflow-hidden">
-        {/* Background Image with Enhanced Multi-layer Overlay */}
+        {/* Layer 1: Background Image */}
         <div className="absolute inset-0">
           <m.div
             initial={shouldReduceMotion ? undefined : { scale: 1.1, opacity: 0 }}
@@ -123,25 +101,23 @@ export default function Home({ config, dbVideos }: HomeProps) {
               className="object-cover"
               style={{ objectPosition: heroBackgroundPosition }}
               priority
-              quality={90}
-              sizes="100vw"
+              quality={80}
+              sizes="(max-width: 768px) 100vw, 100vw"
             />
           </m.div>
-          {/* Layered Overlays for Depth and Contrast */}
-          <div className="absolute inset-0 bg-black/30"></div>
-          <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent"></div>
-          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-black/40"></div>
 
-          {/* Subtle vignette for focus */}
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_25%_50%,transparent_0%,rgba(0,0,0,0.4)_100%)]"></div>
+          {/* Overlays for Depth */}
+          <div className="absolute inset-0 bg-black/40"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-black via-black/40 to-transparent"></div>
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_25%_50%,transparent_0%,rgba(0,0,0,0.6)_100%)]"></div>
         </div>
 
-        {/* Content Overlay */}
+        {/* Layer 2: Content Overlay */}
         <m.div
           variants={shouldReduceMotion ? {} : containerVariants}
           initial={shouldReduceMotion ? undefined : "hidden"}
           animate={shouldReduceMotion ? undefined : "visible"}
-          className="relative h-full flex flex-col justify-between px-6 sm:px-12 md:px-16 lg:px-20 py-12 sm:py-16 md:py-20"
+          className="relative h-full flex flex-col justify-between px-6 sm:px-12 md:px-16 lg:px-20 py-12 sm:py-16 md:py-20 z-20"
         >
           {/* Top Section - Small Tagline */}
           <m.div variants={itemVariants} className="pt-8 hidden sm:block">
@@ -150,26 +126,14 @@ export default function Home({ config, dbVideos }: HomeProps) {
             </p>
           </m.div>
 
-          {/* Center-Left Section - Large Name with staggered char animation */}
+          {/* Center-Left Section - Large Name */}
           <div className="flex-1 flex items-center -translate-y-16 sm:translate-y-0">
             <div className="max-w-4xl">
               <m.h1
-                variants={shouldReduceMotion ? {} : nameVariants}
+                variants={shouldReduceMotion ? {} : itemVariants}
                 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-[6.5rem] font-serif font-bold text-white leading-[0.85] tracking-tighter"
               >
-                {config.artist.name.split(' ').map((word, wordIdx) => (
-                  <span key={wordIdx} className="block whitespace-nowrap overflow-hidden py-1 sm:py-2">
-                    {shouldReduceMotion ? word : word.split('').map((char, charIdx) => (
-                      <m.span
-                        key={charIdx}
-                        variants={charVariants}
-                        className="inline-block"
-                      >
-                        {char}
-                      </m.span>
-                    ))}
-                  </span>
-                ))}
+                {config.artist.name}
               </m.h1>
 
               <m.div
@@ -189,7 +153,7 @@ export default function Home({ config, dbVideos }: HomeProps) {
                     <p className="text-xs tracking-[0.25em] text-gold-200/60 font-light uppercase mb-2 group-hover:text-gold-400/80 transition-colors">
                       {stat.label}
                     </p>
-                    <p className="text-lg sm:text-xl md:text-2xl font-serif text-white italic border-l-2 border-white/10 pl-4 py-1">
+                    <p className="text-lg sm:text-xl md:text-2xl font-serif text-white italic border-l-2 border-white/10 pl-4 py-1 whitespace-pre-line">
                       {stat.value}
                     </p>
                   </div>
