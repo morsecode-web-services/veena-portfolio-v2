@@ -8,6 +8,7 @@ import {
   FaInstagram,
   FaTwitter,
   FaLinkedin,
+  FaEnvelope,
 } from 'react-icons/fa';
 import type { SiteConfig } from '@/types';
 import Image from 'next/image';
@@ -22,6 +23,7 @@ const socialMediaIcons = {
   instagram: FaInstagram,
   twitter: FaTwitter,
   linkedin: FaLinkedin,
+  email: FaEnvelope,
 };
 
 import { usePathname } from 'next/navigation';
@@ -116,6 +118,25 @@ function Footer({ config }: FooterProps) {
               );
             })}
           </m.div>
+
+          {/* Direct Email Link */}
+          {config?.artist.email && (
+            <m.div
+              initial={shouldReduceMotion ? undefined : { opacity: 0, y: 10 }}
+              whileInView={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: shouldReduceMotion ? 0 : 0.6, delay: shouldReduceMotion ? 0 : 0.2 }}
+              className="text-center"
+            >
+              <a
+                href={`mailto:${config.artist.email}`}
+                className="text-slate-300 hover:text-gold-400 text-sm font-medium transition-colors duration-200 border-b border-gold-500/30 hover:border-gold-400"
+                onClick={() => analytics.socialMediaClick('email', 'footer', deviceType, 'mailto')}
+              >
+                {config.artist.email}
+              </a>
+            </m.div>
+          )}
 
           {/* Copyright */}
           <m.div

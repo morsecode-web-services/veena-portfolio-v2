@@ -156,6 +156,20 @@ export default function Contact() {
               <span className="text-[10px] font-black text-navy-400 uppercase tracking-widest mb-0.5">Response</span>
               <span className="text-xs font-semibold text-navy-900">24-48 Hours</span>
             </div>
+            {siteConfig?.artist?.email && (
+              <>
+                <div className="w-px h-8 bg-slate-100 self-center" />
+                <div className="flex flex-col items-center text-center px-2">
+                  <span className="text-[10px] font-black text-navy-400 uppercase tracking-widest mb-0.5">Direct Email</span>
+                  <a
+                    href={`mailto:${siteConfig.artist.email}`}
+                    className="text-xs font-semibold text-navy-900 hover:text-gold-600 transition-colors duration-200"
+                  >
+                    {siteConfig.artist.email}
+                  </a>
+                </div>
+              </>
+            )}
           </div>
         </m.div>
 
