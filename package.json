@@ -13,7 +13,9 @@
     "test:coverage": "vitest --run --coverage",
     "type-check": "tsc --noEmit",
     "analyze": "ANALYZE=true next build",
-    "optimize-gallery": "node scripts/optimize-gallery.js"
+    "optimize-gallery": "node scripts/optimize-gallery.js",
+    "optimize-images": "node scripts/optimize-images.js",
+    "prebuild": "node scripts/optimize-images.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

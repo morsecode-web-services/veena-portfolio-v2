@@ -13,8 +13,8 @@ const nextConfig = {
   trailingSlash: false,
 
   images: {
-    // GitHub Pages (static export) doesn't support image optimization
-    // Netlify supports it natively - enable based on environment
+    // GitHub Pages (static export) needs unoptimized=true
+    // Netlify uses _next/image with sharp — needs unoptimized=false
     unoptimized: !!process.env.NEXT_PUBLIC_BASE_PATH,
     formats: ['image/avif', 'image/webp'],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920],

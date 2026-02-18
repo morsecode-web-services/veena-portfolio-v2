@@ -27,6 +27,7 @@ export default function ImageWithFallback({
   const [hasError, setHasError] = useState(false);
   const [attempts, setAttempts] = useState(0);
   const [isRetrying, setIsRetrying] = useState(false);
+  const [triedFallback, setTriedFallback] = useState(false);
 
   // Sync state when src prop changes
   useEffect(() => {
@@ -34,26 +35,28 @@ export default function ImageWithFallback({
     setHasError(false);
     setAttempts(0);
     setIsRetrying(false);
+    setTriedFallback(false);
   }, [src]);
 
   const handleError = () => {
     if (attempts < retryCount) {
-      // Retry loading the image
+      // Retry loading the current image
       setIsRetrying(true);
       setAttempts(prev => prev + 1);
 
       // Add a small delay before retrying
       setTimeout(() => {
-        const retrySrc = `${src}${src.toString().includes('?') ? '&' : '?'}retry=${attempts + 1}`;
+        const retrySrc = `${triedFallback ? fallbackSrc : src}${(triedFallback ? fallbackSrc : src).toString().includes('?') ? '&' : '?'}retry=${attempts + 1}`;
         setImgSrc(getAssetPath(retrySrc));
         setIsRetrying(false);
       }, 1000 * (attempts + 1)); // Exponential backoff
-    } else if (imgSrc !== getAssetPath(fallbackSrc)) {
+    } else if (!triedFallback) {
       // Try fallback image
       setImgSrc(getAssetPath(fallbackSrc));
       setAttempts(0);
+      setTriedFallback(true);
     } else {
-      // Both primary and fallback failed
+      // Both primary and fallback failed - stop trying
       setHasError(true);
     }
   };
