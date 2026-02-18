@@ -200,7 +200,7 @@ export default function ImageGallery({ images }: ImageGalleryProps) {
                 fill
                 sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                 className="object-cover transition-transform duration-500 group-hover:scale-110"
-                loading={index < 6 ? 'eager' : 'lazy'}
+                loading={index < 2 ? 'eager' : 'lazy'}
                 quality={85}
               />
               {/* Caption Overlay - Always visible */}

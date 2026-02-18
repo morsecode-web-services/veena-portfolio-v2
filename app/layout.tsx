@@ -188,6 +188,13 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="https://www.youtube-nocookie.com" />
         <link rel="dns-prefetch" href="https://i.ytimg.com" />
         <link rel="dns-prefetch" href="https://img.youtube.com" />
+        {/* Preload hero background image (LCP element) */}
+        <link
+          rel="preload"
+          as="image"
+          href="/images/home/hero-bg.jpg"
+          type="image/jpeg"
+        />
         {jsonLdData && (
           <script
             type="application/ld+json"

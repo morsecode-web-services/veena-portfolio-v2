@@ -13,8 +13,12 @@ const nextConfig = {
   trailingSlash: false,
 
   images: {
-    // Serve images directly (already optimized by our script)
-    unoptimized: true,
+    // GitHub Pages (static export) doesn't support image optimization
+    // Netlify supports it natively - enable based on environment
+    unoptimized: !!process.env.NEXT_PUBLIC_BASE_PATH,
+    formats: ['image/avif', 'image/webp'],
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     remotePatterns: [
       {
         protocol: 'https',
@@ -44,15 +48,13 @@ const nextConfig = {
     } : false,
   },
 
-  // Optimize production builds
-
   // Enable React strict mode for better development experience
   reactStrictMode: true,
 
   // Optimize bundle size
   experimental: {
     optimizeCss: true,
-    optimizePackageImports: ['framer-motion', 'react-icons'],
+    optimizePackageImports: ['framer-motion', 'react-icons', 'lucide-react'],
   },
 
   // Tree-shake react-icons to reduce bundle size

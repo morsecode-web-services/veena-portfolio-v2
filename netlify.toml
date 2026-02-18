@@ -1,13 +1,14 @@
 # Production configuration for Netlify
 
-# Cache configuration for static assets
+# Cache configuration for static assets - immutable hashed chunks
 [[headers]]
   for = "/_next/static/*"
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
 
+# Cache images in all subdirectories
 [[headers]]
-  for = "/*.jpg"
+  for = "/images/*"
   [headers.values]
     Cache-Control = "public, max-age=2592000"
 
@@ -27,9 +28,20 @@
     Cache-Control = "public, max-age=2592000"
 
 [[headers]]
+  for = "/*.ico"
+  [headers.values]
+    Cache-Control = "public, max-age=2592000"
+
+[[headers]]
   for = "/*.woff2"
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
+
+# Next.js Image Optimization cache
+[[headers]]
+  for = "/_next/image*"
+  [headers.values]
+    Cache-Control = "public, max-age=2592000"
 
 # Security headers
 [[headers]]
