@@ -94,91 +94,100 @@ export function FeaturedCarousel({ items, autoScrollInterval = 5000 }: FeaturedC
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
-      <AnimatePresence mode="wait">
-        <m.div
-          key={currentItem.id}
-          initial={{ opacity: 0, scale: 0.98, x: 20 }}
-          animate={{ opacity: 1, scale: 1, x: 0 }}
-          exit={{ opacity: 0, scale: 1.02, x: -20 }}
-          transition={{ duration: 0.7, ease: [0.25, 0.1, 0.25, 1] as any }}
-          className="flex flex-col sm:flex-row items-start sm:items-end justify-end gap-2 sm:gap-8 md:gap-10"
-        >
-          {/* Text Content */}
-          <div className="space-y-0.5 sm:space-y-5 text-right flex-1">
-            {/* Subtitle Label */}
-            {currentItem.subtitle && (
-              <div className="flex items-center justify-end gap-3 sm:gap-4">
-                <p className="text-xs tracking-[0.3em] text-gold-500 font-medium uppercase">
-                  {currentItem.subtitle}
-                </p>
-                <div className="h-px w-8 sm:w-12 bg-gold-500/30"></div>
-              </div>
-            )}
+      {/* Pre-render all images to keep them cached in DOM */}
+      <div className="relative w-full">
+        <AnimatePresence mode="wait">
+          <m.div
+            key={currentItem.id}
+            initial={{ opacity: 0, scale: 0.98, x: 20 }}
+            animate={{ opacity: 1, scale: 1, x: 0 }}
+            exit={{ opacity: 0, scale: 1.02, x: -20 }}
+            transition={{ duration: 0.7, ease: [0.25, 0.1, 0.25, 1] as any }}
+            className="flex flex-col sm:flex-row items-start sm:items-end justify-end gap-2 sm:gap-8 md:gap-10"
+          >
+            {/* Text Content */}
+            <div className="space-y-0.5 sm:space-y-5 text-right flex-1">
+              {/* Subtitle Label */}
+              {currentItem.subtitle && (
+                <div className="flex items-center justify-end gap-3 sm:gap-4">
+                  <p className="text-xs tracking-[0.3em] text-gold-500 font-medium uppercase">
+                    {currentItem.subtitle}
+                  </p>
+                  <div className="h-px w-8 sm:w-12 bg-gold-500/30"></div>
+                </div>
+              )}
 
-            {/* Title */}
-            <h2 className="text-xl sm:text-3xl md:text-4xl font-serif text-white leading-tight tracking-tight">
-              <span className="italic">{currentItem.title}</span>
-            </h2>
+              {/* Title */}
+              <h2 className="text-xl sm:text-3xl md:text-4xl font-serif text-white leading-tight tracking-tight">
+                <span className="italic">{currentItem.title}</span>
+              </h2>
 
-            {/* Description */}
-            <p className="text-xs sm:text-base text-white/80 leading-relaxed max-w-lg font-light ml-auto line-clamp-2 sm:line-clamp-none">
-              {currentItem.description}
-            </p>
+              {/* Description */}
+              <p className="text-xs sm:text-base text-white/80 leading-relaxed max-w-lg font-light ml-auto line-clamp-2 sm:line-clamp-none">
+                {currentItem.description}
+              </p>
 
-            {/* CTA Link */}
-            {currentItem.link && currentItem.linkText && (
-              <m.a
-                href={currentItem.link}
-                whileHover={{ x: -4 }}
-                transition={{ duration: 0.2 }}
-                className="inline-flex items-center gap-2.5 text-xs text-gold-500 font-medium tracking-[0.15em] uppercase mt-0.5 sm:mt-3 group"
-              >
-                <span>{currentItem.linkText}</span>
-                <svg
-                  className="w-3.5 h-3.5 transition-transform duration-300 group-hover:-translate-x-1"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  strokeWidth={2.5}
+              {/* CTA Link */}
+              {currentItem.link && currentItem.linkText && (
+                <m.a
+                  href={currentItem.link}
+                  whileHover={{ x: -4 }}
+                  transition={{ duration: 0.2 }}
+                  className="inline-flex items-center gap-2.5 text-xs text-gold-500 font-medium tracking-[0.15em] uppercase mt-0.5 sm:mt-3 group"
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M7 16l-4-4m0 0l4-4m-4 4h18" />
-                </svg>
-              </m.a>
-            )}
-          </div>
+                  <span>{currentItem.linkText}</span>
+                  <svg
+                    className="w-3.5 h-3.5 transition-transform duration-300 group-hover:-translate-x-1"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    strokeWidth={2.5}
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M7 16l-4-4m0 0l4-4m-4 4h18" />
+                  </svg>
+                </m.a>
+              )}
+            </div>
 
-          {/* Image Thumbnail - Show image or placeholder to maintain layout stability */}
-          {currentItem.image ? (
+            {/* Image Thumbnail - Render all items, show only current */}
             <div className="relative w-full h-32 sm:w-40 sm:h-40 md:w-44 md:h-44 rounded-md overflow-hidden border border-white/15 shadow-2xl flex-shrink-0 group/img">
-              {/* Mobile image with custom position */}
-              <ImageWithFallback
-                src={currentItem.image}
-                alt={currentItem.title}
-                fill
-                className="sm:hidden object-cover transition-transform duration-700 group-hover/img:scale-105"
-                style={{
-                  objectPosition: currentItem.imagePositionMobile || currentItem.imagePosition || 'center'
-                }}
-                sizes="100vw"
-              />
-              {/* Desktop image with custom position */}
-              <ImageWithFallback
-                src={currentItem.image}
-                alt={currentItem.title}
-                fill
-                className="hidden sm:block object-cover transition-transform duration-700 group-hover/img:scale-105"
-                style={{
-                  objectPosition: currentItem.imagePosition || 'center'
-                }}
-                sizes="176px"
-              />
+              {items.map((item, index) => (
+                item.image && (
+                  <div
+                    key={item.id}
+                    className={`absolute inset-0 transition-opacity duration-500 ${index === currentIndex ? 'opacity-100' : 'opacity-0 pointer-events-none'
+                      }`}
+                  >
+                    {/* Mobile image */}
+                    <ImageWithFallback
+                      src={item.image}
+                      alt={item.title}
+                      fill
+                      className="sm:hidden object-cover transition-transform duration-700 group-hover/img:scale-105"
+                      style={{
+                        objectPosition: item.imagePositionMobile || item.imagePosition || 'center'
+                      }}
+                      sizes="100vw"
+                    />
+                    {/* Desktop image */}
+                    <ImageWithFallback
+                      src={item.image}
+                      alt={item.title}
+                      fill
+                      className="hidden sm:block object-cover transition-transform duration-700 group-hover/img:scale-105"
+                      style={{
+                        objectPosition: item.imagePosition || 'center'
+                      }}
+                      sizes="176px"
+                    />
+                  </div>
+                )
+              ))}
               <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover/img:opacity-100 transition-opacity duration-500"></div>
             </div>
-          ) : (
-            <div className="relative w-full h-32 sm:w-40 sm:h-40 md:w-44 md:h-44 flex-shrink-0" aria-hidden="true" />
-          )}
-        </m.div>
-      </AnimatePresence>
+          </m.div>
+        </AnimatePresence>
+      </div>
 
       {/* Navigation Controls - Dot Indicators Only */}
       {items.length > 1 && (
