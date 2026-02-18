@@ -65,6 +65,17 @@ Log in to GoDaddy → **Domain Portfolio** → **aishwaryamanikarnike.com** → 
 
 ---
 
+## Step 5.5: Add Resend & Email Records (Crucial)
+Since Netlify is now your DNS manager, you must add your Resend verification records here:
+1. In Netlify → **Domains** → `aishwaryamanikarnike.com`.
+2. Add the **MX** and **TXT** records given by Resend.
+3. Add the **DMARC** record:
+   - Type: `TXT`
+   - Name: `_dmarc.email`
+   - Value: `v=DMARC1; p=none;`
+
+---
+
 ## Step 6: Verify and SSL
 1. Go back to Netlify Domain Management.
 2. Once DNS propagates (5-30 mins), click **"Verify DNS configuration"**.

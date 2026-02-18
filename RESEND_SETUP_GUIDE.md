@@ -190,22 +190,31 @@ The error you're seeing (`403 validation_error`) is because you're using the tes
 5. Click **"Add"**
 6. **Keep this page open!** You will see a list of DNS records (MX, TXT).
 
-### Step 2: Configure GoDaddy DNS
-1. Log in to your [GoDaddy Domain Portfolio](https://dcc.godaddy.com/control/portfolio)
-2. Click on **`aishwaryamanikarnike.com`**
-3. Select **"DNS"** → **"DNS Records"**
-4. For each record shown in your Resend Dashboard, click **"Add New Record"** in GoDaddy:
+### Step 2: Configure DNS in Netlify
+Since you moved your nameservers, you must add these records in **Netlify**, not GoDaddy.
 
-| Type | Name (Host) | Value (Points to) | TTL |
-| :--- | :--- | :--- | :--- |
-| **MX** | `feedback` | `feedback-smtp.us-east-1.amazonses.com` (Example) | 1/2 Hour |
-| **TXT** | `resend._domainkey` | `p=MIGfMA0GCSqGSIb3DQEBAQUAA...` (Copy from Resend) | 1/2 Hour |
-| **TXT** | `@` (or leave blank) | `v=spf1 include:_spf.resend.com ~all` | 1/2 Hour |
+1. Log in to [Netlify Dashboard](https://app.netlify.com/)
+2. Go to **Domains** → **`aishwaryamanikarnike.com`**
+3. Click **"Add DNS record"** for each of the following:
+
+| Type | Name (Host) | Value (Points to) |
+| :--- | :--- | :--- |
+| **MX** | `feedback` | `[Provided by Resend]` |
+| **TXT** | `resend._domainkey` | `[Provided by Resend]` |
+| **TXT** | `@` | `v=spf1 include:_spf.resend.com ~all` |
 
 > [!IMPORTANT]
 > - Copy the exact values from **your** Resend dashboard.
-> - If GoDaddy says a record already exists (like SPF), append `include:_spf.resend.com` to the existing one.
-> - MX priority is usually 10.
+
+### Step 2.5: Add DMARC Record (Crucial for Spam Prevention)
+To prevent your emails from going to Spam, you should add a DMARC record for your subdomain in GoDaddy:
+
+| Type | Name | Value |
+| :--- | :--- | :--- |
+| **TXT** | `_dmarc.email` | `v=DMARC1; p=none;` |
+
+> [!TIP]
+> This tells email providers (like Gmail) that you are a legitimate sender. Without this, Gmail often flags emails as suspicious.
 
 ### Step 3: Verify in Resend
 1. Go back to your Resend Dashboard

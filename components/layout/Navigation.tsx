@@ -198,8 +198,8 @@ export default function Navigation({ config, isScrolled = false }: NavigationPro
                 initial={{ x: '100%' }}
                 animate={{ x: 0 }}
                 exit={{ x: '100%' }}
-                transition={{ type: 'tween', duration: 0.3 }}
-                className="fixed top-0 right-0 bottom-0 w-72 max-w-[85vw] bg-white shadow-2xl z-[110] md:hidden overflow-hidden flex flex-col"
+                transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                className="fixed top-0 right-0 bottom-0 w-80 max-w-[85vw] bg-white shadow-2xl z-[110] md:hidden overflow-hidden flex flex-col"
                 role="navigation"
                 aria-label="Mobile navigation"
               >
@@ -243,46 +243,59 @@ export default function Navigation({ config, isScrolled = false }: NavigationPro
                       <HeaderPDFButton showLabel={true} />
                     </li>
 
-                    {/* Minimalist Quick Contact for mobile */}
+                    {/* Premium Quick Contact Section */}
                     {config?.artist.email && (
-                      <li role="none" className="pt-10 mt-6 border-t border-slate-50 px-8">
-
-                        <a
-                          href={`mailto:${config.artist.email}`}
-                          className="flex items-center gap-4 text-[13px] font-medium text-navy-900 group/email mb-8"
-                          onClick={() => setIsMenuOpen(false)}
-                        >
-                          <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-gold-600/60 group-hover/email:text-gold-600 group-hover/email:bg-gold-50 transition-all duration-300 shrink-0">
-                            <Mail size={14} />
+                      <li role="none" className="pt-12 mt-10 border-t border-slate-50 px-2 pb-12">
+                        <div className="space-y-10">
+                          {/* Social Icons Row - Uniform and High End */}
+                          <div className="flex justify-start gap-4 px-2">
+                            {config.socialMedia?.instagram && (
+                              <a
+                                href={config.socialMedia.instagram}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center text-navy-400 hover:text-gold-600 hover:bg-gold-50 hover:shadow-premium-sm transition-all duration-500 border border-slate-100"
+                                aria-label="Instagram"
+                              >
+                                <Instagram size={20} />
+                              </a>
+                            )}
+                            {config.socialMedia?.youtube && (
+                              <a
+                                href={config.socialMedia.youtube}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center text-navy-400 hover:text-gold-600 hover:bg-gold-50 hover:shadow-premium-sm transition-all duration-500 border border-slate-100"
+                                aria-label="YouTube"
+                              >
+                                <Youtube size={20} />
+                              </a>
+                            )}
+                            <a
+                              href={`mailto:${config.artist.email}`}
+                              className="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center text-navy-400 hover:text-gold-600 hover:bg-gold-50 hover:shadow-premium-sm transition-all duration-500 border border-slate-100"
+                              aria-label="Email"
+                            >
+                              <Mail size={20} />
+                            </a>
                           </div>
-                          <span className="border-b border-navy-100 group-hover/email:border-gold-400 transition-colors pb-0.5 break-all leading-tight">
-                            {config.artist.email}
-                          </span>
-                        </a>
 
-                        <div className="flex gap-6 items-center pl-1">
-                          {config.socialMedia?.instagram && (
+                          {/* Email Display - Single Line Emphasis */}
+                          <div className="space-y-4 px-2">
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] block">Get in Touch</span>
                             <a
-                              href={config.socialMedia.instagram}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-slate-400 hover:text-gold-600 transition-all duration-300"
-                              aria-label="Instagram"
+                              href={`mailto:${config.artist.email}`}
+                              className="group block"
+                              onClick={() => setIsMenuOpen(false)}
                             >
-                              <Instagram size={20} />
+                              <div className="flex flex-col">
+                                <span className="text-[13px] font-bold text-navy-900 group-hover:text-gold-600 transition-colors duration-300 break-all leading-tight">
+                                  {config.artist.email}
+                                </span>
+                                <div className="h-0.5 w-8 bg-gold-400 mt-2 group-hover:w-full transition-all duration-500" />
+                              </div>
                             </a>
-                          )}
-                          {config.socialMedia?.youtube && (
-                            <a
-                              href={config.socialMedia.youtube}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-slate-400 hover:text-gold-600 transition-all duration-300"
-                              aria-label="YouTube"
-                            >
-                              <Youtube size={20} />
-                            </a>
-                          )}
+                          </div>
                         </div>
                       </li>
                     )}
