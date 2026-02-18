@@ -13,12 +13,10 @@ const nextConfig = {
   trailingSlash: false,
 
   images: {
-    // GitHub Pages (static export) needs unoptimized=true
-    // Netlify uses _next/image with sharp — needs unoptimized=false
-    unoptimized: !!process.env.NEXT_PUBLIC_BASE_PATH,
-    formats: ['image/avif', 'image/webp'],
-    deviceSizes: [640, 750, 828, 1080, 1200, 1920],
-    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    // Use Cloudinary for image optimization via fetch mode
+    // Auto WebP/AVIF conversion, CDN delivery, responsive sizing
+    loader: 'custom',
+    loaderFile: './lib/cloudinary-loader.js',
     remotePatterns: [
       {
         protocol: 'https',
