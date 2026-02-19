@@ -112,6 +112,10 @@ export interface SiteConfig {
       opacity?: number;     // Override default opacity (0-1, default: 0.3)
     };
   };
+  contact?: {
+    imageUrl?: string;
+    imageAlt?: string;
+  };
 }
 
 export interface MusicVideo {

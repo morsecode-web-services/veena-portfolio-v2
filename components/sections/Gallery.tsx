@@ -35,3 +35,4 @@ export default function Gallery({ config }: GalleryProps) {
     </SectionWrapper>
   );
 }
+
