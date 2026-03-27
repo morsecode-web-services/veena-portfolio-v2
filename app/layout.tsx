@@ -196,7 +196,7 @@ export default async function RootLayout({
         {/* Preconnect to Cloudinary CDN for faster image delivery */}
         <link rel="preconnect" href="https://res.cloudinary.com" />
         <link rel="dns-prefetch" href="https://res.cloudinary.com" />
-        {jsonLdData && (
+        {jsonLdData && !isComingSoon && (
           <script
             type="application/ld+json"
             dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdData) }}

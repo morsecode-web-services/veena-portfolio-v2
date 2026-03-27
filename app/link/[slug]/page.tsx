@@ -68,6 +68,9 @@ export default async function DeepLinkRedirect({ params }: { params: Promise<{ s
         else if (isAndroid) deepLink = `intent://${targetUrl.replace(/https?:\/\//, '')}#Intent;package=com.twitter.android;scheme=https;end;`;
     }
 
+    // For Android intent:// we use an iframe trick to avoid ERR_UNKNOWN_URL_SCHEME on desktop.
+    const isAndroidIntent = isAndroid && deepLink.startsWith('intent://');
+
     // 5. Return the smart HTML redirect page
     return (
         <html lang="en">
@@ -91,16 +94,30 @@ export default async function DeepLinkRedirect({ params }: { params: Promise<{ s
                 <script
                     dangerouslySetInnerHTML={{
                         __html: `
-                            var deepLink = "${deepLink}";
-                            var targetUrl = "${targetUrl}";
-                            
-                            // Attempt to open the deep link
+                            var deepLink = ${JSON.stringify(deepLink)};
+                            var targetUrl = ${JSON.stringify(targetUrl)};
+                            var appOpened = false;
+
+                            // Listen for the page going hidden — that means the app launched.
+                            // We cancel the fallback redirect in that case.
+                            document.addEventListener('visibilitychange', function() {
+                                if (document.hidden) {
+                                    appOpened = true;
+                                }
+                            });
+
+                            // Attempt to open the deep link via standard navigation.
+                            // Works on Chrome Android, Samsung Browser, etc.
+                            // Brave on Android may block intent:// — the fallback below handles that.
                             window.location.href = deepLink;
 
-                            // If the deep link fails (app not installed), 
-                            // fallback to the normal web URL after a slight delay.
+                            // Fallback: if the app didn't open within 1.5s, go to the web URL.
+                            // This fires on: desktop browsers, Brave Android (intent blocked),
+                            // or any phone without the app installed.
                             setTimeout(function() {
-                                window.location.href = targetUrl;
+                                if (!appOpened) {
+                                    window.location.href = targetUrl;
+                                }
                             }, 1500);
                         `,
                     }}
