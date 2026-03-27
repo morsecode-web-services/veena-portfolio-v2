@@ -15,7 +15,8 @@ import {
     Users,
     Settings,
     PenTool,
-    ImageIcon
+    ImageIcon,
+    BarChart3
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
@@ -118,6 +119,7 @@ export default function AdminLayoutClient({ children }: AdminLayoutClientProps) 
         { name: 'Blog', href: '/admin/blogs', icon: FileText },
         { name: 'Videos', href: '/admin/videos', icon: LayoutDashboard },
         { name: 'Gallery', href: '/admin/images', icon: ImageIcon },
+        { name: 'Analytics', href: '/admin/social/analytics', icon: BarChart3 },
         { name: 'Forms', href: '/admin/forms', icon: LayoutDashboard },
         { name: 'Leads', href: '/admin/leads', icon: Users, badge: leadsCount },
         { name: 'Architect', href: '/admin/config', icon: PenTool },
