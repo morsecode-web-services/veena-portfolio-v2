@@ -47,31 +47,51 @@ export default async function DeepLinkRedirect({ params }: { params: Promise<{ s
     const userAgent = headersList.get('user-agent')?.toLowerCase() || "";
     const isIOS = /iphone|ipad|ipod/.test(userAgent);
     const isAndroid = /android/.test(userAgent);
+    const isMobile = isIOS || isAndroid;
 
-    let targetUrl = link.target_url;
-    let deepLink = targetUrl; // Default fallback
+    const targetUrl = link.target_url;
+    let deepLink = ''; // Empty means "no deep link, go straight to web"
 
-    // 4. Generate App Deep Links based on Platform
-    if (link.platform === 'youtube') {
+    // 4. Generate deep links — different strategy per platform.
+    //
+    // PRIMARY USE CASE: User taps link in Instagram bio on their phone.
+    //   - iOS: Instagram uses SFSafariViewController → custom schemes (vnd.youtube://) work.
+    //   - Android: Instagram uses Chrome Custom Tabs → intent:// with S.browser_fallback_url works.
+    //   - Desktop: No deep link needed → instant redirect to web URL.
+    //
+    if (isMobile && link.platform === 'youtube') {
         const videoIdMatch = targetUrl.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
         const videoId = videoIdMatch ? videoIdMatch[1] : null;
 
         if (videoId) {
-            if (isIOS) deepLink = `vnd.youtube://watch?v=${videoId}`;
-            else if (isAndroid) deepLink = `intent://www.youtube.com/watch?v=${videoId}#Intent;package=com.google.android.youtube;scheme=https;end;`;
+            if (isIOS) {
+                // vnd.youtube:// is the official YouTube app URI scheme on iOS.
+                // Works from Safari, SFSafariViewController (Instagram IAB), Chrome, etc.
+                deepLink = `vnd.youtube://watch?v=${videoId}`;
+            } else if (isAndroid) {
+                // intent:// is the Android standard for launching apps.
+                // Works from Chrome, Samsung Browser, and Chrome Custom Tabs (Instagram IAB).
+                // S.browser_fallback_url tells Chrome where to go if the app isn't installed.
+                // If the browser blocks intent:// entirely (Brave), our JS setTimeout fallback handles it.
+                deepLink = `intent://www.youtube.com/watch?v=${videoId}#Intent;package=com.google.android.youtube;scheme=https;S.browser_fallback_url=${encodeURIComponent(targetUrl)};end;`;
+            }
         }
-    } else if (link.platform === 'instagram') {
-        if (isIOS) deepLink = targetUrl.replace('https://', 'instagram://').replace('http://', 'instagram://');
-        else if (isAndroid) deepLink = `intent://${targetUrl.replace(/https?:\/\//, '')}#Intent;package=com.instagram.android;scheme=https;end;`;
-    } else if (link.platform === 'twitter' || link.platform === 'x') {
-        if (isIOS) deepLink = targetUrl.replace('https://', 'twitter://').replace('http://', 'twitter://');
-        else if (isAndroid) deepLink = `intent://${targetUrl.replace(/https?:\/\//, '')}#Intent;package=com.twitter.android;scheme=https;end;`;
+    } else if (isMobile && link.platform === 'instagram') {
+        if (isIOS) {
+            deepLink = targetUrl.replace(/^https?:\/\/(www\.)?instagram\.com/, 'instagram://');
+        } else if (isAndroid) {
+            deepLink = `intent://${targetUrl.replace(/^https?:\/\//, '')}#Intent;package=com.instagram.android;scheme=https;S.browser_fallback_url=${encodeURIComponent(targetUrl)};end;`;
+        }
+    } else if (isMobile && (link.platform === 'twitter' || link.platform === 'x')) {
+        if (isIOS) {
+            deepLink = targetUrl.replace(/^https?:\/\/(www\.)?(twitter|x)\.com/, 'twitter://');
+        } else if (isAndroid) {
+            deepLink = `intent://${targetUrl.replace(/^https?:\/\//, '')}#Intent;package=com.twitter.android;scheme=https;S.browser_fallback_url=${encodeURIComponent(targetUrl)};end;`;
+        }
     }
+    // Desktop: deepLink stays empty → JS will redirect to targetUrl immediately.
 
-    // For Android intent:// we use an iframe trick to avoid ERR_UNKNOWN_URL_SCHEME on desktop.
-    const isAndroidIntent = isAndroid && deepLink.startsWith('intent://');
-
-    // 5. Return the smart HTML redirect page
+    // 5. Return the smart redirect page.
     return (
         <html lang="en">
             <head>
@@ -96,29 +116,35 @@ export default async function DeepLinkRedirect({ params }: { params: Promise<{ s
                         __html: `
                             var deepLink = ${JSON.stringify(deepLink)};
                             var targetUrl = ${JSON.stringify(targetUrl)};
-                            var appOpened = false;
 
-                            // Listen for the page going hidden — that means the app launched.
-                            // We cancel the fallback redirect in that case.
-                            document.addEventListener('visibilitychange', function() {
-                                if (document.hidden) {
-                                    appOpened = true;
-                                }
-                            });
+                            if (!deepLink) {
+                                // Desktop or unknown device: go to web URL immediately, no delay.
+                                window.location.href = targetUrl;
+                            } else {
+                                // Mobile: attempt the deep link.
+                                var appOpened = false;
 
-                            // Attempt to open the deep link via standard navigation.
-                            // Works on Chrome Android, Samsung Browser, etc.
-                            // Brave on Android may block intent:// — the fallback below handles that.
-                            window.location.href = deepLink;
+                                // Track if the app actually opens (page goes to background).
+                                document.addEventListener('visibilitychange', function() {
+                                    if (document.hidden) appOpened = true;
+                                });
 
-                            // Fallback: if the app didn't open within 1.5s, go to the web URL.
-                            // This fires on: desktop browsers, Brave Android (intent blocked),
-                            // or any phone without the app installed.
-                            setTimeout(function() {
-                                if (!appOpened) {
-                                    window.location.href = targetUrl;
-                                }
-                            }, 1500);
+                                // Navigate to the deep link.
+                                // - iOS: vnd.youtube:// triggers the YouTube app via SFSafariViewController.
+                                // - Android Chrome/Samsung/Instagram CCT: intent:// opens the app.
+                                //   If app not installed, S.browser_fallback_url redirects automatically.
+                                // - Android Brave: intent:// is blocked, page stays, setTimeout fires.
+                                window.location.href = deepLink;
+
+                                // Safety net: if nothing happened after 2s, redirect to web URL.
+                                // This catches: Brave blocking intent://, app not installed on iOS,
+                                // or any edge case where the deep link silently fails.
+                                setTimeout(function() {
+                                    if (!appOpened) {
+                                        window.location.href = targetUrl;
+                                    }
+                                }, 2000);
+                            }
                         `,
                     }}
                 />
