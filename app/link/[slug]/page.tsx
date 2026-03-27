@@ -117,11 +117,17 @@ export default async function DeepLinkRedirect({ params }: { params: Promise<{ s
                             var deepLink = ${JSON.stringify(deepLink)};
                             var targetUrl = ${JSON.stringify(targetUrl)};
 
-                            if (!deepLink) {
-                                // Desktop or unknown device: go to web URL immediately, no delay.
+                            // Detect Brave browser — it exposes navigator.brave.
+                            // Brave blocks intent:// with a hard ERR_UNKNOWN_URL_SCHEME page crash
+                            // that destroys our JS context, so the setTimeout fallback never fires.
+                            // We must detect it and skip the deep link entirely.
+                            var isBrave = navigator.brave && typeof navigator.brave.isBrave === 'function';
+
+                            if (!deepLink || isBrave) {
+                                // Desktop, unknown device, or Brave: go to web URL immediately.
                                 window.location.href = targetUrl;
                             } else {
-                                // Mobile: attempt the deep link.
+                                // Mobile (non-Brave): attempt the deep link.
                                 var appOpened = false;
 
                                 // Track if the app actually opens (page goes to background).
@@ -130,15 +136,12 @@ export default async function DeepLinkRedirect({ params }: { params: Promise<{ s
                                 });
 
                                 // Navigate to the deep link.
-                                // - iOS: vnd.youtube:// triggers the YouTube app via SFSafariViewController.
+                                // - iOS: vnd.youtube:// triggers the YouTube app.
                                 // - Android Chrome/Samsung/Instagram CCT: intent:// opens the app.
                                 //   If app not installed, S.browser_fallback_url redirects automatically.
-                                // - Android Brave: intent:// is blocked, page stays, setTimeout fires.
                                 window.location.href = deepLink;
 
                                 // Safety net: if nothing happened after 2s, redirect to web URL.
-                                // This catches: Brave blocking intent://, app not installed on iOS,
-                                // or any edge case where the deep link silently fails.
                                 setTimeout(function() {
                                     if (!appOpened) {
                                         window.location.href = targetUrl;
