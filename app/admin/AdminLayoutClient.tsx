@@ -14,7 +14,8 @@ import {
     FileText,
     Users,
     Settings,
-    PenTool
+    PenTool,
+    Link as LinkIcon
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
@@ -117,6 +118,7 @@ export default function AdminLayoutClient({ children }: AdminLayoutClientProps) 
         { name: 'Blog', href: '/admin/blogs', icon: FileText },
         { name: 'Videos', href: '/admin/videos', icon: LayoutDashboard },
         { name: 'Forms', href: '/admin/forms', icon: LayoutDashboard }, // Using LayoutDashboard for now
+        { name: 'Smart Links', href: '/admin/smart-links', icon: LinkIcon },
         { name: 'Leads', href: '/admin/leads', icon: Users, badge: leadsCount },
         { name: 'Architect', href: '/admin/config', icon: PenTool },
         { name: 'Public Site', href: '/', icon: Home },

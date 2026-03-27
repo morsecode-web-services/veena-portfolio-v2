@@ -1,0 +1,236 @@
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
+import { Plus, Trash2, Link as LinkIcon, ExternalLink, RefreshCw } from 'lucide-react';
+import { useToast } from '@/context/ToastContext';
+
+interface SmartLink {
+    id: string;
+    slug: string;
+    target_url: string;
+    platform: string;
+    clicks: number;
+    created_at: string;
+}
+
+export default function SmartLinksPage() {
+    const { addToast } = useToast();
+    const [links, setLinks] = useState<SmartLink[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [isCreating, setIsCreating] = useState(false);
+    
+    // Form state
+    const [slug, setSlug] = useState('');
+    const [targetUrl, setTargetUrl] = useState('');
+    const [platform, setPlatform] = useState('youtube');
+
+    useEffect(() => {
+        fetchLinks();
+    }, []);
+
+    const fetchLinks = async () => {
+        setLoading(true);
+        const { data, error } = await supabase
+            .from('smart_links')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            console.error('Error fetching smart links:', error);
+            addToast('Failed to fetch smart links', 'error');
+        } else {
+            setLinks(data || []);
+        }
+        setLoading(false);
+    };
+
+    const handleCreate = async (e: React.FormEvent) => {
+        e.preventDefault();
+        
+        let formattedSlug = slug.toLowerCase().replace(/[^a-z0-9-]/g, '-');
+        if (!formattedSlug || !targetUrl) {
+            addToast('Please fill all required fields', 'error');
+            return;
+        }
+
+        setIsCreating(true);
+        const { error } = await supabase
+            .from('smart_links')
+            .insert([{ slug: formattedSlug, target_url: targetUrl, platform }]);
+
+        if (error) {
+            console.error('Error creating link:', error);
+            if (error.code === '23505') {
+                addToast('That custom slug is already taken. Please choose another.', 'error');
+            } else {
+                addToast('Failed to create link', 'error');
+            }
+        } else {
+            addToast('Smart link created successfully', 'success');
+            setSlug('');
+            setTargetUrl('');
+            setPlatform('youtube');
+            fetchLinks();
+        }
+        setIsCreating(false);
+    };
+
+    const handleDelete = async (id: string) => {
+        if (!confirm('Are you sure you want to delete this smart link?')) return;
+
+        const { error } = await supabase
+            .from('smart_links')
+            .delete()
+            .eq('id', id);
+
+        if (error) {
+            addToast('Failed to delete smart link', 'error');
+        } else {
+            addToast('Smart link deleted', 'success');
+            fetchLinks();
+        }
+    };
+
+    return (
+        <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                    <h1 className="text-2xl font-serif font-bold text-navy-900">Smart Links (Deep Links)</h1>
+                    <p className="text-navy-600">Create short links that bypass in-app browsers and open directly in native apps like YouTube and Instagram.</p>
+                </div>
+                <button
+                    onClick={fetchLinks}
+                    className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 text-navy-600 transition-colors"
+                >
+                    <RefreshCw className="h-4 w-4" />
+                    <span className="text-sm font-medium">Refresh Data</span>
+                </button>
+            </div>
+
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                <h2 className="text-lg font-bold text-navy-900 mb-4 flex items-center gap-2">
+                    <Plus className="w-5 h-5 text-gold-500" />
+                    Create New Smart Link
+                </h2>
+                
+                <form onSubmit={handleCreate} className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium text-navy-700 mb-1">Target URL</label>
+                            <input
+                                type="url"
+                                required
+                                placeholder="https://youtube.com/watch?v=..."
+                                className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+                                value={targetUrl}
+                                onChange={(e) => setTargetUrl(e.target.value)}
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-navy-700 mb-1">Custom Slug</label>
+                            <div className="flex group">
+                                <span className="inline-flex items-center px-3 rounded-l-lg border border-r-0 border-gray-200 bg-gray-50 text-gray-500 text-sm whitespace-nowrap">
+                                    yourdomain.com/link/
+                                </span>
+                                <input
+                                    type="text"
+                                    required
+                                    placeholder="yt-promo"
+                                    className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-r-lg focus:ring-2 focus:ring-gold-500 focus:border-transparent flex-1"
+                                    value={slug}
+                                    onChange={(e) => setSlug(e.target.value)}
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-navy-700 mb-1">Platform Optimization</label>
+                        <select
+                            value={platform}
+                            onChange={(e) => setPlatform(e.target.value)}
+                            className="w-full md:w-1/2 px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+                        >
+                            <option value="youtube">YouTube</option>
+                            <option value="instagram">Instagram</option>
+                            <option value="twitter">X (Twitter)</option>
+                            <option value="other">Other / Standard Fallback</option>
+                        </select>
+                        <p className="text-xs text-gray-500 mt-1">This determines how the phone tries to open the app.</p>
+                    </div>
+
+                    <button
+                        type="submit"
+                        disabled={isCreating}
+                        className="px-6 py-2 bg-navy-900 text-white font-medium rounded-lg hover:bg-navy-800 transition-colors disabled:opacity-50"
+                    >
+                        {isCreating ? 'Creating...' : 'Create Smart Link'}
+                    </button>
+                </form>
+            </div>
+
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                <div className="p-6 border-b border-gray-100">
+                    <h2 className="text-lg font-bold text-navy-900 flex items-center gap-2">
+                        <LinkIcon className="w-5 h-5 text-gold-500" />
+                        Manage Existing Links
+                    </h2>
+                </div>
+                
+                <div className="overflow-x-auto">
+                    {loading ? (
+                        <div className="p-12 text-center text-gray-500">Loading links...</div>
+                    ) : links.length === 0 ? (
+                        <div className="p-12 text-center text-gray-500">No smart links created yet. Create your first one above!</div>
+                    ) : (
+                        <table className="w-full text-left border-collapse">
+                            <thead>
+                                <tr className="bg-gray-50 text-navy-600 text-sm border-b border-gray-100">
+                                    <th className="p-4 font-medium">Link & URL</th>
+                                    <th className="p-4 font-medium">Platform</th>
+                                    <th className="p-4 font-medium">Clicks</th>
+                                    <th className="p-4 font-medium text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {links.map((link) => (
+                                    <tr key={link.id} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
+                                        <td className="p-4">
+                                            <div className="font-medium text-navy-900 flex items-center gap-2">
+                                                /link/{link.slug}
+                                                <a href={`/link/${link.slug}`} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-gold-500">
+                                                    <ExternalLink className="w-3 h-3" />
+                                                </a>
+                                            </div>
+                                            <div className="text-xs text-gray-500 mt-1 truncate max-w-xs xl:max-w-md" title={link.target_url}>
+                                                {link.target_url}
+                                            </div>
+                                        </td>
+                                        <td className="p-4">
+                                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700 capitalize">
+                                                {link.platform}
+                                            </span>
+                                        </td>
+                                        <td className="p-4 font-mono font-medium text-gold-600">
+                                            {link.clicks.toLocaleString()}
+                                        </td>
+                                        <td className="p-4 text-right">
+                                            <button
+                                                onClick={() => handleDelete(link.id)}
+                                                className="p-2 text-gray-400 hover:text-red-500 transition-colors rounded-lg hover:bg-red-50"
+                                                title="Delete Link"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+}
