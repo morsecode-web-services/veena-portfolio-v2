@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Inter, Playfair_Display } from 'next/font/google';
+import { headers } from 'next/headers';
 import './globals.css';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
@@ -169,11 +170,15 @@ const generateJsonLd = (config: any) => {
 
 const jsonLdData = generateJsonLd(config);
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const headersList = await headers();
+  const pathname = headersList.get('x-invoke-path') ?? headersList.get('x-pathname') ?? '';
+  const isComingSoon = pathname.startsWith('/coming-soon');
+
   return (
     <html lang="en" className={`${inter.variable} ${playfair.variable}`}>
       <head>
@@ -199,26 +204,30 @@ export default function RootLayout({
         )}
       </head>
       <body className="font-sans antialiased">
-        {/* Skip Navigation Links for Accessibility */}
-        <a
-          href="#main-content"
-          className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] focus:px-6 focus:py-3 focus:bg-navy-900 focus:text-white focus:rounded-md focus:shadow-lg focus:font-medium"
-        >
-          Skip to main content
-        </a>
-        <a
-          href="#navigation"
-          className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-48 focus:z-[100] focus:px-6 focus:py-3 focus:bg-navy-900 focus:text-white focus:rounded-md focus:shadow-lg focus:font-medium"
-        >
-          Skip to navigation
-        </a>
+        {!isComingSoon && (
+          <>
+            {/* Skip Navigation Links for Accessibility */}
+            <a
+              href="#main-content"
+              className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] focus:px-6 focus:py-3 focus:bg-navy-900 focus:text-white focus:rounded-md focus:shadow-lg focus:font-medium"
+            >
+              Skip to main content
+            </a>
+            <a
+              href="#navigation"
+              className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-48 focus:z-[100] focus:px-6 focus:py-3 focus:bg-navy-900 focus:text-white focus:rounded-md focus:shadow-lg focus:font-medium"
+            >
+              Skip to navigation
+            </a>
+          </>
+        )}
         <Providers>
           <ErrorBoundary>
-            <Header config={config} />
+            {!isComingSoon && <Header config={config} />}
             {children}
-            <Footer key="site-footer" config={config} />
-            <VideoModal />
-            <BackToTop />
+            {!isComingSoon && <Footer key="site-footer" config={config} />}
+            {!isComingSoon && <VideoModal />}
+            {!isComingSoon && <BackToTop />}
           </ErrorBoundary>
         </Providers>
       </body>

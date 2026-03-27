@@ -56,3 +56,16 @@ CREATE POLICY "Allow authenticated users to manage smart_links" ON smart_links
     TO authenticated 
     USING (true)
     WITH CHECK (true);
+
+-- Remote Procedure Call (RPC) to increment clicks securely from the public API
+CREATE OR REPLACE FUNCTION increment_click_count(row_id UUID)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER -- This bypasses RLS so unauthenticated users clicking the link can increment
+AS $$
+BEGIN
+  UPDATE smart_links
+  SET clicks = clicks + 1
+  WHERE id = row_id;
+END;
+$$;

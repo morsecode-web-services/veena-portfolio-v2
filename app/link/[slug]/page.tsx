@@ -28,14 +28,19 @@ export default async function DeepLinkRedirect({ params }: { params: Promise<{ s
         return notFound();
     }
 
-    // 2. Increment the clicks asynchronously (don't await it so we don't slow down the redirect)
-    supabase.rpc('increment_click_count_v2', { row_id: link.id }).then(({ error: rpcError }) => {
-        if (rpcError) {
-          // Fallback if the RPC isn't created, we just do a normal update 
-          // (note: this is technically prone to race conditions, but good enough for simple metrics)
-          supabase.from('smart_links').update({ clicks: link.clicks + 1 }).eq('id', link.id).then();
+    // 2. Increment the clicks asynchronously (non-blocking)
+    // Triggering the update in the background exactly as requested.
+    (async () => {
+        try {
+            const { error: rpcError } = await supabase.rpc('increment_click_count', { row_id: link.id });
+            if (rpcError) {
+                // Fallback update
+                await supabase.from('smart_links').update({ clicks: link.clicks + 1 }).eq('id', link.id);
+            }
+        } catch (e) {
+            console.error('Background click track error', e);
         }
-    });
+    })();
 
     // 3. Detect the device from the User-Agent
     const headersList = await headers();
