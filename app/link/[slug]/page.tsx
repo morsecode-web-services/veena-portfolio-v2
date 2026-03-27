@@ -2,7 +2,7 @@ import { supabase } from '@/lib/supabase';
 import { headers } from 'next/headers';
 import { notFound } from 'next/navigation';
 
-export async function generateMetadata({ params }: { params: { slug: string } }) {
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
     // Generate simple metadata to avoid caching issues and help with basic unfurling
     return {
         title: 'Redirecting...',
@@ -13,8 +13,8 @@ export async function generateMetadata({ params }: { params: { slug: string } })
     };
 }
 
-export default async function DeepLinkRedirect({ params }: { params: { slug: string } }) {
-    const resolvedParams = await Promise.resolve(params);
+export default async function DeepLinkRedirect({ params }: { params: Promise<{ slug: string }> }) {
+    const resolvedParams = await params;
     const slug = resolvedParams.slug;
 
     // 1. Fetch the actual URL and platform from Supabase
