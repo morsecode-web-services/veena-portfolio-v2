@@ -17,33 +17,30 @@ export default async function DeepLinkRedirect({ params }: { params: Promise<{ s
     const resolvedParams = await params;
     const slug = resolvedParams.slug;
 
-    // 1. Fetch the actual URL and platform from Supabase
-    const { data: link, error } = await supabase
-        .from('smart_links')
-        .select('*')
-        .eq('slug', slug)
-        .single();
+    // Read link data from middleware headers (already queried + click-tracked there)
+    const headersList = await headers();
+    const headerTargetUrl = headersList.get('x-link-target-url');
+    const headerPlatform = headersList.get('x-link-platform');
 
-    if (error || !link) {
-        return notFound();
+    // If middleware didn't inject data (e.g. Supabase was down), fall back to a direct query
+    let link = headerTargetUrl && headerPlatform
+        ? { target_url: headerTargetUrl, platform: headerPlatform }
+        : null;
+
+    if (!link) {
+        const { data, error } = await supabase
+            .from('smart_links')
+            .select('id, target_url, platform')
+            .eq('slug', slug)
+            .single();
+
+        if (error || !data) {
+            return notFound();
+        }
+        link = data;
     }
 
-    // 2. Increment the clicks asynchronously (non-blocking)
-    // Triggering the update in the background exactly as requested.
-    (async () => {
-        try {
-            const { error: rpcError } = await supabase.rpc('increment_click_count', { row_id: link.id });
-            if (rpcError) {
-                // Fallback update
-                await supabase.from('smart_links').update({ clicks: link.clicks + 1 }).eq('id', link.id);
-            }
-        } catch (e) {
-            console.error('Background click track error', e);
-        }
-    })();
-
-    // 3. Detect the device from the User-Agent
-    const headersList = await headers();
+    // Detect the device from the User-Agent (headersList already obtained above)
     const userAgent = headersList.get('user-agent')?.toLowerCase() || "";
     const isIOS = /iphone|ipad|ipod/.test(userAgent);
     const isAndroid = /android/.test(userAgent);
@@ -52,7 +49,7 @@ export default async function DeepLinkRedirect({ params }: { params: Promise<{ s
     const targetUrl = link.target_url;
     let deepLink = ''; // Empty means "no deep link, go straight to web"
 
-    // 4. Generate deep links — different strategy per platform.
+    // Generate deep links — different strategy per platform.
     //
     // PRIMARY USE CASE: User taps link in Instagram bio on their phone.
     //   - iOS: Instagram uses SFSafariViewController → custom schemes (vnd.youtube://) work.
@@ -91,7 +88,7 @@ export default async function DeepLinkRedirect({ params }: { params: Promise<{ s
     }
     // Desktop: deepLink stays empty → JS will redirect to targetUrl immediately.
 
-    // 5. Return the smart redirect page.
+    // Return the smart redirect page.
     return (
         <html lang="en">
             <head>
@@ -109,7 +106,7 @@ export default async function DeepLinkRedirect({ params }: { params: Promise<{ s
             <body>
                 <div className="container">
                     <div className="loader"></div>
-                    <p>Opening app...</p>
+                    <p>{deepLink ? 'Opening app...' : 'Redirecting...'}</p>
                 </div>
                 <script
                     dangerouslySetInnerHTML={{

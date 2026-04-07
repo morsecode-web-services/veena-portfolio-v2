@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Plus, Trash2, Link as LinkIcon, ExternalLink, RefreshCw } from 'lucide-react';
+import { Plus, Trash2, Link as LinkIcon, ExternalLink, RefreshCw, Copy, RotateCcw, Edit2 } from 'lucide-react';
 import { useToast } from '@/context/ToastContext';
 
 interface SmartLink {
@@ -23,11 +23,23 @@ export default function SmartLinksPage() {
     // Form state
     const [slug, setSlug] = useState('');
     const [targetUrl, setTargetUrl] = useState('');
-    const [platform, setPlatform] = useState('youtube');
+    const [platform, setPlatform] = useState('other');
+    const [domain, setDomain] = useState('yourdomain.com');
+
+    // Edit state
+    const [editingId, setEditingId] = useState<string | null>(null);
+    const [isUpdating, setIsUpdating] = useState(false);
 
     useEffect(() => {
+        setDomain(window.location.host);
         fetchLinks();
     }, []);
+
+    const handleCopy = (slug: string) => {
+        const url = `${window.location.origin}/link/${slug}`;
+        navigator.clipboard.writeText(url);
+        addToast('Link copied to clipboard', 'success');
+    };
 
     const fetchLinks = async () => {
         setLoading(true);
@@ -45,7 +57,7 @@ export default function SmartLinksPage() {
         setLoading(false);
     };
 
-    const handleCreate = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         
         let formattedSlug = slug.toLowerCase().replace(/[^a-z0-9-]/g, '-');
@@ -54,26 +66,63 @@ export default function SmartLinksPage() {
             return;
         }
 
-        setIsCreating(true);
-        const { error } = await supabase
-            .from('smart_links')
-            .insert([{ slug: formattedSlug, target_url: targetUrl, platform }]);
+        if (editingId) {
+            setIsUpdating(true);
+            const { error } = await supabase
+                .from('smart_links')
+                .update({ slug: formattedSlug, target_url: targetUrl, platform })
+                .eq('id', editingId);
 
-        if (error) {
-            console.error('Error creating link:', error);
-            if (error.code === '23505') {
-                addToast('That custom slug is already taken. Please choose another.', 'error');
+            if (error) {
+                console.error('Error updating link:', error);
+                if (error.code === '23505') {
+                    addToast('That custom slug is already taken.', 'error');
+                } else {
+                    addToast('Failed to update link', 'error');
+                }
             } else {
-                addToast('Failed to create link', 'error');
+                addToast('Smart link updated successfully', 'success');
+                handleCancelEdit();
+                fetchLinks();
             }
+            setIsUpdating(false);
         } else {
-            addToast('Smart link created successfully', 'success');
-            setSlug('');
-            setTargetUrl('');
-            setPlatform('youtube');
-            fetchLinks();
+            setIsCreating(true);
+            const { error } = await supabase
+                .from('smart_links')
+                .insert([{ slug: formattedSlug, target_url: targetUrl, platform }]);
+
+            if (error) {
+                console.error('Error creating link:', error);
+                if (error.code === '23505') {
+                    addToast('That custom slug is already taken. Please choose another.', 'error');
+                } else {
+                    addToast('Failed to create link', 'error');
+                }
+            } else {
+                addToast('Smart link created successfully', 'success');
+                setSlug('');
+                setTargetUrl('');
+                setPlatform('other');
+                fetchLinks();
+            }
+            setIsCreating(false);
         }
-        setIsCreating(false);
+    };
+
+    const handleEditClick = (link: SmartLink) => {
+        setSlug(link.slug);
+        setTargetUrl(link.target_url);
+        setPlatform(link.platform);
+        setEditingId(link.id);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    const handleCancelEdit = () => {
+        setEditingId(null);
+        setSlug('');
+        setTargetUrl('');
+        setPlatform('other');
     };
 
     const handleDelete = async (id: string) => {
@@ -88,6 +137,23 @@ export default function SmartLinksPage() {
             addToast('Failed to delete smart link', 'error');
         } else {
             addToast('Smart link deleted', 'success');
+            if (editingId === id) handleCancelEdit();
+            fetchLinks();
+        }
+    };
+
+    const handleResetClicks = async (id: string) => {
+        if (!confirm('Are you sure you want to reset the clicks for this link?')) return;
+
+        const { error } = await supabase
+            .from('smart_links')
+            .update({ clicks: 0 })
+            .eq('id', id);
+
+        if (error) {
+            addToast('Failed to reset clicks', 'error');
+        } else {
+            addToast('Clicks reset to 0', 'success');
             fetchLinks();
         }
     };
@@ -96,8 +162,8 @@ export default function SmartLinksPage() {
         <div className="space-y-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <h1 className="text-2xl font-serif font-bold text-navy-900">Smart Links (Deep Links)</h1>
-                    <p className="text-navy-600">Create short links that bypass in-app browsers and open directly in native apps like YouTube and Instagram.</p>
+                    <h1 className="text-2xl font-serif font-bold text-navy-900">Smart Links</h1>
+                    <p className="text-navy-600">Create short, trackable redirect links. Optionally enable deep linking to open native apps like YouTube and Instagram on mobile.</p>
                 </div>
                 <button
                     onClick={fetchLinks}
@@ -110,11 +176,11 @@ export default function SmartLinksPage() {
 
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
                 <h2 className="text-lg font-bold text-navy-900 mb-4 flex items-center gap-2">
-                    <Plus className="w-5 h-5 text-gold-500" />
-                    Create New Smart Link
+                    {editingId ? <Edit2 className="w-5 h-5 text-navy-500" /> : <Plus className="w-5 h-5 text-gold-500" />}
+                    {editingId ? 'Edit Smart Link' : 'Create New Smart Link'}
                 </h2>
                 
-                <form onSubmit={handleCreate} className="space-y-4">
+                <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label className="block text-sm font-medium text-navy-700 mb-1">Target URL</label>
@@ -131,7 +197,7 @@ export default function SmartLinksPage() {
                             <label className="block text-sm font-medium text-navy-700 mb-1">Custom Slug</label>
                             <div className="flex group">
                                 <span className="inline-flex items-center px-3 rounded-l-lg border border-r-0 border-gray-200 bg-gray-50 text-gray-500 text-sm whitespace-nowrap">
-                                    yourdomain.com/link/
+                                    {domain}/link/
                                 </span>
                                 <input
                                     type="text"
@@ -146,27 +212,39 @@ export default function SmartLinksPage() {
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-navy-700 mb-1">Platform Optimization</label>
+                        <label className="block text-sm font-medium text-navy-700 mb-1">Link Type</label>
                         <select
                             value={platform}
                             onChange={(e) => setPlatform(e.target.value)}
                             className="w-full md:w-1/2 px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-transparent"
                         >
-                            <option value="youtube">YouTube</option>
-                            <option value="instagram">Instagram</option>
-                            <option value="twitter">X (Twitter)</option>
-                            <option value="other">Other / Standard Fallback</option>
+                            <option value="other">Standard Redirect</option>
+                            <option value="youtube">YouTube (Deep Link)</option>
+                            <option value="instagram">Instagram (Deep Link)</option>
+                            <option value="twitter">X / Twitter (Deep Link)</option>
                         </select>
-                        <p className="text-xs text-gray-500 mt-1">This determines how the phone tries to open the app.</p>
+                        <p className="text-xs text-gray-500 mt-1">{platform === 'other' ? 'Redirects straight to the target URL on all devices.' : 'On mobile, attempts to open the native app before falling back to the web URL.'}</p>
                     </div>
 
-                    <button
-                        type="submit"
-                        disabled={isCreating}
-                        className="px-6 py-2 bg-navy-900 text-white font-medium rounded-lg hover:bg-navy-800 transition-colors disabled:opacity-50"
-                    >
-                        {isCreating ? 'Creating...' : 'Create Smart Link'}
-                    </button>
+                    <div className="flex gap-2">
+                        <button
+                            type="submit"
+                            disabled={isCreating || isUpdating}
+                            className="px-6 py-2 bg-navy-900 text-white font-medium rounded-lg hover:bg-navy-800 transition-colors disabled:opacity-50"
+                        >
+                            {editingId ? (isUpdating ? 'Updating...' : 'Update Smart Link') : (isCreating ? 'Creating...' : 'Create Smart Link')}
+                        </button>
+                        {editingId && (
+                            <button
+                                type="button"
+                                onClick={handleCancelEdit}
+                                disabled={isUpdating}
+                                className="px-6 py-2 bg-white text-navy-600 border border-gray-200 font-medium rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+                            >
+                                Cancel
+                            </button>
+                        )}
+                    </div>
                 </form>
             </div>
 
@@ -216,6 +294,27 @@ export default function SmartLinksPage() {
                                             {link.clicks.toLocaleString()}
                                         </td>
                                         <td className="p-4 text-right">
+                                            <button
+                                                onClick={() => handleCopy(link.slug)}
+                                                className="p-2 text-gray-400 hover:text-navy-600 transition-colors rounded-lg hover:bg-gray-100 mr-2"
+                                                title="Copy Link URL"
+                                            >
+                                                <Copy className="w-4 h-4" />
+                                            </button>
+                                            <button
+                                                onClick={() => handleResetClicks(link.id)}
+                                                className="p-2 text-gray-400 hover:text-orange-500 transition-colors rounded-lg hover:bg-orange-50 mr-2"
+                                                title="Reset Clicks"
+                                            >
+                                                <RotateCcw className="w-4 h-4" />
+                                            </button>
+                                            <button
+                                                onClick={() => handleEditClick(link)}
+                                                className="p-2 text-gray-400 hover:text-navy-600 transition-colors rounded-lg hover:bg-gray-100 mr-2"
+                                                title="Edit Link"
+                                            >
+                                                <Edit2 className="w-4 h-4" />
+                                            </button>
                                             <button
                                                 onClick={() => handleDelete(link.id)}
                                                 className="p-2 text-gray-400 hover:text-red-500 transition-colors rounded-lg hover:bg-red-50"

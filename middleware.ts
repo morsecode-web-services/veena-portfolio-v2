@@ -1,5 +1,9 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
 // When NEXT_PUBLIC_SITE_LIVE is 'true', this middleware does nothing — the full site is visible.
 // Set it to 'false' in .env.local (and Netlify env vars) to show the coming soon page.
@@ -18,12 +22,44 @@ const WHITELISTED_PREFIXES = [
     '/sitemap.xml',
 ];
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl;
 
     // Always inject pathname header so root layout can detect the current page
     const requestHeaders = new Headers(request.headers);
     requestHeaders.set('x-pathname', pathname);
+
+    // --- Smart Link fast-path: handle /link/{slug} redirects at the edge ---
+    const linkMatch = pathname.match(/^\/link\/([^/]+)$/);
+    if (linkMatch && supabaseUrl && supabaseAnonKey) {
+        const slug = linkMatch[1];
+        const edgeSupabase = createClient(supabaseUrl, supabaseAnonKey);
+
+        const { data: link, error } = await edgeSupabase
+            .from('smart_links')
+            .select('id, target_url, platform')
+            .eq('slug', slug)
+            .single();
+
+        if (!link || error) {
+            // Fall through to the page which will render notFound()
+            return NextResponse.next({ request: { headers: requestHeaders } });
+        }
+
+        // Fire-and-forget click tracking (non-blocking)
+        edgeSupabase.rpc('increment_click_count', { row_id: link.id }).then(() => {});
+
+        // Plain redirect: instant 307, no HTML needed
+        if (link.platform === 'other') {
+            return NextResponse.redirect(link.target_url, 307);
+        }
+
+        // Deep link: pass data via headers so the page skips the Supabase query
+        requestHeaders.set('x-link-target-url', link.target_url);
+        requestHeaders.set('x-link-platform', link.platform);
+        requestHeaders.set('x-link-id', link.id);
+        return NextResponse.next({ request: { headers: requestHeaders } });
+    }
 
     if (SITE_LIVE) {
         return NextResponse.next({ request: { headers: requestHeaders } });
