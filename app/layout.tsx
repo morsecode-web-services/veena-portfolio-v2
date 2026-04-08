@@ -178,6 +178,8 @@ export default async function RootLayout({
   const headersList = await headers();
   const pathname = headersList.get('x-invoke-path') ?? headersList.get('x-pathname') ?? '';
   const isComingSoon = pathname.startsWith('/coming-soon');
+  // Pages that don't need the main site navigation and footer
+  const isStandalonePage = isComingSoon || pathname.startsWith('/link') || pathname.startsWith('/admin');
 
   return (
     <html lang="en" className={`${inter.variable} ${playfair.variable}`}>
@@ -196,7 +198,7 @@ export default async function RootLayout({
         {/* Preconnect to Cloudinary CDN for faster image delivery */}
         <link rel="preconnect" href="https://res.cloudinary.com" />
         <link rel="dns-prefetch" href="https://res.cloudinary.com" />
-        {jsonLdData && !isComingSoon && (
+        {jsonLdData && !isStandalonePage && (
           <script
             type="application/ld+json"
             dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdData) }}
@@ -204,7 +206,7 @@ export default async function RootLayout({
         )}
       </head>
       <body className="font-sans antialiased">
-        {!isComingSoon && (
+        {!isStandalonePage && (
           <>
             {/* Skip Navigation Links for Accessibility */}
             <a
@@ -223,11 +225,11 @@ export default async function RootLayout({
         )}
         <Providers>
           <ErrorBoundary>
-            {!isComingSoon && <Header config={config} />}
+            {!isStandalonePage && <Header config={config} />}
             {children}
-            {!isComingSoon && <Footer key="site-footer" config={config} />}
-            {!isComingSoon && <VideoModal />}
-            {!isComingSoon && <BackToTop />}
+            {!isStandalonePage && <Footer key="site-footer" config={config} />}
+            {!isStandalonePage && <VideoModal />}
+            {!isStandalonePage && <BackToTop />}
           </ErrorBoundary>
         </Providers>
       </body>

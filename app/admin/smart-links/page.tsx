@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Plus, Trash2, Link as LinkIcon, ExternalLink, RefreshCw, Copy, RotateCcw, Edit2 } from 'lucide-react';
 import { useToast } from '@/context/ToastContext';
+import { invalidateSmartLinksCache } from './actions';
 
 interface SmartLink {
     id: string;
@@ -11,6 +12,9 @@ interface SmartLink {
     target_url: string;
     platform: string;
     clicks: number;
+    title: string | null;
+    show_in_bio: boolean;
+    order_index: number;
     created_at: string;
 }
 
@@ -25,6 +29,8 @@ export default function SmartLinksPage() {
     const [targetUrl, setTargetUrl] = useState('');
     const [platform, setPlatform] = useState('other');
     const [domain, setDomain] = useState('yourdomain.com');
+    const [title, setTitle] = useState('');
+    const [showInBio, setShowInBio] = useState(false);
 
     // Edit state
     const [editingId, setEditingId] = useState<string | null>(null);
@@ -70,7 +76,7 @@ export default function SmartLinksPage() {
             setIsUpdating(true);
             const { error } = await supabase
                 .from('smart_links')
-                .update({ slug: formattedSlug, target_url: targetUrl, platform })
+                .update({ slug: formattedSlug, target_url: targetUrl, platform, title: title || null, show_in_bio: showInBio })
                 .eq('id', editingId);
 
             if (error) {
@@ -81,6 +87,7 @@ export default function SmartLinksPage() {
                     addToast('Failed to update link', 'error');
                 }
             } else {
+                await invalidateSmartLinksCache();
                 addToast('Smart link updated successfully', 'success');
                 handleCancelEdit();
                 fetchLinks();
@@ -90,7 +97,7 @@ export default function SmartLinksPage() {
             setIsCreating(true);
             const { error } = await supabase
                 .from('smart_links')
-                .insert([{ slug: formattedSlug, target_url: targetUrl, platform }]);
+                .insert([{ slug: formattedSlug, target_url: targetUrl, platform, title: title || null, show_in_bio: showInBio }]);
 
             if (error) {
                 console.error('Error creating link:', error);
@@ -100,10 +107,13 @@ export default function SmartLinksPage() {
                     addToast('Failed to create link', 'error');
                 }
             } else {
+                await invalidateSmartLinksCache();
                 addToast('Smart link created successfully', 'success');
                 setSlug('');
                 setTargetUrl('');
                 setPlatform('other');
+                setTitle('');
+                setShowInBio(false);
                 fetchLinks();
             }
             setIsCreating(false);
@@ -114,6 +124,8 @@ export default function SmartLinksPage() {
         setSlug(link.slug);
         setTargetUrl(link.target_url);
         setPlatform(link.platform);
+        setTitle(link.title || '');
+        setShowInBio(link.show_in_bio || false);
         setEditingId(link.id);
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
@@ -123,6 +135,8 @@ export default function SmartLinksPage() {
         setSlug('');
         setTargetUrl('');
         setPlatform('other');
+        setTitle('');
+        setShowInBio(false);
     };
 
     const handleDelete = async (id: string) => {
@@ -136,6 +150,7 @@ export default function SmartLinksPage() {
         if (error) {
             addToast('Failed to delete smart link', 'error');
         } else {
+            await invalidateSmartLinksCache();
             addToast('Smart link deleted', 'success');
             if (editingId === id) handleCancelEdit();
             fetchLinks();
@@ -211,6 +226,38 @@ export default function SmartLinksPage() {
                         </div>
                     </div>
 
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium text-navy-700 mb-1">Display Title (for Bio Page)</label>
+                            <input
+                                type="text"
+                                placeholder="e.g. Watch my new video"
+                                className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+                                value={title}
+                                onChange={(e) => setTitle(e.target.value)}
+                            />
+                            <p className="text-xs text-gray-500 mt-1">Optional. Only used if displayed on the Link-in-Bio page.</p>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-navy-700 mb-1">Show in Bio Page?</label>
+                            <div className="flex items-center h-full pb-2">
+                                <label className="flex items-center cursor-pointer relative">
+                                    <input 
+                                        type="checkbox" 
+                                        className="sr-only"
+                                        checked={showInBio}
+                                        onChange={(e) => setShowInBio(e.target.checked)}
+                                    />
+                                    <div className={`w-11 h-6 rounded-full transition duration-200 ease-in-out ${showInBio ? 'bg-gold-500' : 'bg-gray-300'}`}></div>
+                                    <div className={`absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform duration-200 ease-in-out ${showInBio ? 'transform translate-x-5' : ''}`}></div>
+                                </label>
+                                <span className="ml-3 text-sm text-gray-600 truncate">
+                                    {showInBio ? 'Visible on /links page' : 'Hidden from /links page'}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
                     <div>
                         <label className="block text-sm font-medium text-navy-700 mb-1">Link Type</label>
                         <select
@@ -266,7 +313,8 @@ export default function SmartLinksPage() {
                             <thead>
                                 <tr className="bg-gray-50 text-navy-600 text-sm border-b border-gray-100">
                                     <th className="p-4 font-medium">Link & URL</th>
-                                    <th className="p-4 font-medium">Platform</th>
+                                    <th className="p-4 font-medium hidden sm:table-cell">Platform</th>
+                                    <th className="p-4 font-medium hidden md:table-cell">Bio Status</th>
                                     <th className="p-4 font-medium">Clicks</th>
                                     <th className="p-4 font-medium text-right">Actions</th>
                                 </tr>
@@ -281,14 +329,25 @@ export default function SmartLinksPage() {
                                                     <ExternalLink className="w-3 h-3" />
                                                 </a>
                                             </div>
-                                            <div className="text-xs text-gray-500 mt-1 truncate max-w-xs xl:max-w-md" title={link.target_url}>
+                                            <div className="text-xs text-gray-500 mt-1 truncate max-w-[200px] sm:max-w-xs xl:max-w-md" title={link.target_url}>
                                                 {link.target_url}
                                             </div>
                                         </td>
-                                        <td className="p-4">
+                                        <td className="p-4 hidden sm:table-cell">
                                             <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700 capitalize">
                                                 {link.platform}
                                             </span>
+                                        </td>
+                                        <td className="p-4 hidden md:table-cell">
+                                            {link.show_in_bio ? (
+                                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-50 text-green-700">
+                                                    <span className="w-2 h-2 rounded-full bg-green-500 mr-2"></span> Visible
+                                                </span>
+                                            ) : (
+                                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-50 text-gray-600">
+                                                    Hidden
+                                                </span>
+                                            )}
                                         </td>
                                         <td className="p-4 font-mono font-medium text-gold-600">
                                             {link.clicks.toLocaleString()}

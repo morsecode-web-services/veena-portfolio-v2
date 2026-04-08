@@ -36,6 +36,9 @@ CREATE TABLE IF NOT EXISTS smart_links (
     target_url TEXT NOT NULL,
     platform TEXT NOT NULL,
     clicks INTEGER DEFAULT 0,
+    title TEXT,
+    show_in_bio BOOLEAN DEFAULT false,
+    order_index INTEGER DEFAULT 0,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 

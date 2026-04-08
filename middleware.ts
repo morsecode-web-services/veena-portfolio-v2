@@ -12,14 +12,17 @@ const SITE_LIVE = process.env.NEXT_PUBLIC_SITE_LIVE === 'true';
 // Paths that must always work regardless of site live status
 const WHITELISTED_PREFIXES = [
     '/link/',       // Deep links must always function
+    '/links',       // Link-in-bio page
     '/admin',       // Admin dashboard access 
     '/api/',        // API routes
     '/coming-soon', // The page itself (avoid infinite redirect loop)
     '/_next/',      // Next.js internals
     '/favicon',
     '/icon.png',
+    '/logo.png',    // Allow site logo to load
     '/robots.txt',
     '/sitemap.xml',
+    '/images/',     // Allow static images to load
 ];
 
 export async function middleware(request: NextRequest) {
@@ -33,7 +36,27 @@ export async function middleware(request: NextRequest) {
     const linkMatch = pathname.match(/^\/link\/([^/]+)$/);
     if (linkMatch && supabaseUrl && supabaseAnonKey) {
         const slug = linkMatch[1];
-        const edgeSupabase = createClient(supabaseUrl, supabaseAnonKey);
+        // Create Edge Supabase client with Next.js caching
+        const edgeSupabase = createClient(supabaseUrl, supabaseAnonKey, {
+            auth: { persistSession: false },
+            global: {
+                fetch: (url, options) => {
+                    // Cache the URL lookup (GET) at the edge for 1 week maximum speed
+                    // We will manually invalidate this cache using tags from the admin dashboard
+                    if (options?.method === 'GET') {
+                        return fetch(url, {
+                            ...options,
+                            next: { 
+                                revalidate: 604800, // 1 week
+                                tags: ['smart-links']
+                            }
+                        });
+                    }
+                    // Leave the click tracking (POST) un-cached so it's always accurate
+                    return fetch(url, { ...options, cache: 'no-store' });
+                }
+            }
+        });
 
         const { data: link, error } = await edgeSupabase
             .from('smart_links')
