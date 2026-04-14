@@ -15,10 +15,11 @@ import 'react-phone-number-input/style.css';
 export interface FormField {
     name: string;
     label: string;
-    type: 'text' | 'textarea' | 'email' | 'tel' | 'select' | 'date' | 'checkbox';
+    type: 'text' | 'textarea' | 'email' | 'tel' | 'select' | 'date' | 'checkbox' | 'content' | 'image';
     required?: boolean;
     placeholder?: string;
     options?: string[];
+    content?: string;
 }
 
 interface DynamicFormProps {

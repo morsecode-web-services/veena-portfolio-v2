@@ -25,6 +25,7 @@ interface FormConfig {
     fields: FormField[];
     is_active: boolean;
     email_notifications_enabled: boolean;
+    auto_reply_subject?: string;
     auto_reply_message?: string;
     success_message?: string;
 }
