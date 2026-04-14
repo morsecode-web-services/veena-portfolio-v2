@@ -523,6 +523,24 @@
   },
   "contact": {
     "imageUrl": "/images/contact/contact-image.jpg",
-    "imageAlt": "Aishwarya Manikarnike performing"
+    "imageAlt": "Aishwarya Manikarnike performing",
+    "formSlugs": ["classes", "performance"]
+  },
+  "standaloneForms": {
+    "workshop": {
+      "title": "Upcoming Workshop",
+      "description": "Register for the upcoming online workshop. Please complete the payment of Rs. 999 to secure your spot.",
+      "deadline": "2026-05-01T00:00:00Z",
+      "fee": "Rs. 999",
+      "payment": {
+        "upiId": "pay@upi",
+        "bankDetails": {
+          "accountName": "Aishwarya Manikarnike",
+          "accountNumber": "1234567890",
+          "bankName": "Axis Bank",
+          "ifsc": "UTIB0001234"
+        }
+      }
+    }
   }
 }

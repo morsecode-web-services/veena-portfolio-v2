@@ -72,8 +72,12 @@ export default function Contact() {
           return;
         }
 
+        const allowedSlugs = siteConfig?.contact?.formSlugs || ['classes', 'performance'];
+
         const configMap = data.reduce((acc, config) => {
-          acc[config.form_slug] = config;
+          if (allowedSlugs.includes(config.form_slug)) {
+            acc[config.form_slug] = config;
+          }
           return acc;
         }, {} as Record<string, FormConfig>);
 

@@ -39,6 +39,7 @@ export default function SmartLinksPage() {
     useEffect(() => {
         setDomain(window.location.host);
         fetchLinks();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const handleCopy = (slug: string) => {

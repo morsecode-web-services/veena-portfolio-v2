@@ -79,10 +79,11 @@ export async function POST(request: Request) {
     // Check if email notifications are enabled for this specific form
     let emailEnabled = true; // Default to enabled for legacy forms
     let formFields: any[] = [];
+    let customAutoReply: { subject?: string, message?: string } | null = null;
     if (formSlug) {
       const { data: config } = await supabase
         .from('form_configs')
-        .select('email_notifications_enabled, fields')
+        .select('*')
         .eq('form_slug', formSlug)
         .single();
 
@@ -91,6 +92,12 @@ export async function POST(request: Request) {
           emailEnabled = false;
         }
         formFields = config.fields || [];
+        if (config.auto_reply_subject || config.auto_reply_message) {
+           customAutoReply = {
+              subject: config.auto_reply_subject,
+              message: config.auto_reply_message
+           };
+        }
       }
     }
 
@@ -113,23 +120,59 @@ export async function POST(request: Request) {
       return form_data?.[type] || nameKeywords.map(kw => form_data?.[kw]).find(v => !!v);
     };
 
-    const discoveredName = name || getFieldByTypeOrName('text', ['name', 'full name']);
-    const discoveredEmail = email || getFieldByTypeOrName('email', ['email', 'email address']);
-    const discoveredPhone = phone || getFieldByTypeOrName('tel', ['phone', 'contact', 'mobile', 'whatsapp']);
+    // Smart discovery of identity from dynamic fields
+    const findValue = (keys: string[]) => {
+      for (const key of keys) {
+        const val = form_data?.[key] || body?.[key];
+        if (val) return val;
+      }
+      return null;
+    };
+
+    const discoveredEmail = email || findValue(['email', 'user_email', 'Email Address', 'mail']);
+    
+    // For name, we try to find a real name and avoid using a phone number if possible
+    let discoveredName = name || findValue(['name', 'full_name', 'fullName', 'first_name', 'firstName', 'Name']);
+    const discoveredPhone = phone || findValue(['phone', 'tel', 'mobile', 'whatsapp', 'phoneNumber']);
+
+    // If discoveredName looks exactly like the phone, it's likely a mis-mapped field, so we default to Anonymous
+    if (discoveredName && discoveredPhone && String(discoveredName) === String(discoveredPhone)) {
+      discoveredName = null;
+    }
+
+    if (!discoveredName) discoveredName = 'Anonymous';
     const discoveredMessage = message || form_data?.message || form_data?.comments || 'No message provided';
 
-    // 1. Store lead in Supabase
-    const { error: dbError } = await supabase.from('leads').insert([
-      {
-        form_slug: formSlug || 'general',
-        form_data: form_data || body,
-        status: 'new',
-        name: discoveredName || 'Anonymous',
-      },
-    ]);
+    // 1. Route and Store Data
+    // Business Leads vs. General Form Submissions
+    const leadSlugs = ['performance', 'collaboration', 'classes'];
+    const targetTable = leadSlugs.includes(formSlug) ? 'leads' : 'form_submissions';
+
+    const submissionRecord: any = {
+      form_slug: formSlug || 'general',
+      form_data: form_data || body,
+    };
+
+    // Table-specific fields
+    if (targetTable === 'form_submissions') {
+      submissionRecord.user_email = discoveredEmail;
+      submissionRecord.user_name = discoveredName || 'Anonymous';
+      submissionRecord.status = 'unread';
+    } else {
+      submissionRecord.name = discoveredName || 'Anonymous';
+      submissionRecord.status = 'new';
+    }
+
+    const { error: dbError } = await supabase
+      .from(targetTable)
+      .insert([submissionRecord]);
 
     if (dbError) {
-      console.error('Failed to store lead in Supabase:', dbError);
+      console.error(`Failed to store data in ${targetTable}:`, dbError);
+      return NextResponse.json(
+        { error: 'Database error: Failed to save your submission. Your data has not been sent. Please try again.' },
+        { status: 500 }
+      );
     }
 
     // If emails are disabled, store the lead but don't send anything
@@ -191,11 +234,22 @@ export async function POST(request: Request) {
 
     // 5. Send auto-reply to user (if email exists)
     if (userEmail) {
+      const finalSubject = customAutoReply?.subject || templateConfig.subject;
+      
+      let processedCustomMsg = customAutoReply?.message || '';
+      if (processedCustomMsg) {
+          processedCustomMsg = processedCustomMsg.replace(/{{name}}/g, userName);
+      }
+
+      const finalHtml = processedCustomMsg 
+        ? `<div style="font-family: Arial, sans-serif; line-height: 1.5; color: #333333;">${processedCustomMsg}</div>` 
+        : autoReplyHtml;
+
       const autoReplyResult = await resendClient.emails.send({
         from: 'Aishwarya Manikarnike <official@email.aishwaryamanikarnike.com>',
         to: userEmail,
-        subject: templateConfig.subject,
-        html: autoReplyHtml,
+        subject: finalSubject,
+        html: finalHtml,
         replyTo: 'official@aishwaryamanikarnike.com',
       });
 

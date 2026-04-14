@@ -3,16 +3,18 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/system/Button';
-import { Plus, Trash2, Save, MoveUp, MoveDown, Settings2, X, Link } from 'lucide-react';
+import { Plus, Trash2, Save, MoveUp, MoveDown, Settings2, X, Link, ChevronDown, ChevronUp, Eye } from 'lucide-react';
 import { m, AnimatePresence } from 'framer-motion';
+import TipTapEditor from '@/components/admin/TipTapEditor';
 
 interface FormField {
     name: string;
     label: string;
-    type: 'text' | 'textarea' | 'email' | 'tel' | 'select' | 'date' | 'checkbox';
+    type: 'text' | 'textarea' | 'email' | 'tel' | 'select' | 'date' | 'checkbox' | 'content' | 'image';
     required?: boolean;
     placeholder?: string;
     options?: string[];
+    content?: string;
 }
 
 interface FormConfig {
@@ -23,9 +25,9 @@ interface FormConfig {
     fields: FormField[];
     is_active: boolean;
     email_notifications_enabled: boolean;
+    auto_reply_message?: string;
+    success_message?: string;
 }
-
-// Local component to handle comma-separated options without syncing issues (REMOVED)
 
 export default function FormManagementPage() {
     const [configs, setConfigs] = useState<FormConfig[]>([]);
@@ -36,6 +38,8 @@ export default function FormManagementPage() {
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [newFormDetails, setNewFormDetails] = useState({ title: '', slug: '', description: '' });
     const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+    const [isAutoReplyOpen, setIsAutoReplyOpen] = useState(false);
+    const [showPreviewModal, setShowPreviewModal] = useState(false);
 
     useEffect(() => {
         fetchConfigs();
@@ -151,7 +155,10 @@ export default function FormManagementPage() {
                 description: selectedConfig.description,
                 fields: selectedConfig.fields,
                 is_active: selectedConfig.is_active,
-                email_notifications_enabled: selectedConfig.email_notifications_enabled
+                email_notifications_enabled: selectedConfig.email_notifications_enabled,
+                auto_reply_subject: selectedConfig.auto_reply_subject,
+                auto_reply_message: selectedConfig.auto_reply_message,
+                success_message: selectedConfig.success_message
             })
             .eq('id', selectedConfig.id);
 
@@ -226,82 +233,37 @@ export default function FormManagementPage() {
                                 animate={{ opacity: 1, x: 0 }}
                                 className="bg-white rounded-2xl shadow-premium border border-slate-100 p-6 space-y-8"
                             >
-                                <div className="flex flex-col lg:flex-row lg:items-center justify-between pb-6 border-b border-gray-100 gap-6">
-                                    <div className="flex-1 space-y-4">
-                                        <div>
-                                            <label className="text-[10px] uppercase font-bold text-gray-400 block mb-1">Form Title</label>
-                                            <input
-                                                className="text-2xl font-serif font-bold text-navy-900 w-full outline-none focus:border-b focus:border-gold-400 bg-transparent"
-                                                value={selectedConfig.title}
-                                                onChange={(e) => setSelectedConfig({ ...selectedConfig, title: e.target.value })}
-                                            />
-                                        </div>
-
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pb-2">
-                                            <div>
-                                                <label className="text-[10px] uppercase font-bold text-gray-400 block mb-1">Form Slug (Read-only)</label>
-                                                <div className="text-sm font-mono text-navy-600 bg-navy-50 px-3 py-1.5 rounded-lg border border-navy-100 w-fit">
-                                                    {selectedConfig.form_slug}
-                                                </div>
-                                            </div>
-                                            <div>
-                                                <label className="text-[10px] uppercase font-bold text-gray-400 block mb-1">Description</label>
-                                                <input
-                                                    className="text-sm text-gray-500 w-full outline-none focus:border-b focus:border-gold-200 bg-transparent"
-                                                    value={selectedConfig.description}
-                                                    onChange={(e) => setSelectedConfig({ ...selectedConfig, description: e.target.value })}
-                                                    placeholder="Enter description..."
-                                                />
-                                            </div>
-                                        </div>
-
-                                        <div className="flex items-center gap-8 pt-2 border-t border-gray-50">
-                                            <label className="flex items-center gap-3 cursor-pointer group">
-                                                <div className="relative">
-                                                    <input
-                                                        type="checkbox"
-                                                        className="sr-only peer"
-                                                        checked={selectedConfig.is_active}
-                                                        onChange={(e) => setSelectedConfig({ ...selectedConfig, is_active: e.target.checked })}
-                                                    />
-                                                    <div className="w-10 h-5 bg-gray-200 rounded-full peer peer-checked:bg-navy-900 transition-colors"></div>
-                                                    <div className="absolute left-1 top-1 w-3 h-3 bg-white rounded-full transition-transform peer-checked:translate-x-5"></div>
-                                                </div>
-                                                <span className="text-xs font-bold text-navy-900 uppercase tracking-widest group-hover:text-gold-600 transition-colors">
-                                                    Status: {selectedConfig.is_active ? 'Active' : 'Inactive'}
-                                                </span>
-                                            </label>
-
-                                            <label className="flex items-center gap-3 cursor-pointer group">
-                                                <div className="relative">
-                                                    <input
-                                                        type="checkbox"
-                                                        className="sr-only peer"
-                                                        checked={selectedConfig.email_notifications_enabled}
-                                                        onChange={(e) => setSelectedConfig({ ...selectedConfig, email_notifications_enabled: e.target.checked })}
-                                                    />
-                                                    <div className="w-10 h-5 bg-gray-200 rounded-full peer peer-checked:bg-navy-900 transition-colors"></div>
-                                                    <div className="absolute left-1 top-1 w-3 h-3 bg-white rounded-full transition-transform peer-checked:translate-x-5"></div>
-                                                </div>
-                                                <span className="text-xs font-bold text-navy-900 uppercase tracking-widest group-hover:text-gold-600 transition-colors">
-                                                    Email Alerts: {selectedConfig.email_notifications_enabled ? 'ON' : 'OFF'}
-                                                </span>
-                                            </label>
-                                        </div>
+                                <div className="flex flex-col md:flex-row md:items-start justify-between pb-6 border-b border-gray-100 gap-4 mb-8">
+                                    <div className="flex-1">
+                                        <label className="text-[10px] uppercase font-bold text-gray-400 block mb-1">Form Title</label>
+                                        <input
+                                            className="text-3xl font-serif font-bold text-navy-900 w-full outline-none focus:border-b focus:border-gold-400 bg-transparent transition-colors"
+                                            value={selectedConfig.title}
+                                            onChange={(e) => setSelectedConfig({ ...selectedConfig, title: e.target.value })}
+                                        />
                                     </div>
-
-                                    <div className="flex flex-wrap items-center gap-3 lg:self-start pt-2">
+                                    
+                                    <div className="flex flex-wrap items-center gap-2 pt-2 md:pt-4">
                                         <Button
                                             variant="secondary"
                                             size="sm"
                                             onClick={() => {
-                                                const url = `${window.location.origin}/?form=${selectedConfig.form_slug}#contact`;
+                                                const url = `${window.location.origin}/forms/${selectedConfig.form_slug}`;
                                                 navigator.clipboard.writeText(url);
                                                 setMessage({ type: 'success', text: 'Share link copied to clipboard!' });
                                             }}
-                                            className="bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100"
+                                            className="bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100 shadow-sm"
                                         >
                                             <Link className="w-4 h-4 mr-1.5" /> Copy Link
+                                        </Button>
+
+                                        <Button
+                                            variant="secondary"
+                                            size="sm"
+                                            onClick={() => setShowPreviewModal(true)}
+                                            className="bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100 shadow-sm"
+                                        >
+                                            <Eye className="w-4 h-4 mr-1.5" /> Preview Form
                                         </Button>
 
                                         <Button
@@ -309,22 +271,137 @@ export default function FormManagementPage() {
                                             size="sm"
                                             onClick={handleSave}
                                             isLoading={isSaving}
-                                            className="px-6 shadow-premium"
+                                            className="shadow-premium"
                                         >
                                             <Save className="w-4 h-4 mr-1.5" /> Save Changes
                                         </Button>
 
-                                        <div className="w-px h-8 bg-gray-100 mx-1 hidden sm:block" />
+                                        <div className="w-px h-8 bg-gray-200 mx-1 hidden sm:block" />
 
                                         <Button
                                             variant="tertiary"
                                             size="sm"
                                             onClick={handleDeleteForm}
                                             isLoading={isSaving}
-                                            className="text-red-400 hover:text-red-600 border-transparent hover:bg-red-50"
+                                            className="text-red-400 hover:text-red-600 border-transparent hover:bg-red-50 px-2"
                                         >
                                             <Trash2 className="w-4 h-4" />
                                         </Button>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-8 pb-6 border-b border-gray-100">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                        <div>
+                                            <label className="text-[10px] uppercase font-bold text-gray-400 block mb-1">Form Slug (Read-only)</label>
+                                            <div className="text-sm font-mono text-navy-600 bg-navy-50 px-3 py-2 rounded-lg border border-navy-100 w-full overflow-hidden text-ellipsis">
+                                                {selectedConfig.form_slug}
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label className="text-[10px] uppercase font-bold text-gray-400 block mb-1">Description</label>
+                                            <textarea
+                                                className="text-sm text-navy-800 w-full bg-gray-50 border border-gray-200 p-2 rounded-lg outline-none focus:border-gold-400 min-h-[42px] transition-colors"
+                                                value={selectedConfig.description}
+                                                onChange={(e) => setSelectedConfig({ ...selectedConfig, description: e.target.value })}
+                                                placeholder="Enter description..."
+                                                rows={2}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="flex flex-col sm:flex-row sm:items-center gap-6 p-4 bg-gray-50 rounded-xl border border-gray-100">
+                                        <label className="flex items-center gap-3 cursor-pointer group">
+                                            <div className="relative">
+                                                <input
+                                                    type="checkbox"
+                                                    className="sr-only peer"
+                                                    checked={selectedConfig.is_active}
+                                                    onChange={(e) => setSelectedConfig({ ...selectedConfig, is_active: e.target.checked })}
+                                                />
+                                                <div className="w-10 h-5 bg-gray-200 rounded-full peer peer-checked:bg-navy-900 transition-colors"></div>
+                                                <div className="absolute left-1 top-1 w-3 h-3 bg-white rounded-full transition-transform peer-checked:translate-x-5 shadow-sm"></div>
+                                            </div>
+                                            <span className="text-xs font-bold text-navy-900 uppercase tracking-widest group-hover:text-gold-600 transition-colors">
+                                                Status: {selectedConfig.is_active ? 'Active' : 'Inactive'}
+                                            </span>
+                                        </label>
+
+                                        <div className="hidden sm:block w-px h-6 bg-gray-200" />
+
+                                        <label className="flex items-center gap-3 cursor-pointer group">
+                                            <div className="relative">
+                                                <input
+                                                    type="checkbox"
+                                                    className="sr-only peer"
+                                                    checked={selectedConfig.email_notifications_enabled}
+                                                    onChange={(e) => setSelectedConfig({ ...selectedConfig, email_notifications_enabled: e.target.checked })}
+                                                />
+                                                <div className="w-10 h-5 bg-gray-200 rounded-full peer peer-checked:bg-navy-900 transition-colors"></div>
+                                                <div className="absolute left-1 top-1 w-3 h-3 bg-white rounded-full transition-transform peer-checked:translate-x-5 shadow-sm"></div>
+                                            </div>
+                                            <span className="text-xs font-bold text-navy-900 uppercase tracking-widest group-hover:text-gold-600 transition-colors">
+                                                Email Alerts: {selectedConfig.email_notifications_enabled ? 'ON' : 'OFF'}
+                                            </span>
+                                        </label>
+
+                                        <div className="hidden sm:block w-px h-6 bg-gray-200" />
+
+                                        <div className="flex-1">
+                                            <label className="text-[10px] uppercase font-bold text-gray-400 block mb-1">Success Message (On-screen)</label>
+                                            <input
+                                                className="text-xs text-navy-900 bg-white border border-gray-200 p-2 rounded-lg w-full outline-none focus:border-gold-400 transition-colors"
+                                                value={selectedConfig.success_message || ''}
+                                                onChange={(e) => setSelectedConfig({ ...selectedConfig, success_message: e.target.value })}
+                                                placeholder="e.g. Thank you! We will contact you soon."
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <button 
+                                            onClick={() => setIsAutoReplyOpen(!isAutoReplyOpen)}
+                                            className="flex items-center justify-between w-full text-left focus:outline-none group p-4 border border-gray-100 rounded-xl hover:border-gold-300 transition-colors bg-white shadow-sm"
+                                        >
+                                            <div>
+                                                <h3 className="text-sm font-bold text-navy-900 group-hover:text-gold-600 transition-colors">Auto-Reply Settings</h3>
+                                                <p className="text-xs text-gray-500 mt-0.5">Customize the email sent to users upon form submission.</p>
+                                            </div>
+                                            <div className="text-gray-400 group-hover:text-gold-600 transition-colors bg-gray-50 rounded-full p-2">
+                                                {isAutoReplyOpen ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                                            </div>
+                                        </button>
+                                        <AnimatePresence>
+                                            {isAutoReplyOpen && (
+                                                <m.div 
+                                                    initial={{ opacity: 0, height: 0 }}
+                                                    animate={{ opacity: 1, height: 'auto' }}
+                                                    exit={{ opacity: 0, height: 0 }}
+                                                    className="overflow-hidden"
+                                                >
+                                                    <div className="pt-4 pb-2 space-y-4 px-2">
+                                                        <div>
+                                                            <label className="text-[10px] uppercase font-bold text-gray-400 block mb-1">Reply Subject</label>
+                                                            <input
+                                                                className="text-sm text-navy-900 bg-gray-50 p-3 rounded-xl w-full border border-gray-200 outline-none focus:border-gold-400 transition-colors"
+                                                                value={selectedConfig.auto_reply_subject || ''}
+                                                                onChange={(e) => setSelectedConfig({ ...selectedConfig, auto_reply_subject: e.target.value })}
+                                                                placeholder="e.g. Thanks for registering!"
+                                                            />
+                                                        </div>
+                                                        <div>
+                                                            <label className="text-[10px] uppercase font-bold text-gray-400 block mb-1">Message Body</label>
+                                                            <div className="mt-1 shadow-sm rounded-xl overflow-hidden ring-1 ring-gray-200">
+                                                                <TipTapEditor
+                                                                    content={selectedConfig.auto_reply_message || ''}
+                                                                    onChange={(content) => setSelectedConfig({ ...selectedConfig, auto_reply_message: content })}
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </m.div>
+                                            )}
+                                        </AnimatePresence>
                                     </div>
                                 </div>
 
@@ -334,15 +411,15 @@ export default function FormManagementPage() {
                                     </m.div>
                                 )}
 
-                                <div className="space-y-4">
-                                    <div className="flex items-center justify-between">
-                                        <h4 className="font-bold text-navy-900">Fields</h4>
-                                        <Button variant="ghost" size="sm" onClick={handleAddField}>
+                                <div className="space-y-6 pt-4">
+                                    <div className="flex items-center justify-between border-b border-gray-100 pb-4">
+                                        <h4 className="text-lg font-serif font-bold text-navy-900 inline-block">Form Builder</h4>
+                                        <Button variant="secondary" size="sm" onClick={handleAddField} className="bg-navy-50 text-navy-700 hover:bg-navy-100 border-0">
                                             <Plus className="w-4 h-4 mr-1" /> Add Field
                                         </Button>
                                     </div>
 
-                                    <div className="space-y-3">
+                                    <div className="space-y-4">
                                         {selectedConfig.fields.map((field, index) => (
                                             <m.div
                                                 key={index}
@@ -356,6 +433,24 @@ export default function FormManagementPage() {
                                                 </div>
 
                                                 <div className="flex-1 grid grid-cols-1 sm:grid-cols-12 gap-4">
+                                                    <div className="sm:col-span-3">
+                                                        <label className="text-[10px] uppercase font-bold text-gray-400 block mb-1">Type</label>
+                                                        <select
+                                                            className="w-full bg-white border border-gray-200 p-2 rounded text-sm outline-none font-bold text-navy-900 border-l-4 border-l-gold-400 shadow-sm"
+                                                            value={field.type}
+                                                            onChange={(e) => handleUpdateField(index, { type: e.target.value as any })}
+                                                        >
+                                                            <option value="text">Text</option>
+                                                            <option value="textarea">Long Text</option>
+                                                            <option value="email">Email</option>
+                                                            <option value="tel">Phone</option>
+                                                            <option value="select">Dropdown</option>
+                                                            <option value="date">Date</option>
+                                                            <option value="checkbox">Checkbox</option>
+                                                            <option value="image">Image Upload</option>
+                                                            <option value="content">Content Block</option>
+                                                        </select>
+                                                    </div>
                                                     <div className="sm:col-span-3">
                                                         <label className="text-[10px] uppercase font-bold text-gray-400 block mb-1">Label</label>
                                                         <input
@@ -379,29 +474,14 @@ export default function FormManagementPage() {
                                                             </div>
                                                         )}
                                                     </div>
-                                                    <div className="sm:col-span-3">
-                                                        <label className="text-[10px] uppercase font-bold text-gray-400 block mb-1">Type</label>
-                                                        <select
-                                                            className="w-full bg-white border border-gray-200 p-2 rounded text-sm outline-none"
-                                                            value={field.type}
-                                                            onChange={(e) => handleUpdateField(index, { type: e.target.value as any })}
-                                                        >
-                                                            <option value="text">Text</option>
-                                                            <option value="textarea">Long Text</option>
-                                                            <option value="email">Email</option>
-                                                            <option value="tel">Phone</option>
-                                                            <option value="select">Dropdown</option>
-                                                            <option value="date">Date</option>
-                                                            <option value="checkbox">Checkbox</option>
-                                                        </select>
-                                                    </div>
                                                     <div className="sm:col-span-1">
                                                         <label className="text-[10px] uppercase font-bold text-gray-400 block mb-1">Req.</label>
                                                         <input
                                                             type="checkbox"
-                                                            className="mt-2 w-4 h-4 rounded text-navy-600 focus:ring-navy-500"
+                                                            className="mt-2 w-4 h-4 rounded text-navy-600 focus:ring-navy-500 disabled:opacity-50 disabled:cursor-not-allowed"
                                                             checked={field.required}
                                                             onChange={(e) => handleUpdateField(index, { required: e.target.checked })}
+                                                            disabled={field.type === 'content'}
                                                         />
                                                     </div>
                                                     <div className="sm:col-span-2 flex items-end">
@@ -455,6 +535,18 @@ export default function FormManagementPage() {
                                                             {(!field.options || field.options.length === 0) && (
                                                                 <p className="text-xs text-gray-400 italic">No options added yet.</p>
                                                             )}
+                                                        </div>
+                                                    )}
+
+                                                    {field.type === 'content' && (
+                                                        <div className="col-span-full border-t border-gray-200 pt-4 mt-1">
+                                                            <label className="text-[10px] uppercase font-bold text-gray-400 block mb-2">Content Block Text</label>
+                                                            <div className="bg-white rounded border border-gray-200">
+                                                                <TipTapEditor
+                                                                    content={field.content || ''}
+                                                                    onChange={(c) => handleUpdateField(index, { content: c })}
+                                                                />
+                                                            </div>
                                                         </div>
                                                     )}
                                                 </div>
@@ -532,6 +624,55 @@ export default function FormManagementPage() {
                                         Create Form
                                     </Button>
                                 </div>
+                            </div>
+                        </m.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* Preview Form Modal */}
+            <AnimatePresence>
+                {showPreviewModal && selectedConfig && (
+                    <div className="fixed inset-0 bg-navy-950/80 backdrop-blur-md flex items-center justify-center p-4 sm:p-8 z-[100]">
+                        <m.div
+                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                            className="bg-gray-100 rounded-2xl shadow-premium-xl w-full max-w-5xl h-[90vh] flex flex-col overflow-hidden border border-gray-200 ring-1 ring-white/10"
+                        >
+                            <div className="bg-white px-6 py-4 border-b border-gray-200 flex items-center justify-between shadow-sm z-10 sticky top-0">
+                                <div>
+                                    <h2 className="text-xl font-serif font-bold text-navy-900 flex items-center gap-2">
+                                        <Eye className="w-5 h-5 text-gray-400" />
+                                        Preview: {selectedConfig.title}
+                                    </h2>
+                                    <p className="text-xs text-gray-500 font-mono mt-1">
+                                        {window.location.origin}/forms/{selectedConfig.form_slug}
+                                    </p>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-yellow-50 text-yellow-700 rounded-lg text-xs font-medium border border-yellow-100 mr-2">
+                                        <div className="w-2 h-2 rounded-full bg-yellow-400 animate-pulse"></div>
+                                        Live Preview
+                                    </div>
+                                    <Button
+                                        variant="secondary"
+                                        size="sm"
+                                        onClick={() => setShowPreviewModal(false)}
+                                        className="bg-gray-50 text-gray-600 hover:bg-gray-100 border-0"
+                                    >
+                                        <X className="w-4 h-4 mr-1.5" /> Close
+                                    </Button>
+                                </div>
+                            </div>
+                            
+                            <div className="flex-1 w-full bg-gray-100 overflow-hidden relative">
+                                {/* The key={selectedConfig.id} ensures iframe reloads if switching configs, but here we don't switch while open. */}
+                                <iframe 
+                                    src={`/forms/${selectedConfig.form_slug}`} 
+                                    className="w-full h-full border-0 absolute inset-0 bg-white"
+                                    title="Form Preview"
+                                />
                             </div>
                         </m.div>
                     </div>

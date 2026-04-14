@@ -82,26 +82,34 @@ function EditorToolbar() {
                     console.error('Compression failed, using original file:', error);
                 }
 
-                const fileExt = file.name.split('.').pop();
-                const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
-                const filePath = `inline-images/${fileName}`;
+                const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
+                const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD;
 
-                const { error: uploadError } = await supabase.storage
-                    .from('blog-assets')
-                    .upload(filePath, uploadFile, {
-                        contentType: uploadFile.type,
-                        upsert: false
-                    });
-
-                if (uploadError) throw uploadError;
-
-                const { data } = supabase.storage
-                    .from('blog-assets')
-                    .getPublicUrl(filePath);
-
-                if (data?.publicUrl) {
-                    editor.chain().focus().setImage({ src: data.publicUrl }).run();
+                if (!uploadPreset || !cloudName) {
+                    alert('Cloudinary upload preset or cloud name is missing. Please configure NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET.');
+                    return;
                 }
+
+                const formData = new FormData();
+                formData.append('file', uploadFile);
+                formData.append('upload_preset', uploadPreset);
+                formData.append('folder', 'forms/admin-content');
+
+                const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error?.message || 'Failed to upload image');
+
+                // Cloudinary fetch mode formatting for optimization
+                const transforms = 'f_auto,q_auto,w_1200,c_limit';
+                // Extract just the path from the secure URL to pass to fetch mode
+                const urlParts = data.secure_url.split('/upload/');
+                const finalUrl = `https://res.cloudinary.com/${cloudName}/image/upload/${transforms}/${urlParts[1]}`;
+
+                editor.chain().focus().setImage({ src: finalUrl }).run();
 
             } catch (error: any) {
                 console.error('Error uploading image:', error);

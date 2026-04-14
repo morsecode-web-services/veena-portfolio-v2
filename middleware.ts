@@ -14,7 +14,8 @@ const WHITELISTED_PREFIXES = [
     '/link/',       // Deep links must always function
     '/links',       // Link-in-bio page
     '/admin',       // Admin dashboard access 
-    '/api/',        // API routes
+    '/forms/',      // Standalone registration forms
+    '/api/',        // API routes for forms to function
     '/coming-soon', // The page itself (avoid infinite redirect loop)
     '/_next/',      // Next.js internals
     '/favicon',

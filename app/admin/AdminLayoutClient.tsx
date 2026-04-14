@@ -30,6 +30,7 @@ export default function AdminLayoutClient({ children }: AdminLayoutClientProps) 
     const [checkingAuth, setCheckingAuth] = useState(true);
 
     const [leadsCount, setLeadsCount] = useState(0);
+    const [responsesCount, setResponsesCount] = useState(0);
 
     useEffect(() => {
         async function checkAuth() {
@@ -72,11 +73,16 @@ export default function AdminLayoutClient({ children }: AdminLayoutClientProps) 
                     if (!countError && count !== null) {
                         setLeadsCount(count);
                     }
-                } else {
-                    // If never viewed, show all new leads (or maybe just 0 to start cleanly)
-                    // For now, let's treat null as "checked everything just now" to avoid noise, 
-                    // or we could show total count. Let's show 0 to be less annoying initially.
-                    setLeadsCount(0);
+                }
+
+                // Check for unread form submissions
+                const { count: unreadCount, error: unreadError } = await supabase
+                    .from('form_submissions')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('status', 'unread');
+
+                if (!unreadError && unreadCount !== null) {
+                    setResponsesCount(unreadCount);
                 }
 
                 setCheckingAuth(false);
@@ -117,7 +123,8 @@ export default function AdminLayoutClient({ children }: AdminLayoutClientProps) 
         { name: 'Events', href: '/admin/events', icon: Calendar },
         { name: 'Blog', href: '/admin/blogs', icon: FileText },
         { name: 'Videos', href: '/admin/videos', icon: LayoutDashboard },
-        { name: 'Forms', href: '/admin/forms', icon: LayoutDashboard }, // Using LayoutDashboard for now
+        { name: 'Forms', href: '/admin/forms', icon: Settings },
+        { name: 'Responses', href: '/admin/responses', icon: FileText, badge: responsesCount },
         { name: 'Smart Links', href: '/admin/smart-links', icon: LinkIcon },
         { name: 'Leads', href: '/admin/leads', icon: Users, badge: leadsCount },
         { name: 'Architect', href: '/admin/config', icon: PenTool },
