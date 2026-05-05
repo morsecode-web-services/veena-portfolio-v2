@@ -48,7 +48,7 @@ npm install
 
 ### 3. Configure the Site
 
-Edit the configuration file at `public/config/site-config.json` to customize:
+Manage the site's content and structure through the **Admin Architect** dashboard. This controls:
 
 - Artist information and biography
 - Social media links
@@ -206,31 +206,15 @@ veena-musician-website/
 
 ### Site Configuration
 
-The main configuration file is located at `public/config/site-config.json`. It includes:
+The site is powered by a dynamic configuration system backed by **Supabase**.
 
-- **Artist Information:** Name, tagline, biography
-- **Home Page:** Images and featured videos
-- **Music Categories:** Veena, Vocal, 3 Generation Trio, RTP
-- **Press Articles:** Title, publication, date, excerpt, URL
-- **FAQ Items:** Questions and answers
-- **Social Media:** Links to various platforms
-
-### Tailwind Theme
-
-Customize the theme in `tailwind.config.ts`:
-
-- **Colors:** Primary and secondary color palettes
-- **Fonts:** Custom font families
-- **Animations:** Custom animation keyframes
-
-### Feature Flags & Customization
-
-You can toggle specific features and layouts in `public/config/site-config.json` under the `features` and `music` sections:
-
-#### Music Section Layout
-Choose between two display modes for the Music section:
+### Admin Architect
+Access the admin panel at `/admin` to modify:
+- **Artist Profile**: Name, role, social links, and bio.
+- **Site Structure**: Toggle sections and change their display order.
+- **Design Settings**: Switch between "Carousel" and "Grid" modes for music, manage colors, and SEO.
+- **Music Section Layout**: Choose between two display modes for the Music section:
 - **Carousel (Default):** `"layout": "carousel"` - Modern, multi-select stacked carousel view.
-- **Grid:** `"layout": "grid"` - Classic single-tab grid view.
 
 ```json
 "music": {

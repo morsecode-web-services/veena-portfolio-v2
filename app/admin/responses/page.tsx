@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
+import Image from 'next/image';
 import { Button } from '@/components/system/Button';
 import { 
     Search, 
@@ -430,15 +431,14 @@ export default function ResponsesPage() {
                                                     <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">{label}</label>
                                                     {isImage ? (
                                                         <div className="relative rounded-2xl overflow-hidden border border-slate-200 bg-slate-50 aspect-video shadow-sm">
-                                                            <img 
+                                                            <Image 
                                                                 src={value as string} 
                                                                 alt={label} 
-                                                                className="w-full h-full object-contain"
-                                                                onError={(e) => {
-                                                                    (e.target as HTMLImageElement).src = 'https://placehold.co/600x400?text=Image+Not+Found';
-                                                                }}
+                                                                fill
+                                                                className="object-contain"
+                                                                unoptimized // External URLs from submissions
                                                             />
-                                                            <a href={value as string} target="_blank" rel="noopener noreferrer" className="absolute bottom-3 right-3 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-lg text-[10px] font-bold shadow-sm hover:bg-white transition-colors border border-slate-200">View Full Size</a>
+                                                            <a href={value as string} target="_blank" rel="noopener noreferrer" className="absolute bottom-3 right-3 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-lg text-[10px] font-bold shadow-sm hover:bg-white transition-colors border border-slate-200 z-10">View Full Size</a>
                                                         </div>
                                                     ) : (
                                                         <div className="text-sm text-navy-800 bg-slate-50/50 p-4 rounded-xl border border-slate-100 leading-relaxed min-h-[46px] flex items-center break-words">

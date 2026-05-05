@@ -4,11 +4,10 @@ import { useState, useEffect, useMemo } from 'react';
 import { m, AnimatePresence } from 'framer-motion';
 import DynamicForm, { FormField } from '@/components/features/DynamicForm';
 import ImageWithFallback from '@/components/ui/ImageWithFallback';
-import siteConfig from '@/public/config/site-config.json';
 import { supabase } from '@/lib/supabase';
-
 import { SectionWrapper } from '@/components/system/SectionWrapper';
 import { SectionTitle } from '@/components/system/SectionTitle';
+import type { SiteConfig } from '@/types';
 
 interface FormConfig {
   form_slug: string;
@@ -17,13 +16,17 @@ interface FormConfig {
   fields: FormField[];
 }
 
-export default function Contact() {
+interface ContactProps {
+  config: SiteConfig;
+}
+
+export default function Contact({ config }: ContactProps) {
   const [activeTab, setActiveTab] = useState<'classes' | 'performance'>('classes');
   const [configs, setConfigs] = useState<Record<string, FormConfig>>({});
   const [isLoading, setIsLoading] = useState(true);
 
-  const contactImage = siteConfig?.contact?.imageUrl || '/images/contact/contact-image.jpg';
-  const contactImageAlt = siteConfig?.contact?.imageAlt || 'Contact';
+  const contactImage = config?.contact?.imageUrl || '/images/contact/contact-image.jpg';
+  const contactImageAlt = config?.contact?.imageAlt || 'Contact';
 
   const defaultConfigs: Record<string, FormConfig> = useMemo(() => ({
     classes: {
@@ -72,7 +75,7 @@ export default function Contact() {
           return;
         }
 
-        const allowedSlugs = siteConfig?.contact?.formSlugs || ['classes', 'performance'];
+        const allowedSlugs = config?.contact?.formSlugs || ['classes', 'performance'];
 
         const configMap = data.reduce((acc, config) => {
           if (allowedSlugs.includes(config.form_slug)) {
@@ -91,7 +94,7 @@ export default function Contact() {
     }
 
     fetchConfigs();
-  }, [defaultConfigs]);
+  }, [defaultConfigs, config?.contact?.formSlugs]);
 
   // Generate tabs dynamically from loaded configs
   const tabs = Object.values(configs).map(config => ({
@@ -160,16 +163,16 @@ export default function Contact() {
               <span className="text-[10px] font-black text-navy-400 uppercase tracking-widest mb-0.5">Response</span>
               <span className="text-xs font-semibold text-navy-900">24-48 Hours</span>
             </div>
-            {siteConfig?.artist?.email && (
+            {config?.artist?.email && (
               <>
                 <div className="hidden sm:block w-px h-8 bg-slate-100 self-center" />
                 <div className="flex flex-col items-center text-center px-2">
                   <span className="text-[10px] font-black text-navy-400 uppercase tracking-widest mb-0.5">Direct Email</span>
                   <a
-                    href={`mailto:${siteConfig.artist.email}`}
+                    href={`mailto:${config.artist.email}`}
                     className="text-xs font-semibold text-navy-900 hover:text-gold-600 transition-colors duration-200 break-all"
                   >
-                    {siteConfig.artist.email}
+                    {config.artist.email}
                   </a>
                 </div>
               </>

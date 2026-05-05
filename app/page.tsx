@@ -2,12 +2,11 @@ import dynamic from 'next/dynamic';
 import { SectionErrorBoundary } from '@/components/ErrorBoundary';
 import HomeSection from '@/components/sections/Home';
 import PortfolioGeneratorWrapper from '@/components/features/PortfolioGeneratorWrapper';
-import siteConfig from '@/public/config/site-config.json';
-import { validateConfig } from '@/lib/config';
+import { validateConfig, loadConfig } from '@/lib/config';
 import { supabase } from '@/lib/supabase'; // Use anon client for public fetch
 import { LoadingCard } from '@/components/system/LoadingCard';
 
-export const revalidate = 900; // Revalidate every 15 minutes
+export const revalidate = 0; // Disable static caching for local testing, or set to a higher value for prod
 
 // Code-split heavy components for better performance
 const Gallery = dynamic(() => import('@/components/sections/Gallery'), {
@@ -70,13 +69,7 @@ const About = dynamic(() => import('@/components/sections/About'));
 const Schedule = dynamic(() => import('@/components/sections/Schedule'));
 
 export default async function Page() {
-  // Validate config
-  const validation = validateConfig(siteConfig);
-  if (!validation.success) {
-    console.error('Config validation failed:', validation.error);
-    return <div>Configuration Error</div>;
-  }
-  const config = validation.data;
+  const config = await loadConfig();
 
   let dbVideos: any[] = [];
   try {
@@ -161,7 +154,7 @@ export default async function Page() {
             return (
               <div key="Contact" className="bg-white">
                 <SectionErrorBoundary sectionName="Contact">
-                  <Contact />
+                  <Contact config={config} />
                 </SectionErrorBoundary>
               </div>
             );

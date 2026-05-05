@@ -87,12 +87,10 @@ export async function generatePDF(
 
     // Load config data
     const basePath = getBasePath().replace(/\/$/, '');
-    const configPath = '/config/site-config.json'.replace(/^\//, '');
-    const fullPath = basePath ? `${basePath}/${configPath}` : `/${configPath}`;
-
-    const response = await fetch(fullPath);
+    const apiUrl = '/api/admin/config';
+    const response = await fetch(apiUrl);
     if (!response.ok) {
-      throw new Error(`Failed to load site configuration from ${fullPath}`);
+      throw new Error(`Failed to load site configuration from ${apiUrl}`);
     }
     const config = await response.json();
 
@@ -772,7 +770,7 @@ async function renderCoverPage(pdf: jsPDF, config: any, pageWidth: number, pageH
   // Premium minimal design with full-bleed hero image
 
   // 1. Load and add full-bleed hero image (use the hero background image)
-  let heroImgUrl = config.home?.heroBackground || '/images/home/hero-bg.jpg';
+  let heroImgUrl = config.home?.heroBackground || 'https://placehold.co/1920x1080/14213d/d4af37?text=Hero+Image';
 
   if (heroImgUrl) {
     const imgData = await loadImg(heroImgUrl);

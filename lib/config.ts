@@ -50,22 +50,6 @@ const GalleryImageSchema = z.object({
   caption: z.string().optional(),
 });
 
-const SpotlightFeatureSchema = z.object({
-  title: z.string().min(1),
-  description: z.string().min(1),
-});
-
-const SpotlightSchema = z.object({
-  id: z.string().min(1),
-  title: z.string().min(1),
-  subtitle: z.string().min(1),
-  description: z.string().min(1),
-  imageUrl: z.string().min(1),
-  imagePosition: z.string().optional(),
-  features: z.array(SpotlightFeatureSchema),
-  ctaText: z.string().optional(),
-  ctaLink: z.string().optional(),
-});
 
 const FeaturedCarouselItemSchema = z.object({
   id: z.string().min(1),
@@ -115,7 +99,6 @@ const SiteConfigSchema = z.object({
       eventLinkText: z.string().optional(),
     }).optional(),
   }),
-  spotlights: z.array(SpotlightSchema).optional(),
   gallery: z.object({
     images: z.array(GalleryImageSchema),
   }),
@@ -153,6 +136,7 @@ const SiteConfigSchema = z.object({
   contact: z.object({
     imageUrl: z.string().optional(),
     imageAlt: z.string().optional(),
+    formSlugs: z.array(z.string()).optional(),
   }).optional(),
 });
 
@@ -165,14 +149,13 @@ const defaultConfig: SiteConfig = {
     fullBio: ['Full biography not available.'],
   },
   home: {
-    heroTitle: 'Music is the mediator between the spiritual and the sensual life.',
+    heroTitle: '',
     images: {
       veena: '/images/placeholder.jpg',
       vocal: '/images/placeholder.jpg',
     },
     featuredVideos: [],
   },
-  spotlights: [],
   gallery: {
     images: [],
   },
@@ -200,6 +183,11 @@ const defaultConfig: SiteConfig = {
   blog: {
     title: 'Deep Dives into the Ocean of Swaras',
     subtitle: 'Journal & Musings',
+  },
+  contact: {
+    imageUrl: '/images/contact/contact-image.jpg',
+    imageAlt: 'Contact',
+    formSlugs: ['classes', 'performance'],
   },
 };
 
@@ -277,64 +265,27 @@ export function getAssetPath(path: string | undefined): string {
 }
 
 /**
- * Loads and parses the site configuration from JSON file
- * @param configPath - Path to the configuration file (default: /config/site-config.json)
+ * Loads and parses the site configuration.
+ * Prioritizes the Supabase database with a fallback to the local JSON file.
  * @returns Parsed and validated site configuration
  */
-export async function loadConfig(
-  configPath: string = '/config/site-config.json'
-): Promise<SiteConfig> {
+export async function loadConfig(): Promise<SiteConfig> {
+  // 1. Try loading from Database (Supabase) first
   try {
-    // 1. Server-side: Read file directly from filesystem
-    if (typeof window === 'undefined') {
-      const { readFile } = await import('fs/promises');
-      const path = await import('path');
-
-      const filePath = path.join(process.cwd(), 'public', configPath.replace(/^\//, ''));
-
-      try {
-        const fileContents = await readFile(filePath, 'utf-8');
-        const data = JSON.parse(fileContents);
-        const validation = validateConfig(data);
-
-        if (!validation.success) {
-          console.error('[Config] Server-side Validation Failed:', validation.error.format());
-          return defaultConfig;
-        }
-
-        return validation.data!;
-      } catch (fsError) {
-        console.error(`[Config] Failed to read file at ${filePath}:`, fsError);
-        return defaultConfig;
-      }
+    const { getDbConfig } = await import('./db-config');
+    const dbConfig = await getDbConfig();
+    if (dbConfig) {
+      return dbConfig;
     }
-
-    // 2. Client-side: Use fetch
-    const basePath = getBasePath().replace(/\/$/, '');
-    const sanitizedConfigPath = configPath.replace(/^\//, '');
-    const fullPath = basePath ? `${basePath}/${sanitizedConfigPath}` : `/${sanitizedConfigPath}`;
-
-    const response = await fetch(fullPath);
-
-    if (!response.ok) {
-      console.error(`[Config] HTTP Error ${response.status}: ${response.statusText} at ${fullPath}`);
-      return defaultConfig;
-    }
-
-    const data = await response.json();
-    const validation = validateConfig(data);
-
-    if (!validation.success) {
-      console.error('[Config] Validation Failed. Errors:', validation.error.format());
-      return defaultConfig;
-    }
-
-    return validation.data!;
-  } catch (error) {
-    console.error('[Config] Unexpected Error:', error);
-    return defaultConfig;
+  } catch (err) {
+    console.warn('[config] Failed to load from DB, falling back to local file:', err);
   }
+
+
+  // 3. Ultimate Fallback: The hardcoded default config
+  return defaultConfig;
 }
+
 
 /**
  * Synchronously loads configuration (for server-side use)

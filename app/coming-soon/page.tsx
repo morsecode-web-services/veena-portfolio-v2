@@ -9,7 +9,7 @@ export default async function ComingSoonPage() {
             {/* Background Replicating Main Hero */}
             <div className="fixed inset-0 z-0">
                 <Image
-                    src={getAssetPath(config.home.heroBackground || '/images/home/hero-bg.jpg')}
+                    src={getAssetPath(config.home.heroBackground || 'https://placehold.co/1920x1080/14213d/d4af37?text=Hero+Image')}
                     alt="Background"
                     fill
                     className="object-cover"

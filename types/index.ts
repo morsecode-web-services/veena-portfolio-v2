@@ -64,20 +64,6 @@ export interface SiteConfig {
       eventLinkText?: string; // default "View Event Details"
     };
   };
-  spotlights: {
-    id: string;
-    title: string;
-    subtitle: string;
-    description: string;
-    features: {
-      title: string;
-      description: string;
-    }[];
-    imageUrl: string;
-    imagePosition?: string;
-    ctaText?: string;
-    ctaLink?: string;
-  }[];
   gallery: {
     images: GalleryImage[];
   };
@@ -111,6 +97,11 @@ export interface SiteConfig {
       enabled?: boolean;    // Toggle: true = gradients, false = legacy grayscale images
       opacity?: number;     // Override default opacity (0-1, default: 0.3)
     };
+  };
+  contact?: {
+    imageUrl?: string;
+    imageAlt?: string;
+    formSlugs?: string[];
   };
 }
 

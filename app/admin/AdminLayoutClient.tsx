@@ -18,6 +18,7 @@ import {
     Link as LinkIcon
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { motion as m, AnimatePresence } from 'framer-motion';
 
 interface AdminLayoutClientProps {
     children: ReactNode;
@@ -28,6 +29,7 @@ export default function AdminLayoutClient({ children }: AdminLayoutClientProps) 
     const router = useRouter();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [checkingAuth, setCheckingAuth] = useState(true);
+    const [isCollapsed, setIsCollapsed] = useState(true);
 
     const [leadsCount, setLeadsCount] = useState(0);
     const [responsesCount, setResponsesCount] = useState(0);
@@ -142,55 +144,99 @@ export default function AdminLayoutClient({ children }: AdminLayoutClientProps) 
             )}
 
             {/* Sidebar */}
-            <aside className={`
-        fixed inset-y-0 left-0 z-30 w-64 bg-navy-950 text-white transform transition-transform duration-300 ease-in-out
-        lg:translate-x-0 lg:static lg:inset-0
-        ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-      `}>
-                <div className="h-full flex flex-col">
-                    <div className="p-6">
-                        <h1 className="text-xl font-serif font-bold text-gold-400">Admin Portal</h1>
-                        <p className="text-xs text-navy-300 mt-1 uppercase tracking-widest">Aishwarya Manikarnike</p>
+            <aside 
+                onMouseEnter={() => setIsCollapsed(false)}
+                onMouseLeave={() => setIsCollapsed(true)}
+                className={`
+                    fixed inset-y-0 left-0 z-30 bg-navy-950 text-white transform transition-all duration-300 ease-in-out
+                    lg:static lg:inset-0
+                    ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+                    ${isCollapsed ? 'lg:w-[72px]' : 'lg:w-64'}
+                `}
+            >
+                <div className="h-full flex flex-col overflow-hidden">
+                    <div className={`p-6 transition-all duration-300 ${isCollapsed ? 'px-4' : 'px-6'}`}>
+                        <div className="flex items-center gap-3 overflow-hidden">
+                            <div className="min-w-[40px] h-10 bg-gold-500/10 rounded-lg flex items-center justify-center border border-gold-500/20">
+                                <PenTool className="h-5 w-5 text-gold-400" />
+                            </div>
+                            {!isCollapsed && (
+                                <m.div 
+                                    initial={{ opacity: 0 }} 
+                                    animate={{ opacity: 1 }} 
+                                    className="whitespace-nowrap"
+                                >
+                                    <h1 className="text-xl font-serif font-bold text-gold-400">Admin</h1>
+                                    <p className="text-[10px] text-navy-300 uppercase tracking-[0.2em]">Portfolio CMS</p>
+                                </m.div>
+                            )}
+                        </div>
                     </div>
 
-                    <nav className="flex-1 px-4 space-y-2">
+                    <nav className="flex-1 px-3 space-y-1">
                         {navItems.map((item) => {
                             const Icon = item.icon;
                             const isActive = pathname === item.href;
-                            // @ts-ignore - Adding dynamic badge property
                             const badgeCount = item.badge ?? 0;
 
                             return (
                                 <Link
                                     key={item.name}
                                     href={item.href}
+                                    title={isCollapsed ? item.name : ''}
                                     className={`
-                    flex items-center gap-3 px-4 py-3 rounded-lg transition-colors relative
-                    ${isActive
-                                            ? 'bg-navy-800 text-gold-400 border-l-4 border-gold-400'
-                                            : 'text-navy-100 hover:bg-navy-900 hover:text-white'}
-                  `}
+                                        flex items-center gap-4 px-3 py-3 rounded-xl transition-all relative group
+                                        ${isActive
+                                            ? 'bg-gold-500/10 text-gold-400 shadow-[inset_0_0_20px_rgba(234,179,8,0.05)]'
+                                            : 'text-navy-300 hover:bg-white/5 hover:text-white'}
+                                    `}
                                     onClick={() => setIsSidebarOpen(false)}
                                 >
-                                    <Icon className="h-5 w-5" />
-                                    <span className="font-medium text-sm">{item.name}</span>
+                                    <div className="min-w-[24px] flex justify-center">
+                                        <Icon className={`h-5 w-5 transition-transform duration-300 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`} />
+                                    </div>
+                                    
+                                    {!isCollapsed && (
+                                        <m.span 
+                                            initial={{ opacity: 0, x: -10 }} 
+                                            animate={{ opacity: 1, x: 0 }}
+                                            className="font-medium text-sm whitespace-nowrap"
+                                        >
+                                            {item.name}
+                                        </m.span>
+                                    )}
+
                                     {badgeCount > 0 && (
-                                        <span className="absolute right-3 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
+                                        <span className={`
+                                            absolute bg-red-500 text-white text-[10px] font-bold rounded-full text-center
+                                            ${isCollapsed 
+                                                ? 'top-2 right-2 w-4 h-4 flex items-center justify-center' 
+                                                : 'right-3 px-1.5 py-0.5 min-w-[18px]'}
+                                        `}>
                                             {badgeCount}
                                         </span>
+                                    )}
+
+                                    {isActive && !isCollapsed && (
+                                        <m.div 
+                                            layoutId="active-indicator" 
+                                            className="absolute left-0 w-1 h-6 bg-gold-400 rounded-r-full" 
+                                        />
                                     )}
                                 </Link>
                             );
                         })}
                     </nav>
 
-                    <div className="p-4 mt-auto">
+                    <div className="p-3 mt-auto border-t border-white/5">
                         <button
                             onClick={handleLogout}
-                            className="flex items-center gap-3 w-full px-4 py-3 text-navy-200 hover:text-white hover:bg-navy-900 rounded-lg transition-colors"
+                            className="flex items-center gap-4 w-full px-3 py-3 text-navy-400 hover:text-red-400 hover:bg-red-500/5 rounded-xl transition-all group"
                         >
-                            <LogOut className="h-5 w-5" />
-                            <span className="font-medium text-sm">Logout</span>
+                            <div className="min-w-[24px] flex justify-center">
+                                <LogOut className="h-5 w-5 group-hover:-translate-x-1 transition-transform" />
+                            </div>
+                            {!isCollapsed && <span className="font-medium text-sm">Logout</span>}
                         </button>
                     </div>
                 </div>

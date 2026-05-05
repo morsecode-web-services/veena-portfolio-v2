@@ -13,19 +13,33 @@ import {
     Eye,
     CheckCircle2,
     AlertCircle,
-    Loader2
+    Loader2,
+    Grid3X3,
+    Zap,
+    Plus,
+    Trash2,
+    MoveUp,
+    MoveDown
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import { SiteConfig } from '@/types';
+import { SiteConfig, GalleryImage } from '@/types';
 import { Button } from '@/components/system/Button';
+import { CloudinaryUpload } from '@/components/admin/CloudinaryUpload';
 
 export default function ConfigPage() {
-    const [activeTab, setActiveTab] = useState<'artist' | 'home' | 'layout'>('artist');
+    const [activeTab, setActiveTab] = useState<'artist' | 'home' | 'gallery' | 'layout'>('artist');
     const [config, setConfig] = useState<SiteConfig | null>(null);
     const [originalConfig, setOriginalConfig] = useState<SiteConfig | null>(null);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [status, setStatus] = useState<{ type: 'success' | 'error', message: string } | null>(null);
+    const [pendingDeletions, setPendingDeletions] = useState<Set<string>>(new Set());
+
+    const trackDeletion = (url?: string) => {
+        if (url && url.includes('cloudinary.com')) {
+            setPendingDeletions(prev => new Set(prev).add(url));
+        }
+    };
 
     useEffect(() => {
         fetchConfig();
@@ -67,8 +81,29 @@ export default function ConfigPage() {
 
             if (res.ok) {
                 const result = await res.json();
+                
+                // If there are pending deletions, call the cleanup API
+                if (pendingDeletions.size > 0) {
+                    try {
+                        const deleteRes = await fetch('/api/admin/cloudinary/delete', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${session.access_token}`
+                            },
+                            body: JSON.stringify({ urls: Array.from(pendingDeletions) })
+                        });
+                        if (!deleteRes.ok) {
+                            console.error('Failed to perform Cloudinary cleanup:', await deleteRes.json());
+                        }
+                    } catch (err) {
+                        console.error('Cloudinary cleanup error:', err);
+                    }
+                }
+
                 setConfig(result.data);
                 setOriginalConfig(JSON.parse(JSON.stringify(result.data)));
+                setPendingDeletions(new Set()); // Clear pending deletions on success
                 setStatus({ type: 'success', message: 'Configuration saved successfully!' });
             } else {
                 const err = await res.json();
@@ -85,6 +120,7 @@ export default function ConfigPage() {
     const handleReset = () => {
         if (originalConfig) {
             setConfig(JSON.parse(JSON.stringify(originalConfig)));
+            setPendingDeletions(new Set());
             setStatus(null);
         }
     };
@@ -158,8 +194,15 @@ export default function ConfigPage() {
                             active={activeTab === 'home'}
                             onClick={() => setActiveTab('home')}
                             icon={ImageIcon}
-                            label="Hero & Home"
-                            description="Visual elements & stats"
+                            label="Hero Section"
+                            description="Visual entrance"
+                        />
+                        <TabButton
+                            active={activeTab === 'gallery'}
+                            onClick={() => setActiveTab('gallery')}
+                            icon={Grid3X3}
+                            label="Performance Gallery"
+                            description="Image collection"
                         />
                         <TabButton
                             active={activeTab === 'layout'}
@@ -215,6 +258,10 @@ export default function ConfigPage() {
                                                         setConfig({ ...config, artist: { ...config.artist, fullBio: newBio as any } });
                                                     }}
                                                     onRemove={() => {
+                                                        const block = config.artist.fullBio[idx];
+                                                        if (typeof block === 'object' && 'imageUrl' in block) {
+                                                            trackDeletion((block as any).imageUrl);
+                                                        }
                                                         const newBio = config.artist.fullBio.filter((_, i) => i !== idx);
                                                         setConfig({ ...config, artist: { ...config.artist, fullBio: newBio } });
                                                     }}
@@ -254,19 +301,22 @@ export default function ConfigPage() {
                                     className="space-y-8"
                                 >
                                     <SectionTitle title="Hero Section" description="The grand entrance of your portfolio." />
-                                    <InputField
-                                        label="Hero Title"
-                                        value={config.home.heroTitle || ''}
-                                        onChange={(v) => setConfig({ ...config, home: { ...config.home, heroTitle: v } })}
-                                    />
-                                    <div className="grid grid-cols-2 gap-6">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-end">
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-bold uppercase tracking-wider text-navy-400 ml-1">Hero Background</label>
+                                            <CloudinaryUpload
+                                                value={config.home.heroBackground}
+                                                onChange={(url) => {
+                                                    if (config.home.heroBackground && config.home.heroBackground !== url) {
+                                                        trackDeletion(config.home.heroBackground);
+                                                    }
+                                                    setConfig({ ...config, home: { ...config.home, heroBackground: url } });
+                                                }}
+                                                label="Upload Hero Background"
+                                            />
+                                        </div>
                                         <InputField
-                                            label="Background Image Path"
-                                            value={config.home.heroBackground || ''}
-                                            onChange={(v) => setConfig({ ...config, home: { ...config.home, heroBackground: v } })}
-                                        />
-                                        <InputField
-                                            label="Tagline"
+                                            label="Hero Tagline (Top)"
                                             value={config.home.heroTagline || ''}
                                             onChange={(v) => setConfig({ ...config, home: { ...config.home, heroTagline: v } })}
                                         />
@@ -310,8 +360,279 @@ export default function ConfigPage() {
                                             ))}
                                         </div>
                                     </div>
+
+                                    <div className="space-y-4 pt-4">
+                                        <div className="flex items-center justify-between">
+                                            <label className="text-xs font-bold uppercase tracking-wider text-navy-400 ml-1">Hero Highlights (Carousel)</label>
+                                            <div className="flex items-center gap-4">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Enable Carousel</span>
+                                                    <input 
+                                                        type="checkbox" 
+                                                        checked={config.home.featuredCarousel?.enabled ?? true}
+                                                        onChange={(e) => setConfig({ 
+                                                            ...config, 
+                                                            home: { 
+                                                                ...config.home, 
+                                                                featuredCarousel: { 
+                                                                    ...(config.home.featuredCarousel || { enabled: true, items: [] }), 
+                                                                    enabled: e.target.checked 
+                                                                } 
+                                                            } 
+                                                        })}
+                                                        className="w-4 h-4 rounded border-gray-300 text-gold-600 focus:ring-gold-500"
+                                                    />
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Show Upcoming Event</span>
+                                                    <input 
+                                                        type="checkbox" 
+                                                        checked={config.home.featuredCarousel?.showUpcomingEvent ?? true}
+                                                        onChange={(e) => setConfig({ 
+                                                            ...config, 
+                                                            home: { 
+                                                                ...config.home, 
+                                                                featuredCarousel: { 
+                                                                    ...(config.home.featuredCarousel || { enabled: true, items: [] }), 
+                                                                    showUpcomingEvent: e.target.checked 
+                                                                } 
+                                                            } 
+                                                        })}
+                                                        className="w-4 h-4 rounded border-gray-300 text-gold-600 focus:ring-gold-500"
+                                                    />
+                                                </div>
+                                                <Button 
+                                                    size="sm" 
+                                                    variant="secondary"
+                                                    onClick={() => {
+                                                        const newItem = {
+                                                            id: `highlight-${Date.now()}`,
+                                                            title: 'New Achievement',
+                                                            description: 'Details about this highlight...',
+                                                            subtitle: 'Featured',
+                                                            image: ''
+                                                        };
+                                                        const currentCarousel = config.home.featuredCarousel || { enabled: true, items: [] };
+                                                        setConfig({ 
+                                                            ...config, 
+                                                            home: { 
+                                                                ...config.home, 
+                                                                featuredCarousel: { 
+                                                                    ...currentCarousel, 
+                                                                    items: [...currentCarousel.items, newItem] 
+                                                                } 
+                                                            } 
+                                                        });
+                                                    }}
+                                                >
+                                                    <Plus className="h-3 w-3 mr-1" /> Add Highlight
+                                                </Button>
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-4">
+                                            {config.home.featuredCarousel?.items.map((item, idx) => (
+                                                <div key={item.id} className="p-4 bg-white border border-slate-200 rounded-xl space-y-4 shadow-sm group relative">
+                                                    <div className="absolute top-2 right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <button 
+                                                            disabled={idx === 0}
+                                                            onClick={() => {
+                                                                const items = [...(config.home.featuredCarousel?.items || [])];
+                                                                [items[idx], items[idx - 1]] = [items[idx - 1], items[idx]];
+                                                                setConfig({ ...config, home: { ...config.home, featuredCarousel: { ...(config.home.featuredCarousel!), items } } });
+                                                            }}
+                                                            className="p-1 hover:text-gold-600 disabled:opacity-30"
+                                                        >
+                                                            <MoveUp className="h-3 w-3" />
+                                                        </button>
+                                                        <button 
+                                                            disabled={idx === (config.home.featuredCarousel?.items.length || 0) - 1}
+                                                            onClick={() => {
+                                                                const items = [...(config.home.featuredCarousel?.items || [])];
+                                                                [items[idx], items[idx + 1]] = [items[idx + 1], items[idx]];
+                                                                setConfig({ ...config, home: { ...config.home, featuredCarousel: { ...(config.home.featuredCarousel!), items } } });
+                                                            }}
+                                                            className="p-1 hover:text-gold-600 disabled:opacity-30"
+                                                        >
+                                                            <MoveDown className="h-3 w-3" />
+                                                        </button>
+                                                        <button 
+                                                            onClick={() => {
+                                                                if (item.image) trackDeletion(item.image);
+                                                                const items = config.home.featuredCarousel?.items.filter((_, i) => i !== idx);
+                                                                setConfig({ ...config, home: { ...config.home, featuredCarousel: { ...(config.home.featuredCarousel!), items: items || [] } } });
+                                                            }}
+                                                            className="p-1 text-slate-400 hover:text-red-500 ml-1"
+                                                        >
+                                                            <Trash2 className="h-3.5 w-3.5" />
+                                                        </button>
+                                                    </div>
+
+                                                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                                        <div className="md:col-span-1">
+                                                            <CloudinaryUpload
+                                                                value={item.image}
+                                                                onChange={(url) => {
+                                                                    const items = [...(config.home.featuredCarousel?.items || [])];
+                                                                    if (item.image && item.image !== url) trackDeletion(item.image);
+                                                                    items[idx] = { ...item, image: url };
+                                                                    setConfig({ ...config, home: { ...config.home, featuredCarousel: { ...(config.home.featuredCarousel!), items } } });
+                                                                }}
+                                                                label="Highlight Image"
+                                                            />
+                                                        </div>
+                                                        <div className="md:col-span-3 space-y-3">
+                                                            <div className="grid grid-cols-2 gap-3">
+                                                                <InputField
+                                                                    label="Title"
+                                                                    value={item.title}
+                                                                    onChange={(v) => {
+                                                                        const items = [...(config.home.featuredCarousel?.items || [])];
+                                                                        items[idx] = { ...item, title: v };
+                                                                        setConfig({ ...config, home: { ...config.home, featuredCarousel: { ...(config.home.featuredCarousel!), items } } });
+                                                                    }}
+                                                                />
+                                                                <InputField
+                                                                    label="Subtitle (Gold Label)"
+                                                                    value={item.subtitle || ''}
+                                                                    onChange={(v) => {
+                                                                        const items = [...(config.home.featuredCarousel?.items || [])];
+                                                                        items[idx] = { ...item, subtitle: v };
+                                                                        setConfig({ ...config, home: { ...config.home, featuredCarousel: { ...(config.home.featuredCarousel!), items } } });
+                                                                    }}
+                                                                />
+                                                            </div>
+                                                            <TextAreaField
+                                                                label="Description"
+                                                                value={item.description}
+                                                                onChange={(v) => {
+                                                                    const items = [...(config.home.featuredCarousel?.items || [])];
+                                                                    items[idx] = { ...item, description: v };
+                                                                    setConfig({ ...config, home: { ...config.home, featuredCarousel: { ...(config.home.featuredCarousel!), items } } });
+                                                                }}
+                                                            />
+                                                            <div className="grid grid-cols-2 gap-3">
+                                                                <InputField
+                                                                    label="Button Link"
+                                                                    value={item.link || ''}
+                                                                    onChange={(v) => {
+                                                                        const items = [...(config.home.featuredCarousel?.items || [])];
+                                                                        items[idx] = { ...item, link: v };
+                                                                        setConfig({ ...config, home: { ...config.home, featuredCarousel: { ...(config.home.featuredCarousel!), items } } });
+                                                                    }}
+                                                                />
+                                                                <InputField
+                                                                    label="Button Text"
+                                                                    value={item.linkText || ''}
+                                                                    onChange={(v) => {
+                                                                        const items = [...(config.home.featuredCarousel?.items || [])];
+                                                                        items[idx] = { ...item, linkText: v };
+                                                                        setConfig({ ...config, home: { ...config.home, featuredCarousel: { ...(config.home.featuredCarousel!), items } } });
+                                                                    }}
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
                                 </m.div>
                             )}
+
+                             {activeTab === 'gallery' && (
+                                <m.div
+                                    key="gallery"
+                                    initial={{ opacity: 0, x: 20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    exit={{ opacity: 0, x: -20 }}
+                                    className="space-y-8"
+                                >
+                                    <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+                                        <SectionTitle title="Performance Gallery" description="Manage the images shown in your portfolio gallery." />
+                                        <Button 
+                                            size="sm" 
+                                            variant="secondary"
+                                            onClick={() => {
+                                                const newImage: GalleryImage = {
+                                                    id: `gallery-${Date.now()}`,
+                                                    src: '',
+                                                    alt: 'New Performance Image',
+                                                    width: 1200,
+                                                    height: 1600
+                                                };
+                                                setConfig({ ...config, gallery: { images: [newImage, ...(config.gallery?.images || [])] } });
+                                            }}
+                                        >
+                                            <Plus className="h-4 w-4 mr-1" /> Add Image
+                                        </Button>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        {config.gallery?.images.map((img, idx) => (
+                                            <div key={img.id} className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-4 group">
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-[10px] font-bold uppercase tracking-widest text-navy-400">Image #{config.gallery.images.length - idx}</span>
+                                                    <div className="flex items-center gap-1">
+                                                        <button 
+                                                            disabled={idx === 0}
+                                                            onClick={() => {
+                                                                const newImages = [...config.gallery.images];
+                                                                [newImages[idx], newImages[idx - 1]] = [newImages[idx - 1], newImages[idx]];
+                                                                setConfig({ ...config, gallery: { images: newImages } });
+                                                            }}
+                                                            className="p-1 hover:text-gold-600 disabled:opacity-30"
+                                                        >
+                                                            <MoveUp className="h-3 w-3" />
+                                                        </button>
+                                                        <button 
+                                                            disabled={idx === config.gallery.images.length - 1}
+                                                            onClick={() => {
+                                                                const newImages = [...config.gallery.images];
+                                                                [newImages[idx], newImages[idx + 1]] = [newImages[idx + 1], newImages[idx]];
+                                                                setConfig({ ...config, gallery: { images: newImages } });
+                                                            }}
+                                                            className="p-1 hover:text-gold-600 disabled:opacity-30"
+                                                        >
+                                                            <MoveDown className="h-3 w-3" />
+                                                        </button>
+                                                        <button 
+                                                            onClick={() => {
+                                                                if (img.src) trackDeletion(img.src);
+                                                                const newImages = config.gallery.images.filter((_, i) => i !== idx);
+                                                                setConfig({ ...config, gallery: { images: newImages } });
+                                                            }}
+                                                            className="p-1 text-slate-400 hover:text-red-500 ml-2"
+                                                        >
+                                                            <Trash2 className="h-3.5 w-3.5" />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                <CloudinaryUpload 
+                                                    value={img.src}
+                                                    onChange={(url) => {
+                                                        const newImages = [...config.gallery.images];
+                                                        if (img.src && img.src !== url) trackDeletion(img.src);
+                                                        newImages[idx] = { ...img, src: url };
+                                                        setConfig({ ...config, gallery: { images: newImages } });
+                                                    }}
+                                                    label="Upload Gallery Image"
+                                                />
+                                                <InputField 
+                                                    label="Alt Text / Caption"
+                                                    value={img.alt}
+                                                    onChange={(v) => {
+                                                        const newImages = [...(config.gallery?.images || [])];
+                                                        newImages[idx] = { ...img, alt: v };
+                                                        setConfig({ ...config, gallery: { images: newImages } });
+                                                    }}
+                                                />
+                                            </div>
+                                        ))}
+                                    </div>
+                                </m.div>
+                            )}
+
 
                             {activeTab === 'layout' && (
                                 <m.div

@@ -75,26 +75,23 @@ try {
       }
     }
     
-    // Check for config file
-    console.log('\n📄 Configuration File:');
-    const configPath = path.join(__dirname, 'public', 'config', 'site-config.json');
-    if (fs.existsSync(configPath)) {
-      console.log('   ✅ site-config.json found');
+    // Check for Supabase configuration
+    console.log('\n📡 Supabase Configuration:');
+    const envPath = path.join(__dirname, '.env.local');
+    if (fs.existsSync(envPath)) {
+      const envContent = fs.readFileSync(envPath, 'utf8');
+      const hasUrl = envContent.includes('NEXT_PUBLIC_SUPABASE_URL');
+      const hasKey = envContent.includes('NEXT_PUBLIC_SUPABASE_ANON_KEY');
       
-      try {
-        const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-        console.log(`   ✅ Valid JSON`);
-        console.log(`   Artist: ${config.artist?.name || 'Not set'}`);
-        console.log(`   Featured videos: ${config.home?.featuredVideos?.length || 0}`);
-        console.log(`   Gallery images: ${config.gallery?.images?.length || 0}`);
-      } catch (e) {
-        console.log('   ❌ Invalid JSON - please fix syntax errors');
+      if (hasUrl && hasKey) {
+        console.log('   ✅ Supabase environment variables found in .env.local');
+      } else {
+        console.log('   ⚠️  Supabase environment variables missing in .env.local');
       }
     } else {
-      console.log('   ❌ site-config.json NOT found');
-      console.log('   Create it at: public/config/site-config.json');
+      console.log('   ⚠️  .env.local NOT found (ignore if using platform environment variables)');
     }
-    
+
     // Check for GitHub Actions workflow
     console.log('\n🤖 GitHub Actions:');
     const workflowPath = path.join(__dirname, '.github', 'workflows', 'deploy.yml');
@@ -134,14 +131,6 @@ console.log('\n🏗️  Build Status:');
 const outDir = path.join(__dirname, 'out');
 if (fs.existsSync(outDir)) {
   console.log('   ✅ Build output exists (out/ directory)');
-  
-  const configInOut = path.join(outDir, 'config', 'site-config.json');
-  if (fs.existsSync(configInOut)) {
-    console.log('   ✅ Config file copied to build output');
-  } else {
-    console.log('   ⚠️  Config file NOT in build output');
-    console.log('   Run: npm run build');
-  }
 } else {
   console.log('   ⚠️  No build output found');
   console.log('   Run: npm run build');

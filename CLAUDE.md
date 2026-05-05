@@ -32,7 +32,7 @@ The site is configured for GitHub Pages deployment with basePath and assetPrefix
 ## Architecture Overview
 
 ### Configuration-Driven Design
-The entire public site is powered by a central configuration file at `public/config/site-config.json`. This JSON file defines:
+The entire public site is powered by a central configuration system backed by **Supabase**. This defines:
 - Artist information and biography (supports structured blocks: paragraph, heading, list)
 - Section ordering and visibility (`layoutOrder`, `sections`)
 - Music layout mode: `"carousel"` (multi-select stacked) or `"grid"` (classic tabs)
@@ -49,7 +49,7 @@ The codebase uses a sophisticated path resolution system to handle multiple depl
 ### Data Flow Architecture
 
 **Public Site (app/page.tsx)**:
-1. Server-side loads and validates `site-config.json`
+1. Server-side loads and validates the configuration from Supabase
 2. Fetches dynamic data from Supabase (videos, events, blogs) using the anonymous client (`lib/supabase.ts`)
 3. Uses ISR with 15-minute revalidation (`revalidate = 900`)
 4. Passes config and data props to individual section components
@@ -156,15 +156,13 @@ Required for full functionality (see `.env.example`):
 
 ### Adding a New Section
 1. Create component in `components/sections/`
-2. Add section to `layoutOrder` and `sections` in `site-config.json`
-3. Update `app/page.tsx` switch statement to render the section
-4. Add section to TypeScript types if needed
+2. Update the configuration through the **Admin Architect** dashboard.
+3. Update section to TypeScript types if needed
 
 ### Modifying Site Config Schema
 1. Update Zod schemas in `lib/config.ts` (e.g., `SiteConfigSchema`)
 2. Update TypeScript types in `types/index.ts`
 3. Update `defaultConfig` fallback in `lib/config.ts`
-4. Update `site-config.json` with new fields
 
 ### Working with Images
 Always use `getAssetPath()` from `lib/config.ts` for static assets:

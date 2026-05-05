@@ -124,11 +124,6 @@ export default function BlogPostRenderer({ blog, previewMode = false }: BlogPost
                             <div className="flex flex-col items-center text-center space-y-8">
                                 <div className="w-16 h-[1px] bg-gold-400/50"></div>
 
-                                <blockquote className="max-w-2xl">
-                                    <p className="text-2xl md:text-3xl font-serif text-navy-900 italic leading-relaxed">
-                                        &ldquo;Music is the mediator between the spiritual and the sensual life.&rdquo;
-                                    </p>
-                                </blockquote>
 
                                 <div className="flex flex-col items-center gap-4">
                                     <span className="text-xs font-black text-gray-400 uppercase tracking-[0.2em]">Interested in collaboration?</span>

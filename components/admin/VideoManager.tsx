@@ -5,11 +5,12 @@ import { supabase } from '@/lib/supabase';
 import { Video } from '@/types/video';
 import { Trash2, ExternalLink, Plus, Edit2, Check, Star, RefreshCw } from 'lucide-react';
 import Image from 'next/image';
-import siteConfig from '@/public/config/site-config.json';
+import type { SiteConfig } from '@/types';
 import { extractYoutubeId } from '@/lib/utils';
 
 export function VideoManager() {
     const [videos, setVideos] = useState<Video[]>([]);
+    const [siteConfig, setSiteConfig] = useState<SiteConfig | null>(null);
     const [loading, setLoading] = useState(true);
     const [syncing, setSyncing] = useState(false);
     const [importing, setImporting] = useState(false);
@@ -18,11 +19,11 @@ export function VideoManager() {
 
     // Form state for new video
     const [url, setUrl] = useState('');
-    const [category, setCategory] = useState(siteConfig.music.categories[0]?.id || '');
+    const [category, setCategory] = useState('');
     const [subcategory, setSubcategory] = useState('');
     const [isFeatured, setIsFeatured] = useState(false);
 
-    const activeCategory = siteConfig.music.categories.find(c => c.id === category);
+    const activeCategory = siteConfig?.music.categories.find(c => c.id === category);
 
     useEffect(() => {
         if (activeCategory && activeCategory.subcategories.length > 0) {
@@ -33,8 +34,27 @@ export function VideoManager() {
     }, [category, activeCategory]);
 
     useEffect(() => {
-        fetchVideos();
+        const init = async () => {
+            await fetchSiteConfig();
+            await fetchVideos();
+        };
+        init();
     }, []);
+
+    const fetchSiteConfig = async () => {
+        try {
+            const resp = await fetch('/api/admin/config');
+            if (resp.ok) {
+                const data = await resp.json();
+                setSiteConfig(data);
+                if (data.music.categories.length > 0) {
+                    setCategory(data.music.categories[0].id);
+                }
+            }
+        } catch (e) {
+            console.error('Failed to fetch site config:', e);
+        }
+    };
 
     const fetchVideos = async () => {
         setLoading(true);
@@ -50,7 +70,8 @@ export function VideoManager() {
     };
 
     const handleImportFromConfig = async () => {
-        if (!confirm('This will import all videos from site-config.json to Supabase. Continue?')) return;
+        if (!siteConfig) return;
+        if (!confirm('This will import all videos from the current configuration to Supabase. Continue?')) return;
         setImporting(true);
         try {
             let count = 0;
@@ -59,15 +80,17 @@ export function VideoManager() {
 
             // 1. Featured videos
             siteConfig.home.featuredVideos.forEach(v => {
-                configVideos.push({ ...v, is_featured: true, category_id: 'veena' });
+                const videoObj = typeof v === 'string' ? { url: v } : v;
+                configVideos.push({ ...videoObj, is_featured: true, category_id: 'veena' });
             });
 
             // 2. Category videos
             siteConfig.music.categories.forEach(cat => {
                 cat.subcategories.forEach(sub => {
                     sub.videos.forEach(v => {
+                        const videoObj = typeof v === 'string' ? { url: v } : v;
                         configVideos.push({
-                            ...v,
+                            ...videoObj,
                             category_id: cat.id,
                             subcategory_id: sub.id,
                             is_featured: false
@@ -204,9 +227,9 @@ export function VideoManager() {
         }
     };
 
-    if (loading) return (
+    if (loading || !siteConfig) return (
         <div className="flex items-center justify-center h-64 text-gray-500">
-            <RefreshCw className="h-8 w-8 animate-spin mr-2" /> Loading videos...
+            <RefreshCw className="h-8 w-8 animate-spin mr-2" /> {loading ? 'Loading videos...' : 'Finalizing configuration...'}
         </div>
     );
 

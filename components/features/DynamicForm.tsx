@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -295,7 +296,15 @@ export default function DynamicForm({ formSlug, fields, title, description, succ
                             <div className="mt-1">
                                 {watch(field.name) ? (
                                     <div className="relative inline-block border border-gray-200 rounded-xl overflow-hidden group">
-                                        <img src={watch(field.name) as string} alt="Upload preview" className="h-32 object-contain bg-gray-50" />
+                                        <div className="h-32 w-48 relative">
+                                            <Image 
+                                                src={watch(field.name) as string} 
+                                                alt="Upload preview" 
+                                                fill
+                                                className="object-contain bg-gray-50" 
+                                                unoptimized
+                                            />
+                                        </div>
                                         <button
                                             type="button"
                                             onClick={() => setValue(field.name, '', { shouldValidate: true })}

@@ -10,8 +10,49 @@ import GoogleAnalytics from '@/components/GoogleAnalytics';
 import MicrosoftClarity from '@/components/MicrosoftClarity';
 import VideoModal from '@/components/ui/VideoModal';
 import BackToTop from '@/components/ui/BackToTop';
-import siteConfig from '@/public/config/site-config.json';
-import { validateConfig } from '@/lib/config';
+import { validateConfig, loadConfig } from '@/lib/config';
+
+export async function generateMetadata(): Promise<Metadata> {
+  const config = await loadConfig();
+  
+  return {
+    metadataBase: new URL('https://www.aishwaryamanikarnike.com'),
+    title: {
+      default: `${config.artist.name} - ${config.artist.tagline}`,
+      template: `%s | ${config.artist.name}`
+    },
+    description: config.artist.briefBio,
+    keywords: ['Veena', 'Indian classical music', 'Carnatic music', config.artist.name, 'musician', 'veena player', 'vocalist'],
+    authors: [{ name: config.artist.name }],
+    creator: config.artist.name,
+    openGraph: {
+      title: `${config.artist.name} - ${config.artist.tagline}`,
+      description: config.artist.briefBio,
+      url: 'https://www.aishwaryamanikarnike.com',
+      siteName: config.artist.name,
+      locale: 'en_US',
+      type: 'website',
+      images: [
+        {
+          url: config.home.heroBackground || 'https://placehold.co/1200x630/14213d/d4af37?text=Veena+Performance',
+          width: 1200,
+          height: 630,
+          alt: `${config.artist.name} playing Veena`,
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${config.artist.name} Musician`,
+      description: config.artist.briefBio,
+      images: [config.home.heroBackground || 'https://placehold.co/1200x630/14213d/d4af37?text=Veena+Performance'],
+      creator: '@aishwaryaveena',
+    },
+    verification: {
+      google: 'vQ2fP-_vR4J_KzWfX_k9O_o-4pY8Wf3Y8yZ8...',
+    },
+  };
+}
 
 const inter = Inter({
   subsets: ['latin'],
@@ -25,56 +66,6 @@ const playfair = Playfair_Display({
   variable: '--font-playfair',
 });
 
-// Metadata
-export const metadata: Metadata = {
-  metadataBase: new URL('https://www.aishwaryamanikarnike.com'),
-  title: {
-    default: 'Aishwarya Manikarnike - Veena Musician',
-    template: '%s | Aishwarya Manikarnike'
-  },
-  description: 'Official website of Veena musician Aishwarya Manikarnike. Showcasing classical Indian music performances, recordings, and artistic journey.',
-  keywords: ['Veena', 'Indian classical music', 'Carnatic music', 'Aishwarya Manikarnike', 'musician', 'veena player', 'vocalist'],
-  authors: [{ name: 'Aishwarya Manikarnike' }],
-  creator: 'Aishwarya Manikarnike',
-  openGraph: {
-    title: 'Aishwarya Manikarnike - Veena Musician',
-    description: 'Official website of Veena musician Aishwarya Manikarnike',
-    url: 'https://www.aishwaryamanikarnike.com',
-    siteName: 'Aishwarya Manikarnike',
-    locale: 'en_US',
-    type: 'website',
-    images: [
-      {
-        url: '/images/home/veena-performance.jpg',
-        width: 1200,
-        height: 630,
-        alt: 'Aishwarya Manikarnike playing Veena',
-      },
-    ],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Aishwarya Manikarnike - Veena Musician',
-    description: 'Official website of Veena musician Aishwarya Manikarnike',
-    images: ['/images/home/veena-performance.jpg'],
-    creator: '@aishwaryaveena',
-  },
-  alternates: {
-    canonical: '/',
-  },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-      'max-video-preview': -1,
-      'max-image-preview': 'large',
-      'max-snippet': -1,
-    },
-  },
-};
-
 export const viewport = {
   width: 'device-width',
   initialScale: 1,
@@ -82,10 +73,6 @@ export const viewport = {
   userScalable: true,
   themeColor: '#14213d',
 };
-
-// Validate config
-const configValidation = validateConfig(siteConfig);
-const config = configValidation.success ? configValidation.data : undefined;
 
 // Generate Enhanced JSON-LD
 const generateJsonLd = (config: any) => {
@@ -118,7 +105,7 @@ const generateJsonLd = (config: any) => {
     '@id': `${siteUrl}/#musicgroup`,
     name: config.artist.name,
     url: siteUrl,
-    image: `${siteUrl}/images/home/veena-performance.jpg`,
+    image: config.home.heroBackground || 'https://placehold.co/1200x630/14213d/d4af37?text=Veena+Performance',
     description: personSchema.description,
     member: [{
       '@type': 'OrganizationRole',
@@ -168,13 +155,14 @@ const generateJsonLd = (config: any) => {
   return [personSchema, musicGroupSchema, ...videoSchemas];
 };
 
-const jsonLdData = generateJsonLd(config);
-
 export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const config = await loadConfig();
+  const jsonLdData = generateJsonLd(config);
+
   const headersList = await headers();
   const pathname = headersList.get('x-invoke-path') ?? headersList.get('x-pathname') ?? '';
   const isComingSoon = pathname.startsWith('/coming-soon');

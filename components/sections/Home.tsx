@@ -57,7 +57,7 @@ export default function Home({ config, dbVideos }: HomeProps) {
   if (!config) return null;
 
   const carouselConfig = config.home.featuredCarousel;
-  const heroBackground = config.home.heroBackground || '/images/home/hero-bg.jpg';
+  const heroBackground = config.home.heroBackground || 'https://placehold.co/1920x1080/14213d/d4af37?text=Hero+Image';
   const heroBackgroundPosition = config.home.heroBackgroundPosition || 'center 35%';
   const heroTagline = config.home.heroTagline || 'Classical Veena Artiste';
   const heroStats = config.home.heroStats || [];
