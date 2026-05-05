@@ -13,7 +13,6 @@ export function VideoManager() {
     const [siteConfig, setSiteConfig] = useState<SiteConfig | null>(null);
     const [loading, setLoading] = useState(true);
     const [syncing, setSyncing] = useState(false);
-    const [importing, setImporting] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null);
     const [editData, setEditData] = useState<Partial<Video>>({});
 
@@ -41,6 +40,20 @@ export function VideoManager() {
         init();
     }, []);
 
+    const triggerRevalidate = async () => {
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session?.access_token) {
+                await fetch('/api/admin/revalidate', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${session.access_token}` }
+                });
+            }
+        } catch (e) {
+            console.error('Failed to flush cache', e);
+        }
+    };
+
     const fetchSiteConfig = async () => {
         try {
             const resp = await fetch('/api/admin/config');
@@ -67,70 +80,6 @@ export function VideoManager() {
             setVideos(data);
         }
         setLoading(false);
-    };
-
-    const handleImportFromConfig = async () => {
-        if (!siteConfig) return;
-        if (!confirm('This will import all videos from the current configuration to Supabase. Continue?')) return;
-        setImporting(true);
-        try {
-            let count = 0;
-            // Collect all videos from config
-            const configVideos: any[] = [];
-
-            // 1. Featured videos
-            siteConfig.home.featuredVideos.forEach(v => {
-                const videoObj = typeof v === 'string' ? { url: v } : v;
-                configVideos.push({ ...videoObj, is_featured: true, category_id: 'veena' });
-            });
-
-            // 2. Category videos
-            siteConfig.music.categories.forEach(cat => {
-                cat.subcategories.forEach(sub => {
-                    sub.videos.forEach(v => {
-                        const videoObj = typeof v === 'string' ? { url: v } : v;
-                        configVideos.push({
-                            ...videoObj,
-                            category_id: cat.id,
-                            subcategory_id: sub.id,
-                            is_featured: false
-                        });
-                    });
-                });
-            });
-
-            for (const v of configVideos) {
-                const url = typeof v === 'string' ? v : v.url;
-                const title = typeof v === 'string' ? 'Legacy Performance' : v.title;
-                const vId = extractYoutubeId(url) || '';
-
-                // Fetch metadata if possible
-                const syncRes = await fetch('/api/videos/sync', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ url }),
-                });
-
-                const metadata = syncRes.ok ? await syncRes.json() : { title, thumbnail_url: `https://img.youtube.com/vi/${vId}/hqdefault.jpg`, url };
-
-                await supabase.from('videos').insert([{
-                    title: metadata.title,
-                    url: metadata.url,
-                    thumbnail_url: metadata.thumbnail_url,
-                    category_id: v.category_id,
-                    subcategory_id: v.subcategory_id || null,
-                    is_featured: v.is_featured,
-                    order_index: count++
-                }]);
-            }
-            alert('Import complete!');
-            fetchVideos();
-        } catch (error) {
-            console.error('Import failed:', error);
-            alert('Import failed. Check console.');
-        } finally {
-            setImporting(false);
-        }
     };
 
     const handleSync = async (e: React.FormEvent) => {
@@ -171,6 +120,7 @@ export function VideoManager() {
             setUrl('');
             setIsFeatured(false);
             fetchVideos();
+            triggerRevalidate();
         } catch (error: any) {
             console.error('Failed to sync video:', error);
             alert(`Error: ${error.message || 'Check console'}`);
@@ -190,6 +140,7 @@ export function VideoManager() {
 
             setVideos(videos.map(v => v.id === id ? { ...v, ...editData } : v));
             setEditingId(null);
+            triggerRevalidate();
         } catch (error) {
             console.error('Error updating video:', error);
             alert('Failed to update video');
@@ -211,6 +162,7 @@ export function VideoManager() {
         const { error } = await supabase.from('videos').delete().eq('id', id);
         if (!error) {
             fetchVideos();
+            triggerRevalidate();
         } else {
             alert('Failed to delete video');
         }
@@ -224,6 +176,7 @@ export function VideoManager() {
 
         if (!error) {
             fetchVideos();
+            triggerRevalidate();
         }
     };
 
@@ -237,14 +190,6 @@ export function VideoManager() {
         <div className="space-y-8">
             <div className="flex justify-between items-center">
                 <h1 className="text-2xl font-serif font-bold text-navy-900">Video Management</h1>
-                <button
-                    onClick={handleImportFromConfig}
-                    disabled={importing}
-                    className="px-4 py-2 bg-gold-50 text-gold-700 rounded-xl text-xs font-bold uppercase tracking-widest border border-gold-200 hover:bg-gold-100 transition-all flex items-center gap-2"
-                >
-                    {importing ? <RefreshCw className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
-                    Import from Config
-                </button>
             </div>
 
             {/* Add Video Form */}

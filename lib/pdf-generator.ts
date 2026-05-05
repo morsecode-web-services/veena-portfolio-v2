@@ -119,6 +119,9 @@ export async function generatePDF(
     // Initialize Cursor
     const cursor: Cursor = { y: MARGIN };
 
+    // Yield to main thread helper to prevent UI freezing
+    const yieldToMain = () => new Promise(resolve => setTimeout(resolve, 0));
+
     // --- Helpers ---
 
     const setFontHeader = (size: number = 24) => {
@@ -177,6 +180,10 @@ export async function generatePDF(
       const lineHeight = size * LINE_HEIGHT_SCALE + 1;
 
       for (const line of lines) {
+        // Yield occasionally on large text blocks to prevent freezing
+        if (lines.indexOf(line) % 5 === 0) {
+          await yieldToMain();
+        }
         // Check before each line
         if (cursor.y + lineHeight > pageHeight - MARGIN) {
           await addNewPage();
@@ -446,18 +453,9 @@ export async function generatePDF(
         ctx?.drawImage(img, 0, 0);
 
         if (ctx) {
-          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-          const data = imageData.data;
-          for (let i = 0; i < data.length; i += 4) {
-            // Weighted grayscale for more natural tones
-            const avg = (data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114);
-            // Apply configurable brightness adjustment
-            const adjustedAvg = avg * bgBrightness;
-            data[i] = adjustedAvg;
-            data[i + 1] = adjustedAvg;
-            data[i + 2] = adjustedAvg;
-          }
-          ctx.putImageData(imageData, 0, 0);
+          ctx.filter = `grayscale(100%) brightness(${bgBrightness * 100}%)`;
+          ctx.drawImage(img, 0, 0);
+          ctx.filter = 'none';
         }
 
         const grayscaleData = canvas.toDataURL('image/jpeg', 0.6);
@@ -549,6 +547,9 @@ export async function generatePDF(
       }
 
       drawPremiumElements(); // Border AFTER (on top)
+      
+      // Yield to main thread after creating a new page and its background
+      await yieldToMain();
     };
 
     const checkPageBreak = async (
@@ -581,6 +582,7 @@ export async function generatePDF(
     // --- Sections ---
 
     // 1. Cover Page
+    await yieldToMain();
     onProgress?.(15);
     currentSection = 'cover';
     const useGradients = config.pdf?.gradients?.enabled ?? true;
@@ -726,7 +728,7 @@ async function loadCustomFonts(pdf: jsPDF, basePath: string) {
     { name: 'Inter', style: 'bold', file: 'Inter-Bold.ttf' },
   ];
 
-  for (const font of fonts) {
+  await Promise.all(fonts.map(async (font) => {
     try {
       const url = basePath ? `${basePath}/fonts/${font.file}` : `/fonts/${font.file}`;
       const resp = await fetch(url);
@@ -734,7 +736,7 @@ async function loadCustomFonts(pdf: jsPDF, basePath: string) {
         const text = await resp.clone().text();
         if (text.startsWith('404') || text.includes('Not Found') || text.length < 1000) {
           console.warn(`Invalid font file detected for ${font.file}`);
-          continue;
+          return;
         }
 
         const blob = await resp.blob();
@@ -763,7 +765,7 @@ async function loadCustomFonts(pdf: jsPDF, basePath: string) {
     } catch (e) {
       console.warn(`Error loading font ${font.file}`, e);
     }
-  }
+  }));
 }
 
 async function renderCoverPage(pdf: jsPDF, config: any, pageWidth: number, pageHeight: number, loadImg: any, useGradients: boolean = true) {
@@ -884,6 +886,12 @@ async function loadExternalImage(url: string, basePath: string): Promise<string 
     if (url.startsWith('/') && !url.startsWith('//')) {
       const sanitizedUrl = url.replace(/^\//, '');
       finalUrl = basePath ? `${basePath}/${sanitizedUrl}` : `/${sanitizedUrl}`;
+    } else if (url.includes('res.cloudinary.com')) {
+      // Optimize Cloudinary URLs for PDF generation to drastically reduce download size
+      const uploadIndex = url.indexOf('/upload/');
+      if (uploadIndex !== -1 && !url.includes('w_')) {
+        finalUrl = url.substring(0, uploadIndex + 8) + 'w_1200,c_limit,q_80,f_auto/' + url.substring(uploadIndex + 8);
+      }
     }
     const response = await fetch(finalUrl);
     const blob = await response.blob();

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { validateConfig } from '@/lib/config';
 import { createClient } from '@supabase/supabase-js';
 import { saveDbConfig, getDbConfig } from '@/lib/db-config';
@@ -70,6 +71,12 @@ export async function POST(request: Request) {
 
         if (!success) {
             return NextResponse.json({ error: 'Failed to update database' }, { status: 500 });
+        }
+        // 4. Trigger ISR Revalidation
+        try {
+            revalidatePath('/');
+        } catch (e) {
+            console.error('[Config API] Failed to revalidate cache:', e);
         }
 
         return NextResponse.json({ success: true, data: validation.data });

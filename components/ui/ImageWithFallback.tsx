@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Image, { ImageProps } from 'next/image';
+import { CldImage } from 'next-cloudinary';
 import { m } from 'framer-motion';
 import { getBasePath, getAssetPath } from '@/lib/config';
 
@@ -91,14 +92,26 @@ export default function ImageWithFallback({
     );
   }
 
+  const isCloudinary = typeof imgSrc === 'string' && imgSrc.includes('cloudinary.com');
+
   return (
     <>
-      <Image
-        {...props}
-        src={imgSrc}
-        alt={alt}
-        onError={handleError}
-      />
+      {isCloudinary ? (
+        <CldImage
+          {...props}
+          src={imgSrc as string}
+          alt={alt}
+          onError={handleError}
+          sizes={props.sizes || "(max-width: 768px) 100vw, 100vw"}
+        />
+      ) : (
+        <Image
+          {...props}
+          src={imgSrc}
+          alt={alt}
+          onError={handleError}
+        />
+      )}
       {isRetrying && (
         <m.div
           initial={{ opacity: 0 }}

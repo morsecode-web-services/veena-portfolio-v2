@@ -17,6 +17,7 @@
     "optimize-images": "node scripts/optimize-images.js"
   },
   "dependencies": {
+    "@google-analytics/data": "^5.2.2",
     "@hookform/resolvers": "^5.2.2",
     "@react-email/components": "^0.5.7",
     "@react-email/render": "^1.4.0",
@@ -47,6 +48,7 @@
     "jspdf": "^3.0.4",
     "lucide-react": "^0.562.0",
     "next": "^15.0.5",
+    "next-cloudinary": "^6.17.5",
     "qrcode": "^1.5.4",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
@@ -54,6 +56,7 @@
     "react-hook-form": "^7.68.0",
     "react-icons": "^5.5.0",
     "react-phone-number-input": "^3.4.16",
+    "recharts": "^3.8.1",
     "resend": "^6.4.2",
     "sharp": "^0.34.5",
     "zod": "^3.23.8"

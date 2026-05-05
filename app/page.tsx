@@ -6,7 +6,7 @@ import { validateConfig, loadConfig } from '@/lib/config';
 import { supabase } from '@/lib/supabase'; // Use anon client for public fetch
 import { LoadingCard } from '@/components/system/LoadingCard';
 
-export const revalidate = 0; // Disable static caching for local testing, or set to a higher value for prod
+export const revalidate = 3600; // Enable ISR caching (1 hour), auto-flushed via admin webhook
 
 // Code-split heavy components for better performance
 const Gallery = dynamic(() => import('@/components/sections/Gallery'), {

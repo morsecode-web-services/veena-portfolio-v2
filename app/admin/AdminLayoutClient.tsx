@@ -15,7 +15,8 @@ import {
     Users,
     Settings,
     PenTool,
-    Link as LinkIcon
+    Link as LinkIcon,
+    BarChart3
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { motion as m, AnimatePresence } from 'framer-motion';
@@ -129,6 +130,7 @@ export default function AdminLayoutClient({ children }: AdminLayoutClientProps) 
         { name: 'Responses', href: '/admin/responses', icon: FileText, badge: responsesCount },
         { name: 'Smart Links', href: '/admin/smart-links', icon: LinkIcon },
         { name: 'Leads', href: '/admin/leads', icon: Users, badge: leadsCount },
+        { name: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
         { name: 'Architect', href: '/admin/config', icon: PenTool },
         { name: 'Public Site', href: '/', icon: Home },
     ];

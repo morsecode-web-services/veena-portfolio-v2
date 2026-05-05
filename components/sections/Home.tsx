@@ -3,6 +3,7 @@
 import { m } from 'framer-motion';
 import { useMemo } from 'react';
 import Image from 'next/image';
+import { CldImage } from 'next-cloudinary';
 import VideoEmbed from '@/components/ui/VideoEmbed';
 import { FeaturedCarousel } from '@/components/ui/FeaturedCarousel';
 import type { SiteConfig, FeaturedCarouselItem } from '@/types';
@@ -94,16 +95,28 @@ export default function Home({ config, dbVideos }: HomeProps) {
             transition={{ duration: shouldReduceMotion ? 0 : 1.5, ease: "easeOut" }}
             className="h-full w-full"
           >
-            <Image
-              src={getAssetPath(heroBackground)}
-              alt="Hero background"
-              fill
-              className="object-cover"
-              style={{ objectPosition: heroBackgroundPosition }}
-              priority
-              quality={80}
-              sizes="(max-width: 768px) 100vw, 100vw"
-            />
+            {getAssetPath(heroBackground).includes('cloudinary.com') ? (
+              <CldImage
+                src={getAssetPath(heroBackground)}
+                alt="Hero background"
+                fill
+                className="object-cover"
+                style={{ objectPosition: heroBackgroundPosition }}
+                priority
+                sizes="(max-width: 768px) 100vw, 100vw"
+              />
+            ) : (
+              <Image
+                src={getAssetPath(heroBackground)}
+                alt="Hero background"
+                fill
+                className="object-cover"
+                style={{ objectPosition: heroBackgroundPosition }}
+                priority
+                quality={80}
+                sizes="(max-width: 768px) 100vw, 100vw"
+              />
+            )}
           </m.div>
 
           {/* Overlays for Depth */}
