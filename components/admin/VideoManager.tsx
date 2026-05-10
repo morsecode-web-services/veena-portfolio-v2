@@ -7,8 +7,10 @@ import { Trash2, ExternalLink, Plus, Edit2, Check, Star, RefreshCw } from 'lucid
 import Image from 'next/image';
 import type { SiteConfig } from '@/types';
 import { extractYoutubeId } from '@/lib/utils';
+import { useToast } from '@/context/ToastContext';
 
 export function VideoManager() {
+    const { addToast } = useToast();
     const [videos, setVideos] = useState<Video[]>([]);
     const [siteConfig, setSiteConfig] = useState<SiteConfig | null>(null);
     const [loading, setLoading] = useState(true);
@@ -121,9 +123,10 @@ export function VideoManager() {
             setIsFeatured(false);
             fetchVideos();
             triggerRevalidate();
+            addToast('Video added and synced successfully', 'success');
         } catch (error: any) {
             console.error('Failed to sync video:', error);
-            alert(`Error: ${error.message || 'Check console'}`);
+            addToast(error.message || 'Failed to sync video', 'error');
         } finally {
             setSyncing(false);
         }
@@ -141,9 +144,10 @@ export function VideoManager() {
             setVideos(videos.map(v => v.id === id ? { ...v, ...editData } : v));
             setEditingId(null);
             triggerRevalidate();
+            addToast('Video updated successfully', 'success');
         } catch (error) {
             console.error('Error updating video:', error);
-            alert('Failed to update video');
+            addToast('Failed to update video', 'error');
         }
     };
 
@@ -163,8 +167,9 @@ export function VideoManager() {
         if (!error) {
             fetchVideos();
             triggerRevalidate();
+            addToast('Video deleted successfully', 'success');
         } else {
-            alert('Failed to delete video');
+            addToast('Failed to delete video', 'error');
         }
     };
 
@@ -177,6 +182,7 @@ export function VideoManager() {
         if (!error) {
             fetchVideos();
             triggerRevalidate();
+            addToast(`Video ${!current ? 'featured' : 'unfeatured'} successfully`, 'success');
         }
     };
 

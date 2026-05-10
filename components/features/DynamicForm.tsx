@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -29,13 +29,32 @@ interface DynamicFormProps {
     title: string;
     description?: string;
     successMessage?: string;
+    requiresPayment?: boolean;
+    paymentType?: 'subscription' | 'one_time';
+    razorpayPlanId?: string;
+    razorpayAmount?: number;
 }
 
-export default function DynamicForm({ formSlug, fields, title, description, successMessage }: DynamicFormProps) {
+export default function DynamicForm({ formSlug, fields, title, description, successMessage, requiresPayment, paymentType = 'subscription', razorpayPlanId, razorpayAmount }: DynamicFormProps) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
     const [errorMessage, setErrorMessage] = useState<string>('');
     const [uploadingFields, setUploadingFields] = useState<Record<string, boolean>>({});
+
+    // Load Razorpay script if payment is required
+    useEffect(() => {
+        if (requiresPayment) {
+            const script = document.createElement('script');
+            script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+            script.async = true;
+            document.body.appendChild(script);
+            return () => {
+                if (document.body.contains(script)) {
+                    document.body.removeChild(script);
+                }
+            };
+        }
+    }, [requiresPayment]);
 
     // Build dynamic validation schema
     const schemaShape: Record<string, any> = {};
@@ -85,30 +104,96 @@ export default function DynamicForm({ formSlug, fields, title, description, succ
         resolver: zodResolver(dynamicSchema),
     });
 
+    const saveFormData = async (data: FormData, paymentData: any = {}) => {
+        const response = await fetch('/api/send-email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                formSlug,
+                form_data: data,
+                name: data.name || 'Anonymous',
+                email: data.email || null,
+                phone: data.phone || null,
+                inquiryType: formSlug,
+                message: data.message || 'No message provided',
+                ...paymentData
+            }),
+        });
+
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || 'Failed to send message');
+    };
+
     const onSubmit = async (data: FormData) => {
         setIsSubmitting(true);
         setSubmitStatus('idle');
         setErrorMessage('');
 
         try {
-            const response = await fetch('/api/send-email', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    formSlug,
-                    form_data: data,
-                    name: data.name || 'Anonymous',
-                    email: data.email || null,
-                    phone: data.phone || null,
-                    inquiryType: formSlug,
-                    message: data.message || 'No message provided',
-                }),
-            });
+            // 1. Payment Flow
+            if (requiresPayment && razorpayPlanId) {
+                const checkoutRes = await fetch('/api/checkout', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        plan_id: razorpayPlanId,
+                        paymentType,
+                        amount: razorpayAmount,
+                        formSlug,
+                        phone: data.phone,
+                        email: data.email,
+                        name: data.name
+                    })
+                });
+                
+                const checkoutData = await checkoutRes.json();
+                if (!checkoutRes.ok) throw new Error(checkoutData.error || 'Failed to initialize checkout');
 
-            const result = await response.json();
+                const options = {
+                    key: checkoutData.key_id,
+                    subscription_id: checkoutData.type === 'subscription' ? checkoutData.subscription_id : undefined,
+                    order_id: checkoutData.type === 'order' ? checkoutData.order_id : undefined,
+                    name: "Aishwarya Manikarnike",
+                    description: title,
+                    handler: async function (response: any) {
+                        try {
+                            setIsSubmitting(true);
+                            await saveFormData(data, {
+                                payment_status: 'paid',
+                                razorpay_subscription_id: response.razorpay_subscription_id || null,
+                                razorpay_order_id: response.razorpay_order_id || null,
+                                razorpay_payment_id: response.razorpay_payment_id || null
+                            });
+                            analytics.contactFormSubmit(true, undefined, formSlug);
+                            setSubmitStatus('success');
+                            reset();
+                        } catch (err: any) {
+                            setSubmitStatus('error');
+                            setErrorMessage('Payment succeeded, but we failed to save your submission. Please contact support.');
+                        } finally {
+                            setIsSubmitting(false);
+                        }
+                    },
+                    prefill: {
+                        name: data.name || '',
+                        email: data.email || '',
+                        contact: data.phone || ''
+                    },
+                    theme: { color: "#0f172a" }
+                };
+                
+                const rzp = new (window as any).Razorpay(options);
+                rzp.on('payment.failed', function (response: any){
+                    setIsSubmitting(false);
+                    setSubmitStatus('error');
+                    setErrorMessage(response.error.description || 'Payment failed or was cancelled.');
+                });
+                rzp.open();
+                return; // Pause the form submission, let Razorpay handler take over
+            }
 
-            if (!response.ok) throw new Error(result.error || 'Failed to send message');
-
+            // 2. Standard Flow (No Payment)
+            await saveFormData(data);
             analytics.contactFormSubmit(true, undefined, formSlug);
             setSubmitStatus('success');
             reset();
@@ -118,7 +203,9 @@ export default function DynamicForm({ formSlug, fields, title, description, succ
             setErrorMessage(error instanceof Error ? error.message : 'Something went wrong');
             analytics.contactFormSubmit(false, errorMessage);
         } finally {
-            setIsSubmitting(false);
+            if (!requiresPayment) {
+                setIsSubmitting(false);
+            }
         }
     };
 

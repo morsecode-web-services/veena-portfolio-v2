@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-export const dynamic = 'force-static';
+export const dynamic = 'force-dynamic';
 import { Resend } from 'resend';
 import { render } from '@react-email/render';
 import { createClient } from '@supabase/supabase-js';
@@ -66,7 +66,7 @@ export async function POST(request: Request) {
 
     // Parse request body
     const body = await request.json();
-    const { name, email, phone, inquiryType, message, formSlug, form_data } = body;
+    const { name, email, phone, inquiryType, message, formSlug, form_data, payment_status, razorpay_subscription_id, razorpay_customer_id, razorpay_order_id, razorpay_payment_id } = body;
 
     // Validate if either old style or new style dynamic form is used
     if (!formSlug && (!name || !email || !phone || !inquiryType || !message)) {
@@ -121,27 +121,19 @@ export async function POST(request: Request) {
     };
 
     // Smart discovery of identity from dynamic fields
-    const findValue = (keys: string[]) => {
-      for (const key of keys) {
-        const val = form_data?.[key] || body?.[key];
-        if (val) return val;
-      }
-      return null;
-    };
-
-    const discoveredEmail = email || findValue(['email', 'user_email', 'Email Address', 'mail']);
+    const discoveredEmail = email || getFieldByTypeOrName('email', ['email', 'mail', 'address']);
     
     // For name, we try to find a real name and avoid using a phone number if possible
-    let discoveredName = name || findValue(['name', 'full_name', 'fullName', 'first_name', 'firstName', 'Name']);
-    const discoveredPhone = phone || findValue(['phone', 'tel', 'mobile', 'whatsapp', 'phoneNumber']);
+    let discoveredName = name || getFieldByTypeOrName('text', ['name', 'full name', 'first name']);
+    const discoveredPhone = phone || getFieldByTypeOrName('tel', ['phone', 'mobile', 'whatsapp', 'tel']);
 
-    // If discoveredName looks exactly like the phone, it's likely a mis-mapped field, so we default to Anonymous
+    // If discoveredName looks exactly like the phone, it's likely a mis-mapped field, so we default to null to trigger 'Anonymous'
     if (discoveredName && discoveredPhone && String(discoveredName) === String(discoveredPhone)) {
       discoveredName = null;
     }
 
     if (!discoveredName) discoveredName = 'Anonymous';
-    const discoveredMessage = message || form_data?.message || form_data?.comments || 'No message provided';
+    const discoveredMessage = message || getFieldByTypeOrName('textarea', ['message', 'comment', 'inquiry', 'details']) || 'No message provided';
 
     // 1. Route and Store Data
     // Business Leads vs. General Form Submissions
@@ -158,6 +150,11 @@ export async function POST(request: Request) {
       submissionRecord.user_email = discoveredEmail;
       submissionRecord.user_name = discoveredName || 'Anonymous';
       submissionRecord.status = 'unread';
+      if (payment_status) submissionRecord.payment_status = payment_status;
+      if (razorpay_subscription_id) submissionRecord.razorpay_subscription_id = razorpay_subscription_id;
+      if (razorpay_customer_id) submissionRecord.razorpay_customer_id = razorpay_customer_id;
+      if (razorpay_order_id) submissionRecord.razorpay_order_id = razorpay_order_id;
+      if (razorpay_payment_id) submissionRecord.razorpay_payment_id = razorpay_payment_id;
     } else {
       submissionRecord.name = discoveredName || 'Anonymous';
       submissionRecord.status = 'new';
@@ -203,7 +200,9 @@ export async function POST(request: Request) {
         email: userEmail,
         phone: userPhone,
         inquiryType: effectiveSlug,
-        message: userMessage
+        message: userMessage,
+        formData: form_data,
+        formFields: formFields
       })
     );
 

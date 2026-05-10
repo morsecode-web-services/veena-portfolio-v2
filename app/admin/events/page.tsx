@@ -21,8 +21,10 @@ import {
 } from 'lucide-react';
 import Image from 'next/image';
 import { format } from 'date-fns';
+import { useToast } from '@/context/ToastContext';
 
 export default function EventsPage() {
+    const { addToast } = useToast();
     const [events, setEvents] = useState<Event[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
@@ -39,10 +41,10 @@ export default function EventsPage() {
                 .select('*')
                 .order('date', { ascending: false });
 
-            if (error) throw error;
             setEvents(data || []);
         } catch (error) {
             console.error('Error fetching events:', error);
+            addToast('Failed to fetch events', 'error');
         } finally {
             setLoading(false);
         }
@@ -57,8 +59,10 @@ export default function EventsPage() {
 
             if (error) throw error;
             setEvents(events.map(e => e.id === id ? { ...e, is_published: !currentStatus } : e));
+            addToast(`Event ${!currentStatus ? 'published' : 'unpublished'} successfully`, 'success');
         } catch (error) {
             console.error('Error toggling publish status:', error);
+            addToast('Failed to update event status', 'error');
         }
     }
 
@@ -98,9 +102,10 @@ export default function EventsPage() {
 
             if (error) throw error;
             setEvents(events.filter(e => e.id !== id));
+            addToast('Event deleted successfully', 'success');
         } catch (error) {
             console.error('Error deleting event:', error);
-            alert('Failed to delete event. Please try again.');
+            addToast('Failed to delete event', 'error');
         }
     }
 

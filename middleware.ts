@@ -16,6 +16,7 @@ const WHITELISTED_PREFIXES = [
     '/admin',       // Admin dashboard access 
     '/forms/',      // Standalone registration forms
     '/api/',        // API routes for forms to function
+    '/exclusive',   // Subscription landing page
     '/coming-soon', // The page itself (avoid infinite redirect loop)
     '/_next/',      // Next.js internals
     '/favicon',

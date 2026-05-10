@@ -25,14 +25,15 @@ import { supabase } from '@/lib/supabase';
 import { SiteConfig, GalleryImage } from '@/types';
 import { Button } from '@/components/system/Button';
 import { CloudinaryUpload } from '@/components/admin/CloudinaryUpload';
+import { useToast } from '@/context/ToastContext';
 
 export default function ConfigPage() {
+    const { addToast } = useToast();
     const [activeTab, setActiveTab] = useState<'artist' | 'home' | 'gallery' | 'layout'>('artist');
     const [config, setConfig] = useState<SiteConfig | null>(null);
     const [originalConfig, setOriginalConfig] = useState<SiteConfig | null>(null);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
-    const [status, setStatus] = useState<{ type: 'success' | 'error', message: string } | null>(null);
     const [pendingDeletions, setPendingDeletions] = useState<Set<string>>(new Set());
 
     const trackDeletion = (url?: string) => {
@@ -65,7 +66,6 @@ export default function ConfigPage() {
         if (!config) return;
         try {
             setSaving(true);
-            setStatus(null);
 
             const { data: { session } } = await supabase.auth.getSession();
             if (!session) throw new Error('No active session');
@@ -104,14 +104,14 @@ export default function ConfigPage() {
                 setConfig(result.data);
                 setOriginalConfig(JSON.parse(JSON.stringify(result.data)));
                 setPendingDeletions(new Set()); // Clear pending deletions on success
-                setStatus({ type: 'success', message: 'Configuration saved successfully!' });
+                addToast('Configuration saved successfully!', 'success');
             } else {
                 const err = await res.json();
                 throw new Error(err.error || 'Failed to save configuration');
             }
         } catch (error: any) {
             console.error('Save error:', error);
-            setStatus({ type: 'error', message: error.message });
+            addToast(error.message || 'Failed to save configuration', 'error');
         } finally {
             setSaving(false);
         }
@@ -121,7 +121,6 @@ export default function ConfigPage() {
         if (originalConfig) {
             setConfig(JSON.parse(JSON.stringify(originalConfig)));
             setPendingDeletions(new Set());
-            setStatus(null);
         }
     };
 
@@ -164,20 +163,7 @@ export default function ConfigPage() {
                 </div>
             </div>
 
-            <AnimatePresence>
-                {status && (
-                    <m.div
-                        initial={{ opacity: 0, y: -20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -20 }}
-                        className={`mb-6 p-4 rounded-lg flex items-center gap-3 ${status.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
-                            }`}
-                    >
-                        {status.type === 'success' ? <CheckCircle2 className="h-5 w-5" /> : <AlertCircle className="h-5 w-5" />}
-                        <p className="text-sm font-medium">{status.message}</p>
-                    </m.div>
-                )}
-            </AnimatePresence>
+            {/* Status Message - Removed in favor of Toasts */}
 
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
                 {/* Sidebar Navigation */}

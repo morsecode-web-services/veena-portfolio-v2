@@ -16,6 +16,8 @@ interface ContactNotificationProps {
   phone: string;
   inquiryType: string;
   message: string;
+  formData?: Record<string, any>;
+  formFields?: any[];
 }
 
 const labelStyle = {
@@ -53,7 +55,20 @@ export default function ContactNotification({
   phone,
   inquiryType,
   message,
+  formData,
+  formFields,
 }: ContactNotificationProps) {
+  // If we have dynamic form data, we want to prioritize it
+  // but keep the standard fields as a fallback/header
+  const isDynamicForm = !!formData;
+
+  // Filter out fields we already show at the top (name, email, phone, message)
+  // to avoid duplication, while ensuring we show EVERYTHING else
+  const processedFields = isDynamicForm ? Object.entries(formData).filter(([key]) => {
+    const skipKeys = ['name', 'email', 'phone', 'message', 'inquiryType', 'formSlug'];
+    return !skipKeys.includes(key);
+  }) : [];
+
   return (
     <Html>
       <Head />
@@ -74,14 +89,49 @@ export default function ContactNotification({
             <Text style={labelStyle}>Name:</Text>
             <Text style={valueStyle}>{name}</Text>
 
-            <Text style={labelStyle}>Email:</Text>
-            <Text style={valueStyle}>{email}</Text>
+            {email && (
+              <>
+                <Text style={labelStyle}>Email:</Text>
+                <Text style={valueStyle}>{email}</Text>
+              </>
+            )}
 
-            <Text style={labelStyle}>Phone:</Text>
-            <Text style={valueStyle}>{phone}</Text>
+            {phone && (
+              <>
+                <Text style={labelStyle}>Phone:</Text>
+                <Text style={valueStyle}>{phone}</Text>
+              </>
+            )}
 
-            <Text style={labelStyle}>Message:</Text>
-            <Text style={valueStyle}>{message}</Text>
+            {/* Render all other dynamic fields */}
+            {processedFields.map(([key, value]) => {
+              // Try to find a human-readable label from formFields metadata
+              const fieldMeta = formFields?.find(f => f.name === key);
+              const label = fieldMeta?.label || key;
+              
+              // Skip empty values
+              if (value === null || value === undefined || value === '') return null;
+
+              return (
+                <div key={key}>
+                  <Text style={labelStyle}>{label}:</Text>
+                  {typeof value === 'string' && value.startsWith('http') && (value.includes('cloudinary') || value.includes('res.cloudinary')) ? (
+                    <div style={{ margin: '0 0 16px 0', padding: '12px', backgroundColor: '#f7fafc', borderRadius: '4px', borderLeft: '3px solid #d4af37' }}>
+                      <a href={value} style={{ color: '#d4af37', textDecoration: 'underline', fontSize: '15px' }}>View Uploaded Image</a>
+                    </div>
+                  ) : (
+                    <Text style={valueStyle}>{String(value)}</Text>
+                  )}
+                </div>
+              );
+            })}
+
+            {message && message !== 'No message provided' && (
+              <>
+                <Text style={labelStyle}>Message:</Text>
+                <Text style={valueStyle}>{message}</Text>
+              </>
+            )}
           </Section>
 
           <Hr style={styles.hr} />

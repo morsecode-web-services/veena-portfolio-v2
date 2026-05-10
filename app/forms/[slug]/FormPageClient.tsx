@@ -15,6 +15,10 @@ interface FormConfig {
   description: string;
   fields: FormField[];
   success_message?: string;
+  requires_payment?: boolean;
+  payment_type?: 'subscription' | 'one_time';
+  razorpay_plan_id?: string;
+  razorpay_amount?: number;
 }
 
 interface FormPageClientProps {
@@ -35,6 +39,21 @@ export default function FormPageClient({ slug, siteConfig }: FormPageClientProps
 
   useEffect(() => {
     async function fetchConfig() {
+      // Check for preview mode
+      const isPreview = new URLSearchParams(window.location.search).get('preview') === 'true';
+      if (isPreview) {
+        const localData = localStorage.getItem(`form_preview_${slug}`);
+        if (localData) {
+          try {
+            setConfig(JSON.parse(localData));
+            setIsLoading(false);
+            return;
+          } catch (err) {
+            console.error('Error parsing local preview config:', err);
+          }
+        }
+      }
+
       try {
         const { data, error } = await supabase
           .from('form_configs')
@@ -221,6 +240,10 @@ export default function FormPageClient({ slug, siteConfig }: FormPageClientProps
                     fields={config.fields}
                     title={config.title}
                     successMessage={config.success_message}
+                    requiresPayment={config.requires_payment}
+                    paymentType={config.payment_type}
+                    razorpayPlanId={config.razorpay_plan_id}
+                    razorpayAmount={config.razorpay_amount}
                 />
             </div>
           ) : (

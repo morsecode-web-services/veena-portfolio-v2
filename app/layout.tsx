@@ -166,8 +166,14 @@ export default async function RootLayout({
   const headersList = await headers();
   const pathname = headersList.get('x-invoke-path') ?? headersList.get('x-pathname') ?? '';
   const isComingSoon = pathname.startsWith('/coming-soon');
+  const isFormPage = pathname.startsWith('/forms/');
+  const isSiteLive = process.env.NEXT_PUBLIC_SITE_LIVE === 'true';
+
   // Pages that don't need the main site navigation and footer
-  const isStandalonePage = isComingSoon || pathname.startsWith('/link') || pathname.startsWith('/admin');
+  const isStandalonePage = 
+    isComingSoon || 
+    pathname.startsWith('/link') || 
+    pathname.startsWith('/admin');
 
   return (
     <html lang="en" className={`${inter.variable} ${playfair.variable}`}>

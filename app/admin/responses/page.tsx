@@ -30,6 +30,11 @@ interface FormSubmission {
   status: 'unread' | 'read' | 'archived';
   is_verified: boolean;
   created_at: string;
+  payment_status?: string;
+  razorpay_subscription_id?: string;
+  razorpay_customer_id?: string;
+  razorpay_order_id?: string;
+  razorpay_payment_id?: string;
 }
 
 interface FormConfig {
@@ -195,6 +200,25 @@ export default function ResponsesPage() {
         document.body.removeChild(link);
     };
 
+    const markAllAsRead = async () => {
+        const unreadIds = submissions
+            .filter(s => s.status === 'unread')
+            .map(s => s.id);
+        
+        if (unreadIds.length === 0) return;
+
+        const { error } = await supabase
+            .from('form_submissions')
+            .update({ status: 'read' })
+            .in('id', unreadIds);
+
+        if (!error) {
+            setSubmissions(submissions.map(s => 
+                unreadIds.includes(s.id) ? { ...s, status: 'read' } : s
+            ));
+        }
+    };
+
     const getFormTitle = (slug: string) => configs[slug]?.title || slug.replace(/-/g, ' ').toUpperCase();
 
     return (
@@ -206,6 +230,16 @@ export default function ResponsesPage() {
                     <p className="text-slate-500 mt-1">Manage registrations and inquiries from your dynamic forms.</p>
                 </div>
                 <div className="flex items-center gap-3">
+                    {submissions.some(s => s.status === 'unread') && (
+                        <Button 
+                            variant="tertiary" 
+                            onClick={markAllAsRead}
+                            className="text-slate-500 hover:text-gold-600 border-none bg-transparent shadow-none"
+                        >
+                            <CheckCircle2 className="w-4 h-4 mr-2" />
+                            Mark all as read
+                        </Button>
+                    )}
                     <Button 
                         variant="secondary" 
                         onClick={exportToCSV}
@@ -265,6 +299,7 @@ export default function ResponsesPage() {
                                 <th className="px-6 py-4 text-[10px] uppercase font-bold text-slate-400 tracking-widest">User Details</th>
                                 <th className="px-6 py-4 text-[10px] uppercase font-bold text-slate-400 tracking-widest">Form Source</th>
                                 <th className="px-6 py-4 text-[10px] uppercase font-bold text-slate-400 tracking-widest">Received At</th>
+                                <th className="px-6 py-4 text-[10px] uppercase font-bold text-slate-400 tracking-widest">Payment</th>
                                 <th className="px-6 py-4 text-[10px] uppercase font-bold text-slate-400 tracking-widest">Status</th>
                                 <th className="px-6 py-4 text-[10px] uppercase font-bold text-slate-400 tracking-widest text-right">Actions</th>
                             </tr>
@@ -313,6 +348,21 @@ export default function ResponsesPage() {
                                                 <Clock className="w-3 h-3 text-slate-400" />
                                                 {new Date(submission.created_at).toLocaleDateString()}
                                             </div>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            {submission.payment_status === 'paid' ? (
+                                                <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-green-50 text-green-700 text-[10px] font-bold border border-green-100 uppercase tracking-tight shadow-sm">
+                                                    Paid
+                                                </span>
+                                            ) : submission.payment_status === 'none' || !submission.payment_status ? (
+                                                <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-slate-50 text-slate-400 text-[10px] font-bold border border-slate-100 uppercase tracking-tight">
+                                                    N/A
+                                                </span>
+                                            ) : (
+                                                <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-yellow-50 text-yellow-700 text-[10px] font-bold border border-yellow-100 uppercase tracking-tight">
+                                                    {submission.payment_status}
+                                                </span>
+                                            )}
                                         </td>
                                         <td className="px-6 py-4">
                                             {submission.is_verified ? (
@@ -410,6 +460,38 @@ export default function ResponsesPage() {
                                         </div>
                                         <div className="text-sm font-semibold text-navy-900">{new Date(selectedSubmission.created_at).toLocaleString()}</div>
                                     </div>
+                                    {selectedSubmission.payment_status && selectedSubmission.payment_status !== 'none' && (
+                                        <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 col-span-2">
+                                            <div className="flex items-center justify-between mb-4">
+                                                <div className="flex items-center gap-2 text-slate-400">
+                                                    <span className="text-[10px] font-bold uppercase tracking-widest">Payment Info</span>
+                                                </div>
+                                                <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-green-50 text-green-700 text-[10px] font-bold border border-green-100 uppercase tracking-tight shadow-sm">
+                                                    {selectedSubmission.payment_status}
+                                                </span>
+                                            </div>
+                                            {selectedSubmission.razorpay_subscription_id && (
+                                                <div className="text-xs text-slate-600 mb-1">
+                                                    <span className="font-bold">Subscription ID:</span> <code className="font-mono bg-white px-1 py-0.5 rounded border border-slate-200">{selectedSubmission.razorpay_subscription_id}</code>
+                                                </div>
+                                            )}
+                                            {selectedSubmission.razorpay_customer_id && (
+                                                <div className="text-xs text-slate-600 mb-1">
+                                                    <span className="font-bold">Customer ID:</span> <code className="font-mono bg-white px-1 py-0.5 rounded border border-slate-200">{selectedSubmission.razorpay_customer_id}</code>
+                                                </div>
+                                            )}
+                                            {selectedSubmission.razorpay_order_id && (
+                                                <div className="text-xs text-slate-600 mb-1">
+                                                    <span className="font-bold">Order ID:</span> <code className="font-mono bg-white px-1 py-0.5 rounded border border-slate-200">{selectedSubmission.razorpay_order_id}</code>
+                                                </div>
+                                            )}
+                                            {selectedSubmission.razorpay_payment_id && (
+                                                <div className="text-xs text-slate-600">
+                                                    <span className="font-bold">Payment ID:</span> <code className="font-mono bg-white px-1 py-0.5 rounded border border-slate-200">{selectedSubmission.razorpay_payment_id}</code>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Form Data Section */}

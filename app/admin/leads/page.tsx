@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/system/Button';
+import { useToast } from '@/context/ToastContext';
 
 interface Lead {
   id: string;
@@ -32,6 +33,7 @@ interface FormConfig {
 type StatusFilter = Lead['status'] | 'all';
 
 export default function LeadsPage() {
+  const { addToast } = useToast();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [filteredLeads, setFilteredLeads] = useState<Lead[]>([]);
   const [configs, setConfigs] = useState<Record<string, FormConfig>>({});
@@ -176,8 +178,9 @@ export default function LeadsPage() {
 
     if (error) {
       console.error('Error updating lead status:', error);
-      alert('Failed to update status');
+      addToast('Failed to update status', 'error');
     } else {
+      addToast('Status updated successfully', 'success');
       // Update local state
       setLeads(leads.map(lead =>
         lead.id === leadId ? { ...lead, status: newStatus } : lead

@@ -12,6 +12,8 @@ A modern, responsive website for Veena musician Aishwarya Manikarnike, built wit
 - 🎨 Smooth animations and transitions
 - 📱 Fully responsive design
 - ⚡ Optimized performance with lazy loading
+- 🔒 Automated Telegram subscription system with Razorpay integration
+- 🤖 Automated WhatsApp delivery for one-time Telegram invite links
 
 ## Tech Stack
 
@@ -23,6 +25,8 @@ A modern, responsive website for Veena musician Aishwarya Manikarnike, built wit
 - **PDF Generation:** jsPDF + html2canvas
 - **Icons:** React Icons (Font Awesome)
 - **Testing:** Vitest + React Testing Library + fast-check
+- **Payments:** Razorpay
+- **Automation:** Make.com (Webhooks + Telegram Bot + WhatsApp API)
 
 ## Prerequisites
 
@@ -194,12 +198,9 @@ veena-musician-website/
 │       ├── home/
 │       ├── gallery/
 │       └── press/
-├── types/                   # TypeScript type definitions
-│   └── index.ts
-├── tailwind.config.ts      # Tailwind CSS configuration
-├── tsconfig.json           # TypeScript configuration
-├── vitest.config.ts        # Vitest configuration
-└── package.json            # Project dependencies
+├── docs/                     # Project documentation and guides
+├── emails/                   # Email templates
+├── hooks/                   # Custom React hooks
 ```
 
 ## Configuration
@@ -411,19 +412,23 @@ If styles aren't applying:
 4. Push to the branch: `git push origin feature/my-feature`
 5. Submit a pull request
 
+## Documentation
+
+Detailed guides and implementation notes can be found in the [docs/](docs/) folder:
+
+- [Razorpay Setup Guide](docs/RAZORPAY_SETUP_GUIDE.md)
+- [Make.com Automation Guide](docs/MAKE_COM_SETUP_GUIDE.md)
+- [Twilio WhatsApp Setup](docs/TWILIO_WHATSAPP_SETUP.md)
+- [WhatsApp Cloud API Setup](docs/WHATSAPP_CLOUD_API_SETUP.md)
+- [Leads Dashboard Guide](docs/LEADS_DASHBOARD_GUIDE.md)
+- [GA4 Setup Guide](docs/GA4_SETUP_GUIDE.md)
+- [Deployment Guide](docs/DEPLOYMENT_GUIDE.md)
+- [Troubleshooting](docs/TROUBLESHOOTING.md)
+
 ## License
 
 This project is private and proprietary.
 
 ## Support
 
-For questions or issues, please contact:
-
-- Email: [contact email]
-- Website: [website URL]
-
-## Acknowledgments
-
-- Design inspired by modern musician portfolio websites
-- Built with Next.js and the React ecosystem
-- Icons from Font Awesome via react-icons
+For questions or issues, please contact the project maintainer.
