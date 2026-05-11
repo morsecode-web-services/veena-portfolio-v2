@@ -33,9 +33,23 @@ interface DynamicFormProps {
     paymentType?: 'subscription' | 'one_time';
     razorpayPlanId?: string;
     razorpayAmount?: number;
+    cohortId?: string;
+    submitLabel?: string;
 }
 
-export default function DynamicForm({ formSlug, fields, title, description, successMessage, requiresPayment, paymentType = 'subscription', razorpayPlanId, razorpayAmount }: DynamicFormProps) {
+export default function DynamicForm({ 
+    formSlug, 
+    fields, 
+    title, 
+    description, 
+    successMessage, 
+    requiresPayment, 
+    paymentType = 'subscription', 
+    razorpayPlanId, 
+    razorpayAmount,
+    cohortId,
+    submitLabel = 'Submit Inquiry'
+}: DynamicFormProps) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
     const [errorMessage, setErrorMessage] = useState<string>('');
@@ -131,7 +145,7 @@ export default function DynamicForm({ formSlug, fields, title, description, succ
 
         try {
             // 1. Payment Flow
-            if (requiresPayment && razorpayPlanId) {
+            if (requiresPayment && (razorpayPlanId || cohortId)) {
                 const checkoutRes = await fetch('/api/checkout', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -142,7 +156,8 @@ export default function DynamicForm({ formSlug, fields, title, description, succ
                         formSlug,
                         phone: data.phone,
                         email: data.email,
-                        name: data.name
+                        name: data.name,
+                        cohortId: cohortId
                     })
                 });
                 
@@ -164,6 +179,14 @@ export default function DynamicForm({ formSlug, fields, title, description, succ
                                 razorpay_order_id: response.razorpay_order_id || null,
                                 razorpay_payment_id: response.razorpay_payment_id || null
                             });
+                            if (cohortId && checkoutData.amount) {
+                                analytics.purchase(checkoutData.amount / 100, 'INR', [{
+                                    id: cohortId,
+                                    name: title,
+                                    category: 'cohort',
+                                    price: checkoutData.amount / 100
+                                }]);
+                            }
                             analytics.contactFormSubmit(true, undefined, formSlug);
                             setSubmitStatus('success');
                             reset();
@@ -178,6 +201,11 @@ export default function DynamicForm({ formSlug, fields, title, description, succ
                         name: data.name || '',
                         email: data.email || '',
                         contact: data.phone || ''
+                    },
+                    notes: {
+                        formSlug: formSlug,
+                        telegram_chat_id: checkoutData.telegram_chat_id || '',
+                        cohortId: cohortId || ''
                     },
                     theme: { color: "#0f172a" }
                 };
@@ -361,7 +389,7 @@ export default function DynamicForm({ formSlug, fields, title, description, succ
                                         {...register(field.name)}
                                         rows={4}
                                         placeholder={field.placeholder}
-                                        className={`w-full px-4 py-3 rounded-xl border transition-all text-sm focus:ring-2 focus:ring-navy-500/10 focus:border-navy-500 outline-none ${errors[field.name] ? 'border-red-500 bg-red-50/30' : 'border-slate-200 hover:border-slate-300'
+                                        className={`w-full px-6 py-5 rounded-2xl border transition-all text-lg font-medium focus:ring-2 focus:ring-navy-500/10 focus:border-navy-500 outline-none ${errors[field.name] ? 'border-red-500 bg-red-50/30' : 'border-slate-200 hover:border-slate-300'
                                             }`}
                                         disabled={isSubmitting}
                                     />
@@ -369,7 +397,7 @@ export default function DynamicForm({ formSlug, fields, title, description, succ
                                     <select
                                 id={`${formSlug}-${field.name}`}
                                 {...register(field.name)}
-                                className={`w-full px-4 py-3 rounded-xl border transition-all text-sm focus:ring-2 focus:ring-navy-500/10 focus:border-navy-500 outline-none appearance-none bg-no-repeat bg-[length:16px_16px] bg-[right_1rem_center] cursor-pointer ${errors[field.name] ? 'border-red-500 bg-red-50/30' : 'border-slate-200 hover:border-slate-300'
+                                className={`w-full px-6 py-5 rounded-2xl border transition-all text-lg font-medium focus:ring-2 focus:ring-navy-500/10 focus:border-navy-500 outline-none appearance-none bg-no-repeat bg-[length:16px_16px] bg-[right_1.5rem_center] cursor-pointer ${errors[field.name] ? 'border-red-500 bg-red-50/30' : 'border-slate-200 hover:border-slate-300'
                                     }`}
                                 style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23475569'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")` }}
                                 disabled={isSubmitting}
@@ -444,7 +472,7 @@ export default function DynamicForm({ formSlug, fields, title, description, succ
                                 type={field.type}
                                 {...register(field.name)}
                                 placeholder={field.placeholder}
-                                className={`w-full px-4 py-3 rounded-xl border transition-all text-sm focus:ring-2 focus:ring-navy-500/10 focus:border-navy-500 outline-none ${errors[field.name] ? 'border-red-500 bg-red-50/30' : 'border-slate-200 hover:border-slate-300'
+                                className={`w-full px-6 py-5 rounded-2xl border transition-all text-lg font-medium focus:ring-2 focus:ring-navy-500/10 focus:border-navy-500 outline-none ${errors[field.name] ? 'border-red-500 bg-red-50/30' : 'border-slate-200 hover:border-slate-300'
                                     }`}
                                 disabled={isSubmitting}
                             />
@@ -465,9 +493,9 @@ export default function DynamicForm({ formSlug, fields, title, description, succ
                     variant="primary"
                     fullWidth
                     isLoading={isSubmitting}
-                    className="mt-4 py-4 rounded-xl text-base tracking-wide"
+                    className="mt-6 py-5 rounded-2xl text-lg font-bold tracking-tight shadow-premium-lg hover:shadow-premium-xl transition-all"
                 >
-                    {isSubmitting ? 'Sending...' : 'Submit Inquiry'}
+                    {isSubmitting ? 'Processing...' : submitLabel}
                 </Button>
 
                 <AnimatePresence>

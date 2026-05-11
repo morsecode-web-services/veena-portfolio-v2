@@ -123,6 +123,7 @@ export default function AdminLayoutClient({ children }: AdminLayoutClientProps) 
     };
 
     const navItems = [
+        { name: 'Cohorts', href: '/admin/cohorts', icon: Users },
         { name: 'Events', href: '/admin/events', icon: Calendar },
         { name: 'Blog', href: '/admin/blogs', icon: FileText },
         { name: 'Videos', href: '/admin/videos', icon: LayoutDashboard },

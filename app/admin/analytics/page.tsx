@@ -208,6 +208,50 @@ export default function AnalyticsPage() {
                     </div>
                 </div>
 
+                {/* Cohort Conversion Funnel */}
+                {data.funnel && (
+                    <Section title="Cohort Enrollment Funnel" icon={<Zap className="w-4 h-4 text-gold-500" />}>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
+                            {[
+                                { label: 'Cohort Views', value: data.funnel.view_item, color: C.blue, sub: 'Initial Interest' },
+                                { label: 'Form Opens', value: data.funnel.begin_checkout, color: C.purple, sub: 'Purchase Intent' },
+                                { label: 'Enrollments', value: data.funnel.purchase, color: C.green, sub: 'Revenue Realized' }
+                            ].map((step, i, arr) => {
+                                const prev = arr[i-1];
+                                const conversion = prev ? Math.round((step.value / prev.value) * 100) || 0 : 100;
+                                
+                                return (
+                                    <div key={step.label} className="relative group">
+                                        <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100 hover:border-gold-200 transition-all hover:bg-white hover:shadow-md">
+                                            <div className="flex items-center justify-between mb-2">
+                                                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">{step.label}</span>
+                                                {i > 0 && (
+                                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                                                        conversion > 50 ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-100 text-slate-500'
+                                                    }`}>
+                                                        {conversion}% conv.
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <div className="text-3xl font-bold text-navy-900 mb-1">{step.value.toLocaleString()}</div>
+                                            <div className="text-[10px] font-medium text-slate-400">{step.sub}</div>
+                                        </div>
+                                        {i < arr.length - 1 && (
+                                            <div className="hidden md:block absolute -right-3 top-1/2 -translate-y-1/2 z-10">
+                                                <div className="w-6 h-6 bg-white border border-slate-100 rounded-full flex items-center justify-center shadow-sm">
+                                                    <ArrowUpRight className="w-3 h-3 text-slate-300 rotate-90" />
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </Section>
+                )}
+
+                {/* Row 1: Pages + Sources */}
+
                 {/* Row 1: Pages + Sources */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
                     {/* Pages table with more columns */}

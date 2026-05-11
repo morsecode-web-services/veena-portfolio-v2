@@ -107,11 +107,48 @@ export default function FormPageClient({ slug, siteConfig }: FormPageClientProps
   }
 
   return (
-    <SectionWrapper id="standalone-form" background="white" spacing="base" className="pt-28 md:pt-36 min-h-screen">
-      <SectionTitle
-        title={formSettings?.title || config?.title || "Form"}
-        alignment="center"
-      />
+    <div className="relative min-h-screen overflow-hidden bg-[#fdfcf0]">
+      {/* Animated Ambient Background Elements */}
+      <div className="absolute inset-0 pointer-events-none">
+        <m.div 
+          animate={{ 
+            scale: [1, 1.2, 1],
+            rotate: [0, 90, 0],
+            x: [0, 100, 0],
+            y: [0, 50, 0] 
+          }}
+          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+          className="absolute -top-[10%] -left-[10%] w-[50%] h-[50%] bg-gold-200/20 blur-[120px] rounded-full" 
+        />
+        <m.div 
+          animate={{ 
+            scale: [1, 1.5, 1],
+            rotate: [0, -45, 0],
+            x: [0, -50, 0],
+            y: [0, 100, 0] 
+          }}
+          transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
+          className="absolute top-[20%] -right-[10%] w-[40%] h-[40%] bg-navy-100/30 blur-[100px] rounded-full" 
+        />
+        <m.div 
+          animate={{ 
+            scale: [1, 1.3, 1],
+            x: [0, 30, 0],
+            y: [0, -80, 0] 
+          }}
+          transition={{ duration: 18, repeat: Infinity, ease: "linear" }}
+          className="absolute -bottom-[10%] left-[20%] w-[60%] h-[40%] bg-gold-100/20 blur-[110px] rounded-full" 
+        />
+      </div>
+
+      {/* Subtle Texture Overlay */}
+      <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/paper-fibers.png')]" />
+
+      <SectionWrapper id="standalone-form" background="transparent" spacing="base" className="pt-28 md:pt-36 relative z-10">
+        <SectionTitle
+          title={formSettings?.title || config?.title || "Form"}
+          alignment="center"
+        />
 
       <div className={`grid grid-cols-1 ${requiresPayment ? 'lg:grid-cols-12' : 'lg:grid-cols-1'} gap-12 mt-12 sm:mt-16 max-w-6xl mx-auto`}>
         
@@ -258,5 +295,6 @@ export default function FormPageClient({ slug, siteConfig }: FormPageClientProps
         </m.div>
       </div>
     </SectionWrapper>
+    </div>
   );
 }

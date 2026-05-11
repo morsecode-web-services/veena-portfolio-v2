@@ -88,7 +88,7 @@ export default function Header({ config }: HeaderProps) {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="flex items-center"
           >
-            <a href="#home" className="focus:outline-none focus:ring-2 focus:ring-blue-600 rounded flex items-center gap-2 md:gap-3 group">
+            <a href="/" className="focus:outline-none focus:ring-2 focus:ring-blue-600 rounded flex items-center gap-2 md:gap-3 group">
               {logo && (
                 <div className={`relative w-8 h-8 md:w-10 md:h-10 transition-transform duration-300 group-hover:scale-110 ${!showSolidHeader ? 'brightness-0 invert' : ''}`}>
                   <Image
@@ -110,7 +110,7 @@ export default function Header({ config }: HeaderProps) {
           </m.div>
  
           <div className="flex items-center gap-4">
-            {!(process.env.NEXT_PUBLIC_SITE_LIVE === 'false' && pathname?.startsWith('/forms/')) && (
+            {!(process.env.NEXT_PUBLIC_SITE_LIVE === 'false' && pathname?.startsWith('/forms/')) && pathname !== '/cohorts' && (
               <>
                 <Navigation config={config} isScrolled={showSolidHeader} />
                 <m.div

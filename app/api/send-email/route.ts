@@ -66,7 +66,7 @@ export async function POST(request: Request) {
 
     // Parse request body
     const body = await request.json();
-    const { name, email, phone, inquiryType, message, formSlug, form_data, payment_status, razorpay_subscription_id, razorpay_customer_id, razorpay_order_id, razorpay_payment_id } = body;
+    const { name, email, phone, inquiryType, message, formSlug, form_data, payment_status, razorpay_subscription_id, razorpay_customer_id, razorpay_order_id, razorpay_payment_id, cohortId } = body;
 
     // Validate if either old style or new style dynamic form is used
     if (!formSlug && (!name || !email || !phone || !inquiryType || !message)) {
@@ -150,14 +150,19 @@ export async function POST(request: Request) {
       submissionRecord.user_email = discoveredEmail;
       submissionRecord.user_name = discoveredName || 'Anonymous';
       submissionRecord.status = 'unread';
-      if (payment_status) submissionRecord.payment_status = payment_status;
+      if (payment_status) {
+        submissionRecord.payment_status = payment_status;
+        if (payment_status === 'paid') submissionRecord.is_verified = true;
+      }
       if (razorpay_subscription_id) submissionRecord.razorpay_subscription_id = razorpay_subscription_id;
       if (razorpay_customer_id) submissionRecord.razorpay_customer_id = razorpay_customer_id;
       if (razorpay_order_id) submissionRecord.razorpay_order_id = razorpay_order_id;
       if (razorpay_payment_id) submissionRecord.razorpay_payment_id = razorpay_payment_id;
+      if (cohortId) submissionRecord.cohort_id = cohortId;
     } else {
       submissionRecord.name = discoveredName || 'Anonymous';
       submissionRecord.status = 'new';
+      if (cohortId) submissionRecord.cohort_id = cohortId;
     }
 
     const { error: dbError } = await supabase
@@ -231,8 +236,8 @@ export async function POST(request: Request) {
       );
     }
 
-    // 5. Send auto-reply to user (if email exists)
-    if (userEmail) {
+    // 5. Send auto-reply to user (if email exists and it's NOT a cohort enrollment)
+    if (userEmail && formSlug !== 'cohort_enrollment') {
       const finalSubject = customAutoReply?.subject || templateConfig.subject;
       
       let processedCustomMsg = customAutoReply?.message || '';

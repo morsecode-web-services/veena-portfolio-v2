@@ -38,8 +38,13 @@ Your automation runs in the background, but it's good to check on it occasionall
 ---
 
 ## 5. Website Updates
-- **Enabling/Disabling Forms**: Use the "Active" toggle in your Admin Dashboard to open or close registrations for specific classes or events.
 - **Deadlines**: You can set deadlines for forms so they automatically close at a specific date/time.
+- **Transitioning to a New Month**:
+  1. Create a **New Private Channel** in Telegram for the new cohort.
+  2. Add your Bot as an admin in the new channel.
+  3. Get the new **Chat ID** (starting with -100).
+  4. In your website Dashboard, update the **Telegram Chat ID** and **Title** (e.g., "July Cohort").
+  5. The automation will now automatically start sending links for the *new* channel.
 
 ---
 

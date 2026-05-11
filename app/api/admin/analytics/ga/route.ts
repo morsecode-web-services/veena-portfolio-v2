@@ -87,7 +87,7 @@ export async function GET(request: Request) {
             dailyReport, pagesReport, countriesReport, devicesReport,
             sourcesReport, overviewReport, realtimeReport,
             heatmapReport, browsersReport, landingReport,
-            citiesReport, osReport, eventsReport,
+            citiesReport, osReport, eventsReport, funnelReport,
             smartLinksResult
         ] = await Promise.all([
             // 1. Daily traffic trend
@@ -188,9 +188,27 @@ export async function GET(request: Request) {
                 limit: 10,
                 orderBys: [{ metric: { metricName: 'eventCount' }, desc: true }],
             }),
+            // 14. Cohort Funnel
+            runReport(accessToken, propertyId, {
+                dateRanges: [{ startDate, endDate: 'today' }],
+                dimensions: [{ name: 'eventName' }],
+                metrics: [{ name: 'eventCount' }],
+                dimensionFilter: {
+                    filter: {
+                        fieldName: 'eventName',
+                        inListFilter: { values: ['view_item', 'begin_checkout', 'purchase'] }
+                    }
+                }
+            }),
             // Smart links from Supabase
             smartLinksPromise,
         ]);
+
+        // Parse Funnel
+        const funnel = funnelReport.rows?.reduce((acc: any, row: any) => {
+            acc[row.dimensionValues[0].value] = parseInt(row.metricValues[0].value, 10);
+            return acc;
+        }, { view_item: 0, begin_checkout: 0, purchase: 0 }) || { view_item: 0, begin_checkout: 0, purchase: 0 };
 
         // Parse daily trend
         const daily = dailyReport.rows?.map((row: any) => ({
@@ -315,7 +333,7 @@ export async function GET(request: Request) {
             success: true,
             overview, today, daily, topPages, countries, devices,
             sources, heatmap, browsers, landingPages, smartLinks,
-            cities, operatingSystems, events,
+            cities, operatingSystems, events, funnel,
         });
     } catch (error: any) {
         console.error('[GA4] Error:', error.message || error);

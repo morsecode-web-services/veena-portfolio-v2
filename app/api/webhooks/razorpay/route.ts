@@ -73,6 +73,7 @@ export async function POST(req: Request) {
                     razorpay_order_id: orderId,
                     razorpay_payment_id: paymentId,
                     razorpay_customer_id: customerId,
+                    cohort_id: notes.cohortId || null,
                     is_verified: true // Automatically verify paid submissions
                 };
 

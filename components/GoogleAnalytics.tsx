@@ -154,6 +154,22 @@ export const analytics = {
         });
     },
 
+    // Ecommerce Funnel
+    purchase: (amount: number, currency: string = 'INR', items: any[]) => {
+        trackEvent('purchase', {
+            value: amount,
+            currency: currency,
+            transaction_id: `txn_${Date.now()}`, // Fallback if no specific ID
+            items: items.map(item => ({
+                item_id: item.id,
+                item_name: item.name,
+                item_category: item.category || 'cohort',
+                price: item.price,
+                quantity: 1
+            }))
+        });
+    },
+
     // Carousel interactions
     carouselSwipe: (direction: 'left' | 'right', currentSlide: number, carouselName: string) => {
         trackEvent('carousel_swipe', {

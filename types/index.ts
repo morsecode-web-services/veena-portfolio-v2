@@ -103,6 +103,7 @@ export interface SiteConfig {
     imageAlt?: string;
     formSlugs?: string[];
   };
+  showCohortsOnComingSoon?: boolean;
 }
 
 export interface MusicVideo {

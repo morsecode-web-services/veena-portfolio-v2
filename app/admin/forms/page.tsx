@@ -54,6 +54,7 @@ interface FormConfig {
   payment_type?: "subscription" | "one_time";
   razorpay_plan_id?: string;
   razorpay_amount?: number;
+  telegram_chat_id?: string;
 }
 
 export default function FormManagementPage() {
@@ -218,6 +219,7 @@ export default function FormManagementPage() {
           payment_type: selectedConfig.payment_type || "subscription",
           razorpay_plan_id: selectedConfig.razorpay_plan_id || null,
           razorpay_amount: selectedConfig.razorpay_amount || null,
+          telegram_chat_id: selectedConfig.telegram_chat_id || null,
         })
         .eq("id", selectedConfig.id);
 
@@ -634,13 +636,11 @@ export default function FormManagementPage() {
                                   <input
                                     type="number"
                                     className="text-sm text-navy-900 bg-gray-50 p-3 rounded-xl w-full border border-gray-200 outline-none focus:border-gold-400 transition-colors"
-                                    value={selectedConfig.razorpay_amount || ""}
+                                    value={(selectedConfig.razorpay_amount ?? 0) / 100}
                                     onChange={(e) =>
                                       setSelectedConfig({
                                         ...selectedConfig,
-                                        razorpay_amount: parseInt(
-                                          e.target.value,
-                                        ),
+                                        razorpay_amount: Math.round(parseFloat(e.target.value) * 100) || 0,
                                       })
                                     }
                                     placeholder="e.g. 500"
@@ -674,6 +674,26 @@ export default function FormManagementPage() {
                                   </p>
                                 </div>
                               )}
+
+                              <div className="pt-4 border-t border-gray-100">
+                                <label className="text-[10px] uppercase font-bold text-gray-400 block mb-1">
+                                  Telegram Chat ID
+                                </label>
+                                <input
+                                  className="text-sm text-navy-900 bg-gray-50 p-3 rounded-xl w-full border border-gray-200 outline-none focus:border-gold-400 transition-colors font-mono"
+                                  value={selectedConfig.telegram_chat_id || ""}
+                                  onChange={(e) =>
+                                    setSelectedConfig({
+                                      ...selectedConfig,
+                                      telegram_chat_id: e.target.value,
+                                    })
+                                  }
+                                  placeholder="e.g. -100123456789"
+                                />
+                                <p className="text-[10px] text-gray-400 mt-2 italic">
+                                  This channel will receive the invite link request when a user pays. Must start with -100.
+                                </p>
+                              </div>
                             </div>
                           )}
                         </div>

@@ -192,6 +192,8 @@ export default async function RootLayout({
         {/* Preconnect to Cloudinary CDN for faster image delivery */}
         <link rel="preconnect" href="https://res.cloudinary.com" />
         <link rel="dns-prefetch" href="https://res.cloudinary.com" />
+        {/* Razorpay Checkout Script */}
+        <script src="https://checkout.razorpay.com/v1/checkout.js" async></script>
         {jsonLdData && !isStandalonePage && (
           <script
             type="application/ld+json"

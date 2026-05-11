@@ -629,6 +629,29 @@ export default function ConfigPage() {
                                     className="space-y-8"
                                 >
                                     <SectionTitle title="Page Architect" description="Reorder and toggle visibility of landing page sections." />
+                                    
+                                    <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100 mb-8">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-3">
+                                                <div className="p-2 bg-navy-900 rounded-lg">
+                                                    <Zap className="h-4 w-4 text-gold-400" />
+                                                </div>
+                                                <div>
+                                                    <h3 className="text-sm font-bold text-navy-900 uppercase tracking-wider">Maintenance Mode Overrides</h3>
+                                                    <p className="text-xs text-navy-500 mt-0.5">Force visibility of specific features when the site is not live.</p>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-4 bg-white p-3 rounded-xl border border-slate-100 shadow-sm">
+                                                <span className="text-xs font-bold text-navy-700">Show Cohorts on Coming Soon</span>
+                                                <button
+                                                    onClick={() => setConfig({ ...config, showCohortsOnComingSoon: !config.showCohortsOnComingSoon })}
+                                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${config.showCohortsOnComingSoon ? 'bg-gold-500' : 'bg-slate-300'}`}
+                                                >
+                                                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${config.showCohortsOnComingSoon ? 'translate-x-6' : 'translate-x-1'}`} />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
 
                                     <div className="space-y-3">
                                         {config.layoutOrder?.map((key, idx) => {

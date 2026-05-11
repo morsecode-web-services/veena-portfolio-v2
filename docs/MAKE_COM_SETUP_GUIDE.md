@@ -87,6 +87,9 @@ To handle both one-time payments and subscriptions in one scenario, we use a gen
 ## Troubleshooting
 - **Bot can't create link**: Check that the bot is an Admin in the channel and has "Manage Invite Links" permission.
 - **Wrong Chat ID**: Ensure the ID starts with `-100`.
-- **Payment not triggering**: Make sure you selected both `subscription.charged` and `payment.captured`.
+- **Hybrid Routing (Free Tier Optimization)**: 
+  To stay within the Make.com free tier limits, we use two different methods for the **Chat ID** in Step 3:
+  1. **For One-Time Payments (Workshops)**: Use the dynamic field `{{payload.payment.entity.notes.telegram_chat_id}}`. This is 100% automated.
+  2. **For Subscriptions (Monthly Membership)**: Manually paste the new `-100...` Chat ID into the Telegram module on the 1st of every month. This saves 1 operation per user and keeps your account free for up to 333 users per month.
 - **Email missing in Resend**: Since one-time payments and subscriptions store emails in different places, use this formula in the "to" field: 
   `{{ifempty(payload.payment.entity.email; payload.subscription.entity.email)}}`

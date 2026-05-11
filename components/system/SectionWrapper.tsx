@@ -3,7 +3,7 @@
 import { HTMLAttributes } from 'react';
 
 export interface SectionWrapperProps extends HTMLAttributes<HTMLElement> {
-  background?: 'white' | 'cream' | 'navy';
+  background?: 'white' | 'cream' | 'navy' | 'transparent';
   spacing?: 'sm' | 'base' | 'lg';
   fullWidth?: boolean;
   children: React.ReactNode;
@@ -30,6 +30,7 @@ export function SectionWrapper({
     white: 'bg-white',
     cream: 'bg-cream-50',
     navy: 'bg-navy-950 text-white',
+    transparent: 'bg-transparent',
   };
 
   // Vertical padding styles

@@ -138,6 +138,7 @@ const SiteConfigSchema = z.object({
     imageAlt: z.string().optional(),
     formSlugs: z.array(z.string()).optional(),
   }).optional(),
+  showCohortsOnComingSoon: z.boolean().optional(),
 });
 
 // Default fallback configuration
@@ -189,6 +190,7 @@ const defaultConfig: SiteConfig = {
     imageAlt: 'Contact',
     formSlugs: ['classes', 'performance'],
   },
+  showCohortsOnComingSoon: false,
 };
 
 /**
