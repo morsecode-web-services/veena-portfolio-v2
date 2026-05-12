@@ -22,7 +22,7 @@ function formatPhoneNumber(phone: string): string {
  * Sends a WhatsApp notification via Meta Cloud API using a pre-approved template.
  *
  * PREREQUISITES:
- * - Create a template named `cohort_welcome` (or set META_WHATSAPP_TEMPLATE_NAME) in
+ * - Create a template (and set META_WHATSAPP_TEMPLATE_NAME) in
  *   Meta Business Manager → WhatsApp → Message Templates.
  * - Template body must have exactly 2 variables: {{1}} = name, {{2}} = invite link
  * - Wait for Meta approval (usually 24-48 hours) before this works in production.

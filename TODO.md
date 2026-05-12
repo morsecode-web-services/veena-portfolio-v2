@@ -6,7 +6,7 @@ Tracking tasks and progress for the project.
 - [x] Replaced Make.com with Native Next.js Webhook (Save ₹1,500/mo)
 - [x] Built Admin Automation Dashboard with Real-time Logs
 - [x] Compare twilio vs whatsapp business api cost (Done: Meta wins)
-- [ ] Create & Approve WhatsApp Template (`cohort_welcome`) in Meta Dashboard
+- [ ] Create & Approve WhatsApp Template in Meta Dashboard
 - [ ] Brainstorm and finalise subscription flow.
 - [x] Test Native Webhook with curl (Success: Logs & Email working)
 
