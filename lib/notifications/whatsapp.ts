@@ -38,7 +38,7 @@ export async function sendWhatsAppNotification(
 ): Promise<WhatsAppResult> {
   const phoneNumberId = process.env.META_WHATSAPP_PHONE_NUMBER_ID;
   const accessToken = process.env.META_WHATSAPP_ACCESS_TOKEN;
-  const templateName = process.env.META_WHATSAPP_TEMPLATE_NAME || 'cohort_welcome';
+  const templateName = process.env.META_WHATSAPP_TEMPLATE_NAME;
 
   if (!phoneNumberId || !accessToken) {
     return { success: false, error: 'WhatsApp credentials not configured (META_WHATSAPP_PHONE_NUMBER_ID / META_WHATSAPP_ACCESS_TOKEN missing)' };
