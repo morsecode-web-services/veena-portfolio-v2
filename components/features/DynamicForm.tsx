@@ -267,8 +267,13 @@ export default function DynamicForm({
                                 }]);
                             }
                             analytics.contactFormSubmit(true, undefined, formSlug);
-                            setSubmitStatus('success');
-                            reset();
+                            
+                            if (cohortId) {
+                                window.location.href = '/cohorts?success=true';
+                            } else {
+                                setSubmitStatus('success');
+                                reset();
+                            }
                         } catch (err: any) {
                             setSubmitStatus('error');
                             setErrorMessage('Payment succeeded, but we failed to save your submission. Please contact support.');
@@ -307,8 +312,13 @@ export default function DynamicForm({
             // 2. Standard Flow (No Payment)
             await saveFormData(data);
             analytics.contactFormSubmit(true, undefined, formSlug);
-            setSubmitStatus('success');
-            reset();
+            
+            if (cohortId) {
+                window.location.href = '/cohorts?success=true';
+            } else {
+                setSubmitStatus('success');
+                reset();
+            }
         } catch (error: any) {
             if (error.message?.includes('Verification failed') || error.message?.includes('valid mobile number')) {
                 console.warn('Validation check:', error.message);

@@ -1,12 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, Clock, Lock, Users, Calendar, ArrowRight, X, Star } from 'lucide-react';
+import { Check, Clock, Lock, Users, Calendar, ArrowRight, X, Star, PartyPopper, Mail } from 'lucide-react';
 import { Button } from '@/components/system/Button';
 import DynamicForm, { FormField } from '@/components/features/DynamicForm';
 import Image from 'next/image';
 import { analytics, trackEvent } from '@/components/GoogleAnalytics';
+import { useSearchParams, useRouter } from 'next/navigation';
 
 interface Cohort {
     id: string;
@@ -30,9 +31,34 @@ interface CohortClientProps {
     initialCohorts: Cohort[];
 }
 
-export default function CohortClient({ initialCohorts }: CohortClientProps) {
+function CohortContent({ initialCohorts }: CohortClientProps) {
     const [selectedCohort, setSelectedCohort] = useState<Cohort | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [showCelebration, setShowCelebration] = useState(false);
+    
+    const searchParams = useSearchParams();
+    const router = useRouter();
+
+    useEffect(() => {
+        if (searchParams.get('success') === 'true') {
+            setShowCelebration(true);
+            trackEvent('purchase_complete', { status: 'success' });
+
+            // Auto-dismiss after 12 seconds
+            const timer = setTimeout(() => {
+                closeCelebration();
+            }, 12000);
+
+            return () => clearTimeout(timer);
+        }
+    }, [searchParams]);
+
+    const closeCelebration = () => {
+        setShowCelebration(false);
+        const params = new URLSearchParams(searchParams.toString());
+        params.delete('success');
+        router.replace(`/cohorts${params.toString() ? `?${params.toString()}` : ''}`, { scroll: false });
+    };
 
     const enrollmentFields: FormField[] = [
         { name: 'name', label: 'Full Name', type: 'text', required: true, placeholder: 'Your name' },
@@ -45,7 +71,6 @@ export default function CohortClient({ initialCohorts }: CohortClientProps) {
         setSelectedCohort(cohort);
         setIsModalOpen(true);
 
-        // GA4 Funnel: Track interest and checkout start
         trackEvent('view_item', {
             items: [{
                 item_id: cohort.id,
@@ -89,7 +114,6 @@ export default function CohortClient({ initialCohorts }: CohortClientProps) {
                         className={`group relative bg-white rounded-2xl border border-slate-100 overflow-hidden transition-all duration-500 text-left w-full outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-4 ${cohort.status === 'active' ? 'cursor-pointer hover:shadow-premium-xl hover:-translate-y-1' : 'opacity-75 cursor-not-allowed'
                             }`}
                     >
-                        {/* Thumbnail */}
                         <div className="relative aspect-video overflow-hidden bg-slate-100">
                             {cohort.image_url ? (
                                 <Image
@@ -106,7 +130,6 @@ export default function CohortClient({ initialCohorts }: CohortClientProps) {
                                 </div>
                             )}
 
-                            {/* Overlay Badges */}
                             <div className="absolute top-3 left-3 flex flex-col gap-2">
                                 {cohort.is_highlighted && (
                                     <div className="bg-gold-400 text-navy-950 text-[10px] font-black px-2.5 py-1 rounded shadow-sm uppercase tracking-wider">
@@ -120,7 +143,6 @@ export default function CohortClient({ initialCohorts }: CohortClientProps) {
                             </div>
                         </div>
 
-                        {/* Content */}
                         <div className="p-5 flex flex-col">
                             <div className="flex-grow">
                                 <h3 className="text-lg font-serif font-bold text-navy-900 leading-snug group-hover:text-gold-600 transition-colors line-clamp-2 min-h-[3.5rem]">
@@ -131,7 +153,6 @@ export default function CohortClient({ initialCohorts }: CohortClientProps) {
                                     By Aishwarya Manikarnike
                                 </p>
 
-                                {/* Subtle Student Count */}
                                 <div className="flex items-center gap-1.5 mb-4 text-slate-500">
                                     <Users size={12} className="text-slate-400" />
                                     <span className="text-xs font-medium">
@@ -141,8 +162,6 @@ export default function CohortClient({ initialCohorts }: CohortClientProps) {
                                     </span>
                                 </div>
 
-
-                                {/* Bottom Section */}
                                 <div className="flex items-center justify-between mt-2 pt-4 border-t border-slate-50">
                                     <div className="flex flex-col">
                                         {cohort.original_price && (
@@ -161,7 +180,6 @@ export default function CohortClient({ initialCohorts }: CohortClientProps) {
                             </div>
                         </div>
 
-                        {/* Coming Soon Overlay */}
                         {cohort.status === 'coming_soon' && (
                             <div className="absolute inset-0 bg-white/10 backdrop-blur-[1px] pointer-events-none" />
                         )}
@@ -169,7 +187,6 @@ export default function CohortClient({ initialCohorts }: CohortClientProps) {
                 ))}
             </div>
 
-            {/* Enrollment Modal */}
             <AnimatePresence>
                 {isModalOpen && selectedCohort && (
                     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
@@ -193,7 +210,6 @@ export default function CohortClient({ initialCohorts }: CohortClientProps) {
                                 <X size={24} />
                             </button>
 
-                            {/* Minimal Left Side: Quick Context */}
                             <div className="md:w-[35%] p-8 lg:p-12 bg-slate-50/50 border-r border-slate-100 overflow-y-auto">
                                 <div className="mb-10">
                                     <h2 className="text-2xl font-serif font-bold text-navy-900 mb-3 tracking-tight">
@@ -235,7 +251,6 @@ export default function CohortClient({ initialCohorts }: CohortClientProps) {
                                 </div>
                             </div>
 
-                            {/* Priority Right Side: Enrollment Form */}
                             <div className="flex-1 p-8 lg:p-14 bg-white overflow-y-auto">
                                 <div className="max-w-md mx-auto">
                                     <div className="mb-10 text-center md:text-left">
@@ -281,6 +296,63 @@ export default function CohortClient({ initialCohorts }: CohortClientProps) {
                     </div>
                 )}
             </AnimatePresence>
+
+            {/* Minimal Celebration Modal */}
+            <AnimatePresence>
+                {showCelebration && (
+                    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="absolute inset-0 bg-navy-950/40 backdrop-blur-sm"
+                            onClick={closeCelebration}
+                        />
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: 20 }}
+                            className="relative w-full max-w-md bg-white rounded-3xl shadow-premium-xl p-10 text-center"
+                        >
+                            <div className="w-20 h-20 bg-gold-50 text-gold-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                                <Check size={40} strokeWidth={3} />
+                            </div>
+                            
+                            <h2 className="text-2xl font-serif font-bold text-navy-900 mb-3">
+                                Enrollment Successful
+                            </h2>
+                            
+                            <p className="text-slate-500 text-sm leading-relaxed mb-8">
+                                Welcome to the batch! We&apos;ve sent your welcome kit and Telegram access link to your email.
+                            </p>
+
+                            <div className="space-y-4 mb-8">
+                                <div className="flex items-center gap-3 px-4 py-3 bg-slate-50 rounded-xl text-left">
+                                    <Mail className="text-navy-400 w-5 h-5 flex-shrink-0" />
+                                    <span className="text-xs font-medium text-navy-900">Check your inbox & spam folder</span>
+                                </div>
+                            </div>
+
+                            <Button 
+                                variant="primary" 
+                                fullWidth 
+                                onClick={closeCelebration}
+                                className="py-4 rounded-xl text-sm font-bold tracking-wide"
+                            >
+                                Continue to Cohorts
+                            </Button>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div>
+    );
+}
+
+export default function CohortClient(props: CohortClientProps) {
+    return (
+        <Suspense fallback={<div className="min-h-[400px] flex items-center justify-center font-serif italic text-navy-400">Loading learning journey...</div>}>
+            <CohortContent {...props} />
+        </Suspense>
     );
 }

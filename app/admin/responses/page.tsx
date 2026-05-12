@@ -35,6 +35,7 @@ interface FormSubmission {
   razorpay_customer_id?: string;
   razorpay_order_id?: string;
   razorpay_payment_id?: string;
+  cohort_id?: string | null;
 }
 
 interface FormConfig {
@@ -47,6 +48,7 @@ export default function ResponsesPage() {
     const [submissions, setSubmissions] = useState<FormSubmission[]>([]);
     const [filteredSubmissions, setFilteredSubmissions] = useState<FormSubmission[]>([]);
     const [configs, setConfigs] = useState<Record<string, FormConfig>>({});
+    const [cohorts, setCohorts] = useState<Record<string, { title: string }>>({});
     const [loading, setLoading] = useState(true);
     const [statusFilter, setStatusFilter] = useState<string>('all');
     const [slugFilter, setSlugFilter] = useState<string>('all');
@@ -79,9 +81,21 @@ export default function ResponsesPage() {
         }
     }, []);
 
+    const fetchCohorts = useCallback(async () => {
+        const { data } = await supabase.from('cohorts').select('id, title');
+        if (data) {
+            const cohortMap = data.reduce((acc, c) => {
+                acc[c.id] = { title: c.title };
+                return acc;
+            }, {} as Record<string, { title: string }>);
+            setCohorts(cohortMap);
+        }
+    }, []);
+
     useEffect(() => {
         fetchSubmissions();
         fetchConfigs();
+        fetchCohorts();
 
         // Add Escape key listener
         const handleEsc = (e: KeyboardEvent) => {
@@ -89,7 +103,7 @@ export default function ResponsesPage() {
         };
         window.addEventListener('keydown', handleEsc);
         return () => window.removeEventListener('keydown', handleEsc);
-    }, [fetchSubmissions, fetchConfigs]);
+    }, [fetchSubmissions, fetchConfigs, fetchCohorts]);
 
     useEffect(() => {
         let filtered = [...submissions];
@@ -412,15 +426,15 @@ export default function ResponsesPage() {
             <AnimatePresence>
                 {selectedSubmission && (
                     <div 
-                        className="fixed inset-0 bg-navy-950/40 backdrop-blur-sm z-50 flex items-center justify-end p-0 sm:p-4"
+                        className="fixed inset-0 bg-navy-950/40 backdrop-blur-sm z-50 flex justify-end"
                         onClick={() => setSelectedSubmission(null)}
                     >
                         <m.div 
                             initial={{ x: '100%' }}
                             animate={{ x: 0 }}
                             exit={{ x: '100%' }}
-                            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                            className="bg-white w-full max-w-xl h-full sm:h-[95vh] sm:rounded-3xl shadow-premium-xl flex flex-col overflow-hidden"
+                            transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+                            className="bg-white w-full max-w-xl h-full shadow-premium-xl flex flex-col overflow-hidden border-l border-slate-100"
                             onClick={(e) => e.stopPropagation()}
                         >
                             {/* Modal Header - Sticky */}
@@ -490,6 +504,18 @@ export default function ResponsesPage() {
                                                     <span className="font-bold">Payment ID:</span> <code className="font-mono bg-white px-1 py-0.5 rounded border border-slate-200">{selectedSubmission.razorpay_payment_id}</code>
                                                 </div>
                                             )}
+                                        </div>
+                                    )}
+
+                                    {selectedSubmission.cohort_id && (
+                                        <div className="p-4 bg-gold-50/30 rounded-2xl border border-gold-100 col-span-2">
+                                            <div className="flex items-center gap-2 mb-2 text-gold-600">
+                                                <Clock className="w-3.5 h-3.5" />
+                                                <span className="text-[10px] font-bold uppercase tracking-widest">Enrolled Cohort</span>
+                                            </div>
+                                            <div className="text-sm font-bold text-navy-900">
+                                                {cohorts[selectedSubmission.cohort_id]?.title || 'Unknown Batch'}
+                                            </div>
                                         </div>
                                     )}
                                 </div>
