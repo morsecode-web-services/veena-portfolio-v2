@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import {
     AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -89,8 +89,9 @@ export default function AnalyticsPage() {
     const [error, setError] = useState<string | null>(null);
     const [refreshing, setRefreshing] = useState(false);
     const [dateRange, setDateRange] = useState('30');
+    const [cohortStats, setCohortStats] = useState<any[]>([]);
 
-    const fetch_ = async (refresh = false) => {
+    const fetch_ = useCallback(async (refresh = false) => {
         try {
             if (refresh) setRefreshing(true); else setLoading(true);
             const { data: { session } } = await supabase.auth.getSession();
@@ -104,9 +105,31 @@ export default function AnalyticsPage() {
             setData(json); setError(null);
         } catch (e: any) { setError(e.message); }
         finally { setLoading(false); setRefreshing(false); }
-    };
+    }, [dateRange]);
 
-    useEffect(() => { fetch_(); }, [dateRange]);
+    const fetchCohortStats = useCallback(async () => {
+        const { data: cohorts } = await supabase.from('cohorts').select('id, title, price');
+        const { data: subs } = await supabase.from('form_submissions').select('cohort_id').not('cohort_id', 'is', null);
+        const { data: leads } = await supabase.from('leads').select('cohort_id').not('cohort_id', 'is', null);
+        
+        const counts = [...(subs || []), ...(leads || [])].reduce((acc: any, curr: any) => {
+            acc[curr.cohort_id] = (acc[curr.cohort_id] || 0) + 1;
+            return acc;
+        }, {});
+
+        if (cohorts) {
+            setCohortStats(cohorts.map(c => ({
+                title: c.title,
+                count: counts[c.id] || 0,
+                revenue: (counts[c.id] || 0) * (c.price / 100)
+            })).sort((a, b) => b.count - a.count));
+        }
+    }, []);
+
+    useEffect(() => { 
+        fetch_(); 
+        fetchCohortStats();
+    }, [dateRange, fetch_, fetchCohortStats]);
 
     if (error) return (
         <div className="p-6 bg-red-50 rounded-xl border border-red-100 text-red-600">
@@ -446,6 +469,24 @@ export default function AnalyticsPage() {
                                     <Bar1 key={i} label={l.title} value={l.clicks} max={smartLinks[0]?.clicks} color={C.gold} sub={`/link/${l.slug}`} />
                                 ))
                                 : <p className="text-xs text-gray-400 py-4 text-center">No clicks recorded yet.</p>
+                            }
+                        </div>
+                    </Section>
+
+                    <Section title="Cohort Enrollments" icon={<Users className="w-4 h-4 text-gold-500" />}>
+                        <div className="space-y-1">
+                            {cohortStats.length > 0
+                                ? cohortStats.map((c: any, i: number) => (
+                                    <Bar1 
+                                        key={i} 
+                                        label={c.title} 
+                                        value={c.count} 
+                                        max={cohortStats[0]?.count || 1} 
+                                        color={C.blue} 
+                                        sub={`Est. Revenue: ₹${c.revenue.toLocaleString()}`} 
+                                    />
+                                ))
+                                : <p className="text-xs text-gray-400 py-4 text-center">No enrollments yet.</p>
                             }
                         </div>
                     </Section>

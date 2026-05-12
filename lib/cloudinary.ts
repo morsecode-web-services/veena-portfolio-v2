@@ -45,7 +45,7 @@ export function extractPublicId(url: string | undefined): string | null {
  * This must be executed server-side as it requires API Secret.
  */
 export async function deleteFromCloudinary(publicId: string): Promise<boolean> {
-    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD;
+    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
     const apiKey = process.env.CLOUDINARY_API_KEY;
     const apiSecret = process.env.CLOUDINARY_API_SECRET;
 

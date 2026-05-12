@@ -132,6 +132,7 @@ export default function AdminLayoutClient({ children }: AdminLayoutClientProps) 
         { name: 'Smart Links', href: '/admin/smart-links', icon: LinkIcon },
         { name: 'Leads', href: '/admin/leads', icon: Users, badge: leadsCount },
         { name: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
+        { name: 'Automations', href: '/admin/webhooks', icon: Settings },
         { name: 'Architect', href: '/admin/config', icon: PenTool },
         { name: 'Public Site', href: '/', icon: Home },
     ];

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { Event } from '@/types/event';
@@ -29,11 +29,7 @@ export default function EventsPage() {
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
 
-    useEffect(() => {
-        fetchEvents();
-    }, []);
-
-    async function fetchEvents() {
+    const fetchEvents = useCallback(async () => {
         try {
             setLoading(true);
             const { data, error } = await supabase
@@ -48,7 +44,11 @@ export default function EventsPage() {
         } finally {
             setLoading(false);
         }
-    }
+    }, [addToast]);
+
+    useEffect(() => {
+        fetchEvents();
+    }, [fetchEvents]);
 
     async function togglePublish(id: string, currentStatus: boolean) {
         try {

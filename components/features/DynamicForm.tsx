@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
+import Script from 'next/script';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -9,7 +10,8 @@ import { m, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/system/Button';
 import { analytics } from '@/components/GoogleAnalytics';
 import { CheckCircle2, AlertCircle, Loader2, UploadCloud, X } from 'lucide-react';
-import PhoneInput, { getCountryCallingCode } from 'react-phone-number-input';
+import PhoneInput, { getCountryCallingCode, getCountries } from 'react-phone-number-input';
+import en from 'react-phone-number-input/locale/en';
 import Input from 'react-phone-number-input/input';
 import 'react-phone-number-input/style.css';
 
@@ -37,6 +39,71 @@ interface DynamicFormProps {
     submitLabel?: string;
 }
 
+const CustomPhoneInput = ({ name, placeholder, control, error }: { name: string, placeholder?: string, control: any, error?: any }) => {
+    const [country, setCountry] = useState<any>('IN');
+
+    // Helper to convert country code to flag emoji
+    const getFlagEmoji = (countryCode: string) => {
+        if (!countryCode) return '🌐';
+        return countryCode
+            .toUpperCase()
+            .replace(/./g, (char) => String.fromCodePoint(char.charCodeAt(0) + 127397));
+    };
+
+    return (
+        <div className={`phone-input-wrapper ${error ? 'has-error' : ''}`}>
+            <Controller
+                name={name}
+                control={control}
+                render={({ field: { onChange, value } }) => (
+                    <div className={`flex items-center w-full rounded-xl border transition-all bg-white overflow-hidden ${
+                        error 
+                            ? 'border-red-500 bg-red-50/30' 
+                            : 'border-slate-200 focus-within:ring-2 focus-within:ring-navy-500/10 focus-within:border-navy-500 hover:border-slate-300'
+                    }`}>
+                        {/* The Grouped Selector (Left) */}
+                        <div className="flex items-center gap-2 pl-4 pr-3 py-3 border-r border-slate-200 bg-slate-50/50 hover:bg-slate-100 transition-colors cursor-pointer group relative">
+                            <div className="flex items-center gap-2 pointer-events-none">
+                                <span className="text-xl leading-none">
+                                    {getFlagEmoji(country)}
+                                </span>
+                                <span className="text-sm font-bold text-navy-900">+{getCountryCallingCode(country)}</span>
+                            </div>
+                            <select 
+                                className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                                value={country}
+                                onChange={e => setCountry(e.target.value)}
+                            >
+                                {getCountries().map((c) => (
+                                    <option key={c} value={c}>
+                                        {en[c]} +{getCountryCallingCode(c)}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        {/* The Input Area (Right) */}
+                        <Input
+                            country={country}
+                            value={value}
+                            onChange={onChange}
+                            placeholder={placeholder || 'Enter phone number'}
+                            className="flex-1 bg-transparent border-none outline-none font-medium text-navy-900 px-4 py-3 text-sm placeholder:text-slate-400"
+                        />
+                    </div>
+                )}
+            />
+            
+            <style jsx global>{`
+                .phone-input-wrapper .PhoneInputInput {
+                    width: 100%;
+                    height: 100%;
+                }
+            `}</style>
+        </div>
+    );
+};
+
 export default function DynamicForm({ 
     formSlug, 
     fields, 
@@ -54,21 +121,7 @@ export default function DynamicForm({
     const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
     const [errorMessage, setErrorMessage] = useState<string>('');
     const [uploadingFields, setUploadingFields] = useState<Record<string, boolean>>({});
-
-    // Load Razorpay script if payment is required
-    useEffect(() => {
-        if (requiresPayment) {
-            const script = document.createElement('script');
-            script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-            script.async = true;
-            document.body.appendChild(script);
-            return () => {
-                if (document.body.contains(script)) {
-                    document.body.removeChild(script);
-                }
-            };
-        }
-    }, [requiresPayment]);
+    const [isValidating, setIsValidating] = useState(false);
 
     // Build dynamic validation schema
     const schemaShape: Record<string, any> = {};
@@ -130,6 +183,7 @@ export default function DynamicForm({
                 phone: data.phone || null,
                 inquiryType: formSlug,
                 message: data.message || 'No message provided',
+                cohortId: cohortId,
                 ...paymentData
             }),
         });
@@ -144,8 +198,33 @@ export default function DynamicForm({
         setErrorMessage('');
 
         try {
+            // 0. Soft Verification (Cohorts only)
+            if (cohortId && (data.email || data.phone)) {
+                setIsValidating(true);
+                try {
+                    const valRes = await fetch('/api/validate', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email: data.email, phone: data.phone })
+                    });
+                    const valData = await valRes.json();
+                    if (valRes.ok && !valData.isValid) {
+                        throw new Error(valData.error || 'Verification failed. Please check your contact details.');
+                    }
+                } catch (valErr: any) {
+                    // We only block if we got an explicit "invalid" from our API.
+                    // If the API itself failed/timed out, we allow the user through (Fail-Open).
+                    if (valErr.message && !valErr.message.includes('Failed to fetch')) {
+                        throw valErr;
+                    }
+                    console.warn('Validation service unavailable, proceeding to checkout');
+                } finally {
+                    setIsValidating(false);
+                }
+            }
+
             // 1. Payment Flow
-            if (requiresPayment && (razorpayPlanId || cohortId)) {
+            if (requiresPayment && (razorpayPlanId || razorpayAmount || cohortId)) {
                 const checkoutRes = await fetch('/api/checkout', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -207,7 +286,12 @@ export default function DynamicForm({
                         telegram_chat_id: checkoutData.telegram_chat_id || '',
                         cohortId: cohortId || ''
                     },
-                    theme: { color: "#0f172a" }
+                    theme: { color: "#0f172a" },
+                    modal: {
+                        ondismiss: function() {
+                            setIsSubmitting(false);
+                        }
+                    }
                 };
                 
                 const rzp = new (window as any).Razorpay(options);
@@ -225,10 +309,16 @@ export default function DynamicForm({
             analytics.contactFormSubmit(true, undefined, formSlug);
             setSubmitStatus('success');
             reset();
-        } catch (error) {
-            console.error('Form submission error:', error);
+        } catch (error: any) {
+            if (error.message?.includes('Verification failed') || error.message?.includes('valid mobile number')) {
+                console.warn('Validation check:', error.message);
+            } else {
+                console.error('Form submission error:', error);
+            }
+            
             setSubmitStatus('error');
             setErrorMessage(error instanceof Error ? error.message : 'Something went wrong');
+            setIsSubmitting(false);
             analytics.contactFormSubmit(false, errorMessage);
         } finally {
             if (!requiresPayment) {
@@ -242,7 +332,7 @@ export default function DynamicForm({
         if (!file) return;
 
         const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
-        const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD;
+        const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
 
         if (!uploadPreset || !cloudName) {
             alert('Cloudinary upload preset or cloud name is missing. Please configure NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET.');
@@ -290,66 +380,6 @@ export default function DynamicForm({
         }
     };
 
-    const CustomPhoneInput = ({ name, placeholder, control }: { name: string, placeholder?: string, control: any }) => {
-        const [country, setCountry] = useState<any>('IN');
-
-        return (
-            <div className={`phone-input-wrapper ${errors[name] ? 'has-error' : ''}`}>
-                <Controller
-                    name={name}
-                    control={control}
-                    render={({ field: { onChange, value } }) => (
-                        <div className={`flex items-center w-full rounded-xl border transition-all bg-white overflow-hidden ${
-                            errors[name] 
-                                ? 'border-red-500 bg-red-50/30' 
-                                : 'border-slate-200 focus-within:ring-2 focus-within:ring-navy-500/10 focus-within:border-navy-500 hover:border-slate-300'
-                        }`}>
-                            {/* The Grouped Selector (Left) */}
-                            <div className="flex items-center gap-2 pl-4 pr-3 py-3 border-r border-slate-200 bg-slate-50/50 hover:bg-slate-100 transition-colors cursor-pointer group relative">
-                                <div className="flex items-center gap-2 pointer-events-none">
-                                    <span className="text-xl leading-none">
-                                        {country === 'IN' ? '🇮🇳' : country === 'US' ? '🇺🇸' : country === 'GB' ? '🇬🇧' : country === 'AE' ? '🇦🇪' : country === 'CA' ? '🇨🇦' : country === 'AU' ? '🇦🇺' : country === 'SG' ? '🇸🇬' : '🌐'}
-                                    </span>
-                                    <span className="text-sm font-bold text-navy-900">+{getCountryCallingCode(country)}</span>
-                                </div>
-                                <select 
-                                    className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-                                    value={country}
-                                    onChange={e => setCountry(e.target.value)}
-                                >
-                                    <option value="IN">India +91</option>
-                                    <option value="US">USA +1</option>
-                                    <option value="GB">UK +44</option>
-                                    <option value="AE">UAE +971</option>
-                                    <option value="CA">Canada +1</option>
-                                    <option value="AU">Australia +61</option>
-                                    <option value="SG">Singapore +65</option>
-                                    <option value="DE">Germany +49</option>
-                                    <option value="FR">France +33</option>
-                                </select>
-                            </div>
-
-                            {/* The Input Area (Right) */}
-                            <Input
-                                country={country}
-                                value={value}
-                                onChange={onChange}
-                                placeholder={placeholder || 'Enter phone number'}
-                                className="flex-1 bg-transparent border-none outline-none font-medium text-navy-900 px-4 py-3 text-sm placeholder:text-slate-400"
-                            />
-                        </div>
-                    )}
-                />
-                
-                <style jsx global>{`
-                    .phone-input-wrapper .PhoneInputInput {
-                        width: 100%;
-                        height: 100%;
-                    }
-                `}</style>
-            </div>
-        );
-    };
 
     if (submitStatus === 'success') {
         return (
@@ -372,6 +402,12 @@ export default function DynamicForm({
                 </div>
             )}
 
+            {requiresPayment && (
+                <Script 
+                    src="https://checkout.razorpay.com/v1/checkout.js"
+                    strategy="lazyOnload"
+                />
+            )}
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
                 {fields.map((field) => (
                     <div key={field.name}>
@@ -465,6 +501,7 @@ export default function DynamicForm({
                                 name={field.name}
                                 placeholder={field.placeholder}
                                 control={control}
+                                error={errors[field.name]}
                             />
                         ) : (
                             <input
@@ -495,7 +532,7 @@ export default function DynamicForm({
                     isLoading={isSubmitting}
                     className="mt-6 py-5 rounded-2xl text-lg font-bold tracking-tight shadow-premium-lg hover:shadow-premium-xl transition-all"
                 >
-                    {isSubmitting ? 'Processing...' : submitLabel}
+                    {isValidating ? 'Verifying Details...' : isSubmitting ? 'Processing...' : submitLabel}
                 </Button>
 
                 <AnimatePresence>

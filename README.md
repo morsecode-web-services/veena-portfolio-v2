@@ -424,6 +424,7 @@ Detailed guides and implementation notes can be found in the [docs/](docs/) fold
 - [GA4 Setup Guide](docs/GA4_SETUP_GUIDE.md)
 - [Deployment Guide](docs/DEPLOYMENT_GUIDE.md)
 - [Troubleshooting](docs/TROUBLESHOOTING.md)
+- [Project TODO](TODO.md)
 
 ## License
 

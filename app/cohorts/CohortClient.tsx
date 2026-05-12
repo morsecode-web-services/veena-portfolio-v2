@@ -22,6 +22,8 @@ interface Cohort {
     original_price?: number;
     learning_outcomes?: string[];
     curriculum_highlights?: string[];
+    registration_count?: number;
+    success_message?: string;
 }
 
 interface CohortClientProps {
@@ -129,15 +131,14 @@ export default function CohortClient({ initialCohorts }: CohortClientProps) {
                                     By Aishwarya Manikarnike
                                 </p>
 
-                                {/* Mock Ratings - Udemy Style */}
-                                <div className="flex items-center gap-1.5 mb-4">
-                                    <span className="text-sm font-bold text-gold-600">4.9</span>
-                                    <div className="flex text-gold-400">
-                                        {[...Array(5)].map((_, i) => (
-                                            <Star key={i} size={12} fill="currentColor" />
-                                        ))}
-                                    </div>
-                                    <span className="text-[10px] text-slate-400 font-medium">(120+)</span>
+                                {/* Subtle Student Count */}
+                                <div className="flex items-center gap-1.5 mb-4 text-slate-500">
+                                    <Users size={12} className="text-slate-400" />
+                                    <span className="text-xs font-medium">
+                                        {cohort.registration_count && cohort.registration_count > 0 
+                                            ? `${cohort.registration_count} ${cohort.registration_count === 1 ? 'student' : 'students'} enrolled`
+                                            : 'Be the first to join'}
+                                    </span>
                                 </div>
 
 
@@ -261,7 +262,7 @@ export default function CohortClient({ initialCohorts }: CohortClientProps) {
                                             paymentType={selectedCohort.razorpay_plan_id ? 'subscription' : 'one_time'}
                                             cohortId={selectedCohort.id}
                                             submitLabel="Pay & Enroll"
-                                            successMessage="Welcome aboard! Your payment was successful."
+                                            successMessage={selectedCohort.success_message || "Welcome aboard! Your payment was successful."}
                                         />
 
                                         <div className="pt-8 border-t border-slate-50 flex flex-col gap-4">

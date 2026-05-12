@@ -83,7 +83,7 @@ function EditorToolbar() {
                 }
 
                 const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
-                const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD;
+                const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
 
                 if (!uploadPreset || !cloudName) {
                     alert('Cloudinary upload preset or cloud name is missing. Please configure NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET.');

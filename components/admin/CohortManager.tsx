@@ -27,6 +27,8 @@ interface Cohort {
     image_url: string;
     learning_outcomes: string[];
     curriculum_highlights: string[];
+    success_message?: string;
+    registration_count?: number;
 }
 
 export function CohortManager() {
@@ -45,7 +47,8 @@ export function CohortManager() {
         is_highlighted: false,
         image_url: '',
         learning_outcomes_raw: '',
-        curriculum_highlights_raw: ''
+        curriculum_highlights_raw: '',
+        success_message: 'Welcome aboard! Your enrollment is successful.'
     });
 
     useEffect(() => {
@@ -54,13 +57,27 @@ export function CohortManager() {
 
     const fetchCohorts = async () => {
         setLoading(true);
-        const { data, error } = await supabase
+        
+        // 1. Fetch Cohorts
+        const { data: cohortData } = await supabase
             .from('cohorts')
             .select('*')
             .order('order_index', { ascending: true });
 
-        if (!error && data) {
-            setCohorts(data);
+        // 2. Fetch Registration Counts
+        const { data: subs } = await supabase.from('form_submissions').select('cohort_id').not('cohort_id', 'is', null);
+        const { data: leads } = await supabase.from('leads').select('cohort_id').not('cohort_id', 'is', null);
+        
+        const counts = [...(subs || []), ...(leads || [])].reduce((acc: any, curr: any) => {
+            acc[curr.cohort_id] = (acc[curr.cohort_id] || 0) + 1;
+            return acc;
+        }, {});
+
+        if (cohortData) {
+            setCohorts(cohortData.map(c => ({
+                ...c,
+                registration_count: counts[c.id] || 0
+            })));
         }
         setLoading(false);
     };
@@ -76,7 +93,8 @@ export function CohortManager() {
             is_highlighted: false,
             image_url: '',
             learning_outcomes: [],
-            curriculum_highlights: []
+            curriculum_highlights: [],
+            success_message: 'Welcome aboard! Your enrollment is successful.'
         });
         setIsCreating(false);
         setEditingId(null);
@@ -221,6 +239,15 @@ export function CohortManager() {
                                                 onChange={e => setFormData({...formData, description: e.target.value})}
                                                 className="w-full px-4 py-3 bg-slate-50 border-transparent rounded-xl focus:bg-white focus:ring-2 focus:ring-navy-500 transition-all outline-none text-sm min-h-[80px]"
                                                 placeholder="A brief summary of what this cohort is about..."
+                                            />
+                                        </div>
+                                        <div className="md:col-span-2">
+                                            <label className="block text-[10px] font-bold text-slate-500 mb-1">SUCCESS MESSAGE (Shown after payment)</label>
+                                            <input 
+                                                value={formData.success_message || ''} 
+                                                onChange={e => setFormData({...formData, success_message: e.target.value})}
+                                                className="w-full px-4 py-3 bg-slate-50 border-transparent rounded-xl focus:bg-white focus:ring-2 focus:ring-navy-500 transition-all outline-none text-sm font-medium text-green-700"
+                                                placeholder="Welcome aboard! Your enrollment is successful."
                                             />
                                         </div>
                                     </div>
@@ -372,6 +399,7 @@ export function CohortManager() {
                                 <th className="px-8 py-5">Preview</th>
                                 <th className="px-8 py-5">Title & Month</th>
                                 <th className="px-8 py-5">Pricing</th>
+                                <th className="px-8 py-5">Students</th>
                                 <th className="px-8 py-5">Status</th>
                                 <th className="px-8 py-5 text-right">Actions</th>
                             </tr>
@@ -403,6 +431,12 @@ export function CohortManager() {
                                             {cohort.original_price && (
                                                 <span className="text-[10px] text-slate-300 line-through italic">₹{(cohort.original_price / 100).toFixed(0)}</span>
                                             )}
+                                        </div>
+                                    </td>
+                                    <td className="px-8 py-5">
+                                        <div className="flex items-center gap-1.5">
+                                            <span className="text-sm font-bold text-navy-900">{cohort.registration_count || 0}</span>
+                                            <span className="text-[10px] text-slate-400 font-medium uppercase tracking-widest">Enrolled</span>
                                         </div>
                                     </td>
                                     <td className="px-8 py-5">

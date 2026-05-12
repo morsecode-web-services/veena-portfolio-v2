@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/context/ToastContext";
 import { Button } from "@/components/system/Button";
@@ -74,17 +74,7 @@ export default function FormManagementPage() {
   const [isPaymentSettingsOpen, setIsPaymentSettingsOpen] = useState(false);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
 
-  useEffect(() => {
-    fetchConfigs();
-  }, []);
-
-  useEffect(() => {
-    if (selectedConfig) {
-      localStorage.setItem(`form_preview_${selectedConfig.form_slug}`, JSON.stringify(selectedConfig));
-    }
-  }, [selectedConfig]);
-
-  async function fetchConfigs() {
+  const fetchConfigs = useCallback(async () => {
     setIsLoading(true);
     try {
       const { data, error } = await supabase
@@ -98,7 +88,17 @@ export default function FormManagementPage() {
     } finally {
       setIsLoading(false);
     }
-  }
+  }, [addToast]);
+
+  useEffect(() => {
+    fetchConfigs();
+  }, [fetchConfigs]);
+
+  useEffect(() => {
+    if (selectedConfig) {
+      localStorage.setItem(`form_preview_${selectedConfig.form_slug}`, JSON.stringify(selectedConfig));
+    }
+  }, [selectedConfig]);
 
   const handleAddField = () => {
     if (!selectedConfig) return;
