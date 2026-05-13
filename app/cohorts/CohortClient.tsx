@@ -35,7 +35,7 @@ function CohortContent({ initialCohorts }: CohortClientProps) {
     const [selectedCohort, setSelectedCohort] = useState<Cohort | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [showCelebration, setShowCelebration] = useState(false);
-    
+
     const searchParams = useSearchParams();
     const router = useRouter();
 
@@ -156,7 +156,7 @@ function CohortContent({ initialCohorts }: CohortClientProps) {
                                 <div className="flex items-center gap-1.5 mb-4 text-slate-500">
                                     <Users size={12} className="text-slate-400" />
                                     <span className="text-xs font-medium">
-                                        {cohort.registration_count && cohort.registration_count > 0 
+                                        {cohort.registration_count && cohort.registration_count > 0
                                             ? `${cohort.registration_count} ${cohort.registration_count === 1 ? 'student' : 'students'} enrolled`
                                             : 'Be the first to join'}
                                     </span>
@@ -171,8 +171,8 @@ function CohortContent({ initialCohorts }: CohortClientProps) {
                                     </div>
 
                                     <div className={`h-10 px-5 text-[10px] font-black uppercase tracking-widest rounded-lg flex items-center justify-center transition-all duration-300 ${cohort.status === 'active'
-                                            ? 'bg-navy-900 text-white group-hover:bg-gold-600'
-                                            : 'bg-slate-100 text-slate-400'
+                                        ? 'bg-navy-900 text-white group-hover:bg-gold-600'
+                                        : 'bg-slate-100 text-slate-400'
                                         }`}>
                                         {cohort.status === 'active' ? 'Enroll Now' : 'Stay Tuned'}
                                     </div>
@@ -317,11 +317,11 @@ function CohortContent({ initialCohorts }: CohortClientProps) {
                             <div className="w-20 h-20 bg-gold-50 text-gold-600 rounded-full flex items-center justify-center mx-auto mb-6">
                                 <Check size={40} strokeWidth={3} />
                             </div>
-                            
+
                             <h2 className="text-2xl font-serif font-bold text-navy-900 mb-3">
                                 Enrollment Successful
                             </h2>
-                            
+
                             <p className="text-slate-500 text-sm leading-relaxed mb-8">
                                 Welcome to the batch! We&apos;ve sent your welcome kit and Telegram access link to your email.
                             </p>
@@ -333,9 +333,9 @@ function CohortContent({ initialCohorts }: CohortClientProps) {
                                 </div>
                             </div>
 
-                            <Button 
-                                variant="primary" 
-                                fullWidth 
+                            <Button
+                                variant="primary"
+                                fullWidth
                                 onClick={closeCelebration}
                                 className="py-4 rounded-xl text-sm font-bold tracking-wide"
                             >

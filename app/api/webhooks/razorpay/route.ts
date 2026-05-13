@@ -5,6 +5,7 @@ import { render } from '@react-email/render';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { generateTelegramInviteLink } from '@/lib/notifications/telegram';
 import { sendWhatsAppNotification } from '@/lib/notifications/whatsapp';
+import { sendTwilioWhatsApp } from '@/lib/notifications/twilio';
 import CohortWelcome from '@/emails/CohortWelcome';
 
 // ─────────────────────────────────────────────
@@ -176,7 +177,8 @@ export async function POST(req: Request) {
         const automation = configData?.data?.automation || {
           email_enabled: true, 
           whatsapp_enabled: false, 
-          telegram_enabled: true 
+          telegram_enabled: true,
+          twilio_whatsapp_enabled: false
         };
 
         // ── Data Persistence (Upsert Submission) ────────────────────────
@@ -232,11 +234,12 @@ export async function POST(req: Request) {
 
         let emailStatus: any = { status: automation.email_enabled ? 'pending' : 'disabled' };
         let whatsappStatus: any = { status: automation.whatsapp_enabled ? 'pending' : 'disabled' };
+        let twilioWaStatus: any = { status: automation.twilio_whatsapp_enabled ? 'pending' : 'disabled' };
 
         if (telegramResult.success || !automation.telegram_enabled) {
           const inviteLink = (telegramResult as any).inviteLink || '';
 
-          const [emailRes, whatsappRes] = await Promise.allSettled([
+          const results = await Promise.allSettled([
             (studentEmail && automation.email_enabled)
               ? sendCohortWelcomeEmail(studentEmail, studentName, inviteLink, cohortTitle)
               : Promise.reject(new Error(automation.email_enabled ? 'No email' : 'Disabled')),
@@ -244,7 +247,18 @@ export async function POST(req: Request) {
             (studentPhone && automation.whatsapp_enabled)
               ? sendWhatsAppNotification(studentPhone, studentName, inviteLink)
               : Promise.reject(new Error(automation.whatsapp_enabled ? 'No phone' : 'Disabled')),
+
+            (studentPhone && automation.twilio_whatsapp_enabled)
+              ? sendTwilioWhatsApp(
+                  studentPhone, 
+                  `Hi ${studentName}, your payment was received! Join your cohort group here: ${inviteLink}`,
+                  process.env.TWILIO_WHATSAPP_CONTENT_SID,
+                  JSON.stringify({ "1": studentName, "2": inviteLink })
+                )
+              : Promise.reject(new Error(automation.twilio_whatsapp_enabled ? 'No phone' : 'Disabled')),
           ]);
+
+          const [emailRes, whatsappRes, twaRes] = results;
 
           // Process Results
           if (emailRes.status === 'fulfilled') {
@@ -259,6 +273,13 @@ export async function POST(req: Request) {
             whatsappStatus = val.success ? { status: 'success', message_id: val.messageId } : { status: 'failed', error: val.error };
           } else {
             whatsappStatus = { status: automation.whatsapp_enabled ? 'failed' : 'disabled', error: whatsappRes.reason?.message };
+          }
+
+          if (twaRes && twaRes.status === 'fulfilled') {
+            const val = twaRes.value as any;
+            twilioWaStatus = val.success ? { status: 'success', message_id: val.messageSid } : { status: 'failed', error: val.error };
+          } else if (twaRes) {
+            twilioWaStatus = { status: automation.twilio_whatsapp_enabled ? 'failed' : 'disabled', error: (twaRes as any).reason?.message };
           }
         }
 
@@ -278,7 +299,8 @@ export async function POST(req: Request) {
               notification_status: {
                 telegram: { status: automation.telegram_enabled ? (telegramResult.success ? 'success' : 'failed') : 'disabled', error: telegramResult.error, link: (telegramResult as any).inviteLink },
                 email: emailStatus,
-                whatsapp: whatsappStatus
+                whatsapp: whatsappStatus,
+                twilio_whatsapp: twilioWaStatus
               }
             }).eq('id', logId);
           } catch (logUpdateErr) {

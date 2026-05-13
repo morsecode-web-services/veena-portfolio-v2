@@ -32,6 +32,7 @@ interface WebhookLog {
     telegram: { status: string; error?: string; link?: string };
     email: { status: string; error?: string };
     whatsapp: { status: string; error?: string };
+    twilio_whatsapp: { status: string; error?: string };
   };
   payload: any;
   created_at: string;
@@ -48,6 +49,7 @@ export default function WebhookDashboard() {
     email_enabled: true,
     whatsapp_enabled: false,
     telegram_enabled: true,
+    twilio_whatsapp_enabled: false,
   });
   const [savingSettings, setSavingSettings] = useState(false);
 
@@ -279,7 +281,8 @@ export default function WebhookDashboard() {
                       <div className="flex flex-wrap gap-2">
                         {getNotificationBadge('TG', log.notification_status.telegram)}
                         {getNotificationBadge('Email', log.notification_status.email)}
-                        {getNotificationBadge('WA', log.notification_status.whatsapp)}
+                        {getNotificationBadge('WA (Meta)', log.notification_status.whatsapp)}
+                        {getNotificationBadge('WA (Twilio)', log.notification_status.twilio_whatsapp)}
                       </div>
                     </div>
                     <ChevronRight className={`h-4 w-4 text-gray-300 transition-transform ${selectedLog?.id === log.id ? 'translate-x-1 text-navy-400' : 'group-hover:translate-x-1'}`} />
@@ -384,6 +387,21 @@ export default function WebhookDashboard() {
                       {selectedLog.notification_status.whatsapp.error && (
                         <p className="text-[11px] text-red-600 mt-1 font-medium bg-red-50 p-2 rounded">
                           {selectedLog.notification_status.whatsapp.error}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Twilio WhatsApp */}
+                    <div className="p-3 bg-gray-50 rounded-xl border border-gray-100">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-xs font-bold text-navy-900 flex items-center gap-2">
+                          <MessageSquare className="h-3 w-3" /> Twilio WhatsApp
+                        </span>
+                        {getNotificationBadge('', selectedLog.notification_status.twilio_whatsapp)}
+                      </div>
+                      {selectedLog.notification_status.twilio_whatsapp?.error && (
+                        <p className="text-[11px] text-red-600 mt-1 font-medium bg-red-50 p-2 rounded">
+                          {selectedLog.notification_status.twilio_whatsapp.error}
                         </p>
                       )}
                     </div>
@@ -495,7 +513,7 @@ export default function WebhookDashboard() {
                   <MessageSquare className="h-5 w-5" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-navy-900">WhatsApp Notification</h3>
+                  <h3 className="font-bold text-navy-900">WhatsApp (Meta Cloud API)</h3>
                   <p className="text-xs text-navy-400">Sends the invite link via Meta Cloud API. (Requires approved template)</p>
                 </div>
               </div>
@@ -505,6 +523,26 @@ export default function WebhookDashboard() {
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${settings.whatsapp_enabled ? 'bg-gold-500' : 'bg-gray-200'}`}
               >
                 <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${settings.whatsapp_enabled ? 'translate-x-6' : 'translate-x-1'}`} />
+              </button>
+            </div>
+
+            {/* Twilio WhatsApp Setting */}
+            <div className="p-6 flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600">
+                  <MessageSquare className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-navy-900">WhatsApp (Twilio Sandbox/API)</h3>
+                  <p className="text-xs text-navy-400">Alternative WhatsApp channel. Useful for sandbox testing without Meta approval.</p>
+                </div>
+              </div>
+              <button
+                disabled={savingSettings}
+                onClick={() => saveSettings({ ...settings, twilio_whatsapp_enabled: !settings.twilio_whatsapp_enabled })}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${settings.twilio_whatsapp_enabled ? 'bg-gold-500' : 'bg-gray-200'}`}
+              >
+                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${settings.twilio_whatsapp_enabled ? 'translate-x-6' : 'translate-x-1'}`} />
               </button>
             </div>
           </div>

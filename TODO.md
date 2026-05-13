@@ -6,6 +6,7 @@ Tracking tasks and progress for the project.
 - [x] Replaced Make.com with Native Next.js Webhook (Save ₹1,500/mo)
 - [x] Built Admin Automation Dashboard with Real-time Logs
 - [x] Compare twilio vs whatsapp business api cost (Done: Meta wins)
+- [x] Twilio Integration (Production Ready: WhatsApp Templates)
 - [x] Automated Re-Enrollment Links (Approach A)
 - [x] Razorpay Payment Link utility with 7-day expiry
 - [x] /api/admin/cohorts/reenroll API with safety checks
