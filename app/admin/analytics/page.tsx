@@ -89,14 +89,25 @@ export default function AnalyticsPage() {
     const [error, setError] = useState<string | null>(null);
     const [refreshing, setRefreshing] = useState(false);
     const [dateRange, setDateRange] = useState('30');
+    const [customStart, setCustomStart] = useState('');
+    const [customEnd, setCustomEnd] = useState('');
     const [cohortStats, setCohortStats] = useState<any[]>([]);
 
     const fetch_ = useCallback(async (refresh = false) => {
         try {
+            // Prevent fetching if custom is selected but no date is picked
+            if (dateRange === 'custom' && !customStart) return;
+
             if (refresh) setRefreshing(true); else setLoading(true);
             const { data: { session } } = await supabase.auth.getSession();
             if (!session) return;
-            const res = await fetch(`/api/admin/analytics/ga?range=${dateRange}`, {
+            
+            let url = `/api/admin/analytics/ga?range=${dateRange}`;
+            if (dateRange === 'custom' && customStart) {
+                url = `/api/admin/analytics/ga?start=${customStart}&end=${customEnd || new Date().toISOString().split('T')[0]}`;
+            }
+
+            const res = await fetch(url, {
                 headers: { 'Authorization': `Bearer ${session.access_token}` }
             });
             const json = await res.json();
@@ -105,7 +116,7 @@ export default function AnalyticsPage() {
             setData(json); setError(null);
         } catch (e: any) { setError(e.message); }
         finally { setLoading(false); setRefreshing(false); }
-    }, [dateRange]);
+    }, [dateRange, customStart, customEnd]);
 
     const fetchCohortStats = useCallback(async () => {
         const { data: cohorts } = await supabase.from('cohorts').select('id, title, price');
@@ -176,13 +187,30 @@ export default function AnalyticsPage() {
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
                         <div className="flex bg-white rounded-lg border border-gray-200 p-1">
-                            {['7', '30', '90'].map(d => (
+                            {['7', '30', '90', 'custom'].map(d => (
                                 <button key={d} onClick={() => setDateRange(d)}
                                     className={`px-3 py-1.5 rounded-md text-xs font-bold transition-colors ${dateRange === d ? 'bg-navy-900 text-white' : 'text-gray-500 hover:text-navy-900'}`}>
-                                    {d}d
+                                    {d === 'custom' ? 'Custom' : `${d}d`}
                                 </button>
                             ))}
                         </div>
+                        {dateRange === 'custom' && (
+                            <div className="flex items-center gap-2 bg-white rounded-lg border border-gray-200 p-1 animate-in slide-in-from-right-4">
+                                <input 
+                                    type="date" 
+                                    value={customStart} 
+                                    onChange={(e) => setCustomStart(e.target.value)}
+                                    className="text-[10px] font-bold p-1 border-none focus:ring-0 bg-transparent"
+                                />
+                                <span className="text-[10px] text-gray-400 font-bold">TO</span>
+                                <input 
+                                    type="date" 
+                                    value={customEnd} 
+                                    onChange={(e) => setCustomEnd(e.target.value)}
+                                    className="text-[10px] font-bold p-1 border-none focus:ring-0 bg-transparent"
+                                />
+                            </div>
+                        )}
                         {today && (
                             <div className="flex items-center gap-1.5 bg-emerald-50 text-emerald-700 px-3 py-2 rounded-lg border border-emerald-100 text-xs font-bold">
                                 <Zap className="w-3.5 h-3.5" />{today.users} users today · {today.pageViews} views

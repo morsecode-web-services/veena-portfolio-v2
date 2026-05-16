@@ -90,9 +90,9 @@ export default function Home({ config, dbVideos }: HomeProps) {
         {/* Layer 1: Background Image */}
         <div className="absolute inset-0">
           <m.div
-            initial={shouldReduceMotion ? undefined : { scale: 1.1, opacity: 0 }}
-            animate={shouldReduceMotion ? undefined : { scale: 1, opacity: 1 }}
-            transition={{ duration: shouldReduceMotion ? 0 : 1.5, ease: "easeOut" }}
+            initial={shouldReduceMotion ? undefined : { scale: 1.05 }}
+            animate={shouldReduceMotion ? undefined : { scale: 1 }}
+            transition={{ duration: shouldReduceMotion ? 0 : 1.2, ease: "easeOut" }}
             className="h-full w-full"
           >
             {getAssetPath(heroBackground).includes('cloudinary.com') ? (

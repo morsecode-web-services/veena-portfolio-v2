@@ -69,20 +69,18 @@ const About = dynamic(() => import('@/components/sections/About'));
 const Schedule = dynamic(() => import('@/components/sections/Schedule'));
 
 export default async function Page() {
-  const config = await loadConfig();
-
-  let dbVideos: any[] = [];
-  try {
-    const { data, error } = await supabase
+  // Fetch config and videos in parallel to improve TTFB
+  const [config, videosResult] = await Promise.all([
+    loadConfig(),
+    supabase
       .from('videos')
       .select('*')
-      .order('order_index', { ascending: true });
+      .order('order_index', { ascending: true })
+  ]);
 
-    if (!error && data) {
-      dbVideos = data;
-    }
-  } catch (e) {
-    console.error('Failed to fetch videos from Supabase:', e);
+  const dbVideos = videosResult.data || [];
+  if (videosResult.error) {
+    console.error('Failed to fetch videos from Supabase:', videosResult.error);
   }
 
   const featuredVideos = dbVideos.filter(v => v.is_featured);

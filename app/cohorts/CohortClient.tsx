@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Check, Clock, Lock, Users, Calendar, ArrowRight, X, Star, PartyPopper, Mail } from 'lucide-react';
 import { Button } from '@/components/system/Button';
@@ -39,6 +39,14 @@ function CohortContent({ initialCohorts }: CohortClientProps) {
     const searchParams = useSearchParams();
     const router = useRouter();
 
+    const closeCelebration = useCallback(() => {
+        setShowCelebration(false);
+        const params = new URLSearchParams(searchParams.toString());
+        params.delete('success');
+        const query = params.toString();
+        router.replace(`/cohorts${query ? `?${query}` : ''}`, { scroll: false });
+    }, [searchParams, router]);
+
     useEffect(() => {
         if (searchParams.get('success') === 'true') {
             setShowCelebration(true);
@@ -51,14 +59,7 @@ function CohortContent({ initialCohorts }: CohortClientProps) {
 
             return () => clearTimeout(timer);
         }
-    }, [searchParams]);
-
-    const closeCelebration = () => {
-        setShowCelebration(false);
-        const params = new URLSearchParams(searchParams.toString());
-        params.delete('success');
-        router.replace(`/cohorts${params.toString() ? `?${params.toString()}` : ''}`, { scroll: false });
-    };
+    }, [searchParams, closeCelebration]);
 
     const enrollmentFields: FormField[] = [
         { name: 'name', label: 'Full Name', type: 'text', required: true, placeholder: 'Your name' },
@@ -201,74 +202,73 @@ function CohortContent({ initialCohorts }: CohortClientProps) {
                             initial={{ opacity: 0, scale: 0.98, y: 10 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.98, y: 10 }}
-                            className="relative w-full max-w-4xl bg-white rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col md:flex-row max-h-[85vh]"
+                            className="relative w-full max-w-5xl max-h-[90vh] bg-white rounded-3xl shadow-premium-xl overflow-hidden flex flex-col md:flex-row"
                         >
                             <button
                                 onClick={() => setIsModalOpen(false)}
-                                className="absolute top-6 right-8 text-slate-300 hover:text-navy-900 transition-all z-20 p-2 hover:bg-slate-50 rounded-full"
+                                className="absolute top-6 right-6 z-10 p-2 rounded-full bg-white/80 backdrop-blur shadow-sm text-slate-400 hover:text-navy-900 transition-colors"
                             >
                                 <X size={24} />
                             </button>
 
-                            <div className="md:w-[35%] p-8 lg:p-12 bg-slate-50/50 border-r border-slate-100 overflow-y-auto">
-                                <div className="mb-10">
-                                    <h2 className="text-2xl font-serif font-bold text-navy-900 mb-3 tracking-tight">
-                                        {selectedCohort.title}
-                                    </h2>
-                                    <p className="text-slate-500 text-sm leading-relaxed italic font-serif">
-                                        &ldquo;{selectedCohort.description}&rdquo;
-                                    </p>
-                                </div>
-
-                                <div className="space-y-8">
-                                    {selectedCohort.learning_outcomes && selectedCohort.learning_outcomes.length > 0 && (
-                                        <div>
-                                            <h3 className="text-[10px] font-black text-navy-900 uppercase tracking-[0.2em] mb-4">You&apos;ll Master:</h3>
-                                            <div className="space-y-3">
-                                                {selectedCohort.learning_outcomes.slice(0, 5).map((outcome, i) => (
-                                                    <div key={i} className="flex items-start gap-2.5">
-                                                        <Check size={12} className="text-emerald-500 mt-0.5 flex-shrink-0" />
-                                                        <span className="text-xs text-slate-600 leading-tight">{outcome}</span>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {selectedCohort.curriculum_highlights && selectedCohort.curriculum_highlights.length > 0 && (
-                                        <div>
-                                            <h3 className="text-[10px] font-black text-navy-900 uppercase tracking-[0.2em] mb-4">Highlights:</h3>
-                                            <div className="space-y-3">
-                                                {selectedCohort.curriculum_highlights.map((highlight, i) => (
-                                                    <div key={i} className="flex items-center gap-2.5">
-                                                        <div className="w-1.5 h-1.5 rounded-full bg-gold-400"></div>
-                                                        <span className="text-xs font-medium text-navy-800">{highlight}</span>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-
-                            <div className="flex-1 p-8 lg:p-14 bg-white overflow-y-auto">
-                                <div className="max-w-md mx-auto">
-                                    <div className="mb-10 text-center md:text-left">
-                                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gold-600 mb-2">Enrollment Fee</p>
-                                        <div className="flex items-baseline justify-center md:justify-start gap-3">
-                                            <span className="text-5xl font-bold text-navy-900 tracking-tighter">{formatCurrency(selectedCohort.price)}</span>
-                                            {selectedCohort.original_price && (
-                                                <span className="text-xl text-slate-300 line-through font-medium">{formatCurrency(selectedCohort.original_price)}</span>
-                                            )}
-                                        </div>
+                            <div className="md:w-[38%] p-8 bg-slate-50 border-r border-slate-100 overflow-y-auto">
+                                <div className="space-y-10">
+                                    <div>
+                                        <h2 className="text-xl font-bold text-slate-900 mb-3 leading-snug">
+                                            {selectedCohort.title}
+                                        </h2>
+                                        <p className="text-slate-600 text-sm leading-relaxed">
+                                            {selectedCohort.description}
+                                        </p>
                                     </div>
 
                                     <div className="space-y-8">
-                                        <div className="text-center md:text-left">
-                                            <h4 className="text-lg font-bold text-navy-900 mb-1">Confirm Your Spot</h4>
-                                            <p className="text-sm text-slate-400">Enter your details to proceed to payment.</p>
-                                        </div>
+                                        {selectedCohort.learning_outcomes && selectedCohort.learning_outcomes.length > 0 && (
+                                            <div>
+                                                <h3 className="text-sm font-bold text-slate-900 mb-4">What you&apos;ll learn</h3>
+                                                <div className="space-y-3">
+                                                    {selectedCohort.learning_outcomes.slice(0, 5).map((outcome, i) => (
+                                                        <div key={i} className="flex items-start gap-3">
+                                                            <Check size={16} className="text-slate-400 mt-0.5 flex-shrink-0" />
+                                                            <span className="text-sm text-slate-600 leading-snug">{outcome}</span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
 
+                                        {selectedCohort.curriculum_highlights && selectedCohort.curriculum_highlights.length > 0 && (
+                                            <div>
+                                                <h3 className="text-sm font-bold text-slate-900 mb-4">Course includes</h3>
+                                                <div className="space-y-3">
+                                                    {selectedCohort.curriculum_highlights.map((highlight, i) => (
+                                                        <div key={i} className="flex items-center gap-3 text-sm text-slate-600">
+                                                            <Calendar size={14} className="text-slate-400" />
+                                                            <span>{highlight}</span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="flex-1 p-8 lg:p-12 bg-white overflow-y-auto">
+                                <div className="max-w-md mx-auto">
+                                    <div className="mb-8">
+                                        <h3 className="text-base font-bold text-slate-900 mb-4">Finalize Enrollment</h3>
+                                        
+                                        <div className="flex items-center gap-4 mb-2">
+                                            <span className="text-3xl font-bold text-slate-900 tracking-tight">{formatCurrency(selectedCohort.price)}</span>
+                                            {selectedCohort.original_price && (
+                                                <span className="text-lg text-slate-400 line-through font-normal">{formatCurrency(selectedCohort.original_price)}</span>
+                                            )}
+                                        </div>
+                                        <p className="text-xs text-slate-500 italic">One-time payment for full cohort access</p>
+                                    </div>
+
+                                    <div className="space-y-6">
                                         <DynamicForm
                                             formSlug="cohort_enrollment"
                                             title={selectedCohort.title}
@@ -276,19 +276,10 @@ function CohortContent({ initialCohorts }: CohortClientProps) {
                                             requiresPayment={true}
                                             paymentType={selectedCohort.razorpay_plan_id ? 'subscription' : 'one_time'}
                                             cohortId={selectedCohort.id}
-                                            submitLabel="Pay & Enroll"
+                                            submitLabel="Complete Checkout"
                                             successMessage={selectedCohort.success_message || "Welcome aboard! Your payment was successful."}
                                         />
-
-                                        <div className="pt-8 border-t border-slate-50 flex flex-col gap-4">
-                                            <div className="flex items-center justify-center md:justify-start gap-3 opacity-50">
-                                                <Lock size={12} className="text-navy-900" />
-                                                <span className="text-[10px] font-bold uppercase tracking-widest text-navy-900">Secure 256-bit SSL Payment</span>
-                                            </div>
-                                            <p className="text-[10px] text-slate-400 leading-relaxed text-center md:text-left">
-                                                By proceeding with the enrollment, you agree to our terms of service. Since these are digital cohorts, payments are generally non-refundable once the batch begins.
-                                            </p>
-                                        </div>
+                                        
                                     </div>
                                 </div>
                             </div>

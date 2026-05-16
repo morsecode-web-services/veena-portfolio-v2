@@ -29,7 +29,7 @@ import { useToast } from '@/context/ToastContext';
 
 export default function ConfigPage() {
     const { addToast } = useToast();
-    const [activeTab, setActiveTab] = useState<'artist' | 'home' | 'gallery' | 'layout'>('artist');
+    const [activeTab, setActiveTab] = useState<'artist' | 'home' | 'gallery' | 'layout' | 'cohorts'>('artist');
     const [config, setConfig] = useState<SiteConfig | null>(null);
     const [originalConfig, setOriginalConfig] = useState<SiteConfig | null>(null);
     const [loading, setLoading] = useState(true);
@@ -189,6 +189,13 @@ export default function ConfigPage() {
                             icon={Grid3X3}
                             label="Performance Gallery"
                             description="Image collection"
+                        />
+                        <TabButton
+                            active={activeTab === 'cohorts'}
+                            onClick={() => setActiveTab('cohorts')}
+                            icon={Zap}
+                            label="Cohorts Page"
+                            description="FAQs & Settings"
                         />
                         <TabButton
                             active={activeTab === 'layout'}
@@ -619,6 +626,119 @@ export default function ConfigPage() {
                                 </m.div>
                             )}
 
+
+                            {activeTab === 'cohorts' && (
+                                <m.div
+                                    key="cohorts"
+                                    initial={{ opacity: 0, x: 20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    exit={{ opacity: 0, x: -20 }}
+                                    className="space-y-8"
+                                >
+                                    <SectionTitle title="Cohorts Page Settings" description="Manage the learning cohorts page experience." />
+                                    
+                                    <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100">
+                                        <div className="flex items-center justify-between">
+                                            <div>
+                                                <h3 className="text-sm font-bold text-navy-900 uppercase tracking-wider">Visibility Controls</h3>
+                                                <p className="text-xs text-navy-500 mt-0.5">Control where cohorts are visible on the site.</p>
+                                            </div>
+                                            <div className="flex items-center gap-4 bg-white p-3 rounded-xl border border-slate-100 shadow-sm">
+                                                <span className="text-xs font-bold text-navy-700">Show Cohorts on Coming Soon Page</span>
+                                                <button
+                                                    onClick={() => setConfig({ ...config, showCohortsOnComingSoon: !config.showCohortsOnComingSoon })}
+                                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${config.showCohortsOnComingSoon ? 'bg-gold-500' : 'bg-slate-300'}`}
+                                                >
+                                                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${config.showCohortsOnComingSoon ? 'translate-x-6' : 'translate-x-1'}`} />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-6">
+                                        <div className="flex items-center justify-between">
+                                            <h3 className="text-sm font-bold text-navy-900 uppercase tracking-wider ml-1">Frequently Asked Questions</h3>
+                                            <Button 
+                                                size="sm" 
+                                                variant="secondary"
+                                                onClick={() => {
+                                                    const items = [...(config.cohorts_faq?.items || [])];
+                                                    items.push({ question: '', answer: '' });
+                                                    setConfig({ ...config, cohorts_faq: { items } });
+                                                }}
+                                            >
+                                                <Plus className="h-3 w-3 mr-1" /> Add Question
+                                            </Button>
+                                        </div>
+
+                                        <div className="space-y-4">
+                                            {config.cohorts_faq?.items.map((faq, idx) => (
+                                                <div key={idx} className="p-5 bg-white border border-slate-200 rounded-xl space-y-4 shadow-sm group relative">
+                                                    <div className="absolute top-2 right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <button 
+                                                            disabled={idx === 0}
+                                                            onClick={() => {
+                                                                const items = [...(config.cohorts_faq?.items || [])];
+                                                                [items[idx], items[idx - 1]] = [items[idx - 1], items[idx]];
+                                                                setConfig({ ...config, cohorts_faq: { items } });
+                                                            }}
+                                                            className="p-1 hover:text-gold-600 disabled:opacity-30"
+                                                        >
+                                                            <MoveUp className="h-3 w-3" />
+                                                        </button>
+                                                        <button 
+                                                            disabled={idx === (config.cohorts_faq?.items.length || 0) - 1}
+                                                            onClick={() => {
+                                                                const items = [...(config.cohorts_faq?.items || [])];
+                                                                [items[idx], items[idx + 1]] = [items[idx + 1], items[idx]];
+                                                                setConfig({ ...config, cohorts_faq: { items } });
+                                                            }}
+                                                            className="p-1 hover:text-gold-600 disabled:opacity-30"
+                                                        >
+                                                            <MoveDown className="h-3 w-3" />
+                                                        </button>
+                                                        <button 
+                                                            onClick={() => {
+                                                                const items = config.cohorts_faq?.items.filter((_, i) => i !== idx);
+                                                                setConfig({ ...config, cohorts_faq: { items: items || [] } });
+                                                            }}
+                                                            className="p-1 text-slate-400 hover:text-red-500 ml-1"
+                                                        >
+                                                            <Trash2 className="h-3.5 w-3.5" />
+                                                        </button>
+                                                    </div>
+
+                                                    <div className="space-y-4">
+                                                        <InputField 
+                                                            label={`Question #${idx + 1}`}
+                                                            value={faq.question}
+                                                            onChange={(v) => {
+                                                                const items = [...(config.cohorts_faq?.items || [])];
+                                                                items[idx] = { ...faq, question: v };
+                                                                setConfig({ ...config, cohorts_faq: { items } });
+                                                            }}
+                                                        />
+                                                        <TextAreaField 
+                                                            label="Answer"
+                                                            value={faq.answer}
+                                                            onChange={(v) => {
+                                                                const items = [...(config.cohorts_faq?.items || [])];
+                                                                items[idx] = { ...faq, answer: v };
+                                                                setConfig({ ...config, cohorts_faq: { items } });
+                                                            }}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            ))}
+                                            {(!config.cohorts_faq?.items || config.cohorts_faq.items.length === 0) && (
+                                                <div className="text-center py-10 border-2 border-dashed border-slate-100 rounded-2xl bg-slate-50/50">
+                                                    <p className="text-slate-400 text-sm">No FAQs configured yet.</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </m.div>
+                            )}
 
                             {activeTab === 'layout' && (
                                 <m.div

@@ -75,6 +75,9 @@ export async function POST(request: Request) {
         // 4. Trigger ISR Revalidation
         try {
             revalidatePath('/');
+            revalidatePath('/cohorts');
+            const { revalidateTag } = await import('next/cache');
+            revalidateTag('config');
         } catch (e) {
             console.error('[Config API] Failed to revalidate cache:', e);
         }

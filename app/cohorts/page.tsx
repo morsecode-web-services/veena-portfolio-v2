@@ -1,6 +1,8 @@
 import { Metadata } from 'next';
 import CohortClient from './CohortClient';
+import CohortFAQ from '@/components/sections/CohortFAQ';
 import { createClient } from '@supabase/supabase-js';
+import { loadConfig } from '@/lib/config';
 
 export const metadata: Metadata = {
     title: 'Veena & Carnatic Music Cohorts | Monthly Learning Journey',
@@ -22,6 +24,7 @@ export const metadata: Metadata = {
 export const dynamic = 'force-dynamic';
 
 export default async function CohortsPage() {
+    const config = await loadConfig();
     const supabase = createClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -74,6 +77,7 @@ export default async function CohortsPage() {
                 </div>
 
                 <CohortClient initialCohorts={cohortsWithCounts || []} />
+                <CohortFAQ items={config.cohorts_faq?.items} />
             </div>
 
             {/* JSON-LD Schema for Courses */}

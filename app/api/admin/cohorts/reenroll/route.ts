@@ -28,10 +28,10 @@ export async function POST(request: Request) {
     }
 
     // 2. Parse Input
-    const { sourceCohortId, targetCohortId } = await request.json();
+    const { targetCohortId, students } = await request.json();
 
-    if (!sourceCohortId || !targetCohortId) {
-      return NextResponse.json({ error: 'Missing cohort IDs' }, { status: 400 });
+    if (!targetCohortId || !students || !Array.isArray(students)) {
+      return NextResponse.json({ error: 'Missing target cohort ID or student list' }, { status: 400 });
     }
 
     // 3. Fetch Cohort Details
@@ -53,29 +53,10 @@ export async function POST(request: Request) {
     const automation = configData?.data?.automation || { email_enabled: true };
     
     if (!automation.email_enabled) {
-      return NextResponse.json({ error: 'Email notifications are currently disabled in the Automations tab.' }, { status: 400 });
+      return NextResponse.json({ error: 'Email notifications are currently disabled.' }, { status: 400 });
     }
 
-    // 4. Fetch Students from Source Cohort
-    const { data: students, error: studentsError } = await supabaseAdmin
-      .from('form_submissions')
-      .select('user_name, user_email, form_data')
-      .eq('cohort_id', sourceCohortId)
-      .eq('payment_status', 'paid');
-
-    if (studentsError) return NextResponse.json({ error: 'Failed to fetch students' }, { status: 500 });
-    if (!students || students.length === 0) return NextResponse.json({ message: 'No students found to invite' });
-
-    // 5. Fetch existing enrollments for target to skip them
-    const { data: existingEnrollments } = await supabaseAdmin
-      .from('form_submissions')
-      .select('user_email')
-      .eq('cohort_id', targetCohortId)
-      .eq('payment_status', 'paid');
-
-    const enrolledEmails = new Set(existingEnrollments?.map(e => e.user_email) || []);
-
-    // 6. Process Invitations
+    // 4. Process Invitations
     const results = {
       total: students.length,
       sent: 0,
@@ -85,8 +66,9 @@ export async function POST(request: Request) {
     };
 
     for (const student of students) {
-      const name = student.user_name || 'Student';
-      const email = student.user_email;
+      const name = student.name || 'Student';
+      const email = student.email;
+      const phone = student.phone;
 
       if (!email) {
         results.failed++;
@@ -94,16 +76,29 @@ export async function POST(request: Request) {
       }
 
       // ── Duplicate Check ─────────────────────────────────────────────
-      // Skip if this student has already been invited to this target cohort
+      // 1. Check if already invited to this target cohort
       const { data: existingLog } = await supabaseAdmin
         .from('reenrollment_logs')
-        .select('id')
+        .select('id, status')
         .eq('target_cohort_id', targetCohortId)
         .eq('student_email', email)
-        .eq('status', 'sent')
         .single();
 
-      if (existingLog) {
+      if (existingLog && (existingLog.status === 'sent' || existingLog.status === 'paid')) {
+        results.skipped++;
+        continue;
+      }
+
+      // 2. Check if already enrolled in target cohort (actual submission)
+      const { data: actualEnrollment } = await supabaseAdmin
+        .from('form_submissions')
+        .select('id')
+        .eq('cohort_id', targetCohortId)
+        .eq('user_email', email)
+        .eq('payment_status', 'paid')
+        .single();
+
+      if (actualEnrollment) {
         results.skipped++;
         continue;
       }
@@ -115,7 +110,7 @@ export async function POST(request: Request) {
       const plink = await createPersonalizedPaymentLink({
         name,
         email,
-        phone: student.form_data?.phone,
+        phone,
         amount: finalPrice,
         description: `Hi ${name}! Enrollment for ${targetCohort.title}`,
         cohortId: targetCohortId
@@ -123,14 +118,13 @@ export async function POST(request: Request) {
 
       if (!plink.success) {
         results.failed++;
-        await supabaseAdmin.from('reenrollment_logs').insert([{
-          source_cohort_id: sourceCohortId,
+        await supabaseAdmin.from('reenrollment_logs').upsert([{
           target_cohort_id: targetCohortId,
           student_name: name,
           student_email: email,
           status: 'failed',
           error_message: plink.error
-        }]);
+        }], { onConflict: 'target_cohort_id,student_email' });
         continue;
       }
 
@@ -152,29 +146,26 @@ export async function POST(request: Request) {
         });
 
         results.sent++;
-        await supabaseAdmin.from('reenrollment_logs').insert([{
-          source_cohort_id: sourceCohortId,
+        await supabaseAdmin.from('reenrollment_logs').upsert([{
           target_cohort_id: targetCohortId,
           student_name: name,
           student_email: email,
           payment_link_id: plink.id,
           payment_link_url: plink.short_url,
           status: 'sent'
-        }]);
+        }], { onConflict: 'target_cohort_id,student_email' });
 
-        // ── Rate Limit Safety ───────────────────────────────────────
-        // Add a 200ms breather between requests
-        await new Promise(resolve => setTimeout(resolve, 200));
+        // Small breather
+        await new Promise(resolve => setTimeout(resolve, 100));
       } catch (emailErr: any) {
         results.failed++;
-        await supabaseAdmin.from('reenrollment_logs').insert([{
-          source_cohort_id: sourceCohortId,
+        await supabaseAdmin.from('reenrollment_logs').upsert([{
           target_cohort_id: targetCohortId,
           student_name: name,
           student_email: email,
           status: 'failed',
           error_message: `Email failed: ${emailErr.message}`
-        }]);
+        }], { onConflict: 'target_cohort_id,student_email' });
       }
     }
 

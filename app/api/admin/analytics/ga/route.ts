@@ -67,11 +67,35 @@ export async function GET(request: Request) {
 
         // Parse date range from query params
         const { searchParams } = new URL(request.url);
-        const range = searchParams.get('range') || '30';
-        const days = parseInt(range, 10);
-        const startDate = `${days}daysAgo`;
-        const prevStartDate = `${days * 2}daysAgo`;
-        const prevEndDate = `${days + 1}daysAgo`;
+        const start = searchParams.get('start');
+        const end = searchParams.get('end');
+        const rangeStr = searchParams.get('range') || '30';
+        
+        // Safety: Parse range and fallback to 30 if invalid (like "custom")
+        const rangeNum = parseInt(rangeStr, 10);
+        const validRange = isNaN(rangeNum) ? 30 : rangeNum;
+
+        let startDate: string;
+        let endDate: string = end || 'today';
+
+        if (start && start !== 'undefined') {
+            startDate = start;
+        } else {
+            startDate = `${validRange}daysAgo`;
+        }
+
+        // Comparison period logic
+        const daysDiff = (start && end && start !== 'undefined') 
+            ? Math.ceil((new Date(end).getTime() - new Date(start).getTime()) / (1000 * 60 * 60 * 24)) 
+            : validRange;
+            
+        const prevStartDate = (start && start !== 'undefined')
+            ? `${daysDiff}daysAgo` 
+            : `${daysDiff * 2}daysAgo`;
+            
+        const prevEndDate = (start && start !== 'undefined')
+            ? `${daysDiff}daysAgo`
+            : `${daysDiff + 1}daysAgo`;
 
         const accessToken = await getAccessToken(clientEmail, privateKey);
 

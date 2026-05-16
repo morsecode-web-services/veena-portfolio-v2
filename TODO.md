@@ -12,8 +12,14 @@ Tracking tasks and progress for the project.
 - [x] /api/admin/cohorts/reenroll API with safety checks
 - [x] Re-enrollment Invite Modal in Cohort Manager
 - [x] Test Native Webhook with curl (Success: Logs & Email working)
-- [ ] Create & Approve WhatsApp Template in Meta Dashboard
-- [ ] Brainstorm and finalise subscription flow.
+- [ ] Create & Approve WhatsApp Template in Twilio
+- [x] Brainstorm and finalise subscription flow.
+- [ ] Enable Razorpay live API and test it.
+- [ ] Enable Twilio Live API and test it.
+- [ ] Disable Resend for Cohorts
+- [ ] Finalise Cohort Page Content & Success Message
+- [ ] Cleanup cohort test data in all pages
+
 
 ## 🎨 Features & UI
 - [ ] 

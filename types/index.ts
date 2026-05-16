@@ -104,6 +104,15 @@ export interface SiteConfig {
     formSlugs?: string[];
   };
   showCohortsOnComingSoon?: boolean;
+  cohorts_faq?: {
+    items: FAQItem[];
+  };
+  automation?: {
+    email_enabled: boolean;
+    whatsapp_enabled: boolean;
+    telegram_enabled: boolean;
+    twilio_whatsapp_enabled: boolean;
+  };
 }
 
 export interface MusicVideo {

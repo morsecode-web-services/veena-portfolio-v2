@@ -55,6 +55,7 @@ export function CohortManager() {
     const [reenrollSourceId, setReenrollSourceId] = useState('');
     const [reenrollTargetId, setReenrollTargetId] = useState<string | null>(null);
     const [reenrollLoading, setReenrollLoading] = useState(false);
+    const [reenrollProgress, setReenrollProgress] = useState({ current: 0, total: 0, success: 0, failed: 0, skipped: 0 });
 
     const [isViewingLogs, setIsViewingLogs] = useState(false);
     const [viewingLogsCohortId, setViewingLogsCohortId] = useState<string | null>(null);
@@ -116,30 +117,85 @@ export function CohortManager() {
 
         setReenrollLoading(true);
         try {
-            const { data: { session } } = await supabase.auth.getSession();
-            const response = await fetch('/api/admin/cohorts/reenroll', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${session?.access_token}`
-                },
-                body: JSON.stringify({
-                    sourceCohortId: reenrollSourceId,
-                    targetCohortId: reenrollTargetId
-                })
+            // 1. Fetch ALL successful students from source cohort(s)
+            // Note: If we want to support multiple source cohorts in future, we can loop here.
+            // For now, let's stick to one but implement de-duplication.
+            const { data: students, error } = await supabase
+                .from('form_submissions')
+                .select('user_name, user_email, form_data')
+                .eq('cohort_id', reenrollSourceId)
+                .eq('payment_status', 'paid');
+
+            if (error || !students) throw new Error('Failed to fetch source students');
+
+            // 2. De-duplicate by Email
+            const uniqueStudentsMap = new Map();
+            students.forEach(s => {
+                if (s.user_email) {
+                    uniqueStudentsMap.set(s.user_email.toLowerCase(), {
+                        name: s.user_name,
+                        email: s.user_email,
+                        phone: s.form_data?.phone
+                    });
+                }
             });
 
-            const result = await response.json();
-            if (response.ok) {
-                addToast(`Successfully sent ${result.sent} invitations! (${result.skipped} skipped)`, 'success');
+            const uniqueStudents = Array.from(uniqueStudentsMap.values());
+            const total = uniqueStudents.length;
+            
+            setReenrollProgress({ current: 0, total, success: 0, failed: 0, skipped: 0 });
+
+            // 3. Batch Process
+            const BATCH_SIZE = 10;
+            const { data: { session } } = await supabase.auth.getSession();
+            
+            let totalSuccess = 0;
+            let totalFailed = 0;
+            let totalSkipped = 0;
+
+            for (let i = 0; i < uniqueStudents.length; i += BATCH_SIZE) {
+                const batch = uniqueStudents.slice(i, i + BATCH_SIZE);
+                
+                const response = await fetch('/api/admin/cohorts/reenroll', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${session?.access_token}`
+                    },
+                    body: JSON.stringify({
+                        targetCohortId: reenrollTargetId,
+                        students: batch
+                    })
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    totalSuccess += result.sent;
+                    totalFailed += result.failed;
+                    totalSkipped += result.skipped;
+                    
+                    setReenrollProgress(prev => ({
+                        ...prev,
+                        current: Math.min(i + BATCH_SIZE, total),
+                        success: totalSuccess,
+                        failed: totalFailed,
+                        skipped: totalSkipped
+                    }));
+                } else {
+                    console.error('Batch failed:', result.error);
+                    totalFailed += batch.length;
+                }
+            }
+
+            addToast(`Finished processing ${total} invitations.`, 'success');
+            setTimeout(() => {
                 setIsReenrolling(false);
                 setReenrollSourceId('');
                 setReenrollTargetId(null);
-            } else {
-                addToast(result.error || 'Failed to send invitations', 'error');
-            }
-        } catch (error) {
-            addToast('An error occurred during batch processing', 'error');
+            }, 3000);
+        } catch (error: any) {
+            addToast(error.message || 'An error occurred during batch processing', 'error');
         } finally {
             setReenrollLoading(false);
         }
@@ -625,6 +681,26 @@ export function CohortManager() {
                                     Students will receive an email with their <strong>pre-filled 1-click payment link</strong>. No fresh form filling required.
                                 </p>
                             </div>
+
+                            {reenrollLoading && (
+                                <div className="space-y-3">
+                                    <div className="flex justify-between text-[10px] font-black uppercase tracking-widest">
+                                        <span className="text-navy-900">Progress: {reenrollProgress.current} / {reenrollProgress.total}</span>
+                                        <span className="text-gold-600">{Math.round((reenrollProgress.current / reenrollProgress.total) * 100)}%</span>
+                                    </div>
+                                    <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                                        <div 
+                                            className="h-full bg-gold-500 transition-all duration-500" 
+                                            style={{ width: `${(reenrollProgress.current / reenrollProgress.total) * 100}%` }}
+                                        />
+                                    </div>
+                                    <div className="flex gap-4 text-[9px] font-bold text-slate-400 uppercase tracking-wider">
+                                        <span>Sent: <span className="text-green-600">{reenrollProgress.success}</span></span>
+                                        <span>Skipped: <span className="text-navy-700">{reenrollProgress.skipped}</span></span>
+                                        <span>Failed: <span className="text-red-500">{reenrollProgress.failed}</span></span>
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         <div className="p-8 bg-slate-50/50 border-t border-slate-100 flex gap-4">

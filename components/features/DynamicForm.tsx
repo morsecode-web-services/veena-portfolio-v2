@@ -63,7 +63,7 @@ const CustomPhoneInput = ({ name, placeholder, control, error }: { name: string,
                     }`}>
                         {/* The Grouped Selector (Left) */}
                         <div className="flex items-center gap-2 pl-4 pr-3 py-3 border-r border-slate-200 bg-slate-50/50 hover:bg-slate-100 transition-colors cursor-pointer group relative">
-                            <div className="flex items-center gap-2 pointer-events-none">
+                            <div className="flex items-center gap-1.5 pointer-events-none">
                                 <span className="text-xl leading-none">
                                     {getFlagEmoji(country)}
                                 </span>
@@ -435,7 +435,7 @@ export default function DynamicForm({
                                         {...register(field.name)}
                                         rows={4}
                                         placeholder={field.placeholder}
-                                        className={`w-full px-6 py-5 rounded-2xl border transition-all text-lg font-medium focus:ring-2 focus:ring-navy-500/10 focus:border-navy-500 outline-none ${errors[field.name] ? 'border-red-500 bg-red-50/30' : 'border-slate-200 hover:border-slate-300'
+                                        className={`w-full px-4 py-3 rounded-xl border transition-all text-sm font-medium focus:ring-2 focus:ring-navy-500/10 focus:border-navy-500 outline-none ${errors[field.name] ? 'border-red-500 bg-red-50/30' : 'border-slate-200 hover:border-slate-300'
                                             }`}
                                         disabled={isSubmitting}
                                     />
@@ -443,7 +443,7 @@ export default function DynamicForm({
                                     <select
                                 id={`${formSlug}-${field.name}`}
                                 {...register(field.name)}
-                                className={`w-full px-6 py-5 rounded-2xl border transition-all text-lg font-medium focus:ring-2 focus:ring-navy-500/10 focus:border-navy-500 outline-none appearance-none bg-no-repeat bg-[length:16px_16px] bg-[right_1.5rem_center] cursor-pointer ${errors[field.name] ? 'border-red-500 bg-red-50/30' : 'border-slate-200 hover:border-slate-300'
+                                className={`w-full px-4 py-3 rounded-xl border transition-all text-sm font-medium focus:ring-2 focus:ring-navy-500/10 focus:border-navy-500 outline-none appearance-none bg-no-repeat bg-[length:16px_16px] bg-[right_1.5rem_center] cursor-pointer ${errors[field.name] ? 'border-red-500 bg-red-50/30' : 'border-slate-200 hover:border-slate-300'
                                     }`}
                                 style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23475569'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")` }}
                                 disabled={isSubmitting}
@@ -519,7 +519,7 @@ export default function DynamicForm({
                                 type={field.type}
                                 {...register(field.name)}
                                 placeholder={field.placeholder}
-                                className={`w-full px-6 py-5 rounded-2xl border transition-all text-lg font-medium focus:ring-2 focus:ring-navy-500/10 focus:border-navy-500 outline-none ${errors[field.name] ? 'border-red-500 bg-red-50/30' : 'border-slate-200 hover:border-slate-300'
+                                className={`w-full px-4 py-3 rounded-xl border transition-all text-sm font-medium focus:ring-2 focus:ring-navy-500/10 focus:border-navy-500 outline-none ${errors[field.name] ? 'border-red-500 bg-red-50/30' : 'border-slate-200 hover:border-slate-300'
                                     }`}
                                 disabled={isSubmitting}
                             />
@@ -540,7 +540,7 @@ export default function DynamicForm({
                     variant="primary"
                     fullWidth
                     isLoading={isSubmitting}
-                    className="mt-6 py-5 rounded-2xl text-lg font-bold tracking-tight shadow-premium-lg hover:shadow-premium-xl transition-all"
+                    className="mt-6 py-3.5 rounded-xl text-sm font-bold tracking-wide shadow-premium-lg hover:shadow-premium-xl transition-all"
                 >
                     {isValidating ? 'Verifying Details...' : isSubmitting ? 'Processing...' : submitLabel}
                 </Button>

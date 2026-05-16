@@ -139,6 +139,15 @@ const SiteConfigSchema = z.object({
     formSlugs: z.array(z.string()).optional(),
   }).optional(),
   showCohortsOnComingSoon: z.boolean().optional(),
+  cohorts_faq: z.object({
+    items: z.array(FAQItemSchema),
+  }).optional(),
+  automation: z.object({
+    email_enabled: z.boolean(),
+    whatsapp_enabled: z.boolean(),
+    telegram_enabled: z.boolean(),
+    twilio_whatsapp_enabled: z.boolean(),
+  }).optional(),
 });
 
 // Default fallback configuration
@@ -191,6 +200,32 @@ const defaultConfig: SiteConfig = {
     formSlugs: ['classes', 'performance'],
   },
   showCohortsOnComingSoon: false,
+  cohorts_faq: {
+    items: [
+      {
+        question: "What is the format of these monthly cohorts?",
+        answer: "Each cohort is designed for a specific learning goal over a 4-week period. It includes weekly live interactive sessions, structured practice assignments, and ongoing support via our private community."
+      },
+      {
+        question: "Are the live sessions recorded?",
+        answer: "Yes, all live sessions are recorded and uploaded to the student portal within 24 hours. You will have lifetime access to these recordings so you can revisit the lessons anytime."
+      },
+      {
+        question: "Do I need to own a Veena to join the classes?",
+        answer: "For the Veena cohorts, having an instrument is essential for practice. If you are a beginner looking to buy one, I can provide guidance on selecting a quality instrument once you enroll."
+      },
+      {
+        question: "How do I access the private Telegram group?",
+        answer: "Upon successful enrollment, our system automatically sends a personalized invite link to your registered email and WhatsApp. This link is single-use and secure."
+      }
+    ]
+  },
+  automation: {
+    email_enabled: true,
+    whatsapp_enabled: false,
+    telegram_enabled: true,
+    twilio_whatsapp_enabled: false,
+  },
 };
 
 /**
