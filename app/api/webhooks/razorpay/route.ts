@@ -17,6 +17,26 @@ function getResend() {
   return new Resend(process.env.RESEND_API_KEY);
 }
 
+// ─────────────────────────────────────────────
+// Admin Telegram Alert (fire-and-forget)
+// ─────────────────────────────────────────────
+
+async function sendAdminAlert(message: string): Promise<void> {
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  const chatId = process.env.ADMIN_TELEGRAM_CHAT_ID;
+  if (!token || !chatId) return; // silently skip if not configured
+  try {
+    await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: chatId, text: message, parse_mode: 'HTML' }),
+    });
+  } catch (err) {
+    // Never block the main webhook flow
+    console.warn('[AdminAlert] Failed to send Telegram alert:', err);
+  }
+}
+
 async function sendCohortWelcomeEmail(email: string, name: string, inviteLink: string, cohortTitle: string = 'Cohort') {
   const resend = getResend();
   if (!resend) return { error: 'RESEND_API_KEY not configured' };
@@ -327,6 +347,19 @@ export async function POST(req: Request) {
                 twilio_whatsapp: twilioWaStatus
               }
             }).eq('id', logId);
+
+            // ── Admin Group Alert ───────────────────────────────────────────
+            const tgIcon = isTelegramOk ? '✅' : '❌';
+            const emailIcon = isEmailOk ? '✅' : '❌';
+            const amountPaise = paymentEntity?.amount || 0;
+            const amountFormatted = amountPaise ? `₹${(amountPaise / 100).toLocaleString('en-IN')}` : 'N/A';
+            const now = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', hour12: true, day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+
+            const alertMsg = finalStatus === 'success'
+              ? `💰 <b>New Payment!</b>\n\n👤 ${studentName}\n📧 ${studentEmail || 'N/A'}\n📱 ${studentPhone || 'N/A'}\n💳 ${amountFormatted}\n🎓 ${cohortTitle}\n\n${tgIcon} Telegram  ${emailIcon} Email\n⏰ ${now}`
+              : `⚠️ <b>Partial Enrollment</b>\n\n👤 ${studentName}\n📧 ${studentEmail || 'N/A'}\n💳 ${amountFormatted}\n🎓 ${cohortTitle}\n\n${tgIcon} Telegram  ${emailIcon} Email\n❗ Check <a href="https://aishwaryamanikarnike.com/admin/logs">admin logs</a>\n⏰ ${now}`;
+
+            await sendAdminAlert(alertMsg);
           } catch (logUpdateErr) {
             console.error('[Webhook] Failed to update log:', logUpdateErr);
           }
@@ -344,6 +377,8 @@ export async function POST(req: Request) {
           console.error('[Webhook] Failed to log final error:', logFinalErr);
         }
       }
+      // Alert admin group about hard failure
+      await sendAdminAlert(`🚨 <b>Webhook Failed!</b>\n\n❌ ${err.message}\n\nCheck <a href="https://aishwaryamanikarnike.com/admin/logs">admin logs</a> immediately.`);
       return NextResponse.json({ error: err.message }, { status: 500 });
     }
   } catch (err: any) {
