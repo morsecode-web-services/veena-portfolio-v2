@@ -16,7 +16,7 @@ Tracking tasks and progress for the project.
 - [x] Brainstorm and finalise subscription flow.
 - [ ] Enable Razorpay live API and test it.
 - [ ] Enable Twilio Live API and test it.
-- [ ] Disable Resend for Cohorts
+- [x] Disable Resend for Cohorts
 - [ ] Finalise Cohort Page Content & Success Message
 - [ ] Cleanup cohort test data in all pages
 
@@ -29,7 +29,7 @@ Tracking tasks and progress for the project.
 - [ ] Connect to google search console and index the site
  
 ## 📈 SEO & Performance
-- [ ] Sitewide audit
+- [x] Sitewide audit
 
 ## 📄 Documentation
 - [ ] 

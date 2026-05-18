@@ -98,7 +98,7 @@ export default function Home({ config, dbVideos }: HomeProps) {
             {getAssetPath(heroBackground).includes('cloudinary.com') ? (
               <CldImage
                 src={getAssetPath(heroBackground)}
-                alt="Hero background"
+                alt="Aishwarya Manikarnike playing the Veena"
                 fill
                 className="object-cover"
                 style={{ objectPosition: heroBackgroundPosition }}
@@ -108,7 +108,7 @@ export default function Home({ config, dbVideos }: HomeProps) {
             ) : (
               <Image
                 src={getAssetPath(heroBackground)}
-                alt="Hero background"
+                alt="Aishwarya Manikarnike playing the Veena"
                 fill
                 className="object-cover"
                 style={{ objectPosition: heroBackgroundPosition }}

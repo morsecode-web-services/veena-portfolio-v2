@@ -101,23 +101,32 @@ export async function POST(req: Request) {
 
     try {
       // ── Handle Payment Events ───────────────────────────────────────────
-      if (event.event === 'subscription.charged' || event.event === 'order.paid') {
-        const isSubscription = event.event === 'subscription.charged';
+      const validEvents = ['order.paid', 'payment_link.paid'];
+      
+      if (validEvents.includes(event.event)) {
+        const isPaymentLink = event.event === 'payment_link.paid';
         
-        // Defensive extraction
-        const entity = isSubscription
-          ? event.payload.subscription?.entity
-          : (event.payload.order?.entity || event.payload.payment?.entity);
+        // 1. Extract the primary entity (Order or Payment Link)
+        const mainEntity = isPaymentLink 
+          ? event.payload.payment_link?.entity 
+          : event.payload.order?.entity;
 
-        if (!entity) throw new Error(`Could not extract entity for ${event.event}`);
+        // 2. Extract the payment entity (always present on success)
+        const paymentEntity = event.payload.payment?.entity;
 
-        const paymentEntity = event.payload.payment?.entity || (isSubscription ? null : entity);
-        const notes = entity.notes || paymentEntity?.notes || {};
+        if (!mainEntity || !paymentEntity) {
+          throw new Error(`Missing entity in ${event.event} payload`);
+        }
 
-        const subId = isSubscription ? entity.id : null;
-        const orderId = !isSubscription ? (event.payload.order?.entity?.id || paymentEntity?.order_id) : null;
-        const paymentId = paymentEntity?.id || null;
-        const customerId = isSubscription ? entity.customer_id : paymentEntity?.customer_id || null;
+        // 3. Extract Metadata (Notes)
+        // For Payment Links, notes are on the payment_link entity
+        // For Orders, notes are on the order entity
+        const notes = mainEntity.notes || paymentEntity.notes || {};
+
+        const orderId = !isPaymentLink ? mainEntity.id : null;
+        const paymentLinkId = isPaymentLink ? mainEntity.id : null;
+        const paymentId = paymentEntity.id;
+        const customerId = paymentEntity.customer_id || null;
 
         const studentName = notes.studentName || notes.name || 'Student';
         let studentEmail = notes.studentEmail || notes.email || paymentEntity?.email || null;
@@ -184,30 +193,45 @@ export async function POST(req: Request) {
         // ── Data Persistence (Upsert Submission) ────────────────────────
         try {
           const query = supabaseAdmin.from('form_submissions').select('id');
-          if (isSubscription) query.eq('razorpay_subscription_id', subId);
-          else query.eq('razorpay_order_id', orderId);
+          
+          if (isPaymentLink) {
+            query.eq('razorpay_payment_link_id', paymentLinkId);
+          } else {
+            query.eq('razorpay_order_id', orderId);
+          }
 
           const { data: existingSubmissions } = await query;
 
           if (!existingSubmissions || existingSubmissions.length === 0) {
             await supabaseAdmin.from('form_submissions').insert([{
-              form_slug: notes.formSlug || 'payment_fallback',
+              form_slug: notes.formSlug || (isPaymentLink ? 'reenrollment' : 'payment_fallback'),
               user_name: studentName,
               user_email: studentEmail,
               form_data: { name: studentName, email: studentEmail, phone: studentPhone, _note: 'Webhook auto-recovery' },
               status: 'unread',
               payment_status: 'paid',
-              razorpay_subscription_id: subId,
               razorpay_order_id: orderId,
+              razorpay_payment_link_id: paymentLinkId,
               razorpay_payment_id: paymentId,
               razorpay_customer_id: customerId,
               cohort_id: finalCohortId,
               is_verified: true,
             }]);
           } else {
-            const updateQuery = supabaseAdmin.from('form_submissions').update({ payment_status: 'paid', is_verified: true, razorpay_payment_id: paymentId });
-            if (isSubscription) updateQuery.eq('razorpay_subscription_id', subId);
-            else updateQuery.eq('razorpay_order_id', orderId);
+            const updateData: any = { 
+              payment_status: 'paid', 
+              is_verified: true, 
+              razorpay_payment_id: paymentId 
+            };
+            
+            const updateQuery = supabaseAdmin.from('form_submissions').update(updateData);
+            
+            if (isPaymentLink) {
+              updateQuery.eq('razorpay_payment_link_id', paymentLinkId);
+            } else {
+              updateQuery.eq('razorpay_order_id', orderId);
+            }
+            
             await updateQuery;
           }
         } catch (dbErr) {
