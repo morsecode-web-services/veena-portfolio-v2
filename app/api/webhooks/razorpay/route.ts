@@ -101,6 +101,16 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
     }
 
+    // ── Event Routing ─────────────────────────────────────────────────
+    const validEvents = ['order.paid', 'payment_link.paid'];
+
+    // Razorpay fires several events per payment (e.g. payment.captured + order.paid).
+    // Acknowledge unhandled events immediately — no log row, no processing.
+    if (!validEvents.includes(event.event)) {
+      console.log(`[Webhook] Ignoring unhandled event: ${event.event}`);
+      return NextResponse.json({ status: 'ignored' });
+    }
+
     // ── Create Initial Log Entry (Fail-Safe) ──────────────────────────
     let logId: string | null = null;
     try {
@@ -121,8 +131,6 @@ export async function POST(req: Request) {
 
     try {
       // ── Handle Payment Events ───────────────────────────────────────────
-      const validEvents = ['order.paid', 'payment_link.paid'];
-      
       if (validEvents.includes(event.event)) {
         const isPaymentLink = event.event === 'payment_link.paid';
         
@@ -227,7 +235,7 @@ export async function POST(req: Request) {
               form_slug: notes.formSlug || (isPaymentLink ? 'reenrollment' : 'payment_fallback'),
               user_name: studentName,
               user_email: studentEmail,
-              form_data: { name: studentName, email: studentEmail, phone: studentPhone, _note: 'Webhook auto-recovery' },
+              form_data: { name: studentName, email: studentEmail, phone: studentPhone },
               status: 'unread',
               payment_status: 'paid',
               razorpay_order_id: orderId,
@@ -280,51 +288,52 @@ export async function POST(req: Request) {
         let whatsappStatus: any = { status: automation.whatsapp_enabled ? 'pending' : 'disabled' };
         let twilioWaStatus: any = { status: automation.twilio_whatsapp_enabled ? 'pending' : 'disabled' };
 
-        if (telegramResult.success || !automation.telegram_enabled) {
-          const inviteLink = (telegramResult as any).inviteLink || '';
+        // Always attempt email/WhatsApp regardless of Telegram outcome.
+        // If Telegram failed, send an empty inviteLink — the welcome email still reaches the student.
+        // The admin partial alert will prompt manual intervention for the Telegram access.
+        const inviteLink = (telegramResult as any).inviteLink || '';
 
-          const results = await Promise.allSettled([
-            (studentEmail && automation.email_enabled)
-              ? sendCohortWelcomeEmail(studentEmail, studentName, inviteLink, cohortTitle)
-              : Promise.reject(new Error(automation.email_enabled ? 'No email' : 'Disabled')),
+        const results = await Promise.allSettled([
+          (studentEmail && automation.email_enabled)
+            ? sendCohortWelcomeEmail(studentEmail, studentName, inviteLink, cohortTitle)
+            : Promise.reject(new Error(automation.email_enabled ? 'No email' : 'Disabled')),
 
-            (studentPhone && automation.whatsapp_enabled)
-              ? sendWhatsAppNotification(studentPhone, studentName, inviteLink)
-              : Promise.reject(new Error(automation.whatsapp_enabled ? 'No phone' : 'Disabled')),
+          (studentPhone && automation.whatsapp_enabled)
+            ? sendWhatsAppNotification(studentPhone, studentName, inviteLink)
+            : Promise.reject(new Error(automation.whatsapp_enabled ? 'No phone' : 'Disabled')),
 
-            (studentPhone && automation.twilio_whatsapp_enabled)
-              ? sendTwilioWhatsApp(
-                  studentPhone, 
-                  `Hi ${studentName}, your payment was received! Join your cohort group here: ${inviteLink}`,
-                  process.env.TWILIO_WHATSAPP_CONTENT_SID,
-                  JSON.stringify({ "1": studentName, "2": inviteLink })
-                )
-              : Promise.reject(new Error(automation.twilio_whatsapp_enabled ? 'No phone' : 'Disabled')),
-          ]);
+          (studentPhone && automation.twilio_whatsapp_enabled)
+            ? sendTwilioWhatsApp(
+                studentPhone, 
+                `Hi ${studentName}, your payment was received! Join your cohort group here: ${inviteLink}`,
+                process.env.TWILIO_WHATSAPP_CONTENT_SID,
+                JSON.stringify({ "1": studentName, "2": inviteLink })
+              )
+            : Promise.reject(new Error(automation.twilio_whatsapp_enabled ? 'No phone' : 'Disabled')),
+        ]);
 
-          const [emailRes, whatsappRes, twaRes] = results;
+        const [emailRes, whatsappRes, twaRes] = results;
 
-          // Process Results
-          if (emailRes.status === 'fulfilled') {
-            const val = emailRes.value as any;
-            emailStatus = val.error ? { status: 'failed', error: val.error } : { status: 'success', message_id: val.data?.id };
-          } else {
-            emailStatus = { status: automation.email_enabled ? 'failed' : 'disabled', error: emailRes.reason?.message };
-          }
+        // Process Results
+        if (emailRes.status === 'fulfilled') {
+          const val = emailRes.value as any;
+          emailStatus = val.error ? { status: 'failed', error: val.error } : { status: 'success', message_id: val.data?.id };
+        } else {
+          emailStatus = { status: automation.email_enabled ? 'failed' : 'disabled', error: emailRes.reason?.message };
+        }
 
-          if (whatsappRes.status === 'fulfilled') {
-            const val = whatsappRes.value as any;
-            whatsappStatus = val.success ? { status: 'success', message_id: val.messageId } : { status: 'failed', error: val.error };
-          } else {
-            whatsappStatus = { status: automation.whatsapp_enabled ? 'failed' : 'disabled', error: whatsappRes.reason?.message };
-          }
+        if (whatsappRes.status === 'fulfilled') {
+          const val = whatsappRes.value as any;
+          whatsappStatus = val.success ? { status: 'success', message_id: val.messageId } : { status: 'failed', error: val.error };
+        } else {
+          whatsappStatus = { status: automation.whatsapp_enabled ? 'failed' : 'disabled', error: whatsappRes.reason?.message };
+        }
 
-          if (twaRes && twaRes.status === 'fulfilled') {
-            const val = twaRes.value as any;
-            twilioWaStatus = val.success ? { status: 'success', message_id: val.messageSid } : { status: 'failed', error: val.error };
-          } else if (twaRes) {
-            twilioWaStatus = { status: automation.twilio_whatsapp_enabled ? 'failed' : 'disabled', error: (twaRes as any).reason?.message };
-          }
+        if (twaRes && twaRes.status === 'fulfilled') {
+          const val = twaRes.value as any;
+          twilioWaStatus = val.success ? { status: 'success', message_id: val.messageSid } : { status: 'failed', error: val.error };
+        } else if (twaRes) {
+          twilioWaStatus = { status: automation.twilio_whatsapp_enabled ? 'failed' : 'disabled', error: (twaRes as any).reason?.message };
         }
 
         // ── Final Log Update (Fail-Safe) ─────────────────────────────────

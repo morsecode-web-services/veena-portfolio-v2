@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 export const dynamic = 'force-dynamic';
 import { Resend } from 'resend';
 import { render } from '@react-email/render';
-import { createClient } from '@supabase/supabase-js';
+import { supabaseAdmin } from '@/lib/supabase-admin';
 import PerformanceInquiry from '@/emails/PerformanceInquiry';
 import ClassesInquiry from '@/emails/ClassesInquiry';
 import CollaborationInquiry from '@/emails/CollaborationInquiry';
@@ -17,12 +17,6 @@ function getResend() {
   }
   return resend;
 }
-
-// Initialize Supabase (server-side)
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
 
 // Email template configuration
 const emailTemplates = {
@@ -45,6 +39,8 @@ const emailTemplates = {
 };
 
 // Rate limiting: Track submission times per IP
+// NOTE: This is in-memory and resets on serverless cold starts.
+// Acceptable for contact forms; cohort payments are protected by Razorpay itself.
 const submissionTimes = new Map<string, number>();
 const RATE_LIMIT_WINDOW = 30000; // 30 seconds
 
@@ -81,7 +77,7 @@ export async function POST(request: Request) {
     let formFields: any[] = [];
     let customAutoReply: { subject?: string, message?: string } | null = null;
     if (formSlug) {
-      const { data: config } = await supabase
+      const { data: config } = await supabaseAdmin
         .from('form_configs')
         .select('*')
         .eq('form_slug', formSlug)
@@ -140,6 +136,13 @@ export async function POST(request: Request) {
     const leadSlugs = ['performance', 'collaboration', 'classes'];
     const targetTable = leadSlugs.includes(formSlug) ? 'leads' : 'form_submissions';
 
+    // For cohort enrollments with a completed payment, the Razorpay webhook is the
+    // single source of truth for form_submissions writes. Skip the DB insert here
+    // entirely to prevent a duplicate row in /admin/responses.
+    if (formSlug === 'cohort_enrollment' && payment_status === 'paid') {
+      return NextResponse.json({ success: true, message: 'Cohort enrollment handled by webhook' });
+    }
+
     const submissionRecord: any = {
       form_slug: formSlug || 'general',
       form_data: form_data || body,
@@ -165,7 +168,8 @@ export async function POST(request: Request) {
       if (cohortId) submissionRecord.cohort_id = cohortId;
     }
 
-    const { error: dbError } = await supabase
+    // Use supabaseAdmin (service role) to bypass RLS — this is a trusted server route.
+    const { error: dbError } = await supabaseAdmin
       .from(targetTable)
       .insert([submissionRecord]);
 
@@ -212,6 +216,12 @@ export async function POST(request: Request) {
     );
 
     // 4. Send notification email to you
+    // Skip for cohort_enrollment — the Razorpay webhook handles all notifications
+    // for that flow (welcome email + Telegram invite). Sending here too is duplicate noise.
+    if (formSlug === 'cohort_enrollment') {
+      return NextResponse.json({ success: true, message: 'Cohort submission stored (notifications handled by webhook)' });
+    }
+
     const resendClient = getResend();
     if (!resendClient) {
       return NextResponse.json(

@@ -60,9 +60,12 @@ export default function WebhookDashboard() {
     // Subscribe to real-time updates
     const channel = supabase
       .channel('webhook_logs_realtime')
-      // @ts-ignore - Fixing type mismatch in certain Supabase SDK versions
       .on('postgres_changes', { event: 'INSERT', table: 'webhook_logs', schema: 'public' }, (payload) => {
-        setLogs(prev => [payload.new as WebhookLog, ...prev]);
+        setLogs(prev => {
+          // Guard against duplicates — fetchLogs() may have already loaded this row
+          if (prev.some(l => l.id === (payload.new as WebhookLog).id)) return prev;
+          return [payload.new as WebhookLog, ...prev];
+        });
       })
       .subscribe();
 

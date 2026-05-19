@@ -314,13 +314,17 @@ function CohortContent({ initialCohorts }: CohortClientProps) {
                             </h2>
 
                             <p className="text-slate-500 text-sm leading-relaxed mb-8">
-                                Welcome to the batch! We&apos;ve sent your welcome kit and Telegram access link to your email.
+                                Welcome to the batch! Your Telegram access link and welcome email will arrive in your inbox within the next few minutes.
                             </p>
 
                             <div className="space-y-4 mb-8">
                                 <div className="flex items-center gap-3 px-4 py-3 bg-slate-50 rounded-xl text-left">
                                     <Mail className="text-navy-400 w-5 h-5 flex-shrink-0" />
-                                    <span className="text-xs font-medium text-navy-900">Check your inbox & spam folder</span>
+                                    <span className="text-xs font-medium text-navy-900">Check your inbox in a few minutes — your Telegram invite link will be there</span>
+                                </div>
+                                <div className="flex items-center gap-3 px-4 py-3 bg-amber-50 rounded-xl text-left">
+                                    <Clock className="text-amber-500 w-5 h-5 flex-shrink-0" />
+                                    <span className="text-xs font-medium text-amber-800">If it doesn&apos;t arrive in 5 min, check your spam folder</span>
                                 </div>
                             </div>
 
