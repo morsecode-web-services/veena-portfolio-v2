@@ -269,7 +269,7 @@ export default function DynamicForm({
                             analytics.contactFormSubmit(true, undefined, formSlug);
                             
                             if (cohortId) {
-                                window.location.href = '/cohorts?success=true';
+                                window.location.href = `/cohorts?success=true&payment_id=${response.razorpay_payment_id || ''}`;
                             } else {
                                 setSubmitStatus('success');
                                 reset();

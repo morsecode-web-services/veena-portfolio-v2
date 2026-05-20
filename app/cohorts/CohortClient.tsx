@@ -8,6 +8,7 @@ import DynamicForm, { FormField } from '@/components/features/DynamicForm';
 import Image from 'next/image';
 import { analytics, trackEvent } from '@/components/GoogleAnalytics';
 import { useSearchParams, useRouter } from 'next/navigation';
+import QRCode from 'react-qr-code';
 
 interface Cohort {
     id: string;
@@ -34,15 +35,19 @@ interface CohortClientProps {
 function CohortContent({ initialCohorts }: CohortClientProps) {
     const [selectedCohort, setSelectedCohort] = useState<Cohort | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [showCelebration, setShowCelebration] = useState(false);
+    const [inviteLink, setInviteLink] = useState<string | null>(null);
+    const [isPolling, setIsPolling] = useState(false);
 
     const searchParams = useSearchParams();
     const router = useRouter();
 
     const closeCelebration = useCallback(() => {
         setShowCelebration(false);
+        setInviteLink(null);
+        setIsPolling(false);
         const params = new URLSearchParams(searchParams.toString());
         params.delete('success');
+        params.delete('payment_id');
         const query = params.toString();
         router.replace(`/cohorts${query ? `?${query}` : ''}`, { scroll: false });
     }, [searchParams, router]);
@@ -51,13 +56,45 @@ function CohortContent({ initialCohorts }: CohortClientProps) {
         if (searchParams.get('success') === 'true') {
             setShowCelebration(true);
             trackEvent('purchase_complete', { status: 'success' });
-
-            // Auto-dismiss after 12 seconds
-            const timer = setTimeout(() => {
-                closeCelebration();
-            }, 12000);
-
-            return () => clearTimeout(timer);
+            
+            const paymentId = searchParams.get('payment_id');
+            
+            if (paymentId) {
+                setIsPolling(true);
+                let attempts = 0;
+                const maxAttempts = 10; // Poll for 20 seconds (10 * 2s)
+                
+                const pollInterval = setInterval(async () => {
+                    attempts++;
+                    try {
+                        const res = await fetch(`/api/cohorts/invite-link?paymentId=${paymentId}`);
+                        const data = await res.json();
+                        
+                        if (data.status === 'success' && data.link) {
+                            setInviteLink(data.link);
+                            setIsPolling(false);
+                            clearInterval(pollInterval);
+                        } else if (data.status === 'failed' || attempts >= maxAttempts) {
+                            setIsPolling(false);
+                            clearInterval(pollInterval);
+                        }
+                    } catch (err) {
+                        console.error('Polling error:', err);
+                        if (attempts >= maxAttempts) {
+                            setIsPolling(false);
+                            clearInterval(pollInterval);
+                        }
+                    }
+                }, 2000);
+                
+                return () => clearInterval(pollInterval);
+            } else {
+                // Auto-dismiss after 12 seconds if no payment ID to poll for
+                const timer = setTimeout(() => {
+                    closeCelebration();
+                }, 12000);
+                return () => clearTimeout(timer);
+            }
         }
     }, [searchParams, closeCelebration]);
 
@@ -313,20 +350,43 @@ function CohortContent({ initialCohorts }: CohortClientProps) {
                                 Enrollment Successful
                             </h2>
 
-                            <p className="text-slate-500 text-sm leading-relaxed mb-8">
-                                Welcome to the batch! Your Telegram access link and welcome email will arrive in your inbox within the next few minutes.
+                            <p className="text-slate-500 text-sm leading-relaxed mb-6">
+                                Welcome to the batch! Your Telegram access link and welcome email will arrive in your inbox shortly.
                             </p>
 
-                            <div className="space-y-4 mb-8">
-                                <div className="flex items-center gap-3 px-4 py-3 bg-slate-50 rounded-xl text-left">
-                                    <Mail className="text-navy-400 w-5 h-5 flex-shrink-0" />
-                                    <span className="text-xs font-medium text-navy-900">Check your inbox in a few minutes — your Telegram invite link will be there</span>
+                            {isPolling ? (
+                                <div className="bg-slate-50 rounded-2xl p-6 mb-8 border border-slate-100 flex flex-col items-center justify-center min-h-[160px]">
+                                    <div className="w-8 h-8 border-4 border-gold-200 border-t-gold-500 rounded-full animate-spin mb-4"></div>
+                                    <p className="text-sm font-bold text-navy-900">Generating secure invite link...</p>
+                                    <p className="text-xs text-slate-500 mt-1">This usually takes 2-3 seconds</p>
                                 </div>
-                                <div className="flex items-center gap-3 px-4 py-3 bg-amber-50 rounded-xl text-left">
-                                    <Clock className="text-amber-500 w-5 h-5 flex-shrink-0" />
-                                    <span className="text-xs font-medium text-amber-800">If it doesn&apos;t arrive in 5 min, check your spam folder</span>
+                            ) : inviteLink ? (
+                                <div className="bg-slate-50 rounded-2xl p-6 mb-8 border border-slate-100">
+                                    <p className="text-sm font-bold text-navy-900 mb-4">Scan or click to join the group instantly:</p>
+                                    <div className="bg-white p-4 rounded-xl shadow-sm inline-block mb-4 border border-slate-200">
+                                        <QRCode value={inviteLink} size={140} />
+                                    </div>
+                                    <a 
+                                        href={inviteLink}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="w-full flex items-center justify-center gap-2 bg-blue-50 text-blue-600 hover:bg-blue-100 py-3 rounded-xl text-sm font-bold transition-colors"
+                                    >
+                                        Join Telegram Group <ArrowRight size={16} />
+                                    </a>
                                 </div>
-                            </div>
+                            ) : (
+                                <div className="space-y-4 mb-8">
+                                    <div className="flex items-center gap-3 px-4 py-3 bg-slate-50 rounded-xl text-left">
+                                        <Mail className="text-navy-400 w-5 h-5 flex-shrink-0" />
+                                        <span className="text-xs font-medium text-navy-900">Check your inbox in a few minutes — your Telegram invite link will be there</span>
+                                    </div>
+                                    <div className="flex items-center gap-3 px-4 py-3 bg-amber-50 rounded-xl text-left">
+                                        <Clock className="text-amber-500 w-5 h-5 flex-shrink-0" />
+                                        <span className="text-xs font-medium text-amber-800">If it doesn&apos;t arrive in 5 min, check your spam folder</span>
+                                    </div>
+                                </div>
+                            )}
 
                             <Button
                                 variant="primary"
