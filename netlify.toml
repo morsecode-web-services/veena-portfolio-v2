@@ -1,0 +1,12 @@
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[functions]
+  # Max timeout on Netlify free tier is 10s.
+  # Pro/Enterprise allows up to 26s.
+  # Set to 10 to make it explicit — upgrade to Pro for 26s if cold starts persist.
+  timeout = 10
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"

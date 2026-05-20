@@ -27,7 +27,7 @@ interface WebhookLog {
   event_type: string;
   student_name: string;
   student_email: string;
-  status: 'success' | 'failed' | 'partial_success';
+  status: 'success' | 'failed' | 'partial_success' | 'duplicate';
   notification_status: {
     telegram: { status: string; error?: string; link?: string };
     email: { status: string; error?: string };
@@ -143,6 +143,7 @@ export default function WebhookDashboard() {
       case 'success': return <CheckCircle2 className="h-5 w-5 text-emerald-500" />;
       case 'failed': return <XCircle className="h-5 w-5 text-red-500" />;
       case 'partial_success': return <AlertCircle className="h-5 w-5 text-amber-500" />;
+      case 'duplicate': return <RefreshCcw className="h-5 w-5 text-purple-400" />;
       default: return <Clock className="h-5 w-5 text-gray-400" />;
     }
   };
@@ -239,6 +240,7 @@ export default function WebhookDashboard() {
                 <option value="success">Success Only</option>
                 <option value="partial_success">Partial Success</option>
                 <option value="failed">Failed Only</option>
+                <option value="duplicate">Duplicates</option>
               </select>
             </div>
           </div>
@@ -312,6 +314,7 @@ export default function WebhookDashboard() {
                     <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
                       selectedLog.status === 'success' ? 'bg-emerald-500/20 text-emerald-400' :
                       selectedLog.status === 'failed' ? 'bg-red-500/20 text-red-400' :
+                      selectedLog.status === 'duplicate' ? 'bg-purple-500/20 text-purple-400' :
                       'bg-amber-500/20 text-amber-400'
                     }`}>
                       {selectedLog.status.replace('_', ' ')}

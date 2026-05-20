@@ -117,7 +117,9 @@ export async function POST(req: Request) {
       const { data: initialLog } = await supabaseAdmin
         .from('webhook_logs')
         .insert([{
-          event_id: event.id || `internal_${Date.now()}`,
+          // Razorpay doesn't include a top-level event id in payloads.
+          // We'll update this to the payment_id once extracted (more stable than Date.now()).
+          event_id: `pending_${Date.now()}`,
           event_type: event.event,
           payload: event,
           status: 'pending'
@@ -202,6 +204,35 @@ export async function POST(req: Request) {
             finalCohortId = cohort.id;
             cohortTitle = cohort.title;
           }
+        }
+
+        // ── Idempotency Check ──────────────────────────────────────────────
+        // Razorpay retries webhooks on timeout or non-2xx. Both the original
+        // and retry carry the same payment_id. If we've already processed
+        // this payment, skip all notifications and mark the log as duplicate.
+        if (logId) {
+          await supabaseAdmin
+            .from('webhook_logs')
+            .update({ event_id: paymentId })
+            .eq('id', logId);
+        }
+
+        const { data: alreadyProcessed } = await supabaseAdmin
+          .from('form_submissions')
+          .select('id')
+          .eq('razorpay_payment_id', paymentId)
+          .eq('payment_status', 'paid')
+          .maybeSingle();
+
+        if (alreadyProcessed) {
+          console.log(`[Webhook] Duplicate delivery for payment ${paymentId} — skipping`);
+          if (logId) {
+            await supabaseAdmin
+              .from('webhook_logs')
+              .update({ status: 'duplicate', error_message: `Duplicate delivery — payment ${paymentId} already fully processed` })
+              .eq('id', logId);
+          }
+          return NextResponse.json({ status: 'already_processed' });
         }
 
         // ── Fetch Global Automation Settings ──────────────────────────────
