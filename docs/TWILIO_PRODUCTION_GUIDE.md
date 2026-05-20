@@ -50,7 +50,7 @@ To send messages to any user without them joining a sandbox, you need a verified
 Twilio uses the **Content Editor** for production WhatsApp templates.
 1. Go to **Messaging → Content Editor**.
 2. Create a new Content. 
-3. Name it `cohort_welcome`.
+3. Name it `whatever`.
 4. Body: `Hi {{1}}, your payment was received! Join your cohort group here: {{2}}`
 5. Submit for approval (Meta usually takes 1-24 hours).
 6. Once approved, copy the **Content SID** (starts with `HX...`).
