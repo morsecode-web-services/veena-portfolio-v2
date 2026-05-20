@@ -323,6 +323,9 @@ export async function POST(req: Request) {
         // If Telegram failed, send an empty inviteLink — the welcome email still reaches the student.
         // The admin partial alert will prompt manual intervention for the Telegram access.
         const inviteLink = (telegramResult as any).inviteLink || '';
+        
+        // WhatsApp templates require the base URL to be hardcoded, so we only pass the code/path.
+        const whatsappInviteCode = inviteLink.replace(/^https?:\/\/t\.me\//i, '');
 
         const results = await Promise.allSettled([
           (studentEmail && automation.email_enabled)
@@ -330,15 +333,15 @@ export async function POST(req: Request) {
             : Promise.reject(new Error(automation.email_enabled ? 'No email' : 'Disabled')),
 
           (studentPhone && automation.whatsapp_enabled)
-            ? sendWhatsAppNotification(studentPhone, studentName, inviteLink)
+            ? sendWhatsAppNotification(studentPhone, studentName, whatsappInviteCode)
             : Promise.reject(new Error(automation.whatsapp_enabled ? 'No phone' : 'Disabled')),
 
           (studentPhone && automation.twilio_whatsapp_enabled)
             ? sendTwilioWhatsApp(
                 studentPhone, 
-                `Hi ${studentName}, your payment was received! Join your cohort group here: ${inviteLink}`,
+                `Hi ${studentName}, your payment was received! Join your cohort group here: https://t.me/${whatsappInviteCode}`,
                 process.env.TWILIO_WHATSAPP_CONTENT_SID,
-                JSON.stringify({ "1": studentName, "2": inviteLink })
+                JSON.stringify({ "1": studentName, "2": whatsappInviteCode })
               )
             : Promise.reject(new Error(automation.twilio_whatsapp_enabled ? 'No phone' : 'Disabled')),
         ]);
