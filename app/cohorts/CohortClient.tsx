@@ -351,7 +351,7 @@ function CohortContent({ initialCohorts }: CohortClientProps) {
                             </h2>
 
                             <p className="text-slate-500 text-sm leading-relaxed mb-6">
-                                Welcome to the batch! Your Telegram access link and welcome email will arrive in your inbox shortly.
+                                Welcome to the batch! We are processing your enrollment. Your secure Telegram access link will be sent to your registered contact channels shortly.
                             </p>
 
                             {isPolling ? (
@@ -379,11 +379,11 @@ function CohortContent({ initialCohorts }: CohortClientProps) {
                                 <div className="space-y-4 mb-8">
                                     <div className="flex items-center gap-3 px-4 py-3 bg-slate-50 rounded-xl text-left">
                                         <Mail className="text-navy-400 w-5 h-5 flex-shrink-0" />
-                                        <span className="text-xs font-medium text-navy-900">Check your inbox in a few minutes — your Telegram invite link will be there</span>
+                                        <span className="text-xs font-medium text-navy-900">Check your Email and WhatsApp — your Telegram invite link will arrive within a few minutes</span>
                                     </div>
                                     <div className="flex items-center gap-3 px-4 py-3 bg-amber-50 rounded-xl text-left">
                                         <Clock className="text-amber-500 w-5 h-5 flex-shrink-0" />
-                                        <span className="text-xs font-medium text-amber-800">If it doesn&apos;t arrive in 5 min, check your spam folder</span>
+                                        <span className="text-xs font-medium text-amber-800">If checking email, please ensure you check your spam or promotions folder</span>
                                     </div>
                                 </div>
                             )}
