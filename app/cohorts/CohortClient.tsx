@@ -35,6 +35,7 @@ interface CohortClientProps {
 function CohortContent({ initialCohorts }: CohortClientProps) {
     const [selectedCohort, setSelectedCohort] = useState<Cohort | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [showCelebration, setShowCelebration] = useState(false);
     const [inviteLink, setInviteLink] = useState<string | null>(null);
     const [isPolling, setIsPolling] = useState(false);
 
