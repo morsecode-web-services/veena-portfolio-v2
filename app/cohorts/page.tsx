@@ -21,7 +21,7 @@ export const metadata: Metadata = {
     }
 };
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 60;
 
 export default async function CohortsPage() {
     const config = await loadConfig();
@@ -36,34 +36,6 @@ export default async function CohortsPage() {
         .order('order_index', { ascending: true })
         .order('created_at', { ascending: false });
 
-    const { data: formSubmissions } = await supabase
-        .from('form_submissions')
-        .select('cohort_id, payment_status, is_verified')
-        .not('cohort_id', 'is', null);
-
-    const { data: leads } = await supabase
-        .from('leads')
-        .select('cohort_id')
-        .not('cohort_id', 'is', null);
-
-    const counts = [...(formSubmissions || []), ...(leads || [])].reduce((acc: Record<string, number>, curr: any) => {
-        if (curr.cohort_id) {
-            // Only count if it's a lead OR if it's a paid/verified submission
-            const isPaid = curr.payment_status === 'paid' || curr.is_verified === true;
-            const isLead = !('payment_status' in curr); // Leads don't have payment_status usually
-            
-            if (isLead || isPaid) {
-                acc[curr.cohort_id] = (acc[curr.cohort_id] || 0) + 1;
-            }
-        }
-        return acc;
-    }, {});
-
-    const cohortsWithCounts = cohorts?.map(cohort => ({
-        ...cohort,
-        registration_count: counts?.[cohort.id] || 0
-    }));
-
     return (
         <main className="min-h-screen bg-slate-50 pt-24 pb-20">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -76,7 +48,7 @@ export default async function CohortsPage() {
                     </p>
                 </div>
 
-                <CohortClient initialCohorts={cohortsWithCounts || []} />
+                <CohortClient initialCohorts={cohorts || []} />
                 <CohortFAQ items={config.cohorts_faq?.items} />
             </div>
 

@@ -1,16 +1,12 @@
 import type { Metadata } from 'next';
 import { Inter, Playfair_Display } from 'next/font/google';
-import { headers } from 'next/headers';
 import './globals.css';
-import Header from '@/components/layout/Header';
-import Footer from '@/components/layout/Footer';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { Providers } from '@/components/Providers';
 import GoogleAnalytics from '@/components/GoogleAnalytics';
 import MicrosoftClarity from '@/components/MicrosoftClarity';
-import VideoModal from '@/components/ui/VideoModal';
-import BackToTop from '@/components/ui/BackToTop';
 import { validateConfig, loadConfig } from '@/lib/config';
+import ConditionalLayout from '@/components/layout/ConditionalLayout';
 
 export async function generateMetadata(): Promise<Metadata> {
   const config = await loadConfig();
@@ -163,18 +159,6 @@ export default async function RootLayout({
   const config = await loadConfig();
   const jsonLdData = generateJsonLd(config);
 
-  const headersList = await headers();
-  const pathname = headersList.get('x-invoke-path') ?? headersList.get('x-pathname') ?? '';
-  const isComingSoon = pathname.startsWith('/coming-soon');
-  const isFormPage = pathname.startsWith('/forms/');
-  const isSiteLive = process.env.NEXT_PUBLIC_SITE_LIVE === 'true';
-
-  // Pages that don't need the main site navigation and footer
-  const isStandalonePage = 
-    isComingSoon || 
-    pathname.startsWith('/link') || 
-    pathname.startsWith('/admin');
-
   return (
     <html lang="en" className={`${inter.variable} ${playfair.variable}`} suppressHydrationWarning>
       <head>
@@ -192,38 +176,13 @@ export default async function RootLayout({
         {/* Preconnect to Cloudinary CDN for faster image delivery */}
         <link rel="preconnect" href="https://res.cloudinary.com" />
         <link rel="dns-prefetch" href="https://res.cloudinary.com" />
-        {jsonLdData && !isStandalonePage && (
-          <script
-            type="application/ld+json"
-            dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdData) }}
-          />
-        )}
       </head>
       <body className="font-sans antialiased" suppressHydrationWarning>
-        {!isStandalonePage && (
-          <>
-            {/* Skip Navigation Links for Accessibility */}
-            <a
-              href="#main-content"
-              className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] focus:px-6 focus:py-3 focus:bg-navy-900 focus:text-white focus:rounded-md focus:shadow-lg focus:font-medium"
-            >
-              Skip to main content
-            </a>
-            <a
-              href="#navigation"
-              className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-48 focus:z-[100] focus:px-6 focus:py-3 focus:bg-navy-900 focus:text-white focus:rounded-md focus:shadow-lg focus:font-medium"
-            >
-              Skip to navigation
-            </a>
-          </>
-        )}
         <Providers>
           <ErrorBoundary>
-            {!isStandalonePage && <Header config={config} />}
-            {children}
-            {!isStandalonePage && <Footer key="site-footer" config={config} />}
-            {!isStandalonePage && <VideoModal />}
-            {!isStandalonePage && <BackToTop />}
+            <ConditionalLayout config={config} jsonLdData={jsonLdData}>
+              {children}
+            </ConditionalLayout>
           </ErrorBoundary>
         </Providers>
       </body>

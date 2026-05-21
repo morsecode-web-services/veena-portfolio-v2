@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, Clock, Lock, Users, Calendar, ArrowRight, X, Star, PartyPopper, Mail } from 'lucide-react';
+import { Check, Clock, Lock, Calendar, ArrowRight, X, Star, PartyPopper, Mail } from 'lucide-react';
 import { Button } from '@/components/system/Button';
 import DynamicForm, { FormField } from '@/components/features/DynamicForm';
 import Image from 'next/image';
@@ -24,7 +24,6 @@ interface Cohort {
     original_price?: number;
     learning_outcomes?: string[];
     curriculum_highlights?: string[];
-    registration_count?: number;
     success_message?: string;
 }
 
@@ -188,17 +187,19 @@ function CohortContent({ initialCohorts }: CohortClientProps) {
                                     {cohort.title}
                                 </h3>
 
-                                <p className="text-xs text-slate-500 mt-1 mb-3">
-                                    By Aishwarya Manikarnike
-                                </p>
-
-                                <div className="flex items-center gap-1.5 mb-4 text-slate-500">
-                                    <Users size={12} className="text-slate-400" />
-                                    <span className="text-xs font-medium">
-                                        {cohort.registration_count && cohort.registration_count > 0
-                                            ? `${cohort.registration_count} ${cohort.registration_count === 1 ? 'student' : 'students'} enrolled`
-                                            : 'Be the first to join'}
-                                    </span>
+                                {/* Learning outcomes or description fallback */}
+                                <div className="mb-4 space-y-1.5 min-h-[4rem]">
+                                    {cohort.learning_outcomes && cohort.learning_outcomes.length > 0
+                                        ? cohort.learning_outcomes.slice(0, 3).map((outcome, i) => (
+                                            <div key={i} className="flex items-start gap-2">
+                                                <Check size={11} className="text-gold-500 mt-0.5 flex-shrink-0" />
+                                                <span className="text-[11px] text-slate-600 leading-snug line-clamp-1">{outcome}</span>
+                                            </div>
+                                        ))
+                                        : cohort.description && (
+                                            <p className="text-[11px] text-slate-500 leading-snug line-clamp-3">{cohort.description}</p>
+                                        )
+                                    }
                                 </div>
 
                                 <div className="flex items-center justify-between mt-2 pt-4 border-t border-slate-50">
