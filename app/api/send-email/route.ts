@@ -76,6 +76,7 @@ export async function POST(request: Request) {
     let emailEnabled = true; // Default to enabled for legacy forms
     let formFields: any[] = [];
     let customAutoReply: { subject?: string, message?: string } | null = null;
+    let formConfig: any = null;
     if (formSlug) {
       const { data: config } = await supabaseAdmin
         .from('form_configs')
@@ -84,6 +85,7 @@ export async function POST(request: Request) {
         .single();
 
       if (config) {
+        formConfig = config;
         if (config.email_notifications_enabled === false) {
           emailEnabled = false;
         }
@@ -143,42 +145,109 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: true, message: 'Cohort enrollment handled by webhook' });
     }
 
-    const submissionRecord: any = {
-      form_slug: formSlug || 'general',
-      form_data: form_data || body,
-    };
+    const requiresPayment = !!cohortId || !!formConfig?.requires_payment;
 
-    // Table-specific fields
-    if (targetTable === 'form_submissions') {
-      submissionRecord.user_email = discoveredEmail;
-      submissionRecord.user_name = discoveredName || 'Anonymous';
-      submissionRecord.status = 'unread';
-      if (payment_status) {
-        submissionRecord.payment_status = payment_status;
-        if (payment_status === 'paid') submissionRecord.is_verified = true;
+    if (targetTable === 'form_submissions' && requiresPayment) {
+      // SECURITY: For paid forms, we check if a record already exists with the given razorpay_order_id or razorpay_subscription_id.
+      // If it exists (due to a fast webhook execution), we update it to add the form_data.
+      // If it doesn't exist yet, we insert it with 'pending' status, ignoring any client-provided 'paid' status.
+      let existingSubmission = null;
+      if (razorpay_order_id || razorpay_subscription_id) {
+        const query = supabaseAdmin.from('form_submissions').select('*');
+        if (razorpay_order_id) {
+          query.eq('razorpay_order_id', razorpay_order_id);
+        } else if (razorpay_subscription_id) {
+          query.eq('razorpay_subscription_id', razorpay_subscription_id);
+        }
+        const { data } = await query.maybeSingle();
+        existingSubmission = data;
       }
-      if (razorpay_subscription_id) submissionRecord.razorpay_subscription_id = razorpay_subscription_id;
-      if (razorpay_customer_id) submissionRecord.razorpay_customer_id = razorpay_customer_id;
-      if (razorpay_order_id) submissionRecord.razorpay_order_id = razorpay_order_id;
-      if (razorpay_payment_id) submissionRecord.razorpay_payment_id = razorpay_payment_id;
-      if (cohortId) submissionRecord.cohort_id = cohortId;
+
+      if (existingSubmission) {
+        // Webhook already created this record. Update the form details, but preserve the verified/paid status if set.
+        const updateRecord = {
+          user_name: discoveredName || existingSubmission.user_name || 'Anonymous',
+          user_email: discoveredEmail || existingSubmission.user_email,
+          form_data: { ...(existingSubmission.form_data || {}), ...(form_data || body) },
+          status: 'unread',
+          payment_status: existingSubmission.payment_status === 'paid' ? 'paid' : 'pending',
+          is_verified: existingSubmission.payment_status === 'paid',
+          cohort_id: cohortId || existingSubmission.cohort_id,
+          razorpay_payment_id: razorpay_payment_id || existingSubmission.razorpay_payment_id,
+          razorpay_customer_id: razorpay_customer_id || existingSubmission.razorpay_customer_id
+        };
+
+        const { error: dbError } = await supabaseAdmin
+          .from('form_submissions')
+          .update(updateRecord)
+          .eq('id', existingSubmission.id);
+
+        if (dbError) {
+          console.error(`Failed to update existing submission in form_submissions:`, dbError);
+          return NextResponse.json(
+            { error: 'Database error: Failed to save your submission. Please try again.' },
+            { status: 500 }
+          );
+        }
+      } else {
+        // No record exists yet. Create a new one with 'pending' status.
+        const submissionRecord: any = {
+          form_slug: formSlug || 'general',
+          form_data: form_data || body,
+          user_email: discoveredEmail,
+          user_name: discoveredName || 'Anonymous',
+          status: 'unread',
+          payment_status: 'pending',
+          is_verified: false,
+          razorpay_subscription_id: razorpay_subscription_id || null,
+          razorpay_customer_id: razorpay_customer_id || null,
+          razorpay_order_id: razorpay_order_id || null,
+          razorpay_payment_id: razorpay_payment_id || null,
+          cohort_id: cohortId || null
+        };
+
+        const { error: dbError } = await supabaseAdmin
+          .from('form_submissions')
+          .insert([submissionRecord]);
+
+        if (dbError) {
+          console.error(`Failed to insert new submission in form_submissions:`, dbError);
+          return NextResponse.json(
+            { error: 'Database error: Failed to save your submission. Please try again.' },
+            { status: 500 }
+          );
+        }
+      }
     } else {
-      submissionRecord.name = discoveredName || 'Anonymous';
-      submissionRecord.status = 'new';
-      if (cohortId) submissionRecord.cohort_id = cohortId;
-    }
+      // Standard flow: lead table or unpaid form submission.
+      const submissionRecord: any = {
+        form_slug: formSlug || 'general',
+        form_data: form_data || body,
+      };
 
-    // Use supabaseAdmin (service role) to bypass RLS — this is a trusted server route.
-    const { error: dbError } = await supabaseAdmin
-      .from(targetTable)
-      .insert([submissionRecord]);
+      if (targetTable === 'form_submissions') {
+        submissionRecord.user_email = discoveredEmail;
+        submissionRecord.user_name = discoveredName || 'Anonymous';
+        submissionRecord.status = 'unread';
+        if (cohortId) submissionRecord.cohort_id = cohortId;
+        // Ignore payment_status and is_verified entirely for unpaid forms
+      } else {
+        submissionRecord.name = discoveredName || 'Anonymous';
+        submissionRecord.status = 'new';
+        if (cohortId) submissionRecord.cohort_id = cohortId;
+      }
 
-    if (dbError) {
-      console.error(`Failed to store data in ${targetTable}:`, dbError);
-      return NextResponse.json(
-        { error: 'Database error: Failed to save your submission. Your data has not been sent. Please try again.' },
-        { status: 500 }
-      );
+      const { error: dbError } = await supabaseAdmin
+        .from(targetTable)
+        .insert([submissionRecord]);
+
+      if (dbError) {
+        console.error(`Failed to store data in ${targetTable}:`, dbError);
+        return NextResponse.json(
+          { error: 'Database error: Failed to save your submission. Please try again.' },
+          { status: 500 }
+        );
+      }
     }
 
     // If emails are disabled, store the lead but don't send anything

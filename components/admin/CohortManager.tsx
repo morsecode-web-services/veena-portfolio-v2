@@ -143,6 +143,12 @@ export function CohortManager() {
             const uniqueStudents = Array.from(uniqueStudentsMap.values());
             const total = uniqueStudents.length;
             
+            if (total === 0) {
+                addToast('No eligible paid students found in the source cohort.', 'error');
+                setReenrollLoading(false);
+                return;
+            }
+
             setReenrollProgress({ current: 0, total, success: 0, failed: 0, skipped: 0 });
 
             // 3. Batch Process
@@ -234,6 +240,8 @@ export function CohortManager() {
             image_url: '',
             learning_outcomes: [],
             curriculum_highlights: [],
+            learning_outcomes_raw: '',
+            curriculum_highlights_raw: '',
             success_message: 'Welcome aboard! Your enrollment is successful.'
         });
         setIsCreating(false);

@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { motion as m, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
+import { supabase } from '@/lib/supabase';
 
 interface StudentCohort {
     id: string;
@@ -35,6 +36,17 @@ interface StudentResult {
     cohorts: StudentCohort[];
 }
 
+const formatDateSafe = (dateStr: string | null | undefined) => {
+    if (!dateStr) return 'N/A';
+    try {
+        const d = new Date(dateStr);
+        if (isNaN(d.getTime())) return 'N/A';
+        return format(d, 'MMM d, yyyy');
+    } catch {
+        return 'N/A';
+    }
+};
+
 export default function StudentSearchPage() {
     const [query, setQuery] = useState('');
     const [results, setResults] = useState<StudentResult[]>([]);
@@ -44,7 +56,12 @@ export default function StudentSearchPage() {
     const performSearch = useCallback(async () => {
         setLoading(true);
         try {
-            const res = await fetch(`/api/admin/students/search?q=${encodeURIComponent(query)}`);
+            const { data: { session } } = await supabase.auth.getSession();
+            const res = await fetch(`/api/admin/students/search?q=${encodeURIComponent(query)}`, {
+                headers: {
+                    'Authorization': `Bearer ${session?.access_token || ''}`
+                }
+            });
             const data = await res.json();
             setResults(data.results || []);
         } catch (error) {
@@ -163,7 +180,7 @@ export default function StudentSearchPage() {
                                                             </span>
                                                         </div>
                                                         <div className="flex items-center gap-3 text-[11px] text-slate-400">
-                                                            <span className="flex items-center gap-1"><Clock size={12} /> {format(new Date(cohort.date), 'MMM d, yyyy')}</span>
+                                                            <span className="flex items-center gap-1"><Clock size={12} /> {formatDateSafe(cohort.date)}</span>
                                                             <span className="font-bold uppercase tracking-tighter text-[9px]">
                                                                 {cohort.type === 'enrollment' ? 'Confirmed Student' : 'Invitation Link Sent'}
                                                             </span>

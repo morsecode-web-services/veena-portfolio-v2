@@ -527,7 +527,7 @@ export default function ResponsesPage() {
                                     </div>
                                     
                                     <div className="space-y-6">
-                                        {Object.entries(selectedSubmission.form_data).map(([key, value]) => {
+                                        {Object.entries(selectedSubmission.form_data || {}).map(([key, value]) => {
                                             const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
                                             const isImage = typeof value === 'string' && (
                                                 value.startsWith('http') && 

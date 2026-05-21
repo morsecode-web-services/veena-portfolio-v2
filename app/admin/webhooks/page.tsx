@@ -28,15 +28,26 @@ interface WebhookLog {
   student_name: string;
   student_email: string;
   status: 'success' | 'failed' | 'partial_success' | 'duplicate';
-  notification_status: {
-    telegram: { status: string; error?: string; link?: string };
-    email: { status: string; error?: string };
-    whatsapp: { status: string; error?: string };
-    twilio_whatsapp: { status: string; error?: string };
-  };
+  notification_status?: {
+    telegram?: { status: string; error?: string; link?: string };
+    email?: { status: string; error?: string };
+    whatsapp?: { status: string; error?: string };
+    twilio_whatsapp?: { status: string; error?: string };
+  } | null;
   payload: any;
   created_at: string;
 }
+
+const formatWebhookDate = (dateStr: string | null | undefined, formatStr: string) => {
+  if (!dateStr) return 'N/A';
+  try {
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return 'N/A';
+    return format(d, formatStr);
+  } catch {
+    return 'N/A';
+  }
+};
 
 export default function WebhookDashboard() {
   const [logs, setLogs] = useState<WebhookLog[]>([]);
@@ -277,17 +288,17 @@ export default function WebhookDashboard() {
                           {log.event_type.split('.')[0]}
                         </span>
                         <span className="text-[10px] text-gray-400 ml-auto">
-                          {format(new Date(log.created_at), 'MMM d, HH:mm')}
+                          {formatWebhookDate(log.created_at, 'MMM d, HH:mm')}
                         </span>
                       </div>
                       <div className="text-xs text-navy-400 truncate mb-2">
                         {log.student_email || 'No email provided'}
                       </div>
                       <div className="flex flex-wrap gap-2">
-                        {getNotificationBadge('TG', log.notification_status.telegram)}
-                        {getNotificationBadge('Email', log.notification_status.email)}
-                        {getNotificationBadge('WA (Meta)', log.notification_status.whatsapp)}
-                        {getNotificationBadge('WA (Twilio)', log.notification_status.twilio_whatsapp)}
+                        {getNotificationBadge('TG', log.notification_status?.telegram)}
+                        {getNotificationBadge('Email', log.notification_status?.email)}
+                        {getNotificationBadge('WA (Meta)', log.notification_status?.whatsapp)}
+                        {getNotificationBadge('WA (Twilio)', log.notification_status?.twilio_whatsapp)}
                       </div>
                     </div>
                     <ChevronRight className={`h-4 w-4 text-gray-300 transition-transform ${selectedLog?.id === log.id ? 'translate-x-1 text-navy-400' : 'group-hover:translate-x-1'}`} />
@@ -332,7 +343,7 @@ export default function WebhookDashboard() {
                   <p className="text-navy-300 text-sm mb-4 font-mono truncate">{selectedLog.event_id}</p>
                   <div className="flex items-center gap-3 text-[11px] text-navy-400">
                     <Clock className="h-3 w-3" />
-                    {format(new Date(selectedLog.created_at), 'PPPP p')}
+                    {formatWebhookDate(selectedLog.created_at, 'PPPP p')}
                   </div>
                 </div>
 
@@ -350,14 +361,14 @@ export default function WebhookDashboard() {
                         <span className="text-xs font-bold text-navy-900 flex items-center gap-2">
                           <Activity className="h-3 w-3" /> Telegram Invite
                         </span>
-                        {getNotificationBadge('', selectedLog.notification_status.telegram)}
+                        {getNotificationBadge('', selectedLog.notification_status?.telegram)}
                       </div>
-                      {selectedLog.notification_status.telegram.error && (
+                      {selectedLog.notification_status?.telegram?.error && (
                         <p className="text-[11px] text-red-600 mt-1 font-medium bg-red-50 p-2 rounded">
                           {selectedLog.notification_status.telegram.error}
                         </p>
                       )}
-                      {selectedLog.notification_status.telegram.link && (
+                      {selectedLog.notification_status?.telegram?.link && (
                         <div className="mt-2 text-[11px]">
                           <span className="text-gray-400 block mb-1">Generated Link:</span>
                           <code className="block p-2 bg-white rounded border border-gray-200 text-gold-600 break-all">
@@ -373,9 +384,9 @@ export default function WebhookDashboard() {
                         <span className="text-xs font-bold text-navy-900 flex items-center gap-2">
                           <Mail className="h-3 w-3" /> Welcome Email
                         </span>
-                        {getNotificationBadge('', selectedLog.notification_status.email)}
+                        {getNotificationBadge('', selectedLog.notification_status?.email)}
                       </div>
-                      {selectedLog.notification_status.email.error && (
+                      {selectedLog.notification_status?.email?.error && (
                         <p className="text-[11px] text-red-600 mt-1 font-medium bg-red-50 p-2 rounded">
                           {selectedLog.notification_status.email.error}
                         </p>
@@ -388,9 +399,9 @@ export default function WebhookDashboard() {
                         <span className="text-xs font-bold text-navy-900 flex items-center gap-2">
                           <MessageSquare className="h-3 w-3" /> WhatsApp Notification
                         </span>
-                        {getNotificationBadge('', selectedLog.notification_status.whatsapp)}
+                        {getNotificationBadge('', selectedLog.notification_status?.whatsapp)}
                       </div>
-                      {selectedLog.notification_status.whatsapp.error && (
+                      {selectedLog.notification_status?.whatsapp?.error && (
                         <p className="text-[11px] text-red-600 mt-1 font-medium bg-red-50 p-2 rounded">
                           {selectedLog.notification_status.whatsapp.error}
                         </p>
@@ -403,9 +414,9 @@ export default function WebhookDashboard() {
                         <span className="text-xs font-bold text-navy-900 flex items-center gap-2">
                           <MessageSquare className="h-3 w-3" /> Twilio WhatsApp
                         </span>
-                        {getNotificationBadge('', selectedLog.notification_status.twilio_whatsapp)}
+                        {getNotificationBadge('', selectedLog.notification_status?.twilio_whatsapp)}
                       </div>
-                      {selectedLog.notification_status.twilio_whatsapp?.error && (
+                      {selectedLog.notification_status?.twilio_whatsapp?.error && (
                         <p className="text-[11px] text-red-600 mt-1 font-medium bg-red-50 p-2 rounded">
                           {selectedLog.notification_status.twilio_whatsapp.error}
                         </p>

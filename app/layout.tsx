@@ -176,7 +176,7 @@ export default async function RootLayout({
     pathname.startsWith('/admin');
 
   return (
-    <html lang="en" className={`${inter.variable} ${playfair.variable}`}>
+    <html lang="en" className={`${inter.variable} ${playfair.variable}`} suppressHydrationWarning>
       <head>
         <GoogleAnalytics />
         <MicrosoftClarity />
@@ -199,7 +199,7 @@ export default async function RootLayout({
           />
         )}
       </head>
-      <body className="font-sans antialiased">
+      <body className="font-sans antialiased" suppressHydrationWarning>
         {!isStandalonePage && (
           <>
             {/* Skip Navigation Links for Accessibility */}
