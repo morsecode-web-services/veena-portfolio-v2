@@ -37,6 +37,7 @@ function CohortContent({ initialCohorts }: CohortClientProps) {
     const [showCelebration, setShowCelebration] = useState(false);
     const [inviteLink, setInviteLink] = useState<string | null>(null);
     const [isPolling, setIsPolling] = useState(false);
+    const [pollingTimedOut, setPollingTimedOut] = useState(false);
 
     const searchParams = useSearchParams();
     const router = useRouter();
@@ -45,6 +46,7 @@ function CohortContent({ initialCohorts }: CohortClientProps) {
         setShowCelebration(false);
         setInviteLink(null);
         setIsPolling(false);
+        setPollingTimedOut(false);
         const params = new URLSearchParams(searchParams.toString());
         params.delete('success');
         params.delete('payment_id');
@@ -62,7 +64,7 @@ function CohortContent({ initialCohorts }: CohortClientProps) {
             if (paymentId) {
                 setIsPolling(true);
                 let attempts = 0;
-                const maxAttempts = 10; // Poll for 20 seconds (10 * 2s)
+                const maxAttempts = 30; // Poll for 60 seconds (30 * 2s) — covers slow webhook delivery
                 
                 const pollInterval = setInterval(async () => {
                     attempts++;
@@ -74,14 +76,22 @@ function CohortContent({ initialCohorts }: CohortClientProps) {
                             setInviteLink(data.link);
                             setIsPolling(false);
                             clearInterval(pollInterval);
-                        } else if (data.status === 'failed' || attempts >= maxAttempts) {
+                        } else if (data.status === 'failed') {
+                            // Webhook processed but Telegram link wasn't generated — show email/WA fallback
                             setIsPolling(false);
+                            setPollingTimedOut(false); // confirmed failure, not a timeout
+                            clearInterval(pollInterval);
+                        } else if (attempts >= maxAttempts) {
+                            // Timed out — webhook still processing or very slow
+                            setIsPolling(false);
+                            setPollingTimedOut(true);
                             clearInterval(pollInterval);
                         }
                     } catch (err) {
                         console.error('Polling error:', err);
                         if (attempts >= maxAttempts) {
                             setIsPolling(false);
+                            setPollingTimedOut(true);
                             clearInterval(pollInterval);
                         }
                     }
@@ -360,7 +370,7 @@ function CohortContent({ initialCohorts }: CohortClientProps) {
                                 <div className="bg-slate-50 rounded-2xl p-6 mb-8 border border-slate-100 flex flex-col items-center justify-center min-h-[160px]">
                                     <div className="w-8 h-8 border-4 border-gold-200 border-t-gold-500 rounded-full animate-spin mb-4"></div>
                                     <p className="text-sm font-bold text-navy-900">Generating secure invite link...</p>
-                                    <p className="text-xs text-slate-500 mt-1">This usually takes 2-3 seconds</p>
+                                    <p className="text-xs text-slate-500 mt-1">This can take up to a minute</p>
                                 </div>
                             ) : inviteLink ? (
                                 <div className="bg-slate-50 rounded-2xl p-6 mb-8 border border-slate-100">
@@ -377,15 +387,28 @@ function CohortContent({ initialCohorts }: CohortClientProps) {
                                         Join Telegram Group <ArrowRight size={16} />
                                     </a>
                                 </div>
+                            ) : pollingTimedOut ? (
+                                // Webhook is still processing — invite link is on its way
+                                <div className="space-y-4 mb-8">
+                                    <div className="flex items-center gap-3 px-4 py-3 bg-blue-50 rounded-xl text-left">
+                                        <Clock className="text-blue-500 w-5 h-5 flex-shrink-0" />
+                                        <span className="text-xs font-medium text-blue-900">Your invite link is still being prepared — it will arrive on your Email and WhatsApp within the next few minutes</span>
+                                    </div>
+                                    <div className="flex items-center gap-3 px-4 py-3 bg-amber-50 rounded-xl text-left">
+                                        <Mail className="text-amber-500 w-5 h-5 flex-shrink-0" />
+                                        <span className="text-xs font-medium text-amber-800">Check your spam or promotions folder if you don&apos;t see it in your inbox</span>
+                                    </div>
+                                </div>
                             ) : (
+                                // Confirmed: webhook processed but Telegram link wasn't generated — email/WA is the fallback
                                 <div className="space-y-4 mb-8">
                                     <div className="flex items-center gap-3 px-4 py-3 bg-slate-50 rounded-xl text-left">
                                         <Mail className="text-navy-400 w-5 h-5 flex-shrink-0" />
-                                        <span className="text-xs font-medium text-navy-900">Check your Email and WhatsApp — your Telegram invite link will arrive within a few minutes</span>
+                                        <span className="text-xs font-medium text-navy-900">Your Telegram invite link has been sent to your Email and WhatsApp</span>
                                     </div>
                                     <div className="flex items-center gap-3 px-4 py-3 bg-amber-50 rounded-xl text-left">
                                         <Clock className="text-amber-500 w-5 h-5 flex-shrink-0" />
-                                        <span className="text-xs font-medium text-amber-800">If checking email, please ensure you check your spam or promotions folder</span>
+                                        <span className="text-xs font-medium text-amber-800">Check your spam or promotions folder if you don&apos;t see it in your inbox</span>
                                     </div>
                                 </div>
                             )}

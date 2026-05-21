@@ -13,10 +13,12 @@ import * as styles from './styles';
 
 interface CohortWelcomeProps {
   name: string;
-  inviteLink: string;
+  inviteLink?: string;
 }
 
 export default function CohortWelcome({ name, inviteLink }: CohortWelcomeProps) {
+  const hasLink = !!(inviteLink && inviteLink.trim().length > 0);
+
   return (
     <Html>
       <Head />
@@ -26,37 +28,50 @@ export default function CohortWelcome({ name, inviteLink }: CohortWelcomeProps) 
             <Heading style={styles.heading}>Welcome to the Cohort, {name}! 🎉</Heading>
 
             <Text style={styles.text}>
-              Your payment has been confirmed — thank you for enrolling! Your exclusive access to the private Telegram channel is ready.
+              Your payment has been confirmed — thank you for enrolling!
             </Text>
 
-            <Text style={styles.text}>
-              Click the button below to join. This is a <strong>single-use link</strong> — it will expire after one use and is tied to your enrollment. Please do not share it.
-            </Text>
+            {hasLink ? (
+              <>
+                <Text style={styles.text}>
+                  Your exclusive access to the private Telegram channel is ready. Click the button below to join. This is a <strong>single-use link</strong> — it will expire after one use and is tied to your enrollment. Please do not share it.
+                </Text>
 
-            <Section style={{ textAlign: 'center' as const, margin: '32px 0' }}>
-              <Button
-                href={inviteLink}
-                style={{
-                  backgroundColor: '#1e3a5f',
-                  color: '#ffffff',
-                  padding: '14px 36px',
-                  borderRadius: '8px',
-                  fontWeight: 'bold',
-                  fontSize: '16px',
-                  textDecoration: 'none',
-                  display: 'inline-block',
-                  letterSpacing: '0.3px',
-                }}
-              >
-                Join Telegram Channel →
-              </Button>
-            </Section>
+                <Section style={{ textAlign: 'center' as const, margin: '32px 0' }}>
+                  <Button
+                    href={inviteLink}
+                    style={{
+                      backgroundColor: '#1e3a5f',
+                      color: '#ffffff',
+                      padding: '14px 36px',
+                      borderRadius: '8px',
+                      fontWeight: 'bold',
+                      fontSize: '16px',
+                      textDecoration: 'none',
+                      display: 'inline-block',
+                      letterSpacing: '0.3px',
+                    }}
+                  >
+                    Join Telegram Channel →
+                  </Button>
+                </Section>
 
-            <Text style={{ ...styles.text, fontSize: '13px', color: '#718096' }}>
-              If the button above doesn&apos;t work, copy and paste this link into your browser:
-              <br />
-              <a href={inviteLink} style={styles.link}>{inviteLink}</a>
-            </Text>
+                <Text style={{ ...styles.text, fontSize: '13px', color: '#718096' }}>
+                  If the button above doesn&apos;t work, copy and paste this link into your browser:
+                  <br />
+                  <a href={inviteLink} style={styles.link}>{inviteLink}</a>
+                </Text>
+              </>
+            ) : (
+              <>
+                <Text style={styles.text}>
+                  Your personal Telegram invite link is being prepared and will be sent to you in a separate email within the next few minutes.
+                </Text>
+                <Text style={{ ...styles.text, fontSize: '13px', color: '#718096' }}>
+                  If you do not receive it within 15 minutes, please reply to this email or contact us at <a href="mailto:official@aishwaryamanikarnike.com" style={styles.link}>official@aishwaryamanikarnike.com</a>
+                </Text>
+              </>
+            )}
 
             <Hr style={styles.hr} />
 
