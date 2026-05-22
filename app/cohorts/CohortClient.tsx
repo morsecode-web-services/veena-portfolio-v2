@@ -4,11 +4,30 @@ import { useState, useEffect, Suspense, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Check, Clock, Lock, Calendar, ArrowRight, X, Star, PartyPopper, Mail } from 'lucide-react';
 import { Button } from '@/components/system/Button';
-import DynamicForm, { FormField } from '@/components/features/DynamicForm';
+import type { FormField } from '@/components/features/DynamicForm';
 import Image from 'next/image';
 import { analytics, trackEvent } from '@/components/GoogleAnalytics';
 import { useSearchParams, useRouter } from 'next/navigation';
-import QRCode from 'react-qr-code';
+import dynamic from 'next/dynamic';
+
+const DynamicForm = dynamic(() => import('@/components/features/DynamicForm'), {
+    ssr: false,
+    loading: () => (
+        <div className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-100 flex flex-col items-center justify-center min-h-[320px] animate-pulse">
+            <div className="w-8 h-8 border-4 border-slate-200 border-t-navy-900 rounded-full animate-spin mb-4"></div>
+            <p className="text-sm font-medium text-slate-500">Loading enrollment form...</p>
+        </div>
+    )
+});
+
+const QRCode = dynamic(() => import('react-qr-code'), {
+    ssr: false,
+    loading: () => (
+        <div className="w-[140px] h-[140px] bg-slate-100 rounded-xl flex items-center justify-center animate-pulse border border-slate-200">
+            <span className="text-[10px] text-slate-400">Loading QR Code...</span>
+        </div>
+    )
+});
 
 interface Cohort {
     id: string;
@@ -168,6 +187,7 @@ function CohortContent({ initialCohorts }: CohortClientProps) {
                                     src={cohort.image_url}
                                     alt={cohort.title}
                                     fill
+                                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 300px"
                                     className="object-cover transition-transform duration-700 group-hover:scale-105"
                                 />
                             ) : (

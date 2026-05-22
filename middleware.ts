@@ -30,10 +30,6 @@ const WHITELISTED_PREFIXES = [
 export async function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl;
 
-    // Always inject pathname header so root layout can detect the current page
-    const requestHeaders = new Headers(request.headers);
-    requestHeaders.set('x-pathname', pathname);
-
     // --- Smart Link fast-path: handle /link/{slug} redirects at the edge ---
     const linkMatch = pathname.match(/^\/link\/([^/]+)$/);
     if (linkMatch && supabaseUrl && supabaseAnonKey) {
@@ -68,7 +64,7 @@ export async function middleware(request: NextRequest) {
 
         if (!link || error) {
             // Fall through to the page which will render notFound()
-            return NextResponse.next({ request: { headers: requestHeaders } });
+            return NextResponse.next();
         }
 
         // Fire-and-forget click tracking (non-blocking)
@@ -80,6 +76,8 @@ export async function middleware(request: NextRequest) {
         }
 
         // Deep link: pass data via headers so the page skips the Supabase query
+        const requestHeaders = new Headers(request.headers);
+        requestHeaders.set('x-pathname', pathname);
         requestHeaders.set('x-link-target-url', link.target_url);
         requestHeaders.set('x-link-platform', link.platform);
         requestHeaders.set('x-link-id', link.id);
@@ -87,7 +85,7 @@ export async function middleware(request: NextRequest) {
     }
 
     if (SITE_LIVE) {
-        return NextResponse.next({ request: { headers: requestHeaders } });
+        return NextResponse.next();
     }
 
     const isWhitelisted = WHITELISTED_PREFIXES.some((prefix) =>
@@ -95,7 +93,7 @@ export async function middleware(request: NextRequest) {
     );
 
     if (isWhitelisted) {
-        return NextResponse.next({ request: { headers: requestHeaders } });
+        return NextResponse.next();
     }
 
     // Redirect everything else to coming soon
