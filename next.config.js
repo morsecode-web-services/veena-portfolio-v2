@@ -52,6 +52,7 @@ const nextConfig = {
   // Optimize bundle size
   experimental: {
     optimizePackageImports: ['framer-motion', 'react-icons', 'lucide-react'],
+    after: true,
   },
 
   // Tree-shake react-icons to reduce bundle size

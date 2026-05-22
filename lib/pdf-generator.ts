@@ -691,7 +691,7 @@ export async function generatePDF(
     addText("For bookings, collaborations, or inquiries, please reach out:", 11);
     cursor.y += 5;
 
-    if (config.artist.email) {
+    if (config.artist?.email) {
       await addLink(`Email: ${config.artist.email}`, `mailto:${config.artist.email}`, 12, false);
     }
 
@@ -707,7 +707,8 @@ export async function generatePDF(
 
     // Save
     const dateStr = new Date().toISOString().split('T')[0];
-    const fileName = `${config.artist.name.replace(/\s+/g, '_')}_Portfolio_${dateStr}.pdf`;
+    const artistName = config.artist?.name || 'Artist';
+    const fileName = `${artistName.replace(/\s+/g, '_')}_Portfolio_${dateStr}.pdf`;
     pdf.save(fileName);
 
     onProgress?.(100);
@@ -822,18 +823,20 @@ async function renderCoverPage(pdf: jsPDF, config: any, pageWidth: number, pageH
   pdf.setFontSize(32);
   pdf.setTextColor(255, 255, 255);
 
-  const nameWidth = pdf.getTextWidth(config.artist.name);
+  const artistName = config.artist?.name || '';
+  const nameWidth = pdf.getTextWidth(artistName);
   const nameX = (pageWidth - nameWidth) / 2;
-  pdf.text(config.artist.name, nameX, MARGIN + 25);
+  pdf.text(artistName, nameX, MARGIN + 25);
 
   // 4. Tagline (Small, gold, centered below name)
   try { pdf.setFont('Inter', 'normal'); } catch { pdf.setFont('helvetica', 'normal'); }
   pdf.setFontSize(10);
   pdf.setTextColor(COLORS.gold.r, COLORS.gold.g, COLORS.gold.b);
 
-  const taglineWidth = pdf.getTextWidth(config.artist.tagline.toUpperCase());
+  const tagline = config.artist?.tagline || '';
+  const taglineWidth = pdf.getTextWidth(tagline.toUpperCase());
   const taglineX = (pageWidth - taglineWidth) / 2;
-  pdf.text(config.artist.tagline.toUpperCase(), taglineX, MARGIN + 35);
+  pdf.text(tagline.toUpperCase(), taglineX, MARGIN + 35);
 
   // 5. Elegant thin gold line at bottom section
   pdf.setDrawColor(COLORS.gold.r, COLORS.gold.g, COLORS.gold.b);
@@ -862,7 +865,7 @@ async function renderCoverPage(pdf: jsPDF, config: any, pageWidth: number, pageH
 
   // 8. Contact - centered at very bottom
   pdf.setFontSize(8);
-  const contactText = config.artist.email || 'aishwaryamanikarnike.com';
+  const contactText = config.artist?.email || 'aishwaryamanikarnike.com';
   const contactWidth = pdf.getTextWidth(contactText);
   const contactX = (pageWidth - contactWidth) / 2;
   pdf.text(contactText, contactX, pageHeight - MARGIN - 5);
@@ -875,7 +878,7 @@ function addFooter(pdf: jsPDF, config: any, pageWidth: number, pageHeight: numbe
     pdf.setPage(i);
     pdf.setFontSize(9);
     pdf.setTextColor(COLORS.gray.r, COLORS.gray.g, COLORS.gray.b);
-    pdf.text(`${config.artist.name} - Portfolio`, MARGIN, pageHeight - 10);
+    pdf.text(`${config.artist?.name || 'Artist'} - Portfolio`, MARGIN, pageHeight - 10);
     pdf.text(`Page ${i - 1} of ${totalPages - 1}`, pageWidth - MARGIN, pageHeight - 10, { align: 'right' });
   }
 }
@@ -1090,7 +1093,7 @@ async function renderAboutSection(
   });
   cursor.y += 10;
 
-  const fullBio = config.artist.fullBio || [];
+  const fullBio = config.artist?.fullBio || [];
 
   for (const block of fullBio) {
     // Check if block is structured or legacy string format
@@ -1357,6 +1360,9 @@ async function renderMusicCard(
 }
 
 async function renderMusicSection(pdf: jsPDF, musicConfig: any, dbVideos: any[], cursor: Cursor, linkFn: any, loadImageFn: any, addNewPage: any) {
+  if (!musicConfig || !musicConfig.categories) {
+    return;
+  }
   const CARD_WIDTH = 80;
   const CARD_HEIGHT = 55; // 45mm thumbnail + 10mm title
   const CARD_GAP = 10;
