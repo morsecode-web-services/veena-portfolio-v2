@@ -14,6 +14,7 @@ import PhoneInput, { getCountryCallingCode, getCountries } from 'react-phone-num
 import en from 'react-phone-number-input/locale/en';
 import Input from 'react-phone-number-input/input';
 import 'react-phone-number-input/style.css';
+import { Turnstile } from '@marsidev/react-turnstile';
 
 export interface FormField {
     name: string;
@@ -122,6 +123,7 @@ export default function DynamicForm({
     const [errorMessage, setErrorMessage] = useState<string>('');
     const [uploadingFields, setUploadingFields] = useState<Record<string, boolean>>({});
     const [isValidating, setIsValidating] = useState(false);
+    const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
     // Build dynamic validation schema
     const schemaShape: Record<string, any> = {};
@@ -143,6 +145,13 @@ export default function DynamicForm({
                 }, 'Phone number must be between 10 and 15 digits');
         } else if (field.type === 'image') {
             validator = z.string().url('Invalid image URL');
+        } else if (field.name === 'custom_amount') {
+            validator = z.string()
+                .min(1, 'Contribution is required')
+                .refine((val) => {
+                    const num = parseFloat(val.replace(/[^\d.]/g, ''));
+                    return !isNaN(num) && num >= 1;
+                }, 'Please enter a valid contribution (minimum ₹1)');
         }
 
         if (field.required) {
@@ -150,7 +159,7 @@ export default function DynamicForm({
                 validator = validator.min(1, `${field.label} is required`);
             }
         } else {
-            validator = (validator as z.ZodString).optional().or(z.literal(''));
+            validator = (validator as any).optional().or(z.literal(''));
         }
 
         schemaShape[field.name] = validator;
@@ -170,6 +179,18 @@ export default function DynamicForm({
     } = useForm<FormData>({
         resolver: zodResolver(dynamicSchema),
     });
+
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            const params = new URLSearchParams(window.location.search);
+            fields.forEach(field => {
+                const val = params.get(field.name);
+                if (val) {
+                    setValue(field.name, decodeURIComponent(val));
+                }
+            });
+        }
+    }, [fields, setValue]);
 
     const saveFormData = async (data: FormData, paymentData: any = {}) => {
         const response = await fetch('/api/send-email', {
@@ -225,18 +246,24 @@ export default function DynamicForm({
 
             // 1. Payment Flow
             if (requiresPayment && (razorpayPlanId || razorpayAmount || cohortId)) {
+                const customAmountStr = (data as any).custom_amount;
+                const clientAmountToSend = customAmountStr
+                    ? parseFloat(customAmountStr.replace(/[^\d.]/g, ''))
+                    : razorpayAmount;
+
                 const checkoutRes = await fetch('/api/checkout', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         plan_id: razorpayPlanId,
                         paymentType,
-                        amount: razorpayAmount,
+                        amount: clientAmountToSend,
                         formSlug,
                         phone: data.phone,
                         email: data.email,
                         name: data.name,
-                        cohortId: cohortId
+                        cohortId: cohortId,
+                        turnstileToken: turnstileToken
                     })
                 });
                 
@@ -535,12 +562,27 @@ export default function DynamicForm({
                     </div>
                 ))}
 
+                {requiresPayment && (
+                    <div className="flex justify-center my-4">
+                        <Turnstile 
+                            siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || '1x00000000000000000000AA'} 
+                            onSuccess={(token) => setTurnstileToken(token)}
+                            onError={() => setTurnstileToken(null)}
+                            onExpire={() => setTurnstileToken(null)}
+                            options={{
+                                theme: 'light',
+                            }}
+                        />
+                    </div>
+                )}
+
                 <Button
                     type="submit"
                     variant="primary"
                     fullWidth
                     isLoading={isSubmitting}
-                    className="mt-6 py-3.5 rounded-xl text-sm font-bold tracking-wide shadow-premium-lg hover:shadow-premium-xl transition-all"
+                    disabled={requiresPayment && !turnstileToken}
+                    className="mt-6 py-3.5 rounded-xl text-sm font-bold tracking-wide shadow-premium-lg hover:shadow-premium-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     {isValidating ? 'Verifying Details...' : isSubmitting ? 'Processing...' : submitLabel}
                 </Button>

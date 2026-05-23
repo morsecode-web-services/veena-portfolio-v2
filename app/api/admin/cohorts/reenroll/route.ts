@@ -105,27 +105,39 @@ export async function POST(request: Request) {
 
       // Use standard cohort price
       const finalPrice = targetCohort.price;
+      const isPAYW = targetCohort.pricing_type === 'pay_as_you_wish';
+      let inviteLinkUrl = '';
+      let paymentLinkId: string | null = null;
 
-      // Generate Razorpay Link
-      const plink = await createPersonalizedPaymentLink({
-        name,
-        email,
-        phone,
-        amount: finalPrice,
-        description: `Hi ${name}! Enrollment for ${targetCohort.title}`,
-        cohortId: targetCohortId
-      });
+      if (isPAYW) {
+        // Generate prefilled website link
+        const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://aishwaryamanikarnike.com';
+        inviteLinkUrl = `${baseUrl}/cohorts?enroll=${targetCohortId}&name=${encodeURIComponent(name)}&email=${encodeURIComponent(email)}&phone=${encodeURIComponent(phone || '')}`;
+      } else {
+        // Generate Razorpay Link
+        const plink = await createPersonalizedPaymentLink({
+          name,
+          email,
+          phone,
+          amount: finalPrice,
+          description: `Hi ${name}! Enrollment for ${targetCohort.title}`,
+          cohortId: targetCohortId
+        });
 
-      if (!plink.success) {
-        results.failed++;
-        await supabaseAdmin.from('reenrollment_logs').upsert([{
-          target_cohort_id: targetCohortId,
-          student_name: name,
-          student_email: email,
-          status: 'failed',
-          error_message: plink.error
-        }], { onConflict: 'target_cohort_id,student_email' });
-        continue;
+        if (!plink.success) {
+          results.failed++;
+          await supabaseAdmin.from('reenrollment_logs').upsert([{
+            target_cohort_id: targetCohortId,
+            student_name: name,
+            student_email: email,
+            student_phone: phone || null,
+            status: 'failed',
+            error_message: plink.error
+          }], { onConflict: 'target_cohort_id,student_email' });
+          continue;
+        }
+        inviteLinkUrl = plink.short_url!;
+        paymentLinkId = plink.id!;
       }
 
       // Send Email
@@ -133,8 +145,8 @@ export async function POST(request: Request) {
         const html = await render(ReenrollInvite({
           name,
           cohortTitle: targetCohort.title,
-          paymentLink: plink.short_url!,
-          price: `₹${(finalPrice / 100).toLocaleString()}`
+          paymentLink: inviteLinkUrl,
+          price: isPAYW ? 'Guru Dakshina' : `₹${(finalPrice / 100).toLocaleString()}`
         }));
 
         await resend.emails.send({
@@ -150,8 +162,9 @@ export async function POST(request: Request) {
           target_cohort_id: targetCohortId,
           student_name: name,
           student_email: email,
-          payment_link_id: plink.id,
-          payment_link_url: plink.short_url,
+          student_phone: phone || null,
+          payment_link_id: paymentLinkId,
+          payment_link_url: inviteLinkUrl,
           status: 'sent'
         }], { onConflict: 'target_cohort_id,student_email' });
 
@@ -163,6 +176,7 @@ export async function POST(request: Request) {
           target_cohort_id: targetCohortId,
           student_name: name,
           student_email: email,
+          student_phone: phone || null,
           status: 'failed',
           error_message: `Email failed: ${emailErr.message}`
         }], { onConflict: 'target_cohort_id,student_email' });

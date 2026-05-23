@@ -29,6 +29,7 @@ interface Cohort {
     curriculum_highlights: string[];
     success_message?: string;
     registration_count?: number;
+    pricing_type?: 'fixed' | 'pay_as_you_wish';
 }
 
 export function CohortManager() {
@@ -48,7 +49,8 @@ export function CohortManager() {
         image_url: '',
         learning_outcomes_raw: '',
         curriculum_highlights_raw: '',
-        success_message: 'Welcome aboard! Your enrollment is successful.'
+        success_message: 'Welcome aboard! Your enrollment is successful.',
+        pricing_type: 'fixed'
     });
 
     const [isReenrolling, setIsReenrolling] = useState(false);
@@ -242,7 +244,8 @@ export function CohortManager() {
             curriculum_highlights: [],
             learning_outcomes_raw: '',
             curriculum_highlights_raw: '',
-            success_message: 'Welcome aboard! Your enrollment is successful.'
+            success_message: 'Welcome aboard! Your enrollment is successful.',
+            pricing_type: 'fixed'
         });
         setIsCreating(false);
         setEditingId(null);
@@ -265,7 +268,8 @@ export function CohortManager() {
                 image_url: formData.image_url,
                 success_message: formData.success_message,
                 learning_outcomes: (formData.learning_outcomes_raw || '').split('\n').filter((s: string) => s.trim()),
-                curriculum_highlights: (formData.curriculum_highlights_raw || '').split('\n').filter((s: string) => s.trim())
+                curriculum_highlights: (formData.curriculum_highlights_raw || '').split('\n').filter((s: string) => s.trim()),
+                pricing_type: formData.pricing_type || 'fixed'
             };
 
             if (editingId) {
@@ -416,8 +420,22 @@ export function CohortManager() {
                                         <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Pricing & Logistics</h3>
                                     </div>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="md:col-span-2">
+                                            <label className="block text-[10px] font-bold text-slate-500 mb-1">PRICING MODEL</label>
+                                            <select 
+                                                value={formData.pricing_type || 'fixed'} 
+                                                onChange={e => setFormData({...formData, pricing_type: e.target.value as any})}
+                                                className="w-full px-4 py-3 bg-slate-50 border-transparent rounded-xl focus:bg-white focus:ring-2 focus:ring-navy-500 transition-all outline-none text-sm font-semibold text-navy-900"
+                                            >
+                                                <option value="fixed">Fixed Price</option>
+                                                <option value="pay_as_you_wish">Pay As You Wish (Guru Dakshina)</option>
+                                            </select>
+                                            <p className="mt-1 text-[11px] text-slate-400 italic">
+                                                If set to Pay As You Wish, the &quot;Current Price&quot; acts as the suggested/placeholder contribution at checkout, but students can contribute any custom amount (min ₹1).
+                                            </p>
+                                        </div>
                                         <div>
-                                            <label className="block text-[10px] font-bold text-slate-500 mb-1">CURRENT PRICE (₹)</label>
+                                            <label className="block text-[10px] font-bold text-slate-500 mb-1">CURRENT PRICE / SUGGESTED AMOUNT (₹)</label>
                                             <input 
                                                 type="number"
                                                 value={(formData.price || 0) / 100} 
@@ -584,9 +602,18 @@ export function CohortManager() {
                                     </td>
                                     <td className="px-8 py-5">
                                         <div className="flex flex-col">
-                                            <span className="text-sm font-bold text-navy-900">₹{(cohort.price / 100).toFixed(0)}</span>
-                                            {cohort.original_price && (
-                                                <span className="text-[10px] text-slate-300 line-through italic">₹{(cohort.original_price / 100).toFixed(0)}</span>
+                                            {cohort.pricing_type === 'pay_as_you_wish' ? (
+                                                <>
+                                                    <span className="text-[10px] font-black uppercase tracking-wider text-purple-600 bg-purple-50 px-2 py-0.5 rounded-md w-max mb-1">Pay As You Wish</span>
+                                                    <span className="text-xs text-slate-500 font-medium">Suggested: ₹{(cohort.price / 100).toFixed(0)}</span>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <span className="text-sm font-bold text-navy-900">₹{(cohort.price / 100).toFixed(0)}</span>
+                                                    {cohort.original_price && (
+                                                        <span className="text-[10px] text-slate-300 line-through italic">₹{(cohort.original_price / 100).toFixed(0)}</span>
+                                                    )}
+                                                </>
                                             )}
                                         </div>
                                     </td>

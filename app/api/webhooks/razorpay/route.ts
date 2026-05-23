@@ -300,7 +300,7 @@ export async function POST(req: Request) {
           }
 
           // ── Update Re-enrollment Log (If applicable) ─────────────────────
-          if (studentEmail && finalCohortId && notes.source === 'automated_reenrollment') {
+          if (studentEmail && finalCohortId) {
             try {
               await supabaseAdmin
                 .from('reenrollment_logs')

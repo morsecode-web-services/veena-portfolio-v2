@@ -11,10 +11,31 @@ const supabase = createClient(
 
 export async function POST(request: Request) {
   try {
-    const { formSlug, phone, email, name, paymentType: clientPaymentType, cohortId } = await request.json();
+    const { formSlug, phone, email, name, paymentType: clientPaymentType, cohortId, amount: clientAmount, turnstileToken } = await request.json();
 
     if (!formSlug && !cohortId) {
       return NextResponse.json({ error: 'Form slug or Cohort ID is required' }, { status: 400 });
+    }
+
+    // Verify Turnstile Token (only in production or when keys are configured)
+    if (process.env.NODE_ENV === 'production' || process.env.TURNSTILE_SECRET_KEY) {
+      if (!turnstileToken) {
+        return NextResponse.json({ error: 'Security verification is required.' }, { status: 400 });
+      }
+
+      const verifyRes = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          secret: process.env.TURNSTILE_SECRET_KEY || '1x0000000000000000000000000000000AA',
+          response: turnstileToken,
+        }),
+      });
+
+      const verifyData = await verifyRes.json();
+      if (!verifyData.success) {
+        return NextResponse.json({ error: 'Security validation failed. Please try again.' }, { status: 400 });
+      }
     }
 
     if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
@@ -33,7 +54,7 @@ export async function POST(request: Request) {
       // Fetch cohort config
       const { data: cohort, error: cohortError } = await supabase
         .from('cohorts')
-        .select('price, razorpay_plan_id, telegram_chat_id, status')
+        .select('price, razorpay_plan_id, telegram_chat_id, status, pricing_type')
         .eq('id', cohortId)
         .single();
 
@@ -45,11 +66,24 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: 'This cohort is not accepting enrollments' }, { status: 403 });
       }
 
-      razorpayAmount = cohort.price;
-      razorpayPlanId = cohort.razorpay_plan_id;
       telegramChatId = cohort.telegram_chat_id;
-      // Cohorts can be one-time or subscription. If plan_id exists, it's a subscription.
-      paymentType = razorpayPlanId ? 'subscription' : 'one_time';
+
+      if (cohort.pricing_type === 'pay_as_you_wish') {
+        paymentType = 'one_time';
+        
+        const rawAmount = parseFloat(String(clientAmount || '0'));
+        if (isNaN(rawAmount) || rawAmount < 1) {
+          return NextResponse.json({ error: 'Please enter a valid amount (minimum ₹1)' }, { status: 400 });
+        }
+        
+        razorpayAmount = Math.round(rawAmount * 100); // convert Rupees to paise
+        razorpayPlanId = '';
+      } else {
+        razorpayAmount = cohort.price;
+        razorpayPlanId = cohort.razorpay_plan_id;
+        // Cohorts can be one-time or subscription. If plan_id exists, it's a subscription.
+        paymentType = razorpayPlanId ? 'subscription' : 'one_time';
+      }
     } else {
       // SECURITY: Fetch the official payment config from the database
       // Do not trust the amount or plan_id sent from the client!

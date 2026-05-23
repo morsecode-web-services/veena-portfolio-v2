@@ -44,6 +44,7 @@ interface Cohort {
     learning_outcomes?: string[];
     curriculum_highlights?: string[];
     success_message?: string;
+    pricing_type?: 'fixed' | 'pay_as_you_wish';
 }
 
 interface CohortClientProps {
@@ -127,11 +128,47 @@ function CohortContent({ initialCohorts }: CohortClientProps) {
         }
     }, [searchParams, closeCelebration]);
 
-    const enrollmentFields: FormField[] = [
+    useEffect(() => {
+        const enrollId = searchParams.get('enroll');
+        if (enrollId) {
+            const cohort = initialCohorts.find(c => c.id === enrollId);
+            if (cohort && cohort.status === 'active') {
+                setSelectedCohort(cohort);
+                setIsModalOpen(true);
+                
+                // Clean the URL parameters silently without reloading
+                if (typeof window !== 'undefined') {
+                    const url = new URL(window.location.href);
+                    url.searchParams.delete('enroll');
+                    url.searchParams.delete('name');
+                    url.searchParams.delete('email');
+                    url.searchParams.delete('phone');
+                    window.history.replaceState({}, '', url.pathname + url.search);
+                }
+            }
+        }
+    }, [searchParams, initialCohorts]);
+
+    const baseFields: FormField[] = [
         { name: 'name', label: 'Full Name', type: 'text', required: true, placeholder: 'Your name' },
         { name: 'email', label: 'Email Address', type: 'email', required: true, placeholder: 'your@email.com' },
         { name: 'phone', label: 'WhatsApp Number', type: 'tel', required: true, placeholder: 'Your WhatsApp number' },
     ];
+
+    const enrollmentFields: FormField[] = selectedCohort?.pricing_type === 'pay_as_you_wish'
+        ? [
+            ...baseFields,
+            {
+                name: 'custom_amount',
+                label: 'Your Guru Dakshina / Voluntary Contribution (₹)',
+                type: 'text',
+                required: true,
+                placeholder: selectedCohort.price > 0 
+                    ? `e.g. 251 (Suggested: ₹${(selectedCohort.price / 100).toFixed(0)})`
+                    : 'e.g. 251'
+            }
+        ]
+        : baseFields;
 
     const handleEnroll = (cohort: Cohort) => {
         if (cohort.status !== 'active') return;
@@ -234,10 +271,21 @@ function CohortContent({ initialCohorts }: CohortClientProps) {
 
                                 <div className="flex items-center justify-between mt-2 pt-4 border-t border-slate-50">
                                     <div className="flex flex-col">
-                                        {cohort.original_price && (
-                                            <span className="text-[10px] text-slate-400 line-through leading-none decoration-red-200 italic">{formatCurrency(cohort.original_price)}</span>
+                                        {cohort.pricing_type === 'pay_as_you_wish' ? (
+                                            <>
+                                                <span className="text-[9px] font-black uppercase tracking-wider text-purple-600 bg-purple-50 px-2 py-0.5 rounded w-max mb-1">Guru Dakshina</span>
+                                                {cohort.price > 0 && (
+                                                    <span className="text-sm font-bold text-navy-900 tracking-tight">Suggested: {formatCurrency(cohort.price)}</span>
+                                                )}
+                                            </>
+                                        ) : (
+                                            <>
+                                                {cohort.original_price && (
+                                                    <span className="text-[10px] text-slate-400 line-through leading-none decoration-red-200 italic">{formatCurrency(cohort.original_price)}</span>
+                                                )}
+                                                <span className="text-xl font-bold text-navy-900 tracking-tight">{formatCurrency(cohort.price)}</span>
+                                            </>
                                         )}
-                                        <span className="text-xl font-bold text-navy-900 tracking-tight">{formatCurrency(cohort.price)}</span>
                                     </div>
 
                                     <div className={`h-10 px-5 text-[10px] font-black uppercase tracking-widest rounded-lg flex items-center justify-center transition-all duration-300 ${cohort.status === 'active'
@@ -328,17 +376,32 @@ function CohortContent({ initialCohorts }: CohortClientProps) {
                                     <div className="mb-8">
                                         <h3 className="text-base font-bold text-slate-900 mb-4">Finalize Enrollment</h3>
                                         
-                                        <div className="flex items-center gap-4 mb-2">
-                                            <span className="text-3xl font-bold text-slate-900 tracking-tight">{formatCurrency(selectedCohort.price)}</span>
-                                            {selectedCohort.original_price && (
-                                                <span className="text-lg text-slate-400 line-through font-normal">{formatCurrency(selectedCohort.original_price)}</span>
-                                            )}
-                                        </div>
-                                        <p className="text-xs text-slate-500 italic">One-time payment for full cohort access</p>
+                                        {selectedCohort.pricing_type === 'pay_as_you_wish' ? (
+                                            <>
+                                                {selectedCohort.price > 0 && (
+                                                    <div className="flex items-center gap-4 mb-2">
+                                                        <span className="text-lg font-bold text-slate-500">Suggested:</span>
+                                                        <span className="text-2xl font-bold text-navy-900 tracking-tight">{formatCurrency(selectedCohort.price)}</span>
+                                                    </div>
+                                                )}
+                                                <p className="text-xs text-slate-500 italic">Guru Dakshina / Voluntary Contribution (min ₹1)</p>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <div className="flex items-center gap-4 mb-2">
+                                                    <span className="text-3xl font-bold text-slate-900 tracking-tight">{formatCurrency(selectedCohort.price)}</span>
+                                                    {selectedCohort.original_price && (
+                                                        <span className="text-lg text-slate-400 line-through font-normal">{formatCurrency(selectedCohort.original_price)}</span>
+                                                    )}
+                                                </div>
+                                                <p className="text-xs text-slate-500 italic">One-time payment for full cohort access</p>
+                                            </>
+                                        )}
                                     </div>
 
                                     <div className="space-y-6">
                                         <DynamicForm
+                                            key={selectedCohort.id}
                                             formSlug="cohort_enrollment"
                                             title={selectedCohort.title}
                                             fields={enrollmentFields}
