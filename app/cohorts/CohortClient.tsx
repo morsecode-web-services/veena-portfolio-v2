@@ -58,6 +58,7 @@ function CohortContent({ initialCohorts }: CohortClientProps) {
     const [inviteLink, setInviteLink] = useState<string | null>(null);
     const [isPolling, setIsPolling] = useState(false);
     const [pollingTimedOut, setPollingTimedOut] = useState(false);
+    const [prefillData, setPrefillData] = useState<{name?: string, email?: string, phone?: string} | null>(null);
 
     const searchParams = useSearchParams();
     const router = useRouter();
@@ -135,6 +136,11 @@ function CohortContent({ initialCohorts }: CohortClientProps) {
             if (cohort && cohort.status === 'active') {
                 setSelectedCohort(cohort);
                 setIsModalOpen(true);
+                
+                const name = searchParams.get('name') || undefined;
+                const email = searchParams.get('email') || undefined;
+                const phone = searchParams.get('phone') || undefined;
+                setPrefillData({ name, email, phone });
                 
                 // Clean the URL parameters silently without reloading
                 if (typeof window !== 'undefined') {
@@ -399,7 +405,6 @@ function CohortContent({ initialCohorts }: CohortClientProps) {
                                         )}
                                     </div>
 
-                                    <div className="space-y-6">
                                         <DynamicForm
                                             key={selectedCohort.id}
                                             formSlug="cohort_enrollment"
@@ -410,12 +415,11 @@ function CohortContent({ initialCohorts }: CohortClientProps) {
                                             cohortId={selectedCohort.id}
                                             submitLabel="Complete Checkout"
                                             successMessage={selectedCohort.success_message || "Welcome aboard! Your payment was successful."}
+                                            prefillData={prefillData}
                                         />
-                                        
                                     </div>
                                 </div>
-                            </div>
-                        </motion.div>
+                            </motion.div>
                     </div>
                 )}
             </AnimatePresence>

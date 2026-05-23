@@ -305,7 +305,7 @@ export async function POST(req: Request) {
               await supabaseAdmin
                 .from('reenrollment_logs')
                 .update({ status: 'paid' })
-                .eq('student_email', studentEmail)
+                .ilike('student_email', studentEmail)
                 .eq('target_cohort_id', finalCohortId);
             } catch (err) {
               console.error('[Webhook] Failed to update re-enrollment log:', err);

@@ -1,7 +1,27 @@
 import { NextResponse } from 'next/server';
 
+// Rate limiting: Track validation times per IP to protect external API quotas.
+// NOTE: We use a short 5-second window to allow users to correct form typos and resubmit,
+// while still blocking bot scripts sending rapid successive requests.
+const validationTimes = new Map<string, number>();
+const RATE_LIMIT_WINDOW = 5000; // 5 seconds
+
 export async function POST(req: Request) {
     try {
+        // Get client IP for rate limiting
+        const forwarded = req.headers.get('x-forwarded-for');
+        const ip = forwarded ? forwarded.split(',')[0] : 'unknown';
+
+        // Check rate limiting
+        const lastSubmitTime = validationTimes.get(ip);
+        const now = Date.now();
+        if (lastSubmitTime && now - lastSubmitTime < RATE_LIMIT_WINDOW) {
+            return NextResponse.json(
+                { isValid: false, error: 'Too many requests. Please wait a moment.' },
+                { status: 429 }
+            );
+        }
+
         const { email, phone } = await req.json();
 
         // Support for multiple keys (Rotation)
@@ -62,6 +82,14 @@ export async function POST(req: Request) {
                 }
             }
         }
+
+        // Update rate limit
+        validationTimes.set(ip, now);
+
+        // Clean up memory
+        setTimeout(() => {
+            validationTimes.delete(ip);
+        }, RATE_LIMIT_WINDOW);
 
         return NextResponse.json({
             isValid: emailValid && phoneValid,

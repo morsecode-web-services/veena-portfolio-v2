@@ -3,14 +3,14 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Script from 'next/script';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm, Controller, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { m, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/system/Button';
 import { analytics } from '@/components/GoogleAnalytics';
 import { CheckCircle2, AlertCircle, Loader2, UploadCloud, X } from 'lucide-react';
-import PhoneInput, { getCountryCallingCode, getCountries } from 'react-phone-number-input';
+import PhoneInput, { getCountryCallingCode, getCountries, parsePhoneNumber } from 'react-phone-number-input';
 import en from 'react-phone-number-input/locale/en';
 import Input from 'react-phone-number-input/input';
 import 'react-phone-number-input/style.css';
@@ -38,10 +38,29 @@ interface DynamicFormProps {
     razorpayAmount?: number;
     cohortId?: string;
     submitLabel?: string;
+    prefillData?: { name?: string; email?: string; phone?: string; [key: string]: any } | null;
 }
 
 const CustomPhoneInput = ({ name, placeholder, control, error }: { name: string, placeholder?: string, control: any, error?: any }) => {
     const [country, setCountry] = useState<any>('IN');
+
+    const value = useWatch({
+        control,
+        name
+    });
+
+    useEffect(() => {
+        if (value) {
+            try {
+                const parsed = parsePhoneNumber(value);
+                if (parsed && parsed.country) {
+                    setCountry(parsed.country);
+                }
+            } catch (e) {
+                // Ignore parsing errors
+            }
+        }
+    }, [value]);
 
     // Helper to convert country code to flag emoji
     const getFlagEmoji = (countryCode: string) => {
@@ -116,7 +135,8 @@ export default function DynamicForm({
     razorpayPlanId, 
     razorpayAmount,
     cohortId,
-    submitLabel = 'Submit Inquiry'
+    submitLabel = 'Submit Inquiry',
+    prefillData
 }: DynamicFormProps) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
@@ -190,7 +210,16 @@ export default function DynamicForm({
                 }
             });
         }
-    }, [fields, setValue]);
+
+        if (prefillData) {
+            fields.forEach(field => {
+                const val = prefillData[field.name];
+                if (val) {
+                    setValue(field.name, val);
+                }
+            });
+        }
+    }, [fields, setValue, prefillData]);
 
     const saveFormData = async (data: FormData, paymentData: any = {}) => {
         const response = await fetch('/api/send-email', {

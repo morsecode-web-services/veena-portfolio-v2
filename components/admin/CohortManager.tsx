@@ -59,6 +59,62 @@ export function CohortManager() {
     const [reenrollLoading, setReenrollLoading] = useState(false);
     const [reenrollProgress, setReenrollProgress] = useState({ current: 0, total: 0, success: 0, failed: 0, skipped: 0 });
 
+    const [sourceStudents, setSourceStudents] = useState<any[]>([]);
+    const [sourceStudentsLoading, setSourceStudentsLoading] = useState(false);
+    const [selectedStudentEmails, setSelectedStudentEmails] = useState<Set<string>>(new Set());
+    const [studentSearchQuery, setStudentSearchQuery] = useState('');
+
+    const filteredStudents = sourceStudents.filter(s => {
+        const query = studentSearchQuery.toLowerCase();
+        return (
+            (s.name || '').toLowerCase().includes(query) ||
+            (s.email || '').toLowerCase().includes(query)
+        );
+    });
+
+    useEffect(() => {
+        if (!reenrollSourceId) {
+            setSourceStudents([]);
+            setSelectedStudentEmails(new Set());
+            return;
+        }
+
+        const fetchSourceStudents = async () => {
+            setSourceStudentsLoading(true);
+            try {
+                const { data: students, error } = await supabase
+                    .from('form_submissions')
+                    .select('user_name, user_email, form_data')
+                    .eq('cohort_id', reenrollSourceId)
+                    .eq('payment_status', 'paid');
+
+                if (error) throw error;
+
+                // De-duplicate by Email
+                const uniqueStudentsMap = new Map();
+                students?.forEach(s => {
+                    if (s.user_email) {
+                        uniqueStudentsMap.set(s.user_email.toLowerCase(), {
+                            name: s.user_name || 'Student',
+                            email: s.user_email,
+                            phone: s.form_data?.phone
+                        });
+                    }
+                });
+
+                const uniqueStudents = Array.from(uniqueStudentsMap.values());
+                setSourceStudents(uniqueStudents);
+                setSelectedStudentEmails(new Set(uniqueStudents.map(s => s.email.toLowerCase())));
+            } catch (err: any) {
+                addToast(err.message || 'Failed to fetch source students', 'error');
+            } finally {
+                setSourceStudentsLoading(false);
+            }
+        };
+
+        fetchSourceStudents();
+    }, [reenrollSourceId, addToast]);
+
     const [isViewingLogs, setIsViewingLogs] = useState(false);
     const [viewingLogsCohortId, setViewingLogsCohortId] = useState<string | null>(null);
     const [invitationLogs, setInvitationLogs] = useState<any[]>([]);
@@ -117,40 +173,18 @@ export function CohortManager() {
             return;
         }
 
+        const uniqueStudents = sourceStudents.filter(s => 
+            selectedStudentEmails.has(s.email.toLowerCase())
+        );
+        const total = uniqueStudents.length;
+
+        if (total === 0) {
+            addToast('Please select at least one student to invite.', 'error');
+            return;
+        }
+
         setReenrollLoading(true);
         try {
-            // 1. Fetch ALL successful students from source cohort(s)
-            // Note: If we want to support multiple source cohorts in future, we can loop here.
-            // For now, let's stick to one but implement de-duplication.
-            const { data: students, error } = await supabase
-                .from('form_submissions')
-                .select('user_name, user_email, form_data')
-                .eq('cohort_id', reenrollSourceId)
-                .eq('payment_status', 'paid');
-
-            if (error || !students) throw new Error('Failed to fetch source students');
-
-            // 2. De-duplicate by Email
-            const uniqueStudentsMap = new Map();
-            students.forEach(s => {
-                if (s.user_email) {
-                    uniqueStudentsMap.set(s.user_email.toLowerCase(), {
-                        name: s.user_name,
-                        email: s.user_email,
-                        phone: s.form_data?.phone
-                    });
-                }
-            });
-
-            const uniqueStudents = Array.from(uniqueStudentsMap.values());
-            const total = uniqueStudents.length;
-            
-            if (total === 0) {
-                addToast('No eligible paid students found in the source cohort.', 'error');
-                setReenrollLoading(false);
-                return;
-            }
-
             setReenrollProgress({ current: 0, total, success: 0, failed: 0, skipped: 0 });
 
             // 3. Batch Process
@@ -193,20 +227,50 @@ export function CohortManager() {
                 } else {
                     console.error('Batch failed:', result.error);
                     totalFailed += batch.length;
+                    setReenrollProgress(prev => ({
+                        ...prev,
+                        current: Math.min(i + BATCH_SIZE, total),
+                        failed: totalFailed
+                    }));
                 }
             }
 
-            addToast(`Finished processing ${total} invitations.`, 'success');
+            if (totalSuccess > 0) {
+                if (totalFailed > 0) {
+                    addToast(`Sent ${totalSuccess} invitations successfully, but ${totalFailed} failed.`, 'info');
+                } else if (totalSkipped > 0) {
+                    addToast(`Sent ${totalSuccess} invitations successfully (${totalSkipped} already invited/enrolled).`, 'success');
+                } else {
+                    addToast(`Successfully sent ${totalSuccess} invitations.`, 'success');
+                }
+            } else if (totalSkipped > 0) {
+                addToast(`No invitations sent. All ${totalSkipped} students were skipped (already invited or enrolled).`, 'info');
+            } else {
+                addToast(`Failed to process invitations. Please check server logs.`, 'error');
+            }
+
             setTimeout(() => {
                 setIsReenrolling(false);
                 setReenrollSourceId('');
                 setReenrollTargetId(null);
-            }, 3000);
+                setSourceStudents([]);
+                setSelectedStudentEmails(new Set());
+                setStudentSearchQuery('');
+            }, 4000);
         } catch (error: any) {
             addToast(error.message || 'An error occurred during batch processing', 'error');
         } finally {
             setReenrollLoading(false);
         }
+    };
+
+    const closeReenrollModal = () => {
+        setIsReenrolling(false);
+        setReenrollSourceId('');
+        setReenrollTargetId(null);
+        setSourceStudents([]);
+        setSelectedStudentEmails(new Set());
+        setStudentSearchQuery('');
     };
 
     const fetchInvitationLogs = async (cohortId: string) => {
@@ -644,6 +708,10 @@ export function CohortManager() {
                                             <button 
                                                 onClick={() => {
                                                     setReenrollTargetId(cohort.id);
+                                                    setReenrollSourceId('');
+                                                    setSourceStudents([]);
+                                                    setSelectedStudentEmails(new Set());
+                                                    setStudentSearchQuery('');
                                                     setIsReenrolling(true);
                                                 }}
                                                 className="p-2 text-slate-400 hover:text-gold-600 hover:bg-white rounded-lg transition-all hover:shadow-sm"
@@ -675,7 +743,7 @@ export function CohortManager() {
             {/* Re-enrollment Modal */}
             {isReenrolling && (
                 <div className="fixed inset-0 bg-navy-950/40 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden">
+                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200">
                         <div className="p-8 border-b border-slate-50 flex items-center justify-between bg-slate-50/50">
                             <div className="flex items-center gap-4">
                                 <div className="p-3 bg-gold-100 text-gold-600 rounded-2xl">
@@ -686,12 +754,12 @@ export function CohortManager() {
                                     <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mt-0.5">Automated Re-enrollment</p>
                                 </div>
                             </div>
-                            <button onClick={() => setIsReenrolling(false)} className="w-10 h-10 flex items-center justify-center text-slate-300 hover:text-navy-900 transition-all hover:bg-white rounded-full">
+                            <button onClick={closeReenrollModal} className="w-10 h-10 flex items-center justify-center text-slate-300 hover:text-navy-900 transition-all hover:bg-white rounded-full">
                                 <X size={20} />
                             </button>
                         </div>
 
-                        <div className="p-8 space-y-8">
+                        <div className="p-8 space-y-6 max-h-[60vh] overflow-y-auto">
                             <div>
                                 <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">Target: <span className="text-navy-900">{cohorts.find(c => c.id === reenrollTargetId)?.title}</span></label>
                                 <label className="block text-[10px] font-black uppercase tracking-widest text-navy-900 mb-2">Invite Students From</label>
@@ -709,6 +777,98 @@ export function CohortManager() {
                                     We will find all successful enrollees from the selected batch and generate unique payment links for them.
                                 </p>
                             </div>
+
+                            {/* Dynamic Student Checklist */}
+                            {reenrollSourceId && (
+                                <div className="space-y-4 pt-2 border-t border-slate-50">
+                                    {sourceStudentsLoading ? (
+                                        <div className="flex flex-col items-center justify-center py-6 text-slate-400">
+                                            <RefreshCw className="h-5 w-5 animate-spin mb-2 text-gold-500" />
+                                            <span className="text-[10px] font-black uppercase tracking-widest">Loading students...</span>
+                                        </div>
+                                    ) : sourceStudents.length === 0 ? (
+                                        <div className="text-center py-6 text-slate-400 bg-slate-50/50 rounded-2xl border border-slate-100">
+                                            <p className="text-xs font-bold">No eligible paid students found in this cohort</p>
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-3">
+                                            <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-slate-400">
+                                                <span>Students List</span>
+                                                <span className="font-bold text-navy-900">{selectedStudentEmails.size} of {sourceStudents.length} selected</span>
+                                            </div>
+
+                                            {/* Search and Select All Bar */}
+                                            <div className="flex items-center gap-3">
+                                                <div className="relative flex-grow">
+                                                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                                                    <input 
+                                                        type="text"
+                                                        placeholder="Search name or email..."
+                                                        value={studentSearchQuery}
+                                                        onChange={(e) => setStudentSearchQuery(e.target.value)}
+                                                        className="w-full pl-9 pr-3 py-2 bg-slate-50/50 border border-slate-100 rounded-xl text-xs outline-none focus:bg-white focus:ring-2 focus:ring-gold-400/20 transition-all font-medium text-navy-900"
+                                                    />
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        const allSelected = filteredStudents.every(s => selectedStudentEmails.has(s.email.toLowerCase()));
+                                                        const newSelected = new Set(selectedStudentEmails);
+                                                        filteredStudents.forEach(s => {
+                                                            if (allSelected) {
+                                                                newSelected.delete(s.email.toLowerCase());
+                                                            } else {
+                                                                newSelected.add(s.email.toLowerCase());
+                                                            }
+                                                        });
+                                                        setSelectedStudentEmails(newSelected);
+                                                    }}
+                                                    className="px-3 py-2 text-[10px] font-black uppercase tracking-widest rounded-xl border border-slate-200 hover:bg-slate-50 transition-all text-navy-900 shrink-0"
+                                                >
+                                                    {filteredStudents.every(s => selectedStudentEmails.has(s.email.toLowerCase())) ? 'Deselect All' : 'Select All'}
+                                                </button>
+                                            </div>
+
+                                            {/* Scrollable list */}
+                                            <div className="max-h-48 overflow-y-auto border border-slate-100 rounded-2xl divide-y divide-slate-50 bg-slate-50/20">
+                                                {filteredStudents.length === 0 ? (
+                                                    <div className="p-4 text-center text-xs text-slate-400 italic">No matching students</div>
+                                                ) : (
+                                                    filteredStudents.map(student => {
+                                                        const emailKey = student.email.toLowerCase();
+                                                        const isSelected = selectedStudentEmails.has(emailKey);
+                                                        return (
+                                                            <label 
+                                                                key={student.email} 
+                                                                className="flex items-center gap-3 p-3 hover:bg-slate-50/50 cursor-pointer transition-colors"
+                                                            >
+                                                                <input 
+                                                                    type="checkbox"
+                                                                    checked={isSelected}
+                                                                    onChange={() => {
+                                                                        const newSelected = new Set(selectedStudentEmails);
+                                                                        if (newSelected.has(emailKey)) {
+                                                                            newSelected.delete(emailKey);
+                                                                        } else {
+                                                                            newSelected.add(emailKey);
+                                                                        }
+                                                                        setSelectedStudentEmails(newSelected);
+                                                                    }}
+                                                                    className="h-4 w-4 rounded border-slate-300 text-gold-600 focus:ring-gold-500 transition-colors cursor-pointer"
+                                                                />
+                                                                <div className="flex flex-col">
+                                                                    <span className="text-xs font-bold text-navy-900">{student.name}</span>
+                                                                    <span className="text-[10px] text-slate-400">{student.email}</span>
+                                                                </div>
+                                                            </label>
+                                                        );
+                                                    })
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
 
                             <div className="bg-navy-50/50 rounded-2xl p-5 flex items-start gap-3 border border-navy-100/20">
                                 <Info size={16} className="text-navy-400 mt-0.5 flex-shrink-0" />
@@ -740,14 +900,14 @@ export function CohortManager() {
 
                         <div className="p-8 bg-slate-50/50 border-t border-slate-100 flex gap-4">
                             <button 
-                                onClick={() => setIsReenrolling(false)}
+                                onClick={closeReenrollModal}
                                 className="flex-1 px-6 py-4 rounded-xl text-sm font-bold text-slate-500 hover:bg-slate-100 transition-all"
                             >
                                 Cancel
                             </button>
                             <button 
                                 onClick={handleReenrollBatch}
-                                disabled={reenrollLoading || !reenrollSourceId}
+                                disabled={reenrollLoading || !reenrollSourceId || selectedStudentEmails.size === 0}
                                 className="flex-1 px-6 py-4 rounded-xl text-sm font-bold bg-navy-900 text-white hover:bg-navy-800 shadow-premium hover:shadow-premium-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-all"
                             >
                                 {reenrollLoading ? (
