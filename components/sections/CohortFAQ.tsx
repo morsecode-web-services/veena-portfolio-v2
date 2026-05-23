@@ -22,7 +22,7 @@ export default function CohortFAQ({ items = [] }: CohortFAQProps) {
             Frequently Asked Questions
           </h2>
           <p className="text-slate-500 max-w-xl mx-auto text-sm md:text-base">
-            Find answers to common questions about our monthly cohorts and learning format.
+            Find answers to common questions about Next Avarthanam and our learning format.
           </p>
         </div>
 

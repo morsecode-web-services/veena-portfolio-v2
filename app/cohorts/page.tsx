@@ -5,18 +5,18 @@ import { createClient } from '@supabase/supabase-js';
 import { loadConfig } from '@/lib/config';
 
 export const metadata: Metadata = {
-    title: 'Veena & Carnatic Music Cohorts | Monthly Learning Journey',
-    description: 'Master the art of Veena with structured monthly cohorts. Join our exclusive Carnatic music community and take your skills from basics to mastery.',
+    title: 'Next Avarthanam | Veena & Carnatic Music Programs',
+    description: 'Master the art of Veena with structured Avarthanam cohorts. Join our exclusive Carnatic music community and take your skills from basics to mastery.',
     openGraph: {
-        title: 'Join Our Monthly Music Cohorts | Veena Manikarnike',
-        description: 'Structured, monthly Carnatic music programs designed for mastery. Enroll now to start your journey.',
-        images: [{ url: '/images/og-cohorts.png', width: 1200, height: 630, alt: 'Veena Learning Cohorts' }],
+        title: 'Next Avarthanam | Veena Manikarnike',
+        description: 'Structured Carnatic music programs designed for mastery. Enroll now to start your journey.',
+        images: [{ url: '/images/og-cohorts.png', width: 1200, height: 630, alt: 'Next Avarthanam Cohorts' }],
         type: 'website',
     },
     twitter: {
         card: 'summary_large_image',
-        title: 'Veena & Carnatic Music Cohorts',
-        description: 'Master the Veena with structured monthly programs.',
+        title: 'Next Avarthanam | Veena & Carnatic Music',
+        description: 'Master the Veena with structured learning cohorts.',
         images: ['/images/og-cohorts.png'],
     }
 };
@@ -39,12 +39,12 @@ export default async function CohortsPage() {
     return (
         <main className="min-h-screen bg-slate-50 pt-24 pb-20">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="text-center mb-16">
+                <div className="text-center mb-8">
                     <h1 className="text-4xl md:text-5xl font-serif font-bold text-navy-900 mb-4">
-                        Monthly Learning Cohorts
+                        "Next Avarthanam"
                     </h1>
                     <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-                        Choose a cohort that fits your schedule. Our structured monthly programs are designed to take you from basics to mastery.
+                        A 3 month Veena-driven learning journey. Learn two Indian classical / contemporary & raaga-based songs every month. Breaking the barrier to entry with a flexible, accessible music learning community.
                     </p>
                 </div>
 

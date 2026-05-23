@@ -166,12 +166,12 @@ function CohortContent({ initialCohorts }: CohortClientProps) {
             ...baseFields,
             {
                 name: 'custom_amount',
-                label: 'Your Guru Dakshina / Voluntary Contribution (₹)',
+                label: 'Your Contribution / Pay as you wish (₹)',
                 type: 'text',
                 required: true,
                 placeholder: selectedCohort.price > 0 
-                    ? `e.g. 251 (Suggested: ₹${(selectedCohort.price / 100).toFixed(0)})`
-                    : 'e.g. 251'
+                    ? `Suggested: ₹${(selectedCohort.price / 100).toFixed(0)}`
+                    : 'Enter contribution amount'
             }
         ]
         : baseFields;
@@ -211,7 +211,7 @@ function CohortContent({ initialCohorts }: CohortClientProps) {
     };
 
     return (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-0 pb-12">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                 {initialCohorts.map((cohort, index) => (
                     <motion.button
@@ -221,7 +221,7 @@ function CohortContent({ initialCohorts }: CohortClientProps) {
                         transition={{ delay: index * 0.1 }}
                         onClick={() => cohort.status === 'active' && handleEnroll(cohort)}
                         disabled={cohort.status !== 'active'}
-                        className={`group relative bg-white rounded-2xl border border-slate-100 overflow-hidden transition-all duration-500 text-left w-full outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-4 ${cohort.status === 'active' ? 'cursor-pointer hover:shadow-premium-xl hover:-translate-y-1' : 'opacity-75 cursor-not-allowed'
+                        className={`group relative bg-white rounded-2xl border border-slate-100 overflow-hidden transition-all duration-500 text-left w-full outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-4 ${cohort.status === 'active' ? 'cursor-pointer hover:shadow-premium-xl hover:-translate-y-2' : 'opacity-75 cursor-not-allowed'
                             }`}
                     >
                         <div className="relative aspect-video overflow-hidden bg-slate-100">
@@ -241,17 +241,13 @@ function CohortContent({ initialCohorts }: CohortClientProps) {
                                 </div>
                             )}
 
-                            <div className="absolute top-3 left-3 flex flex-col gap-2">
-                                {cohort.is_highlighted && (
+                            {cohort.is_highlighted && (
+                                <div className="absolute top-3 left-3">
                                     <div className="bg-gold-400 text-navy-950 text-[10px] font-black px-2.5 py-1 rounded shadow-sm uppercase tracking-wider">
                                         Recommended
                                     </div>
-                                )}
-                                <div className={`text-[10px] font-black px-2.5 py-1 rounded shadow-sm uppercase tracking-wider ${cohort.status === 'active' ? 'bg-white text-navy-900' : 'bg-slate-200 text-slate-500'
-                                    }`}>
-                                    {cohort.status === 'active' ? 'Enrollment Open' : 'Coming Soon'}
                                 </div>
-                            </div>
+                            )}
                         </div>
 
                         <div className="p-5 flex flex-col">
@@ -260,26 +256,20 @@ function CohortContent({ initialCohorts }: CohortClientProps) {
                                     {cohort.title}
                                 </h3>
 
-                                {/* Learning outcomes or description fallback */}
-                                <div className="mb-4 space-y-1.5 min-h-[4rem]">
-                                    {cohort.learning_outcomes && cohort.learning_outcomes.length > 0
-                                        ? cohort.learning_outcomes.slice(0, 3).map((outcome, i) => (
-                                            <div key={i} className="flex items-start gap-2">
-                                                <Check size={11} className="text-gold-500 mt-0.5 flex-shrink-0" />
-                                                <span className="text-[11px] text-slate-600 leading-snug line-clamp-1">{outcome}</span>
-                                            </div>
-                                        ))
-                                        : cohort.description && (
-                                            <p className="text-[11px] text-slate-500 leading-snug line-clamp-3">{cohort.description}</p>
-                                        )
-                                    }
+                                {/* Short description instead of features checklist */}
+                                <div className="mb-4 min-h-[4rem]">
+                                    {cohort.description && (
+                                        <p className="text-xs text-slate-500 leading-relaxed line-clamp-3">
+                                            {cohort.description}
+                                        </p>
+                                    )}
                                 </div>
 
                                 <div className="flex items-center justify-between mt-2 pt-4 border-t border-slate-50">
                                     <div className="flex flex-col">
                                         {cohort.pricing_type === 'pay_as_you_wish' ? (
                                             <>
-                                                <span className="text-[9px] font-black uppercase tracking-wider text-purple-600 bg-purple-50 px-2 py-0.5 rounded w-max mb-1">Guru Dakshina</span>
+                                                <span className="text-[9px] font-black uppercase tracking-wider text-purple-600 bg-purple-50 px-2 py-0.5 rounded w-max mb-1">Pay as you wish</span>
                                                 {cohort.price > 0 && (
                                                     <span className="text-sm font-bold text-navy-900 tracking-tight">Suggested: {formatCurrency(cohort.price)}</span>
                                                 )}
@@ -390,7 +380,7 @@ function CohortContent({ initialCohorts }: CohortClientProps) {
                                                         <span className="text-2xl font-bold text-navy-900 tracking-tight">{formatCurrency(selectedCohort.price)}</span>
                                                     </div>
                                                 )}
-                                                <p className="text-xs text-slate-500 italic">Guru Dakshina / Voluntary Contribution (min ₹1)</p>
+                                                <p className="text-xs text-slate-500 italic">Voluntary Contribution / Pay as you wish (min ₹1)</p>
                                             </>
                                         ) : (
                                             <>

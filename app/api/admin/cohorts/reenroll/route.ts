@@ -217,7 +217,7 @@ export async function POST(request: Request) {
             name,
             cohortTitle: targetCohort.title,
             paymentLink: inviteLinkUrl,
-            price: isPAYW ? 'Guru Dakshina' : `₹${(finalPrice / 100).toLocaleString()}`
+            price: isPAYW ? 'Pay as you wish' : `₹${(finalPrice / 100).toLocaleString()}`
           }));
 
           await resend.emails.send({

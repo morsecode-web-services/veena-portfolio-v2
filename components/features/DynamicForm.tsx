@@ -169,7 +169,7 @@ export default function DynamicForm({
             validator = z.string()
                 .min(1, 'Contribution is required')
                 .refine((val) => {
-                    const num = parseFloat(val.replace(/[^\d.]/g, ''));
+                    const num = parseFloat(val.replace(/[^\d.-]/g, ''));
                     return !isNaN(num) && num >= 1;
                 }, 'Please enter a valid contribution (minimum ₹1)');
         }
@@ -277,7 +277,7 @@ export default function DynamicForm({
             if (requiresPayment && (razorpayPlanId || razorpayAmount || cohortId)) {
                 const customAmountStr = (data as any).custom_amount;
                 const clientAmountToSend = customAmountStr
-                    ? parseFloat(customAmountStr.replace(/[^\d.]/g, ''))
+                    ? parseFloat(customAmountStr.replace(/[^\d.-]/g, ''))
                     : razorpayAmount;
 
                 const checkoutRes = await fetch('/api/checkout', {

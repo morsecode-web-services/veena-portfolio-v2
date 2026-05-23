@@ -71,7 +71,7 @@ export default async function ComingSoonPage() {
                     <div className="w-full max-w-7xl">
                         <div className="text-center mb-12">
                             <h2 className="text-2xl md:text-3xl font-serif font-bold text-white mb-4">
-                                Upcoming Learning Cohorts
+                                Next Avarthanam
                             </h2>
                             <div className="w-16 h-[1px] bg-gold-500/50 mx-auto"></div>
                         </div>
