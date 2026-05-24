@@ -23,17 +23,29 @@ export async function GET(request: Request) {
 
     const { searchParams } = new URL(request.url);
     const query = searchParams.get('q');
+    const filter = searchParams.get('filter');
 
-    if (!query || query.length < 2) {
+    if (filter !== 'unjoined' && (!query || query.length < 2)) {
       return NextResponse.json({ results: [] });
     }
 
-    // Query the unified view
-    const { data, error } = await supabaseAdmin
+    let queryBuilder = supabaseAdmin
       .from('student_search_view')
-      .select('*')
-      .or(`name.ilike.%${query}%,email.ilike.%${query}%`)
-      .order('created_at', { ascending: false });
+      .select('*');
+
+    if (filter === 'unjoined') {
+      queryBuilder = queryBuilder
+        .eq('type', 'enrollment')
+        .eq('status', 'paid')
+        .or('telegram_joined.eq.false,telegram_joined.is.null')
+        .order('created_at', { ascending: false });
+    } else if (query) {
+      queryBuilder = queryBuilder
+        .or(`name.ilike.%${query}%,email.ilike.%${query}%`)
+        .order('created_at', { ascending: false });
+    }
+
+    const { data, error } = await queryBuilder;
 
     if (error) throw error;
 
@@ -59,7 +71,9 @@ export async function GET(request: Request) {
         type: item.type,
         status: item.status,
         date: item.created_at,
-        link: item.payment_link_url
+        link: item.payment_link_url,
+        telegram_joined: item.telegram_joined || false,
+        telegram_username: item.telegram_username || null
       });
     });
 

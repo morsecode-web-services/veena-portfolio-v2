@@ -92,6 +92,12 @@ export default function AnalyticsPage() {
     const [customStart, setCustomStart] = useState('');
     const [customEnd, setCustomEnd] = useState('');
     const [cohortStats, setCohortStats] = useState<any[]>([]);
+    const [overallStats, setOverallStats] = useState({
+        totalRevenue: 0,
+        totalPaidStudents: 0,
+        overallAverage: 0,
+        totalLeads: 0
+    });
 
     const fetch_ = useCallback(async (refresh = false) => {
         try {
@@ -119,21 +125,111 @@ export default function AnalyticsPage() {
     }, [dateRange, customStart, customEnd]);
 
     const fetchCohortStats = useCallback(async () => {
-        const { data: cohorts } = await supabase.from('cohorts').select('id, title, price');
-        const { data: subs } = await supabase.from('form_submissions').select('cohort_id').not('cohort_id', 'is', null);
+        // Fetch cohorts pricing details
+        const { data: cohorts } = await supabase.from('cohorts').select('id, title, price, pricing_type');
+        
+        // Fetch only paid submissions for revenue calculations
+        const { data: subs } = await supabase
+            .from('form_submissions')
+            .select('cohort_id, razorpay_payment_id')
+            .eq('payment_status', 'paid')
+            .not('cohort_id', 'is', null);
+            
+        // Fetch leads for total interest metrics
         const { data: leads } = await supabase.from('leads').select('cohort_id').not('cohort_id', 'is', null);
         
-        const counts = [...(subs || []), ...(leads || [])].reduce((acc: any, curr: any) => {
-            acc[curr.cohort_id] = (acc[curr.cohort_id] || 0) + 1;
-            return acc;
-        }, {});
+        // Fetch unpaid submissions as additional leads/interest
+        const { data: unpaidSubs } = await supabase
+            .from('form_submissions')
+            .select('cohort_id')
+            .neq('payment_status', 'paid')
+            .not('cohort_id', 'is', null);
+
+        // Map matching webhook logs for actual payment amount lookup (handles custom "Pay As You Wish" amounts)
+        const paymentIds = subs?.map(s => s.razorpay_payment_id).filter(Boolean) || [];
+        const logsMap = new Map();
+        
+        try {
+            if (paymentIds.length > 0) {
+                // Paginate or fetch in batches if extremely large, but a standard .in is perfect here
+                const { data: logs, error: logsError } = await supabase
+                    .from('webhook_logs')
+                    .select('event_id, payload')
+                    .in('event_id', paymentIds);
+                    
+                if (logsError) throw logsError;
+                
+                logs?.forEach(log => {
+                    if (log.event_id) {
+                        logsMap.set(log.event_id, log.payload);
+                    }
+                });
+            }
+        } catch (err) {
+            console.warn('[Analytics] Failed to fetch actual payment amounts from webhook_logs:', err);
+        }
 
         if (cohorts) {
-            setCohortStats(cohorts.map(c => ({
-                title: c.title,
-                count: counts[c.id] || 0,
-                revenue: (counts[c.id] || 0) * (c.price / 100)
-            })).sort((a, b) => b.count - a.count));
+            const stats = cohorts.map(c => {
+                const cohortSubs = subs?.filter(s => s.cohort_id === c.id) || [];
+                
+                // Sum actual payments
+                let totalRevenue = 0;
+                cohortSubs.forEach(s => {
+                    let amount = 0;
+                    if (s.razorpay_payment_id && logsMap.has(s.razorpay_payment_id)) {
+                        const payload = logsMap.get(s.razorpay_payment_id);
+                        const paise = payload?.payload?.payment?.entity?.amount;
+                        if (paise !== undefined && paise !== null) {
+                            amount = Number(paise) / 100;
+                        }
+                    }
+                    
+                    // Fallback to default set price if no webhook payload log exists
+                    if (amount === 0) {
+                        amount = c.price / 100;
+                    }
+                    
+                    totalRevenue += amount;
+                });
+
+                // Lead/Interest count
+                const leadCount = (leads?.filter(l => l.cohort_id === c.id).length || 0) + 
+                                  (unpaidSubs?.filter(us => us.cohort_id === c.id).length || 0);
+
+                return {
+                    id: c.id,
+                    title: c.title,
+                    pricing_type: c.pricing_type || 'fixed',
+                    cohort_price: c.price / 100,
+                    student_count: cohortSubs.length,
+                    lead_count: leadCount,
+                    revenue: totalRevenue,
+                    average: cohortSubs.length > 0 ? (totalRevenue / cohortSubs.length) : 0
+                };
+            });
+
+            // Sort by revenue descending
+            stats.sort((a, b) => b.revenue - a.revenue);
+            setCohortStats(stats);
+
+            // Calculate overall aggregates
+            let overallRevenue = 0;
+            let overallPaidStudents = 0;
+            let overallLeads = 0;
+
+            stats.forEach(s => {
+                overallRevenue += s.revenue;
+                overallPaidStudents += s.student_count;
+                overallLeads += s.lead_count;
+            });
+
+            setOverallStats({
+                totalRevenue: overallRevenue,
+                totalPaidStudents: overallPaidStudents,
+                overallAverage: overallPaidStudents > 0 ? (overallRevenue / overallPaidStudents) : 0,
+                totalLeads: overallLeads
+            });
         }
     }, []);
 
@@ -259,47 +355,105 @@ export default function AnalyticsPage() {
                     </div>
                 </div>
 
-                {/* Cohort Conversion Funnel */}
-                {data.funnel && (
-                    <Section title="Cohort Enrollment Funnel" icon={<Zap className="w-4 h-4 text-gold-500" />}>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
-                            {[
-                                { label: 'Cohort Views', value: data.funnel.view_item, color: C.blue, sub: 'Initial Interest' },
-                                { label: 'Form Opens', value: data.funnel.begin_checkout, color: C.purple, sub: 'Purchase Intent' },
-                                { label: 'Enrollments', value: data.funnel.purchase, color: C.green, sub: 'Revenue Realized' }
-                            ].map((step, i, arr) => {
-                                const prev = arr[i-1];
-                                const conversion = prev ? Math.round((step.value / prev.value) * 100) || 0 : 100;
-                                
-                                return (
-                                    <div key={step.label} className="relative group">
-                                        <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100 hover:border-gold-200 transition-all hover:bg-white hover:shadow-md">
-                                            <div className="flex items-center justify-between mb-2">
-                                                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">{step.label}</span>
-                                                {i > 0 && (
-                                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                                                        conversion > 50 ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-100 text-slate-500'
-                                                    }`}>
-                                                        {conversion}% conv.
-                                                    </span>
+                {/* Cohort Analytics Dashboard: Conversion Funnel & Revenue Summary */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+                    <div className="lg:col-span-2">
+                        {data.funnel ? (
+                            <Section title="Cohort Enrollment Funnel" icon={<Zap className="w-4 h-4 text-gold-500" />}>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+                                    {[
+                                        { label: 'Cohort Views', value: data.funnel.view_item, color: C.blue, sub: 'Initial Interest' },
+                                        { label: 'Form Opens', value: data.funnel.begin_checkout, color: C.purple, sub: 'Purchase Intent' },
+                                        { label: 'Enrollments', value: data.funnel.purchase, color: C.green, sub: 'Revenue Realized' }
+                                    ].map((step, i, arr) => {
+                                        const prev = arr[i-1];
+                                        const conversion = prev ? Math.round((step.value / prev.value) * 100) || 0 : 100;
+                                        
+                                        return (
+                                            <div key={step.label} className="relative group">
+                                                <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100 hover:border-gold-200 transition-all hover:bg-white hover:shadow-md">
+                                                    <div className="flex items-center justify-between mb-2">
+                                                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">{step.label}</span>
+                                                        {i > 0 && (
+                                                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                                                                conversion > 50 ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-100 text-slate-500'
+                                                            }`}>
+                                                                {conversion}% conv.
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <div className="text-3xl font-bold text-navy-900 mb-1">{step.value.toLocaleString()}</div>
+                                                    <div className="text-[10px] font-medium text-slate-400">{step.sub}</div>
+                                                </div>
+                                                {i < arr.length - 1 && (
+                                                    <div className="hidden md:block absolute -right-3 top-1/2 -translate-y-1/2 z-10">
+                                                        <div className="w-6 h-6 bg-white border border-slate-100 rounded-full flex items-center justify-center shadow-sm">
+                                                            <ArrowUpRight className="w-3 h-3 text-slate-300 rotate-90" />
+                                                        </div>
+                                                    </div>
                                                 )}
                                             </div>
-                                            <div className="text-3xl font-bold text-navy-900 mb-1">{step.value.toLocaleString()}</div>
-                                            <div className="text-[10px] font-medium text-slate-400">{step.sub}</div>
-                                        </div>
-                                        {i < arr.length - 1 && (
-                                            <div className="hidden md:block absolute -right-3 top-1/2 -translate-y-1/2 z-10">
-                                                <div className="w-6 h-6 bg-white border border-slate-100 rounded-full flex items-center justify-center shadow-sm">
-                                                    <ArrowUpRight className="w-3 h-3 text-slate-300 rotate-90" />
+                                        );
+                                    })}
+                                </div>
+                            </Section>
+                        ) : (
+                            <div className="bg-slate-50 border border-dashed border-slate-200 rounded-2xl p-8 flex items-center justify-center text-slate-400 text-sm h-full">
+                                Funnel data currently unavailable
+                            </div>
+                        )}
+                    </div>
+                    
+                    <div className="lg:col-span-1">
+                        <Section title="Cohort Revenue & Enrollment" icon={<TrendingUp className="w-4 h-4 text-emerald-500" />}>
+                            <div className="space-y-4 pt-1">
+                                <div className="grid grid-cols-3 gap-2">
+                                    <div className="bg-emerald-50/50 border border-emerald-100 rounded-xl p-2 text-center shadow-sm">
+                                        <span className="text-[8px] font-bold text-emerald-600 block uppercase tracking-wider">Revenue</span>
+                                        <span className="text-xs font-black text-emerald-800">₹{overallStats.totalRevenue.toLocaleString()}</span>
+                                    </div>
+                                    <div className="bg-blue-50/50 border border-blue-100 rounded-xl p-2 text-center shadow-sm">
+                                        <span className="text-[8px] font-bold text-blue-600 block uppercase tracking-wider">Students</span>
+                                        <span className="text-xs font-black text-blue-800">{overallStats.totalPaidStudents}</span>
+                                    </div>
+                                    <div className="bg-purple-50/50 border border-purple-100 rounded-xl p-2 text-center shadow-sm">
+                                        <span className="text-[8px] font-bold text-purple-600 block uppercase tracking-wider">Average</span>
+                                        <span className="text-xs font-black text-purple-800">₹{Math.round(overallStats.overallAverage).toLocaleString()}</span>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2 max-h-[140px] overflow-y-auto pr-1">
+                                    {cohortStats.length > 0 ? (
+                                        cohortStats.map((c: any, i: number) => (
+                                            <div key={i} className="p-2.5 rounded-xl border border-slate-100 bg-slate-50/30 hover:bg-white hover:shadow-sm transition-all">
+                                                <div className="flex items-center justify-between mb-1">
+                                                    <div className="font-bold text-[11px] text-navy-900 truncate max-w-[140px]" title={c.title}>
+                                                        {c.title}
+                                                    </div>
+                                                    <span className={`px-1.5 py-0.5 rounded text-[8px] font-extrabold uppercase tracking-wider ${
+                                                        c.pricing_type === 'pay_as_you_wish' ? 'bg-purple-100 text-purple-700' : 'bg-slate-100 text-slate-700'
+                                                    }`}>
+                                                        {c.pricing_type === 'pay_as_you_wish' ? 'Dakshina' : 'Fixed'}
+                                                    </span>
+                                                </div>
+                                                <div className="flex items-center justify-between text-[10px] text-slate-500 font-medium">
+                                                    <span>{c.student_count} Paid {c.lead_count > 0 && <span className="text-slate-400">({c.lead_count} Leads)</span>}</span>
+                                                    <span className="font-bold text-navy-950">₹{c.revenue.toLocaleString()}</span>
+                                                </div>
+                                                <div className="flex items-center justify-between text-[9px] text-slate-400 mt-0.5">
+                                                    <span>Suggested: ₹{c.cohort_price}</span>
+                                                    <span>Avg: ₹{Math.round(c.average).toLocaleString()}</span>
                                                 </div>
                                             </div>
-                                        )}
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </Section>
-                )}
+                                        ))
+                                    ) : (
+                                        <p className="text-xs text-gray-400 py-4 text-center">No enrollments yet.</p>
+                                    )}
+                                </div>
+                            </div>
+                        </Section>
+                    </div>
+                </div>
 
                 {/* Row 1: Pages + Sources */}
 
@@ -501,23 +655,7 @@ export default function AnalyticsPage() {
                         </div>
                     </Section>
 
-                    <Section title="Cohort Enrollments" icon={<Users className="w-4 h-4 text-gold-500" />}>
-                        <div className="space-y-1">
-                            {cohortStats.length > 0
-                                ? cohortStats.map((c: any, i: number) => (
-                                    <Bar1 
-                                        key={i} 
-                                        label={c.title} 
-                                        value={c.count} 
-                                        max={cohortStats[0]?.count || 1} 
-                                        color={C.blue} 
-                                        sub={`Est. Revenue: ₹${c.revenue.toLocaleString()}`} 
-                                    />
-                                ))
-                                : <p className="text-xs text-gray-400 py-4 text-center">No enrollments yet.</p>
-                            }
-                        </div>
-                    </Section>
+
                 </div>
 
                 {/* Heatmap */}

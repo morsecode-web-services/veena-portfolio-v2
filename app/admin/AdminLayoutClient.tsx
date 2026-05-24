@@ -36,6 +36,10 @@ export default function AdminLayoutClient({ children }: AdminLayoutClientProps) 
     const [leadsCount, setLeadsCount] = useState(0);
     const [responsesCount, setResponsesCount] = useState(0);
 
+    // Cache session and profile to prevent slow DB roundtrips on every page change
+    const [userSession, setUserSession] = useState<any>(null);
+    const [profileData, setProfileData] = useState<any>(null);
+
     useEffect(() => {
         async function checkAuth() {
             const isLoginPage = pathname === '/admin/login' || pathname === '/admin/login/';
@@ -45,34 +49,47 @@ export default function AdminLayoutClient({ children }: AdminLayoutClientProps) 
             }
 
             try {
-                const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+                let currentSession = userSession;
+                let currentProfile = profileData;
 
-                if (sessionError || !session) {
-                    if (sessionError) console.error('Session error:', sessionError);
-                    router.push('/admin/login');
-                    return;
+                // 1. Fetch session if not cached
+                if (!currentSession) {
+                    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+                    if (sessionError || !session) {
+                        if (sessionError) console.error('Session error:', sessionError);
+                        router.push('/admin/login');
+                        return;
+                    }
+                    currentSession = session;
+                    setUserSession(session);
                 }
 
-                // Verify role and get leads notification data
-                const { data: profile, error: profileError } = await supabase
-                    .from('profiles')
-                    .select('role, last_leads_viewed_at')
-                    .eq('id', session.user.id)
-                    .single();
+                // 2. Fetch profile role if not cached
+                if (!currentProfile) {
+                    const { data: profile, error: profileError } = await supabase
+                        .from('profiles')
+                        .select('role, last_leads_viewed_at')
+                        .eq('id', currentSession.user.id)
+                        .single();
 
-                if (profileError || !profile || (profile.role !== 'admin' && profile.role !== 'editor')) {
-                    if (profileError) console.error('Profile error:', profileError);
-                    await supabase.auth.signOut();
-                    router.push('/admin/login');
-                    return;
+                    if (profileError || !profile || (profile.role !== 'admin' && profile.role !== 'editor')) {
+                        if (profileError) console.error('Profile error:', profileError);
+                        await supabase.auth.signOut();
+                        router.push('/admin/login');
+                        return;
+                    }
+                    currentProfile = profile;
+                    setProfileData(profile);
                 }
 
+                // 3. Fetch count badges (these run on page change, but are very fast since auth is cached)
                 // Check for new leads
-                if (profile.last_leads_viewed_at) {
+                if (currentProfile.last_leads_viewed_at) {
                     const { count, error: countError } = await supabase
                         .from('leads')
                         .select('*', { count: 'exact', head: true })
-                        .gt('created_at', profile.last_leads_viewed_at);
+                        .gt('created_at', currentProfile.last_leads_viewed_at);
 
                     if (!countError && count !== null) {
                         setLeadsCount(count);
@@ -99,7 +116,7 @@ export default function AdminLayoutClient({ children }: AdminLayoutClientProps) 
         }
 
         checkAuth();
-    }, [pathname, router]);
+    }, [pathname, router, userSession, profileData]);
 
     // Don't show layout on login page
     const isLoginPage = pathname?.includes('/admin/login');
@@ -120,6 +137,8 @@ export default function AdminLayoutClient({ children }: AdminLayoutClientProps) 
 
     const handleLogout = async () => {
         await supabase.auth.signOut();
+        setUserSession(null);
+        setProfileData(null);
         router.push('/admin/login');
     };
 

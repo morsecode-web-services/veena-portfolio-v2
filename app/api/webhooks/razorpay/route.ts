@@ -314,7 +314,7 @@ export async function POST(req: Request) {
 
           // ── Notifications ─────────────────────────────────────────────────
           const telegramResult = (telegramChatId && automation.telegram_enabled)
-            ? await generateTelegramInviteLink(telegramChatId)
+            ? await generateTelegramInviteLink(telegramChatId, 168)
             : { success: false, error: !automation.telegram_enabled ? 'Disabled' : 'No ID' };
 
           let emailStatus: any = { status: automation.email_enabled ? 'pending' : 'disabled' };
@@ -392,6 +392,26 @@ export async function POST(req: Request) {
                   twilio_whatsapp: twilioWaStatus
                 }
               }).eq('id', logId);
+
+              // Also update the form submission with the generated Telegram invite link
+              if (telegramResult.success && (telegramResult as any).inviteLink) {
+                try {
+                  const subUpdateQuery = supabaseAdmin.from('form_submissions').update({
+                    telegram_invite_link: (telegramResult as any).inviteLink,
+                    telegram_joined: false
+                  });
+                  
+                  if (isPaymentLink) {
+                    subUpdateQuery.eq('razorpay_payment_link_id', paymentLinkId);
+                  } else {
+                    subUpdateQuery.eq('razorpay_order_id', orderId);
+                  }
+                  
+                  await subUpdateQuery;
+                } catch (subUpdateErr) {
+                  console.error('[Webhook] Failed to update form submission with invite link:', subUpdateErr);
+                }
+              }
 
               // ── Admin Group Alert ───────────────────────────────────────────
               const tgIcon = isTelegramOk ? '✅' : '❌';
