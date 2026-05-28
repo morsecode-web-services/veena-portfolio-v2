@@ -338,7 +338,7 @@ function CohortContent({ initialCohorts }: CohortClientProps) {
                                     <div className="space-y-8">
                                         {selectedCohort.learning_outcomes && selectedCohort.learning_outcomes.length > 0 && (
                                             <div>
-                                                <h3 className="text-sm font-bold text-slate-900 mb-4">What you&apos;ll learn</h3>
+                                                <h3 className="text-sm font-bold text-slate-900 mb-4">How it Works</h3>
                                                 <div className="space-y-3">
                                                     {selectedCohort.learning_outcomes.slice(0, 5).map((outcome, i) => (
                                                         <div key={i} className="flex items-start gap-3">
@@ -393,6 +393,16 @@ function CohortContent({ initialCohorts }: CohortClientProps) {
                                                 <p className="text-xs text-slate-500 italic">One-time payment for full cohort access</p>
                                             </>
                                         )}
+
+                                        <div className="mt-4 p-3 bg-amber-50 rounded-xl border border-amber-100 flex items-start gap-2.5">
+                                            <Clock size={16} className="text-amber-600 mt-0.5 flex-shrink-0" />
+                                            <p className="text-xs text-amber-800 font-medium leading-relaxed">
+                                                Kindly note this registration is for the 1st month of the 3 month program.
+                                                {selectedCohort.pricing_type === 'pay_as_you_wish' && (
+                                                    <span> The remaining 2 months will also be Pay as you wish.</span>
+                                                )}
+                                            </p>
+                                        </div>
                                     </div>
 
                                         <DynamicForm

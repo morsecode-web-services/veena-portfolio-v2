@@ -14,9 +14,10 @@ import * as styles from './styles';
 interface CohortWelcomeProps {
   name: string;
   inviteLink?: string;
+  isReminder?: boolean;
 }
 
-export default function CohortWelcome({ name, inviteLink }: CohortWelcomeProps) {
+export default function CohortWelcome({ name, inviteLink, isReminder = false }: CohortWelcomeProps) {
   const hasLink = !!(inviteLink && inviteLink.trim().length > 0);
 
   return (
@@ -25,16 +26,27 @@ export default function CohortWelcome({ name, inviteLink }: CohortWelcomeProps) 
       <Body style={styles.main}>
         <Container style={styles.container}>
           <Section style={{ padding: '20px 0' }}>
-            <Heading style={styles.heading}>Welcome to the Cohort, {name}! 🎉</Heading>
+            <Heading style={styles.heading}>
+              {isReminder ? `Join your cohort Telegram channel, ${name}! ⏳` : `Welcome to the Cohort, ${name}! 🎉`}
+            </Heading>
 
-            <Text style={styles.text}>
-              Your payment has been confirmed — thank you for enrolling!
-            </Text>
+            {isReminder ? (
+              <Text style={styles.text}>
+                This is a gentle reminder to join your private Telegram channel. We don&apos;t want you to miss out on any important updates, cohort materials, or session schedules!
+              </Text>
+            ) : (
+              <Text style={styles.text}>
+                Your payment has been confirmed — thank you for enrolling!
+              </Text>
+            )}
 
             {hasLink ? (
               <>
                 <Text style={styles.text}>
-                  Your exclusive access to the private Telegram channel is ready. Click the button below to join. This is a <strong>single-use link</strong> — it will expire after one use and is tied to your enrollment. Please do not share it.
+                  {isReminder 
+                    ? `Click the button below to claim your access. Please note that this is a single-use link — it will expire after one use and is tied directly to your enrollment.`
+                    : `Your exclusive access to the private Telegram channel is ready. Click the button below to join. This is a single-use link — it will expire after one use and is tied to your enrollment. Please do not share it.`
+                  }
                 </Text>
 
                 <Section style={{ textAlign: 'center' as const, margin: '32px 0' }}>

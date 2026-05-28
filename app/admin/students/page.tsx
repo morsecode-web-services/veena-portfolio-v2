@@ -16,7 +16,9 @@ import {
     Users,
     Plus,
     X,
-    Link as LinkIcon
+    Link as LinkIcon,
+    RefreshCw,
+    MoreVertical
 } from 'lucide-react';
 import { motion as m, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
@@ -70,6 +72,7 @@ export default function StudentSearchPage() {
     const [inviteName, setInviteName] = useState('');
     const [inviteEmail, setInviteEmail] = useState('');
     const [invitePhone, setInvitePhone] = useState('');
+    const [inviteAmount, setInviteAmount] = useState('');
     const [inviteExpireHours, setInviteExpireHours] = useState(24);
     const [recordEnrollment, setRecordEnrollment] = useState(true);
     const [generatedLink, setGeneratedLink] = useState('');
@@ -79,6 +82,11 @@ export default function StudentSearchPage() {
     // Unjoined Students State
     const [unjoinedResults, setUnjoinedResults] = useState<StudentResult[]>([]);
     const [unjoinedLoading, setUnjoinedLoading] = useState(false);
+
+    // Action loading states
+    const [remindLoadingId, setRemindLoadingId] = useState<string | null>(null);
+    const [regenerateLoadingId, setRegenerateLoadingId] = useState<string | null>(null);
+    const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 
     // Fetch Cohorts
     useEffect(() => {
@@ -190,8 +198,9 @@ export default function StudentSearchPage() {
                     cohortId: inviteCohortId === 'custom' ? null : inviteCohortId,
                     customTelegramChatId: inviteCohortId === 'custom' ? inviteCustomChatId : null,
                     name: inviteName,
-                    email: inviteEmail,
+                    email: inviteEmail || null,
                     phone: invitePhone,
+                    amount: inviteAmount ? Math.round(parseFloat(inviteAmount) * 100) : null,
                     expireHours: inviteExpireHours,
                     recordEnrollment
                 })
@@ -259,6 +268,157 @@ export default function StudentSearchPage() {
         }
     };
 
+    const handleSendReminder = async (submissionId: string, email: string) => {
+        setRemindLoadingId(submissionId);
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            const res = await fetch('/api/admin/telegram/remind', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${session?.access_token || ''}`
+                },
+                body: JSON.stringify({ submissionId })
+            });
+
+            const data = await res.json();
+            if (!res.ok) {
+                throw new Error(data.error || 'Failed to send reminder email');
+            }
+
+            addToast(`Reminder email successfully sent to ${email}!`, 'success');
+            if (query) {
+                performSearch();
+            }
+            fetchUnjoinedStudents();
+        } catch (err: any) {
+            addToast(err.message || 'Failed to send reminder', 'error');
+        } finally {
+            setRemindLoadingId(null);
+        }
+    };
+
+    const handleRegenerateLink = async (submissionId: string) => {
+        setRegenerateLoadingId(submissionId);
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            const res = await fetch('/api/admin/telegram/regenerate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${session?.access_token || ''}`
+                },
+                body: JSON.stringify({ submissionId })
+            });
+
+            const data = await res.json();
+            if (!res.ok) {
+                throw new Error(data.error || 'Failed to regenerate link');
+            }
+
+            addToast('Telegram invite link regenerated successfully!', 'success');
+            if (query) {
+                performSearch();
+            }
+            fetchUnjoinedStudents();
+        } catch (err: any) {
+            addToast(err.message || 'Failed to regenerate link', 'error');
+        } finally {
+            setRegenerateLoadingId(null);
+        }
+    };
+
+    const CohortActionGroup = ({ 
+        cohort, 
+        student, 
+        isUnjoinedSection = false 
+    }: { 
+        cohort: StudentCohort; 
+        student: StudentResult; 
+        isUnjoinedSection?: boolean;
+    }) => {
+        const isPaid = cohort.type === 'enrollment';
+        const copyId = isUnjoinedSection ? 'unjoined_link_' + cohort.id : cohort.id + cohort.type;
+
+        return (
+            <div className="flex items-center gap-3 self-end md:self-center">
+                {cohort.link ? (
+                    <button
+                        onClick={() => copyToClipboard(cohort.link!, copyId)}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                            copiedId === copyId
+                            ? 'bg-green-500 text-white shadow-sm'
+                            : 'bg-navy-50 text-navy-600 hover:bg-navy-100'
+                        }`}
+                    >
+                        {copiedId === copyId ? <CheckCircle2 size={12} /> : <Copy size={12} />}
+                        {copiedId === copyId ? 'Copied' : (isPaid ? 'Copy Invite Link' : 'Copy Payment Link')}
+                    </button>
+                ) : (
+                    isPaid ? (
+                        <div className="flex items-center gap-1.5 px-4 py-2 bg-emerald-50 text-emerald-700 rounded-xl text-[10px] font-black uppercase tracking-widest border border-emerald-100/60 shadow-sm">
+                            <CheckCircle2 size={12} />
+                            Fully Enrolled
+                        </div>
+                    ) : null
+                )}
+
+                {isPaid && (
+                    <div className="flex items-center gap-0.5 bg-slate-50/80 border border-slate-200/40 rounded-xl p-0.5 shadow-sm">
+                        {/* Mark Joined / Left */}
+                        <button
+                            type="button"
+                            onClick={() => handleToggleTelegramJoin(cohort.id, !!cohort.telegram_joined)}
+                            className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${
+                                cohort.telegram_joined
+                                ? 'bg-emerald-500 text-white shadow-sm hover:bg-emerald-600'
+                                : 'text-slate-400 hover:text-emerald-700 hover:bg-emerald-50'
+                            }`}
+                            title={cohort.telegram_joined ? "Mark Telegram as Left" : "Mark Telegram as Joined"}
+                        >
+                            <CheckCircle2 size={14} />
+                        </button>
+
+                        {/* Remind Email */}
+                        {!cohort.telegram_joined && (
+                            <button
+                                type="button"
+                                onClick={() => handleSendReminder(cohort.id, student.email)}
+                                disabled={remindLoadingId === cohort.id}
+                                className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-blue-700 hover:bg-blue-50 disabled:opacity-40 transition-all"
+                                title="Send Email Reminder"
+                            >
+                                {remindLoadingId === cohort.id ? (
+                                    <div className="h-3.5 w-3.5 border-2 border-blue-700 border-t-transparent rounded-full animate-spin"></div>
+                                ) : (
+                                    <Mail size={14} />
+                                )}
+                            </button>
+                        )}
+
+                        {/* Regenerate Link */}
+                        {!cohort.telegram_joined && (
+                            <button
+                                type="button"
+                                onClick={() => handleRegenerateLink(cohort.id)}
+                                disabled={regenerateLoadingId === cohort.id}
+                                className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 disabled:opacity-40 transition-all"
+                                title="Regenerate Invite Link"
+                            >
+                                {regenerateLoadingId === cohort.id ? (
+                                    <div className="h-3.5 w-3.5 border-2 border-slate-700 border-t-transparent rounded-full animate-spin"></div>
+                                ) : (
+                                    <RefreshCw size={14} />
+                                )}
+                            </button>
+                        )}
+                    </div>
+                )}
+                <ChevronRight size={16} className="text-slate-200 hidden md:block" />
+            </div>
+        );
+    };
+
     return (
         <div className="max-w-5xl mx-auto space-y-8 pb-20">
             {/* Header */}
@@ -275,6 +435,7 @@ export default function StudentSearchPage() {
                         setInviteName('');
                         setInviteEmail('');
                         setInvitePhone('');
+                        setInviteAmount('');
                         setInviteExpireHours(24);
                         setRecordEnrollment(true);
                         setGeneratedLink('');
@@ -316,10 +477,10 @@ export default function StudentSearchPage() {
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: idx * 0.05 }}
-                                className="bg-white border border-slate-100 rounded-3xl shadow-premium overflow-hidden"
+                                className="bg-white border border-slate-100 rounded-3xl shadow-premium relative"
                             >
                                 {/* Student Header */}
-                                <div className="p-6 md:p-8 bg-slate-50/50 border-b border-slate-100">
+                                <div className="p-6 md:p-8 bg-slate-50/50 border-b border-slate-100 rounded-t-[22px]">
                                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                                         <div className="flex items-center gap-4">
                                             <div className="w-14 h-14 bg-navy-900 text-gold-400 rounded-2xl flex items-center justify-center shadow-lg">
@@ -349,8 +510,13 @@ export default function StudentSearchPage() {
 
                                 {/* Cohorts List */}
                                 <div className="divide-y divide-slate-50">
-                                    {student.cohorts.map((cohort) => (
-                                        <div key={cohort.id + cohort.type} className="p-6 md:px-8 hover:bg-slate-50/30 transition-colors">
+                                    {student.cohorts.map((cohort, cIdx) => (
+                                        <div 
+                                            key={cohort.id + cohort.type} 
+                                            className={`p-6 md:px-8 hover:bg-slate-50/30 transition-colors ${
+                                                cIdx === student.cohorts.length - 1 ? 'rounded-b-[22px]' : ''
+                                            }`}
+                                        >
                                             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                                                 <div className="flex items-center gap-4">
                                                     <div className={`w-2 h-2 rounded-full ${cohort.type === 'enrollment' ? 'bg-green-500' : 'bg-amber-500'}`} />
@@ -379,42 +545,7 @@ export default function StudentSearchPage() {
                                                     </div>
                                                 </div>
 
-                                                <div className="flex items-center gap-3 self-end md:self-center">
-                                                    {cohort.type === 'enrollment' && (
-                                                        <button
-                                                            onClick={() => handleToggleTelegramJoin(cohort.id, !!cohort.telegram_joined)}
-                                                            className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all border ${
-                                                                cohort.telegram_joined
-                                                                ? 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-red-50 hover:border-red-100 hover:text-red-600'
-                                                                : 'bg-emerald-50 border-emerald-100 text-emerald-700 hover:bg-emerald-100'
-                                                            }`}
-                                                            title={cohort.telegram_joined ? "Mark as Not Joined" : "Mark as Joined"}
-                                                        >
-                                                            <CheckCircle2 size={12} />
-                                                            {cohort.telegram_joined ? 'Mark Left' : 'Mark Joined'}
-                                                        </button>
-                                                    )}
-
-                                                    {cohort.link ? (
-                                                        <button
-                                                            onClick={() => copyToClipboard(cohort.link!, cohort.id + cohort.type)}
-                                                            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
-                                                                copiedId === (cohort.id + cohort.type)
-                                                                ? 'bg-green-500 text-white'
-                                                                : 'bg-navy-50 text-navy-600 hover:bg-navy-100'
-                                                            }`}
-                                                        >
-                                                            {copiedId === (cohort.id + cohort.type) ? <CheckCircle2 size={12} /> : <Copy size={12} />}
-                                                            {copiedId === (cohort.id + cohort.type) ? 'Copied' : 'Copy Payment Link'}
-                                                        </button>
-                                                    ) : (
-                                                        <div className="flex items-center gap-1.5 px-4 py-2 bg-emerald-50 text-emerald-700 rounded-lg text-[10px] font-black uppercase tracking-widest">
-                                                            <CheckCircle2 size={12} />
-                                                            Fully Enrolled
-                                                        </div>
-                                                    )}
-                                                    <ChevronRight size={16} className="text-slate-200 hidden md:block" />
-                                                </div>
+                                                <CohortActionGroup cohort={cohort} student={student} isUnjoinedSection={false} />
                                             </div>
                                         </div>
                                     ))}
@@ -458,10 +589,10 @@ export default function StudentSearchPage() {
                                                 initial={{ opacity: 0, y: 10 }}
                                                 animate={{ opacity: 1, y: 0 }}
                                                 transition={{ delay: idx * 0.05 }}
-                                                className="bg-white border border-slate-100 rounded-3xl shadow-premium overflow-hidden"
+                                                className="bg-white border border-slate-100 rounded-3xl shadow-premium relative"
                                             >
                                                 {/* Student Header */}
-                                                <div className="p-6 md:p-8 bg-slate-50/50 border-b border-slate-100">
+                                                <div className="p-6 md:p-8 bg-slate-50/50 border-b border-slate-100 rounded-t-[22px]">
                                                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                                                         <div className="flex items-center gap-4">
                                                             <div className="w-12 h-12 bg-navy-900 text-gold-400 rounded-2xl flex items-center justify-center shadow-md">
@@ -491,8 +622,13 @@ export default function StudentSearchPage() {
 
                                                 {/* Cohorts List */}
                                                 <div className="divide-y divide-slate-50">
-                                                    {student.cohorts.map((cohort) => (
-                                                        <div key={cohort.id + cohort.type} className="p-6 md:px-8 hover:bg-slate-50/30 transition-colors">
+                                                    {student.cohorts.map((cohort, cIdx) => (
+                                                        <div 
+                                                            key={cohort.id + cohort.type} 
+                                                            className={`p-6 md:px-8 hover:bg-slate-50/30 transition-colors ${
+                                                                cIdx === student.cohorts.length - 1 ? 'rounded-b-[22px]' : ''
+                                                            }`}
+                                                        >
                                                             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                                                                 <div className="flex items-center gap-4">
                                                                     <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
@@ -509,30 +645,7 @@ export default function StudentSearchPage() {
                                                                     </div>
                                                                 </div>
 
-                                                                <div className="flex items-center gap-3 self-end md:self-center">
-                                                                    <button
-                                                                        onClick={() => handleToggleTelegramJoin(cohort.id, false)}
-                                                                        className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all border bg-emerald-50 border-emerald-100 text-emerald-700 hover:bg-emerald-100"
-                                                                        title="Mark as Joined"
-                                                                    >
-                                                                        <CheckCircle2 size={12} />
-                                                                        Mark Joined
-                                                                    </button>
-
-                                                                    {cohort.link && (
-                                                                        <button
-                                                                            onClick={() => copyToClipboard(cohort.link!, 'unjoined_link_' + cohort.id)}
-                                                                            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
-                                                                                copiedId === ('unjoined_link_' + cohort.id)
-                                                                                ? 'bg-green-500 text-white'
-                                                                                : 'bg-navy-50 text-navy-600 hover:bg-navy-100'
-                                                                            }`}
-                                                                        >
-                                                                            {copiedId === ('unjoined_link_' + cohort.id) ? <CheckCircle2 size={12} /> : <Copy size={12} />}
-                                                                            {copiedId === ('unjoined_link_' + cohort.id) ? 'Copied' : 'Copy Invite Link'}
-                                                                        </button>
-                                                                    )}
-                                                                </div>
+                                                                <CohortActionGroup cohort={cohort} student={student} isUnjoinedSection={true} />
                                                             </div>
                                                         </div>
                                                     ))}
@@ -768,26 +881,39 @@ export default function StudentSearchPage() {
                                                     />
                                                 </div>
                                                 <div className="space-y-1.5">
-                                                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Email Address</label>
+                                                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Email Address <span className="text-slate-400 normal-case font-normal">(Optional)</span></label>
                                                     <input 
                                                         type="email" 
                                                         value={inviteEmail}
                                                         onChange={e => setInviteEmail(e.target.value)}
                                                         placeholder="e.g. aditi@gmail.com"
                                                         className="w-full px-4 py-3 bg-slate-50 border border-slate-100 focus:bg-white focus:border-gold-500 rounded-xl text-sm transition-all outline-none"
-                                                        required={recordEnrollment}
                                                     />
                                                 </div>
                                             </div>
-                                            <div className="space-y-1.5">
-                                                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Phone Number (Optional)</label>
-                                                <input 
-                                                    type="tel" 
-                                                    value={invitePhone}
-                                                    onChange={e => setInvitePhone(e.target.value)}
-                                                    placeholder="e.g. +91 98765 43210"
-                                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-100 focus:bg-white focus:border-gold-500 rounded-xl text-sm transition-all outline-none"
-                                                />
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div className="space-y-1.5">
+                                                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Phone Number <span className="text-slate-400 normal-case font-normal">(Optional)</span></label>
+                                                    <input 
+                                                        type="tel" 
+                                                        value={invitePhone}
+                                                        onChange={e => setInvitePhone(e.target.value)}
+                                                        placeholder="e.g. +91 98765 43210"
+                                                        className="w-full px-4 py-3 bg-slate-50 border border-slate-100 focus:bg-white focus:border-gold-500 rounded-xl text-sm transition-all outline-none"
+                                                    />
+                                                </div>
+                                                <div className="space-y-1.5">
+                                                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Amount Paid (₹) <span className="text-slate-400 normal-case font-normal">(Optional)</span></label>
+                                                    <input 
+                                                        type="number" 
+                                                        value={inviteAmount}
+                                                        onChange={e => setInviteAmount(e.target.value)}
+                                                        placeholder="e.g. 5000"
+                                                        min="0"
+                                                        step="1"
+                                                        className="w-full px-4 py-3 bg-slate-50 border border-slate-100 focus:bg-white focus:border-gold-500 rounded-xl text-sm transition-all outline-none"
+                                                    />
+                                                </div>
                                             </div>
                                         </m.div>
                                     )}

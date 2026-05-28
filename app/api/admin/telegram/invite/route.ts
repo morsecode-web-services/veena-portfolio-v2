@@ -33,6 +33,7 @@ export async function POST(request: Request) {
       name,
       email,
       phone,
+      amount = null,
       expireHours = 24,
       recordEnrollment = true
     } = await request.json();
@@ -97,6 +98,7 @@ export async function POST(request: Request) {
             status: 'unread',
             payment_status: 'paid',
             razorpay_payment_id: `DIRECT_manual_${Date.now()}`,
+            razorpay_amount: amount,
             cohort_id: resolvedCohortId,
             is_verified: true,
             telegram_invite_link: inviteResult.inviteLink,

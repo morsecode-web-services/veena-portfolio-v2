@@ -69,33 +69,58 @@ export async function GET(request: Request) {
         const { searchParams } = new URL(request.url);
         const start = searchParams.get('start');
         const end = searchParams.get('end');
-        const rangeStr = searchParams.get('range') || '30';
-        
-        // Safety: Parse range and fallback to 30 if invalid (like "custom")
-        const rangeNum = parseInt(rangeStr, 10);
-        const validRange = isNaN(rangeNum) ? 30 : rangeNum;
+        const rangeStr = searchParams.get('range') || 'today';
 
         let startDate: string;
         let endDate: string = end || 'today';
+        let prevStartDate: string;
+        let prevEndDate: string;
 
         if (start && start !== 'undefined') {
             startDate = start;
-        } else {
-            startDate = `${validRange}daysAgo`;
-        }
+            // Comparison period logic for custom dates (same duration, offset backwards)
+            const durationMs = new Date(endDate).getTime() - new Date(start).getTime();
+            const daysDiff = Math.ceil(durationMs / (1000 * 60 * 60 * 24));
+            
+            const prevStart = new Date(start);
+            prevStart.setDate(prevStart.getDate() - (daysDiff === 0 ? 1 : daysDiff));
+            prevStartDate = prevStart.toISOString().split('T')[0];
+            
+            const prevEnd = new Date(endDate);
+            prevEnd.setDate(prevEnd.getDate() - (daysDiff === 0 ? 1 : daysDiff));
+            prevEndDate = prevEnd.toISOString().split('T')[0];
+        } else if (rangeStr === 'today') {
+            startDate = 'today';
+            endDate = 'today';
+            prevStartDate = 'yesterday';
+            prevEndDate = 'yesterday';
+        } else if (rangeStr === 'this_week') {
+            // Sunday of current week
+            const now = new Date();
+            const dayOfWeek = now.getDay(); // 0 (Sun) to 6 (Sat)
+            const startOfWeek = new Date(now);
+            startOfWeek.setDate(now.getDate() - dayOfWeek);
+            startDate = startOfWeek.toISOString().split('T')[0];
+            endDate = 'today';
 
-        // Comparison period logic
-        const daysDiff = (start && end && start !== 'undefined') 
-            ? Math.ceil((new Date(end).getTime() - new Date(start).getTime()) / (1000 * 60 * 60 * 24)) 
-            : validRange;
-            
-        const prevStartDate = (start && start !== 'undefined')
-            ? `${daysDiff}daysAgo` 
-            : `${daysDiff * 2}daysAgo`;
-            
-        const prevEndDate = (start && start !== 'undefined')
-            ? `${daysDiff}daysAgo`
-            : `${daysDiff + 1}daysAgo`;
+            // Comparison period: previous week (Sunday to Sunday/today-equivalent)
+            const prevStartOfWeek = new Date(startOfWeek);
+            prevStartOfWeek.setDate(startOfWeek.getDate() - 7);
+            prevStartDate = prevStartOfWeek.toISOString().split('T')[0];
+
+            const prevEndOfWeek = new Date(now);
+            prevEndOfWeek.setDate(now.getDate() - 7);
+            prevEndDate = prevEndOfWeek.toISOString().split('T')[0];
+        } else {
+            // Safety: Parse range and fallback to 30 if invalid
+            const rangeNum = parseInt(rangeStr, 10);
+            const validRange = isNaN(rangeNum) ? 30 : rangeNum;
+            startDate = `${validRange}daysAgo`;
+            endDate = 'today';
+
+            prevStartDate = `${validRange * 2}daysAgo`;
+            prevEndDate = `${validRange + 1}daysAgo`;
+        }
 
         const accessToken = await getAccessToken(clientEmail, privateKey);
 
@@ -116,13 +141,13 @@ export async function GET(request: Request) {
         ] = await Promise.all([
             // 1. Daily traffic trend
             runReport(accessToken, propertyId, {
-                dateRanges: [{ startDate, endDate: 'today' }],
+                dateRanges: [{ startDate, endDate }],
                 dimensions: [{ name: 'date' }],
                 metrics: [{ name: 'activeUsers' }, { name: 'screenPageViews' }, { name: 'sessions' }],
             }),
             // 2. Detailed Pages (more metrics)
             runReport(accessToken, propertyId, {
-                dateRanges: [{ startDate, endDate: 'today' }],
+                dateRanges: [{ startDate, endDate }],
                 dimensions: [{ name: 'pageTitle' }, { name: 'pagePath' }],
                 metrics: [{ name: 'screenPageViews' }, { name: 'activeUsers' }, { name: 'averageSessionDuration' }, { name: 'bounceRate' }],
                 limit: 15,
@@ -130,7 +155,7 @@ export async function GET(request: Request) {
             }),
             // 3. Top countries
             runReport(accessToken, propertyId, {
-                dateRanges: [{ startDate, endDate: 'today' }],
+                dateRanges: [{ startDate, endDate }],
                 dimensions: [{ name: 'country' }],
                 metrics: [{ name: 'activeUsers' }, { name: 'sessions' }],
                 limit: 10,
@@ -138,13 +163,13 @@ export async function GET(request: Request) {
             }),
             // 4. Device breakdown
             runReport(accessToken, propertyId, {
-                dateRanges: [{ startDate, endDate: 'today' }],
+                dateRanges: [{ startDate, endDate }],
                 dimensions: [{ name: 'deviceCategory' }],
                 metrics: [{ name: 'activeUsers' }, { name: 'sessions' }],
             }),
             // 5. Traffic sources (Detailed)
             runReport(accessToken, propertyId, {
-                dateRanges: [{ startDate, endDate: 'today' }],
+                dateRanges: [{ startDate, endDate }],
                 dimensions: [{ name: 'sessionDefaultChannelGroup' }, { name: 'sessionSource' }],
                 metrics: [{ name: 'sessions' }, { name: 'activeUsers' }, { name: 'bounceRate' }],
                 orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
@@ -153,7 +178,7 @@ export async function GET(request: Request) {
             // 6. Overview totals with comparison
             runReport(accessToken, propertyId, {
                 dateRanges: [
-                    { startDate, endDate: 'today' },
+                    { startDate, endDate },
                     { startDate: prevStartDate, endDate: prevEndDate },
                 ],
                 metrics: [
@@ -168,13 +193,13 @@ export async function GET(request: Request) {
             }),
             // 8. Hourly heatmap (day of week x hour)
             runReport(accessToken, propertyId, {
-                dateRanges: [{ startDate, endDate: 'today' }],
+                dateRanges: [{ startDate, endDate }],
                 dimensions: [{ name: 'dayOfWeekName' }, { name: 'hour' }],
                 metrics: [{ name: 'activeUsers' }],
             }),
             // 9. Browsers
             runReport(accessToken, propertyId, {
-                dateRanges: [{ startDate, endDate: 'today' }],
+                dateRanges: [{ startDate, endDate }],
                 dimensions: [{ name: 'browser' }],
                 metrics: [{ name: 'activeUsers' }, { name: 'sessions' }],
                 limit: 8,
@@ -182,7 +207,7 @@ export async function GET(request: Request) {
             }),
             // 10. Landing pages
             runReport(accessToken, propertyId, {
-                dateRanges: [{ startDate, endDate: 'today' }],
+                dateRanges: [{ startDate, endDate }],
                 dimensions: [{ name: 'landingPagePlusQueryString' }],
                 metrics: [{ name: 'sessions' }, { name: 'activeUsers' }, { name: 'bounceRate' }],
                 limit: 8,
@@ -190,7 +215,7 @@ export async function GET(request: Request) {
             }),
             // 11. Top Cities
             runReport(accessToken, propertyId, {
-                dateRanges: [{ startDate, endDate: 'today' }],
+                dateRanges: [{ startDate, endDate }],
                 dimensions: [{ name: 'city' }, { name: 'country' }],
                 metrics: [{ name: 'activeUsers' }],
                 limit: 8,
@@ -198,7 +223,7 @@ export async function GET(request: Request) {
             }),
             // 12. Operating Systems
             runReport(accessToken, propertyId, {
-                dateRanges: [{ startDate, endDate: 'today' }],
+                dateRanges: [{ startDate, endDate }],
                 dimensions: [{ name: 'operatingSystem' }],
                 metrics: [{ name: 'activeUsers' }],
                 limit: 6,
@@ -206,7 +231,7 @@ export async function GET(request: Request) {
             }),
             // 13. Events
             runReport(accessToken, propertyId, {
-                dateRanges: [{ startDate, endDate: 'today' }],
+                dateRanges: [{ startDate, endDate }],
                 dimensions: [{ name: 'eventName' }],
                 metrics: [{ name: 'eventCount' }],
                 limit: 10,
@@ -214,7 +239,7 @@ export async function GET(request: Request) {
             }),
             // 14. Cohort Funnel
             runReport(accessToken, propertyId, {
-                dateRanges: [{ startDate, endDate: 'today' }],
+                dateRanges: [{ startDate, endDate }],
                 dimensions: [{ name: 'eventName' }],
                 metrics: [{ name: 'eventCount' }],
                 dimensionFilter: {

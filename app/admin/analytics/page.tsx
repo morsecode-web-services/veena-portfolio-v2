@@ -83,12 +83,28 @@ function Section({ title, icon, children }: any) {
     );
 }
 
+const PRESETS = [
+    { value: 'today', label: 'Today' },
+    { value: 'this_week', label: 'This Week' },
+    { value: '7', label: '7d' },
+    { value: '30', label: '30d' },
+    { value: '90', label: '90d' },
+    { value: 'custom', label: 'Custom' }
+];
+
+const getRangeLabel = (range: string) => {
+    if (range === 'today') return 'Today';
+    if (range === 'this_week') return 'This Week';
+    if (range === 'custom') return 'Custom Range';
+    return `${range} Days`;
+};
+
 export default function AnalyticsPage() {
     const [data, setData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [refreshing, setRefreshing] = useState(false);
-    const [dateRange, setDateRange] = useState('30');
+    const [dateRange, setDateRange] = useState('today');
     const [customStart, setCustomStart] = useState('');
     const [customEnd, setCustomEnd] = useState('');
     const [cohortStats, setCohortStats] = useState<any[]>([]);
@@ -131,7 +147,7 @@ export default function AnalyticsPage() {
         // Fetch only paid submissions for revenue calculations
         const { data: subs } = await supabase
             .from('form_submissions')
-            .select('cohort_id, razorpay_payment_id')
+            .select('cohort_id, razorpay_payment_id, razorpay_amount')
             .eq('payment_status', 'paid')
             .not('cohort_id', 'is', null);
             
@@ -170,14 +186,16 @@ export default function AnalyticsPage() {
         }
 
         if (cohorts) {
-            const stats = cohorts.map(c => {
+                const stats = cohorts.map(c => {
                 const cohortSubs = subs?.filter(s => s.cohort_id === c.id) || [];
                 
                 // Sum actual payments
                 let totalRevenue = 0;
                 cohortSubs.forEach(s => {
                     let amount = 0;
-                    if (s.razorpay_payment_id && logsMap.has(s.razorpay_payment_id)) {
+                    if (s.razorpay_amount !== undefined && s.razorpay_amount !== null) {
+                        amount = Number(s.razorpay_amount) / 100;
+                    } else if (s.razorpay_payment_id && logsMap.has(s.razorpay_payment_id)) {
                         const payload = logsMap.get(s.razorpay_payment_id);
                         const paise = payload?.payload?.payment?.entity?.amount;
                         if (paise !== undefined && paise !== null) {
@@ -269,7 +287,7 @@ export default function AnalyticsPage() {
                 <div className="absolute inset-0 z-50 flex items-center justify-center bg-white/60 backdrop-blur-sm rounded-xl">
                     <div className="flex flex-col items-center gap-2 bg-white rounded-xl shadow-xl px-6 py-4 border border-gray-100">
                         <RefreshCw className="w-7 h-7 text-amber-500 animate-spin" />
-                        <p className="text-xs font-bold text-navy-900">Loading {dateRange}d data…</p>
+                        <p className="text-xs font-bold text-navy-900">Loading {getRangeLabel(dateRange).toLowerCase()} data…</p>
                     </div>
                 </div>
             )}
@@ -283,10 +301,10 @@ export default function AnalyticsPage() {
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
                         <div className="flex bg-white rounded-lg border border-gray-200 p-1">
-                            {['7', '30', '90', 'custom'].map(d => (
-                                <button key={d} onClick={() => setDateRange(d)}
-                                    className={`px-3 py-1.5 rounded-md text-xs font-bold transition-colors ${dateRange === d ? 'bg-navy-900 text-white' : 'text-gray-500 hover:text-navy-900'}`}>
-                                    {d === 'custom' ? 'Custom' : `${d}d`}
+                            {PRESETS.map(p => (
+                                <button key={p.value} onClick={() => setDateRange(p.value)}
+                                    className={`px-3 py-1.5 rounded-md text-xs font-bold transition-colors ${dateRange === p.value ? 'bg-navy-900 text-white' : 'text-gray-500 hover:text-navy-900'}`}>
+                                    {p.label}
                                 </button>
                             ))}
                         </div>
@@ -331,7 +349,7 @@ export default function AnalyticsPage() {
 
                 {/* Traffic Chart */}
                 <div className="bg-white rounded-xl border border-gray-100 p-5">
-                    <h2 className="text-sm font-bold text-navy-900 uppercase tracking-wide mb-4">Traffic Trend · {dateRange} Days</h2>
+                    <h2 className="text-sm font-bold text-navy-900 uppercase tracking-wide mb-4">Traffic Trend · {getRangeLabel(dateRange)}</h2>
                     <div className="h-64">
                         <ResponsiveContainer width="100%" height="100%">
                             <AreaChart data={daily} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>

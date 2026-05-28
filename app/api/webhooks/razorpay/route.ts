@@ -1,21 +1,10 @@
 import { NextResponse, unstable_after as after } from 'next/server';
 import crypto from 'crypto';
-import { Resend } from 'resend';
-import { render } from '@react-email/render';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { generateTelegramInviteLink } from '@/lib/notifications/telegram';
 import { sendWhatsAppNotification } from '@/lib/notifications/whatsapp';
 import { sendTwilioWhatsApp } from '@/lib/notifications/twilio';
-import CohortWelcome from '@/emails/CohortWelcome';
-
-// ─────────────────────────────────────────────
-// Helpers
-// ─────────────────────────────────────────────
-
-function getResend() {
-  if (!process.env.RESEND_API_KEY) return null;
-  return new Resend(process.env.RESEND_API_KEY);
-}
+import { sendCohortWelcomeEmail } from '@/lib/notifications/email';
 
 // ─────────────────────────────────────────────
 // Admin Telegram Alert (fire-and-forget)
@@ -34,25 +23,6 @@ async function sendAdminAlert(message: string): Promise<void> {
   } catch (err) {
     // Never block the main webhook flow
     console.warn('[AdminAlert] Failed to send Telegram alert:', err);
-  }
-}
-
-async function sendCohortWelcomeEmail(email: string, name: string, inviteLink: string, cohortTitle: string = 'Cohort') {
-  const resend = getResend();
-  if (!resend) return { error: 'RESEND_API_KEY not configured' };
-
-  try {
-    const html = await render(CohortWelcome({ name, inviteLink }));
-
-    return resend.emails.send({
-      from: 'Aishwarya Manikarnike <official@email.aishwaryamanikarnike.com>',
-      to: email,
-      subject: `🎉 Welcome to ${cohortTitle}! Your Access Link`,
-      html,
-      replyTo: 'official@aishwaryamanikarnike.com',
-    });
-  } catch (err: any) {
-    return { error: `Render/Send failed: ${err.message}` };
   }
 }
 
@@ -277,12 +247,14 @@ export async function POST(req: Request) {
                 razorpay_customer_id: customerId,
                 cohort_id: finalCohortId,
                 is_verified: true,
+                razorpay_amount: paymentEntity?.amount || null,
               }]);
             } else {
               const updateData: any = { 
                 payment_status: 'paid', 
                 is_verified: true, 
-                razorpay_payment_id: paymentId 
+                razorpay_payment_id: paymentId,
+                razorpay_amount: paymentEntity?.amount || null
               };
               
               const updateQuery = supabaseAdmin.from('form_submissions').update(updateData);

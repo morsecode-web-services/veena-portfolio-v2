@@ -8,7 +8,7 @@ export const metadata: Metadata = {
     title: 'Next Avarthanam | Veena & Carnatic Music Programs',
     description: 'Master the art of Veena with structured Avarthanam cohorts. Join our exclusive Carnatic music community and take your skills from basics to mastery.',
     openGraph: {
-        title: 'Next Avarthanam | Veena Manikarnike',
+        title: 'Next Avarthanam | Aishwarya Manikarnike',
         description: 'Structured Carnatic music programs designed for mastery. Enroll now to start your journey.',
         images: [{ url: '/images/og-cohorts.png', width: 1200, height: 630, alt: 'Next Avarthanam Cohorts' }],
         type: 'website',
@@ -68,7 +68,7 @@ export default async function CohortsPage() {
                                 "description": cohort.description,
                                 "provider": {
                                     "@type": "Person",
-                                    "name": "Veena Manikarnike",
+                                    "name": "Aishwarya Manikarnike",
                                     "sameAs": "https://veenamanikarnike.com"
                                 },
                                 "offers": {

@@ -36,6 +36,7 @@ interface FormSubmission {
   razorpay_order_id?: string;
   razorpay_payment_id?: string;
   cohort_id?: string | null;
+  razorpay_amount?: number | null;
 }
 
 interface FormConfig {
@@ -484,6 +485,11 @@ export default function ResponsesPage() {
                                                     {selectedSubmission.payment_status}
                                                 </span>
                                             </div>
+                                            {selectedSubmission.razorpay_amount !== undefined && selectedSubmission.razorpay_amount !== null && (
+                                                <div className="text-xs text-slate-600 mb-2">
+                                                    <span className="font-bold">Amount Paid:</span> <span className="font-bold text-navy-950">₹{(selectedSubmission.razorpay_amount / 100).toLocaleString('en-IN')}</span>
+                                                </div>
+                                            )}
                                             {selectedSubmission.razorpay_subscription_id && (
                                                 <div className="text-xs text-slate-600 mb-1">
                                                     <span className="font-bold">Subscription ID:</span> <code className="font-mono bg-white px-1 py-0.5 rounded border border-slate-200">{selectedSubmission.razorpay_subscription_id}</code>
