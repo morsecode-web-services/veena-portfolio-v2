@@ -1,0 +1,114 @@
+import { NextResponse } from 'next/server';
+import { supabaseAdmin } from '@/lib/supabase-admin';
+import { generateTelegramInviteLink } from '@/lib/notifications/telegram';
+import { sendCohortWelcomeEmail } from '@/lib/notifications/email';
+
+export async function POST(request: Request) {
+  try {
+    // 1. Session & Auth Check
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
+    }
+
+    const { data: profile } = await supabaseAdmin
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+
+    if (!profile || (profile.role !== 'admin' && profile.role !== 'editor')) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    // 2. Parse Input
+    const { submissionId, expireHours = 168 } = await request.json();
+
+    if (!submissionId) {
+      return NextResponse.json({ error: 'Missing submission ID' }, { status: 400 });
+    }
+
+    // 3. Fetch Submission Details and Cohort Info
+    const { data: submission, error: subError } = await supabaseAdmin
+      .from('form_submissions')
+      .select('user_name, user_email, cohort_id')
+      .eq('id', submissionId)
+      .single();
+
+    if (subError || !submission) {
+      return NextResponse.json({ error: 'Submission not found' }, { status: 404 });
+    }
+
+    if (!submission.cohort_id) {
+      return NextResponse.json({ error: 'No cohort assigned to this student' }, { status: 400 });
+    }
+
+    if (!submission.user_email) {
+      return NextResponse.json({ error: 'Student has no email address configured' }, { status: 400 });
+    }
+
+    const { data: cohort, error: cohortError } = await supabaseAdmin
+      .from('cohorts')
+      .select('telegram_chat_id, title')
+      .eq('id', submission.cohort_id)
+      .single();
+
+    if (cohortError || !cohort || !cohort.telegram_chat_id) {
+      return NextResponse.json({ error: 'Cohort Telegram Chat ID not configured' }, { status: 400 });
+    }
+
+    // 4. Generate A Fresh Telegram Invite Link (Ensures it is active for 1 week)
+    const inviteResult = await generateTelegramInviteLink(cohort.telegram_chat_id, expireHours);
+
+    if (!inviteResult.success || !inviteResult.inviteLink) {
+      return NextResponse.json(
+        { error: inviteResult.error || 'Failed to generate Telegram invite link' },
+        { status: 500 }
+      );
+    }
+
+    // 5. Send Reminder Email via Resend
+    const emailResult = await sendCohortWelcomeEmail(
+      submission.user_email,
+      submission.user_name || 'Student',
+      inviteResult.inviteLink,
+      cohort.title || 'Cohort',
+      true
+    );
+
+    if ((emailResult as any).error) {
+      return NextResponse.json(
+        { error: (emailResult as any).error || 'Failed to send email' },
+        { status: 500 }
+      );
+    }
+
+    // 6. Update Database Record
+    const { error: updateError } = await supabaseAdmin
+      .from('form_submissions')
+      .update({
+        telegram_invite_link: inviteResult.inviteLink,
+        telegram_joined: false
+      })
+      .eq('id', submissionId);
+
+    if (updateError) {
+      throw updateError;
+    }
+
+    return NextResponse.json({
+      success: true,
+      inviteLink: inviteResult.inviteLink
+    });
+
+  } catch (error: any) {
+    console.error('[Remind Email API] Error:', error);
+    return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
+  }
+}
