@@ -99,7 +99,17 @@ In [middleware.ts](file:///c:/Users/nages/OneDrive/Desktop/Projects/Nagesh/vynik
 > [!NOTE]
 > This adds approximately 50ms to the redirect latency. Users will not notice — they are already waiting for a DNS + HTTP round trip. The alternative is to use Vercel's `waitUntil` from `@vercel/functions`, but awaiting is simpler and sufficient here.
 
-**Commit this change and push to `main` before proceeding further.**
+**Commit this change and push to your repository to trigger the Vercel build:**
+```bash
+# Stage the changes
+git add middleware.ts netlify_to_vercel_migration.md
+
+# Commit the changes
+git commit -m "fix(edge): await click tracking in middleware to support Vercel execution"
+
+# Push to your main branch
+git push origin main
+```
 
 ---
 
@@ -200,14 +210,14 @@ Use the temporary `.vercel.app` URL to verify **every critical flow** before tou
 
 ### Checklist — Must Pass All Before Phase 4
 
-- [ ] **Homepage loads** at `https://veena-portfolio-v2-[hash].vercel.app`
-- [ ] **Cohorts page loads** and displays cohort data from Supabase
-- [ ] **Enrollment form** (`/forms/[slug]`) renders correctly
-- [ ] **Admin login** works at `/admin` — you can log in with Supabase auth
-- [ ] **Admin dashboard** loads (analytics, student list, smart links)
-- [ ] **Google Analytics dashboard** loads — 14 runReport calls complete within 10s
-- [ ] **Site config save** works — change one field in admin config, save, and verify `revalidatePath` fires (homepage should show the change)
-- [ ] **Smart links** — visit `/link/[some-slug]` and verify it redirects correctly and the click counter increments in Supabase
+- [-] **Homepage loads** at `https://veena-portfolio-v2-[hash].vercel.app`
+- [-] **Cohorts page loads** and displays cohort data from Supabase
+- [-] **Enrollment form** (`/forms/[slug]`) renders correctly
+- [-] **Admin login** works at `/admin` — you can log in with Supabase auth
+- [-] **Admin dashboard** loads (analytics, student list, smart links)
+- [-] **Google Analytics dashboard** loads — 14 runReport calls complete within 10s
+- [-] **Site config save** works — change one field in admin config, save, and verify `revalidatePath` fires (homepage should show the change)
+- [-] **Smart links** — visit `/link/[some-slug]` and verify it redirects correctly and the click counter increments in Supabase
 - [ ] **Test Razorpay checkout** using test mode — complete a payment flow end-to-end on the staging URL
   - After payment, check Supabase `webhook_logs` for a new `success` or `partial_success` entry
   - Check that email was sent (or that the email API was called)
@@ -218,35 +228,41 @@ Use the temporary `.vercel.app` URL to verify **every critical flow** before tou
 
 ---
 
-## Phase 4: DNS Cutover (Zero-Downtime)
+## Phase 4: DNS Cutover (Zero-Downtime & Keeping Netlify DNS)
 
-This is the critical step. The strategy is to reduce DNS TTL in advance so the switch happens quickly, then point to Vercel.
+To ensure **zero risk of email downtime**, we will keep Netlify as your DNS manager. You do not need to change nameservers in GoDaddy or touch your MX/TXT records (which handle your email inboxes and Resend sending). You only change where your website points.
 
-### Step 4.1 — Reduce TTL (Do 24 Hours Before Cutover)
-1. Log in to GoDaddy → **DNS Management** for `aishwaryamanikarnike.com`.
-2. Find the current A record and CNAME pointing to Netlify.
-3. Change the **TTL** to **300 seconds (5 minutes)** on both records.
-4. Wait 24 hours for this TTL reduction to propagate across global DNS resolvers. During this window, the site is still on Netlify and fully live.
+### Step 4.1 — Unlock the Domain in Netlify Site Settings
+Netlify locks the website records (`aishwaryamanikarnike.com` and `www`) as `NETLIFY` type records so they cannot be edited. To unlock them:
+1. Log in to your **Netlify Dashboard** (https://app.netlify.com).
+2. Go to **Sites** ➔ select **`vynika-portfolio`** (the site currently hosting your code).
+3. Go to **Site Configuration** (or Site Settings) ➔ **Domain Management**.
+4. Scroll down to the "Custom Domains" section.
+5. Click **Options** next to `aishwaryamanikarnike.com` and select **Remove domain** (unlink it).
+6. Do the same for `www.aishwaryamanikarnike.com`.
+   * *This deletes only the two website pointer records; all your email/TXT records remain perfectly intact.*
 
-### Step 4.2 — The Cutover (Takes 5-15 Minutes)
-1. Go to GoDaddy DNS Management.
-2. **Delete** the existing Netlify A record and CNAME records.
-3. **Add** the new Vercel DNS records (from Step 2.5):
+### Step 4.2 — Add Website Records to Vercel in Netlify DNS
+Now that the domain is unlinked from the site, the DNS panel allows you to add custom records pointing to Vercel:
+1. Click on the **Netlify DNS** tab in the top navigation bar of your Netlify Dashboard.
+2. Click on the domain **`aishwaryamanikarnike.com`** to open the records list.
+3. Click **Add new record**:
+   * **Record Type**: `A`
+   * **Name**: `@` (or leave blank if it autofills `aishwaryamanikarnike.com`)
+   * **Value**: `216.198.79.1` (or `76.76.21.21` — use the exact Expected Value Vercel displays on your screen)
+   * **TTL**: `300` (Change this from `3600` to `300` seconds so future changes take only 5 minutes)
+4. Click **Add new record** again:
+   * **Record Type**: `CNAME`
+   * **Name**: `www`
+   * **Value**: `d1dd9e5b66d2d278.vercel-dns-017.com` (use the exact project-specific CNAME value Vercel displays on your screen)
+   * **TTL**: `300`
 
-| Type | Name | Value |
-|---|---|---|
-| `A` | `@` | `76.76.21.21` (Vercel's IP) |
-| `CNAME` | `www` | `cname.vercel-dns.com` |
+*Note: Do not touch any **MX** records or **TXT** records. Leaving those alone guarantees your emails and Resend domain verifications will never stop working.*
 
-4. Save. DNS will propagate within 5–15 minutes because of the reduced TTL.
-5. Vercel will automatically issue an SSL certificate for your domain within 2 minutes of DNS verification.
-
-### Step 4.3 — Verify Cutover is Live
-1. Open a browser in **Incognito Mode** (clears DNS cache).
-2. Navigate to `https://aishwaryamanikarnike.com`.
-3. Check the SSL certificate — it should show **"Issued by: ZeroSSL / Let's Encrypt"** (Vercel's cert authority) instead of Netlify's.
-4. Check Vercel dashboard → **Deployments** — you should see the domain as **Active**.
-5. Run: `curl -I https://aishwaryamanikarnike.com` — response headers should include `x-vercel-id` or `server: Vercel`.
+### Step 4.3 — Verify Cutover is Live & TTL Caching Details
+* **Vercel Verification (5 Minutes)**: Vercel queries your nameservers directly. It will detect the new records and turn green in your Vercel Dashboard within **2 to 5 minutes**. It will then automatically issue a new SSL certificate.
+* **Global Propagation (up to 1 hour)**: Because the previous records had a TTL of `3600` (1 hour), some visitors' computers or internet providers may cache the old Netlify route for up to **60 minutes** before they see the Vercel site. 
+  * *To check it instantly: Open an **Incognito Browser** or test on a mobile network (4G/5G) which usually clears DNS cache much faster.*
 
 ---
 
@@ -304,17 +320,14 @@ Run these checks on the live production URL pointing to Vercel.
 If anything is wrong after the DNS cutover, you can revert within 5 minutes.
 
 ### Rollback Procedure
-1. **Go to GoDaddy DNS Management**.
-2. Delete the Vercel A record and CNAME records.
-3. Re-add the Netlify DNS records:
-
-| Type | Name | Value |
-|---|---|---|
-| `A` | `@` | *(your Netlify site IP — find in Netlify Dashboard → Domain Settings)* |
-| `CNAME` | `www` | `[your-site-name].netlify.app` |
-
-4. Because TTL is still 300 seconds (5 minutes), the rollback will propagate in under 10 minutes.
-5. Verify the site is serving from Netlify again by checking the SSL certificate or response headers.
+1. **Go to Netlify DNS Panel** (https://app.netlify.com ➔ Netlify DNS ➔ click `aishwaryamanikarnike.com`).
+2. Edit the **A record** for `aishwaryamanikarnike.com`:
+   * Change the value back to Netlify's default alias/IP.
+3. Edit the **CNAME record** for `www.aishwaryamanikarnike.com`:
+   * Change the value back to your Netlify site domain (e.g., `veena-musician-website.netlify.app`).
+4. Save the changes. 
+5. The rollback will propagate within 5 minutes.
+6. Verify the site is serving from Netlify again by checking the SSL certificate or response headers (which will show `server: Netlify` instead of Vercel).
 
 > [!IMPORTANT]
 > **Keep the Netlify site active and do NOT delete it for at least 30 days** after a successful migration. It is your instant rollback option. Netlify does not charge you for keeping an inactive/un-deployed project live.
@@ -338,7 +351,6 @@ Only do this after you are confident everything is stable.
 Day -1 (24 hours before cutover)
   └── Phase 1: Commit middleware.ts fix
   └── Phase 2: Set up Vercel project + environment variables + Fluid Compute
-  └── Reduce DNS TTL to 300s on GoDaddy
 
 Day 0 (Cutover Day)
   └── Phase 3: Full staging verification on vercel.app URL (1–2 hours)

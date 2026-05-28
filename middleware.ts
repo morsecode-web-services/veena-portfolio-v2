@@ -67,8 +67,8 @@ export async function middleware(request: NextRequest) {
             return NextResponse.next();
         }
 
-        // Fire-and-forget click tracking (non-blocking)
-        edgeSupabase.rpc('increment_click_count', { row_id: link.id }).then(() => {});
+        // Await click tracking — Vercel Edge terminates immediately after response, fire-and-forget is unreliable
+        await edgeSupabase.rpc('increment_click_count', { row_id: link.id });
 
         // Plain redirect: instant 307, no HTML needed
         if (link.platform === 'other') {
