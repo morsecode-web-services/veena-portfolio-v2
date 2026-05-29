@@ -71,12 +71,15 @@ function Bar1({ label, value, max, color, sub }: any) {
     );
 }
 
-function Section({ title, icon, children }: any) {
+function Section({ title, icon, action, children }: any) {
     return (
         <div className="bg-white rounded-xl border border-gray-100 p-5 hover:shadow-sm transition-shadow">
-            <div className="flex items-center gap-2 mb-4">
-                <div className="text-gray-400">{icon}</div>
-                <h2 className="text-sm font-bold text-navy-900 uppercase tracking-wide">{title}</h2>
+            <div className="flex items-center justify-between gap-2 mb-4">
+                <div className="flex items-center gap-2">
+                    <div className="text-gray-400">{icon}</div>
+                    <h2 className="text-sm font-bold text-navy-900 uppercase tracking-wide">{title}</h2>
+                </div>
+                {action && <div className="flex-shrink-0">{action}</div>}
             </div>
             {children}
         </div>
@@ -114,6 +117,10 @@ export default function AnalyticsPage() {
         overallAverage: 0,
         totalLeads: 0
     });
+    const [selectedCohortId, setSelectedCohortId] = useState<string>('all');
+    const [cohortsList, setCohortsList] = useState<any[]>([]);
+    const [paidSubmissions, setPaidSubmissions] = useState<any[]>([]);
+    const [webhookLogsMap, setWebhookLogsMap] = useState<Map<string, any>>(new Map());
 
     const fetch_ = useCallback(async (refresh = false) => {
         try {
@@ -248,8 +255,51 @@ export default function AnalyticsPage() {
                 overallAverage: overallPaidStudents > 0 ? (overallRevenue / overallPaidStudents) : 0,
                 totalLeads: overallLeads
             });
+
+            setCohortsList(cohorts || []);
+            setPaidSubmissions(subs || []);
+            setWebhookLogsMap(logsMap);
         }
     }, []);
+
+    const paymentDist = React.useMemo(() => {
+        const distMap = new Map();
+        
+        // Filter submissions by selected cohort
+        const filteredSubs = selectedCohortId === 'all'
+            ? paidSubmissions
+            : paidSubmissions.filter(s => s.cohort_id === selectedCohortId);
+
+        filteredSubs.forEach(s => {
+            let amount = 0;
+            if (s.razorpay_amount !== undefined && s.razorpay_amount !== null) {
+                amount = Number(s.razorpay_amount) / 100;
+            } else if (s.razorpay_payment_id && webhookLogsMap.has(s.razorpay_payment_id)) {
+                const payload = webhookLogsMap.get(s.razorpay_payment_id);
+                const paise = payload?.payload?.payment?.entity?.amount;
+                if (paise !== undefined && paise !== null) {
+                    amount = Number(paise) / 100;
+                }
+            }
+            
+            if (amount === 0 && s.cohort_id) {
+                const c = cohortsList.find(x => x.id === s.cohort_id);
+                if (c) amount = c.price / 100;
+            }
+            
+            if (amount > 0) {
+                distMap.set(amount, (distMap.get(amount) || 0) + 1);
+            }
+        });
+
+        return Array.from(distMap.entries())
+            .map(([amount, count]) => ({
+                amount,
+                amountLabel: `₹${amount.toLocaleString()}`,
+                students: count
+            }))
+            .sort((a, b) => a.amount - b.amount);
+    }, [paidSubmissions, cohortsList, webhookLogsMap, selectedCohortId]);
 
     useEffect(() => { 
         fetch_(); 
@@ -472,6 +522,43 @@ export default function AnalyticsPage() {
                         </Section>
                     </div>
                 </div>
+
+                {/* Cohort Payment Distribution Chart */}
+                <Section 
+                    title="Cohort Payment Distribution" 
+                    icon={<BarChart3 className="w-4 h-4 text-purple-500" />}
+                    action={
+                        <div className="flex items-center gap-2">
+                            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Cohort:</span>
+                            <select
+                                value={selectedCohortId}
+                                onChange={(e) => setSelectedCohortId(e.target.value)}
+                                className="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-bold text-navy-900 focus:outline-none focus:ring-2 focus:ring-navy-500/10 focus:border-navy-500"
+                            >
+                                <option value="all">All Cohorts</option>
+                                {cohortsList.map((c) => (
+                                    <option key={c.id} value={c.id}>{c.title}</option>
+                                ))}
+                            </select>
+                        </div>
+                    }
+                >
+                    <div className="h-64 pt-4">
+                        {paymentDist.length > 0 ? (
+                            <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={paymentDist} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
+                                    <XAxis dataKey="amountLabel" axisLine={false} tickLine={false} tick={{ fill: '#94A3B8', fontSize: 10, fontWeight: 'bold' }} />
+                                    <YAxis allowDecimals={false} axisLine={false} tickLine={false} tick={{ fill: '#94A3B8', fontSize: 10 }} />
+                                    <Tooltip content={<Tip />} />
+                                    <Bar dataKey="students" fill={C.purple} radius={[4, 4, 0, 0]} maxBarSize={50} name="Students" />
+                                </BarChart>
+                            </ResponsiveContainer>
+                        ) : (
+                            <p className="text-xs text-gray-400 py-20 text-center">No payment distribution data available for this cohort.</p>
+                        )}
+                    </div>
+                </Section>
 
                 {/* Row 1: Pages + Sources */}
 

@@ -2,6 +2,21 @@ import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { generateTelegramInviteLink } from '@/lib/notifications/telegram';
 
+async function sendAdminAlert(message: string): Promise<void> {
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  const chatId = process.env.ADMIN_TELEGRAM_CHAT_ID;
+  if (!token || !chatId) return;
+  try {
+    await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: chatId, text: message, parse_mode: 'HTML' }),
+    });
+  } catch (err) {
+    console.warn('[AdminAlert] Failed to send Telegram alert:', err);
+  }
+}
+
 export async function POST(request: Request) {
   try {
     // 1. Session & Auth Check
@@ -127,6 +142,18 @@ export async function POST(request: Request) {
           enrolled = true;
         }
       }
+    }
+
+    // 6. Send Telegram Admin Notification Alert
+    try {
+      const amountFormatted = amount ? `₹${(amount / 100).toLocaleString('en-IN')}` : 'N/A';
+      const now = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', hour12: true, day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+      
+      const alertMsg = `➕ <b>Manual Enrollment Added!</b>\n\n👤 ${name}\n📧 ${email || 'N/A'}\n📱 ${phone || 'N/A'}\n💳 ${amountFormatted}\n🎓 ${cohortTitle}\n\n🔗 Invite Link: ${inviteResult.inviteLink}\n⏰ ${now}`;
+      
+      await sendAdminAlert(alertMsg);
+    } catch (alertErr) {
+      console.warn('[Manual Invite API] Admin alert notification failed:', alertErr);
     }
 
     return NextResponse.json({
