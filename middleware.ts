@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+import type { NextRequest, NextFetchEvent } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
@@ -27,7 +27,7 @@ const WHITELISTED_PREFIXES = [
     '/images/',     // Allow static images to load
 ];
 
-export async function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest, event: NextFetchEvent) {
     const { pathname } = request.nextUrl;
 
     // --- Smart Link fast-path: handle /link/{slug} redirects at the edge ---
@@ -67,8 +67,17 @@ export async function middleware(request: NextRequest) {
             return NextResponse.next();
         }
 
-        // Await click tracking — Vercel Edge terminates immediately after response, fire-and-forget is unreliable
-        await edgeSupabase.rpc('increment_click_count', { row_id: link.id });
+        // Track click asynchronously in the background using event.waitUntil
+        // This avoids delaying the redirect by 50ms-150ms for the user
+        event.waitUntil(
+            (async () => {
+                try {
+                    await edgeSupabase.rpc('increment_click_count', { row_id: link.id });
+                } catch (e) {
+                    console.error('[Middleware] Failed to increment click count:', e);
+                }
+            })()
+        );
 
         // Plain redirect: instant 307, no HTML needed
         if (link.platform === 'other') {

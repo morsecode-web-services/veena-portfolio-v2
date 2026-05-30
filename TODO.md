@@ -19,6 +19,9 @@ Tracking tasks and progress for the project.
 - [x] Disable Resend for Cohorts
 - [ ] Finalise Cohort Page Content & Success Message
 - [ ] Cleanup cohort test data in all pages
+- [ ] Move from Timed ISR to Pure On-Demand Revalidation (Vercel-native caching optimization)
+- [ ] Instant Coming Soon Toggles via Vercel Edge Config (No Redeploys)
+
 
 
 ## 🎨 Features & UI
