@@ -291,7 +291,7 @@ export async function POST(req: Request) {
 
           // ── Notifications ─────────────────────────────────────────────────
           const telegramResult = (telegramChatId && automation.telegram_enabled)
-            ? await generateTelegramInviteLink(telegramChatId, 168)
+            ? await generateTelegramInviteLink(telegramChatId, 168, studentName)
             : { success: false, error: !automation.telegram_enabled ? 'Disabled' : 'No ID' };
 
           let emailStatus: any = { status: automation.email_enabled ? 'pending' : 'disabled' };

@@ -64,7 +64,7 @@ export async function POST(request: Request) {
     }
 
     // 4. Generate A Fresh Telegram Invite Link (Ensures it is active for 1 week)
-    const inviteResult = await generateTelegramInviteLink(cohort.telegram_chat_id, expireHours);
+    const inviteResult = await generateTelegramInviteLink(cohort.telegram_chat_id, expireHours, submission.user_name);
 
     if (!inviteResult.success || !inviteResult.inviteLink) {
       return NextResponse.json(

@@ -36,7 +36,7 @@ export async function POST(request: Request) {
     // 3. Fetch Submission Details and Cohort Chat ID
     const { data: submission, error: subError } = await supabaseAdmin
       .from('form_submissions')
-      .select('cohort_id, telegram_invite_link')
+      .select('cohort_id, telegram_invite_link, user_name')
       .eq('id', submissionId)
       .single();
 
@@ -59,7 +59,7 @@ export async function POST(request: Request) {
     }
 
     // 4. Generate New Telegram Invite Link
-    const inviteResult = await generateTelegramInviteLink(cohort.telegram_chat_id, expireHours);
+    const inviteResult = await generateTelegramInviteLink(cohort.telegram_chat_id, expireHours, submission.user_name);
 
     if (!inviteResult.success || !inviteResult.inviteLink) {
       return NextResponse.json(

@@ -81,7 +81,7 @@ export async function POST(request: Request) {
     }
 
     // 4. Generate Telegram Invite Link
-    const inviteResult = await generateTelegramInviteLink(telegramChatId, expireHours);
+    const inviteResult = await generateTelegramInviteLink(telegramChatId, expireHours, name);
 
     if (!inviteResult.success || !inviteResult.inviteLink) {
       return NextResponse.json(

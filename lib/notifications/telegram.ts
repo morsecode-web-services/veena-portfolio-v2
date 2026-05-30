@@ -14,7 +14,8 @@ export interface TelegramInviteResult {
  */
 export async function generateTelegramInviteLink(
   chatId: string,
-  expireHours: number = 24
+  expireHours: number = 24,
+  inviteName?: string
 ): Promise<TelegramInviteResult> {
   const botToken = process.env.TELEGRAM_BOT_TOKEN;
 
@@ -38,7 +39,7 @@ export async function generateTelegramInviteLink(
           chat_id: chatId,
           member_limit: 1,       // Single-use — cannot be shared
           expire_date: expireDate,
-          name: 'Cohort Access', // Label visible in Telegram admin panel
+          name: inviteName ? inviteName.substring(0, 32) : 'Cohort Access', // Label visible in Telegram admin panel
         }),
       }
     );
