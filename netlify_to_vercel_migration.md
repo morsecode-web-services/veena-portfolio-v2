@@ -50,7 +50,9 @@
 | Cloudflare Turnstile Allowed Origins | Cloudflare Dashboard | Add Vercel preview domain (for staging testing only) |
 
 > [!NOTE]
-> **Razorpay and Telegram webhook URLs do NOT need to change.** Both are already registered as `https://aishwaryamanikarnike.com/api/webhooks/...`. Since you own the custom domain and are simply redirecting it from Netlify → Vercel via DNS, the URLs remain identical. The webhooks will automatically start hitting Vercel once DNS propagates. No action needed in Razorpay or Telegram dashboards.
+> [!WARNING]
+> **Razorpay and Telegram webhook URLs MUST be updated to use the `www` subdomain (i.e. `https://www.aishwaryamanikarnike.com/api/webhooks/...`).**
+> Because Vercel redirects the apex domain (`aishwaryamanikarnike.com`) to the primary `www` domain via a `308 Permanent Redirect`, webhooks sent to the apex domain will get redirected. Telegram does not follow HTTP redirects for webhooks (which results in `308 Permanent Redirect` errors). Ensure all webhooks are registered with the `www` domain.
 
 ---
 
@@ -273,7 +275,7 @@ Now that the domain points to Vercel, update all external services that push to 
 ### Step 5.1 — Update Razorpay Webhook URL
 1. Log in to [Razorpay Dashboard](https://dashboard.razorpay.com).
 2. Go to **Account & Settings → Webhooks**.
-3. Find the existing webhook pointing to `https://aishwaryamanikarnike.com/api/webhooks/razorpay`.
+3. Find the existing webhook pointing to `https://aishwaryamanikarnike.com/api/webhooks/razorpay` (or edit/create a new one) and ensure it points to the `www` subdomain: `https://www.aishwaryamanikarnike.com/api/webhooks/razorpay`.
 4. Edit it — the URL is the same (since the domain is now on Vercel, it will route correctly). No change needed if the domain matches.
 5. **Verify the webhook secret** (`RAZORPAY_WEBHOOK_SECRET`) matches what you set in Vercel environment variables.
 6. Use Razorpay's "Send Test Webhook" feature and verify a new entry appears in your Supabase `webhook_logs` table.
@@ -282,7 +284,7 @@ Now that the domain points to Vercel, update all external services that push to 
 The Telegram webhook is registered using the Bot API. Run this command to re-register it (replace the URL if needed):
 
 ```bash
-curl "https://api.telegram.org/bot<YOUR_TELEGRAM_BOT_TOKEN>/setWebhook?url=https://aishwaryamanikarnike.com/api/webhooks/telegram?token=<YOUR_TELEGRAM_BOT_TOKEN>"
+curl "https://api.telegram.org/bot<YOUR_TELEGRAM_BOT_TOKEN>/setWebhook?url=https://www.aishwaryamanikarnike.com/api/webhooks/telegram?token=<YOUR_TELEGRAM_BOT_TOKEN>"
 ```
 
 Verify it is registered correctly:
@@ -290,7 +292,7 @@ Verify it is registered correctly:
 curl "https://api.telegram.org/bot<YOUR_TELEGRAM_BOT_TOKEN>/getWebhookInfo"
 ```
 
-The response should show `"url": "https://aishwaryamanikarnike.com/api/webhooks/telegram?token=..."` and `"last_error_message"` should be empty.
+The response should show `"url": "https://www.aishwaryamanikarnike.com/api/webhooks/telegram?token=..."` and `"last_error_message"` should be empty.
 
 ### Step 5.3 — Update Cloudflare Turnstile Allowed Origins
 1. Log in to [Cloudflare Dashboard](https://dash.cloudflare.com) → **Turnstile**.

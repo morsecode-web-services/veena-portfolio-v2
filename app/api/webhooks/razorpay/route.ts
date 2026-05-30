@@ -222,6 +222,7 @@ export async function POST(req: Request) {
           };
 
           // ── Data Persistence (Upsert Submission) ────────────────────────
+          let targetSubmissionId: string | null = null;
           try {
             const query = supabaseAdmin.from('form_submissions').select('id');
             
@@ -234,7 +235,7 @@ export async function POST(req: Request) {
             const { data: existingSubmissions } = await query;
 
             if (!existingSubmissions || existingSubmissions.length === 0) {
-              await supabaseAdmin.from('form_submissions').insert([{
+              const { data: insertedSub } = await supabaseAdmin.from('form_submissions').insert([{
                 form_slug: notes.formSlug || (isPaymentLink ? 'reenrollment' : 'payment_fallback'),
                 user_name: studentName,
                 user_email: studentEmail,
@@ -248,8 +249,12 @@ export async function POST(req: Request) {
                 cohort_id: finalCohortId,
                 is_verified: true,
                 razorpay_amount: paymentEntity?.amount || null,
-              }]);
+              }]).select('id').single();
+              if (insertedSub) {
+                targetSubmissionId = insertedSub.id;
+              }
             } else {
+              targetSubmissionId = existingSubmissions[0].id;
               const updateData: any = { 
                 payment_status: 'paid', 
                 is_verified: true, 
@@ -380,6 +385,17 @@ export async function POST(req: Request) {
                   }
                   
                   await subUpdateQuery;
+
+                  // Insert log entry in telegram_invite_logs
+                  if (targetSubmissionId) {
+                    await supabaseAdmin.from('telegram_invite_logs').insert([{
+                      submission_id: targetSubmissionId,
+                      action: 'created',
+                      invite_link: (telegramResult as any).inviteLink,
+                      created_by: 'system',
+                      payload: { info: 'Generated automatically via Razorpay payment webhook' }
+                    }]);
+                  }
                 } catch (subUpdateErr) {
                   console.error('[Webhook] Failed to update form submission with invite link:', subUpdateErr);
                 }

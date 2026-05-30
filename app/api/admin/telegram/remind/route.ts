@@ -37,7 +37,7 @@ export async function POST(request: Request) {
     // 3. Fetch Submission Details and Cohort Info
     const { data: submission, error: subError } = await supabaseAdmin
       .from('form_submissions')
-      .select('user_name, user_email, cohort_id')
+      .select('user_name, user_email, cohort_id, telegram_invite_link')
       .eq('id', submissionId)
       .single();
 
@@ -101,6 +101,18 @@ export async function POST(request: Request) {
     if (updateError) {
       throw updateError;
     }
+
+    // 7. Log reminder in telegram_invite_logs
+    await supabaseAdmin.from('telegram_invite_logs').insert([{
+      submission_id: submissionId,
+      action: 'reminded',
+      invite_link: inviteResult.inviteLink,
+      created_by: user.email || 'admin',
+      payload: { 
+        old_invite_link: submission.telegram_invite_link,
+        info: 'Email reminder sent to student' 
+      }
+    }]);
 
     return NextResponse.json({
       success: true,

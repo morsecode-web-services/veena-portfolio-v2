@@ -47,6 +47,15 @@ export async function POST(request: Request) {
       throw dbError;
     }
 
+    // 4. Log manual status update in telegram_invite_logs
+    await supabaseAdmin.from('telegram_invite_logs').insert([{
+      submission_id: submissionId,
+      action: telegramJoined ? 'joined' : 'left',
+      telegram_username: telegramJoined ? (telegramUsername || 'Manual Admin Overwrite') : null,
+      created_by: user.email || 'admin',
+      payload: { info: telegramJoined ? 'Manually marked as joined by admin' : 'Manually marked as left by admin' }
+    }]);
+
     return NextResponse.json({ success: true, telegram_joined: !!telegramJoined });
 
   } catch (error: any) {

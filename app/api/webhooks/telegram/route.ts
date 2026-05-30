@@ -45,7 +45,7 @@ export async function POST(request: Request) {
     // First, search form_submissions directly
     let { data: studentSubmission, error: subError } = await supabaseAdmin
       .from('form_submissions')
-      .select('id, user_name, user_email')
+      .select('id, user_name, user_email, telegram_joined, telegram_username')
       .eq('telegram_invite_link', inviteLink)
       .maybeSingle();
 
@@ -53,7 +53,39 @@ export async function POST(request: Request) {
       console.error('[Telegram Webhook] Error querying form_submissions:', subError);
     }
 
-    // If not found, search in webhook_logs (Razorpay automated flows)
+    // Fallback 1: If not found, search in historical telegram_invite_logs table (handles regenerated links)
+    if (!studentSubmission) {
+      const { data: logEntry, error: logErr } = await supabaseAdmin
+        .from('telegram_invite_logs')
+        .select('submission_id')
+        .eq('invite_link', inviteLink)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (logErr) {
+        console.error('[Telegram Webhook] Error querying telegram_invite_logs:', logErr);
+      }
+
+      if (logEntry && logEntry.submission_id) {
+        const { data: subData, error: subFetchErr } = await supabaseAdmin
+          .from('form_submissions')
+          .select('id, user_name, user_email, telegram_joined, telegram_username')
+          .eq('id', logEntry.submission_id)
+          .maybeSingle();
+
+        if (subFetchErr) {
+          console.error('[Telegram Webhook] Error fetching submission from log entry:', subFetchErr);
+        }
+
+        if (subData) {
+          studentSubmission = subData;
+          console.log(`[Telegram Webhook] Historical link matched to student: ${studentSubmission.user_name} via telegram_invite_logs.`);
+        }
+      }
+    }
+
+    // Fallback 2: If still not found, search in webhook_logs (Razorpay automated flows)
     if (!studentSubmission) {
       const { data: webhookLog, error: logError } = await supabaseAdmin
         .from('webhook_logs')
@@ -69,7 +101,7 @@ export async function POST(request: Request) {
         // Find their submission
         const { data: matchingSubmission } = await supabaseAdmin
           .from('form_submissions')
-          .select('id, user_name, user_email')
+          .select('id, user_name, user_email, telegram_joined, telegram_username')
           .ilike('user_email', webhookLog.student_email)
           .eq('payment_status', 'paid')
           .order('created_at', { ascending: false })
@@ -78,12 +110,31 @@ export async function POST(request: Request) {
 
         if (matchingSubmission) {
           studentSubmission = matchingSubmission;
+          console.log(`[Telegram Webhook] Webhook logs matched to student: ${studentSubmission.user_name} via email mapping.`);
         }
       }
     }
 
     // 3. Update the student record if found
     if (studentSubmission) {
+      // Idempotency check: if student is already marked as joined with this exact username, return early
+      const alreadyJoined = studentSubmission.telegram_joined === true && 
+                            studentSubmission.telegram_username === telegramIdentifier;
+
+      if (alreadyJoined) {
+        console.log(`[Telegram Webhook] Student ${studentSubmission.user_name} is already marked as joined with ${telegramIdentifier}. Skipping duplicate log.`);
+        return NextResponse.json({ success: true, student: studentSubmission.user_name, status: 'already_joined' });
+      }
+
+      // Check if a joined event was already logged for this invite link
+      const { data: existingJoinLog } = await supabaseAdmin
+        .from('telegram_invite_logs')
+        .select('id')
+        .eq('submission_id', studentSubmission.id)
+        .eq('action', 'joined')
+        .eq('invite_link', inviteLink)
+        .maybeSingle();
+
       const { error: updateError } = await supabaseAdmin
         .from('form_submissions')
         .update({
@@ -95,6 +146,18 @@ export async function POST(request: Request) {
       if (updateError) {
         console.error('[Telegram Webhook] Failed to update submission:', updateError);
         return NextResponse.json({ error: 'Failed to update record' }, { status: 500 });
+      }
+
+      // Log the joined event if not already logged
+      if (!existingJoinLog) {
+        await supabaseAdmin.from('telegram_invite_logs').insert([{
+          submission_id: studentSubmission.id,
+          action: 'joined',
+          invite_link: inviteLink,
+          telegram_username: telegramIdentifier,
+          created_by: 'telegram_webhook',
+          payload: { info: `User joined Telegram group via link: ${inviteLink}` }
+        }]);
       }
 
       console.log(`[Telegram Webhook] Successfully marked student ${studentSubmission.user_name} (${studentSubmission.user_email}) as joined.`);

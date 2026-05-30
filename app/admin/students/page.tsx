@@ -1,15 +1,15 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { 
-    Search, 
-    User, 
-    Mail, 
-    Phone, 
-    ExternalLink, 
-    Copy, 
-    CheckCircle2, 
-    Clock, 
+import {
+    Search,
+    User,
+    Mail,
+    Phone,
+    ExternalLink,
+    Copy,
+    CheckCircle2,
+    Clock,
     AlertCircle,
     ChevronRight,
     ArrowRight,
@@ -18,7 +18,8 @@ import {
     X,
     Link as LinkIcon,
     RefreshCw,
-    MoreVertical
+    MoreVertical,
+    History
 } from 'lucide-react';
 import { motion as m, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
@@ -87,6 +88,11 @@ export default function StudentSearchPage() {
     const [remindLoadingId, setRemindLoadingId] = useState<string | null>(null);
     const [regenerateLoadingId, setRegenerateLoadingId] = useState<string | null>(null);
     const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+
+    // Activity logs states
+    const [expandedLogs, setExpandedLogs] = useState<Record<string, boolean>>({});
+    const [logsData, setLogsData] = useState<Record<string, any[]>>({});
+    const [logsLoading, setLogsLoading] = useState<Record<string, boolean>>({});
 
     // Fetch Cohorts
     useEffect(() => {
@@ -229,7 +235,7 @@ export default function StudentSearchPage() {
     const handleToggleTelegramJoin = async (submissionId: string, currentJoined: boolean) => {
         try {
             const { data: { session } } = await supabase.auth.getSession();
-            
+
             let telegramUsername = '';
             if (!currentJoined) {
                 const input = prompt("Enter Telegram username/display name (optional):");
@@ -328,13 +334,45 @@ export default function StudentSearchPage() {
         }
     };
 
-    const CohortActionGroup = ({ 
-        cohort, 
-        student, 
-        isUnjoinedSection = false 
-    }: { 
-        cohort: StudentCohort; 
-        student: StudentResult; 
+    const toggleLogs = async (submissionId: string) => {
+        if (expandedLogs[submissionId]) {
+            setExpandedLogs(prev => ({ ...prev, [submissionId]: false }));
+            return;
+        }
+
+        setExpandedLogs(prev => ({ ...prev, [submissionId]: true }));
+
+        // Fetch logs if not already loaded
+        if (!logsData[submissionId]) {
+            setLogsLoading(prev => ({ ...prev, [submissionId]: true }));
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                const res = await fetch(`/api/admin/telegram/logs?submissionId=${submissionId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${session?.access_token || ''}`
+                    }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    setLogsData(prev => ({ ...prev, [submissionId]: data.logs || [] }));
+                } else {
+                    throw new Error(data.error || 'Failed to fetch logs');
+                }
+            } catch (err: any) {
+                addToast(err.message || 'Failed to fetch history logs', 'error');
+            } finally {
+                setLogsLoading(prev => ({ ...prev, [submissionId]: false }));
+            }
+        }
+    };
+
+    const CohortActionGroup = ({
+        cohort,
+        student,
+        isUnjoinedSection = false
+    }: {
+        cohort: StudentCohort;
+        student: StudentResult;
         isUnjoinedSection?: boolean;
     }) => {
         const isPaid = cohort.type === 'enrollment';
@@ -345,11 +383,10 @@ export default function StudentSearchPage() {
                 {cohort.link ? (
                     <button
                         onClick={() => copyToClipboard(cohort.link!, copyId)}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-                            copiedId === copyId
-                            ? 'bg-green-500 text-white shadow-sm'
-                            : 'bg-navy-50 text-navy-600 hover:bg-navy-100'
-                        }`}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${copiedId === copyId
+                                ? 'bg-green-500 text-white shadow-sm'
+                                : 'bg-navy-50 text-navy-600 hover:bg-navy-100'
+                            }`}
                     >
                         {copiedId === copyId ? <CheckCircle2 size={12} /> : <Copy size={12} />}
                         {copiedId === copyId ? 'Copied' : (isPaid ? 'Copy Invite Link' : 'Copy Payment Link')}
@@ -369,11 +406,10 @@ export default function StudentSearchPage() {
                         <button
                             type="button"
                             onClick={() => handleToggleTelegramJoin(cohort.id, !!cohort.telegram_joined)}
-                            className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${
-                                cohort.telegram_joined
-                                ? 'bg-emerald-500 text-white shadow-sm hover:bg-emerald-600'
-                                : 'text-slate-400 hover:text-emerald-700 hover:bg-emerald-50'
-                            }`}
+                            className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${cohort.telegram_joined
+                                    ? 'bg-emerald-500 text-white shadow-sm hover:bg-emerald-600'
+                                    : 'text-slate-400 hover:text-emerald-700 hover:bg-emerald-50'
+                                }`}
                             title={cohort.telegram_joined ? "Mark Telegram as Left" : "Mark Telegram as Joined"}
                         >
                             <CheckCircle2 size={14} />
@@ -412,6 +448,19 @@ export default function StudentSearchPage() {
                                 )}
                             </button>
                         )}
+
+                        {/* History Logs Toggle */}
+                        <button
+                            type="button"
+                            onClick={() => toggleLogs(cohort.id)}
+                            className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${expandedLogs[cohort.id]
+                                    ? 'bg-gold-500 text-navy-900 shadow-sm hover:bg-gold-600'
+                                    : 'text-slate-400 hover:text-navy-950 hover:bg-slate-100'
+                                }`}
+                            title="View Activity History"
+                        >
+                            <History size={14} />
+                        </button>
                     </div>
                 )}
                 <ChevronRight size={16} className="text-slate-200 hidden md:block" />
@@ -427,7 +476,7 @@ export default function StudentSearchPage() {
                     <h1 className="text-3xl font-serif font-bold text-navy-950">Student Support</h1>
                     <p className="text-navy-400 text-sm">Search across all batches and invitations to resolve student queries instantly.</p>
                 </div>
-                <button 
+                <button
                     onClick={() => {
                         setIsInviteModalOpen(true);
                         setInviteCohortId('');
@@ -495,11 +544,10 @@ export default function StudentSearchPage() {
                                             </div>
                                         </div>
                                         <div className="flex gap-2">
-                                            <button 
+                                            <button
                                                 onClick={() => copyToClipboard(student.email, student.email)}
-                                                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border flex items-center gap-2 ${
-                                                    copiedId === student.email ? 'bg-green-500 border-green-500 text-white' : 'bg-white border-slate-200 text-slate-600 hover:border-navy-900 hover:text-navy-900'
-                                                }`}
+                                                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border flex items-center gap-2 ${copiedId === student.email ? 'bg-green-500 border-green-500 text-white' : 'bg-white border-slate-200 text-slate-600 hover:border-navy-900 hover:text-navy-900'
+                                                    }`}
                                             >
                                                 {copiedId === student.email ? <CheckCircle2 size={14} /> : <Copy size={14} />}
                                                 {copiedId === student.email ? 'Copied' : 'Copy Email'}
@@ -511,11 +559,10 @@ export default function StudentSearchPage() {
                                 {/* Cohorts List */}
                                 <div className="divide-y divide-slate-50">
                                     {student.cohorts.map((cohort, cIdx) => (
-                                        <div 
-                                            key={cohort.id + cohort.type} 
-                                            className={`p-6 md:px-8 hover:bg-slate-50/30 transition-colors ${
-                                                cIdx === student.cohorts.length - 1 ? 'rounded-b-[22px]' : ''
-                                            }`}
+                                        <div
+                                            key={cohort.id + cohort.type}
+                                            className={`p-6 md:px-8 hover:bg-slate-50/30 transition-colors ${cIdx === student.cohorts.length - 1 ? 'rounded-b-[22px]' : ''
+                                                }`}
                                         >
                                             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                                                 <div className="flex items-center gap-4">
@@ -527,11 +574,10 @@ export default function StudentSearchPage() {
                                                                 {cohort.status}
                                                             </span>
                                                             {cohort.type === 'enrollment' && (
-                                                                <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest border ${
-                                                                    cohort.telegram_joined 
-                                                                    ? 'bg-emerald-50 text-emerald-700 border-emerald-100' 
-                                                                    : 'bg-slate-100 text-slate-500 border-slate-200'
-                                                                }`}>
+                                                                <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest border ${cohort.telegram_joined
+                                                                        ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
+                                                                        : 'bg-slate-100 text-slate-500 border-slate-200'
+                                                                    }`}>
                                                                     {cohort.telegram_joined ? `Telegram: Joined${cohort.telegram_username ? ` (${cohort.telegram_username})` : ''}` : 'Telegram: Not Joined'}
                                                                 </span>
                                                             )}
@@ -547,14 +593,118 @@ export default function StudentSearchPage() {
 
                                                 <CohortActionGroup cohort={cohort} student={student} isUnjoinedSection={false} />
                                             </div>
+
+                                            {/* History Logs Panel */}
+                                            {cohort.type === 'enrollment' && expandedLogs[cohort.id] && (
+                                                <m.div
+                                                    initial={{ opacity: 0, height: 0 }}
+                                                    animate={{ opacity: 1, height: 'auto' }}
+                                                    exit={{ opacity: 0, height: 0 }}
+                                                    className="mt-6 pt-6 border-t border-slate-100 space-y-4 overflow-hidden"
+                                                >
+                                                    <div className="flex items-center justify-between">
+                                                        <h4 className="text-xs font-black uppercase tracking-wider text-slate-400">Activity History & Audit Trails</h4>
+                                                        <button
+                                                            onClick={() => toggleLogs(cohort.id)}
+                                                            className="text-xs font-bold text-slate-400 hover:text-navy-950 transition-colors"
+                                                        >
+                                                            Hide Logs
+                                                        </button>
+                                                    </div>
+
+                                                    {logsLoading[cohort.id] ? (
+                                                        <div className="flex items-center gap-2.5 py-4 text-xs text-slate-400 font-medium">
+                                                            <div className="h-4 w-4 border-2 border-gold-500 border-t-transparent rounded-full animate-spin"></div>
+                                                            Loading timeline logs...
+                                                        </div>
+                                                    ) : !logsData[cohort.id] || logsData[cohort.id].length === 0 ? (
+                                                        <p className="text-xs text-slate-400 italic py-2">No activity logs recorded for this student yet.</p>
+                                                    ) : (
+                                                        <div className="relative pl-6 border-l-2 border-slate-100 space-y-6 py-2 ml-3">
+                                                            {logsData[cohort.id].map((log) => {
+                                                                let dotColor = 'border-slate-300 bg-slate-50';
+                                                                let actionTitle = log.action;
+
+                                                                if (log.action === 'created') {
+                                                                    dotColor = 'border-blue-500 bg-blue-50 text-blue-600';
+                                                                    actionTitle = 'Invite Link Created';
+                                                                } else if (log.action === 'regenerated') {
+                                                                    dotColor = 'border-amber-500 bg-amber-50 text-amber-600';
+                                                                    actionTitle = 'Link Regenerated';
+                                                                } else if (log.action === 'reminded') {
+                                                                    dotColor = 'border-violet-500 bg-violet-50 text-violet-600';
+                                                                    actionTitle = 'Reminder Sent';
+                                                                } else if (log.action === 'joined') {
+                                                                    dotColor = 'border-emerald-500 bg-emerald-50 text-emerald-600';
+                                                                    actionTitle = 'Telegram Joined';
+                                                                } else if (log.action === 'left') {
+                                                                    dotColor = 'border-red-500 bg-red-50 text-red-600';
+                                                                    actionTitle = 'Telegram Left / Reset';
+                                                                }
+
+                                                                return (
+                                                                    <div key={log.id} className="relative group/log">
+                                                                        {/* Dot */}
+                                                                        <div className={`absolute -left-[32px] top-1.5 w-3 h-3 rounded-full border-2 bg-white ${dotColor} transition-transform group-hover/log:scale-110 shadow-sm`} />
+
+                                                                        <div className="space-y-1.5">
+                                                                            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                                                                                <span className="text-xs font-bold text-navy-950">{actionTitle}</span>
+                                                                                <span className="text-[10px] bg-slate-50 text-slate-500 px-2 py-0.5 rounded-full border border-slate-100 font-medium">
+                                                                                    by {log.created_by}
+                                                                                </span>
+                                                                                <span className="text-[10px] text-slate-400 font-medium ml-auto">
+                                                                                    {format(new Date(log.created_at), 'MMM d, yyyy, h:mm a')}
+                                                                                </span>
+                                                                            </div>
+
+                                                                            {log.invite_link && (
+                                                                                <div className="flex items-center gap-2 bg-slate-50/50 border border-slate-100 rounded-xl p-2.5 max-w-lg shadow-sm">
+                                                                                    <span className="text-[11px] font-mono text-slate-600 truncate flex-1">{log.invite_link}</span>
+                                                                                    <button
+                                                                                        onClick={() => copyToClipboard(log.invite_link, log.id)}
+                                                                                        className={`text-[9px] font-black uppercase tracking-wider px-3 py-1.5 rounded-lg transition-all border ${copiedId === log.id
+                                                                                                ? 'bg-emerald-500 border-emerald-500 text-white shadow-sm'
+                                                                                                : 'bg-white border-slate-200 text-slate-500 hover:border-navy-900 hover:text-navy-900'
+                                                                                            }`}
+                                                                                    >
+                                                                                        {copiedId === log.id ? 'Copied' : 'Copy Link'}
+                                                                                    </button>
+                                                                                </div>
+                                                                            )}
+
+                                                                            {log.payload?.old_invite_link && (
+                                                                                <p className="text-[10px] text-slate-400 italic">
+                                                                                    Replaced link: <span className="font-mono">{log.payload.old_invite_link}</span>
+                                                                                </p>
+                                                                            )}
+
+                                                                            {log.telegram_username && (
+                                                                                <div className="text-[11px] text-emerald-800 font-semibold flex items-center gap-1">
+                                                                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                                                                    Telegram: {log.telegram_username}
+                                                                                </div>
+                                                                            )}
+
+                                                                            {log.payload?.info && (
+                                                                                <p className="text-[11px] text-slate-500 leading-relaxed font-medium">{log.payload.info}</p>
+                                                                            )}
+                                                                        </div>
+                                                                    </div>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    )}
+                                                </m.div>
+                                            )}
                                         </div>
                                     ))}
                                 </div>
                             </m.div>
                         ))
                     ) : query.length >= 2 && !loading ? (
-                        <m.div 
-                            initial={{ opacity: 0 }} 
+                        <m.div
+                            initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             className="bg-white border border-dashed border-slate-200 rounded-3xl p-16 text-center"
                         >
@@ -607,11 +757,10 @@ export default function StudentSearchPage() {
                                                             </div>
                                                         </div>
                                                         <div className="flex gap-2">
-                                                            <button 
+                                                            <button
                                                                 onClick={() => copyToClipboard(student.email, 'unjoined_' + student.email)}
-                                                                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all border flex items-center gap-2 ${
-                                                                    copiedId === ('unjoined_' + student.email) ? 'bg-green-500 border-green-500 text-white' : 'bg-white border-slate-200 text-slate-600 hover:border-navy-900 hover:text-navy-900'
-                                                                }`}
+                                                                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all border flex items-center gap-2 ${copiedId === ('unjoined_' + student.email) ? 'bg-green-500 border-green-500 text-white' : 'bg-white border-slate-200 text-slate-600 hover:border-navy-900 hover:text-navy-900'
+                                                                    }`}
                                                             >
                                                                 {copiedId === ('unjoined_' + student.email) ? <CheckCircle2 size={12} /> : <Copy size={12} />}
                                                                 {copiedId === ('unjoined_' + student.email) ? 'Copied' : 'Copy Email'}
@@ -623,11 +772,10 @@ export default function StudentSearchPage() {
                                                 {/* Cohorts List */}
                                                 <div className="divide-y divide-slate-50">
                                                     {student.cohorts.map((cohort, cIdx) => (
-                                                        <div 
-                                                            key={cohort.id + cohort.type} 
-                                                            className={`p-6 md:px-8 hover:bg-slate-50/30 transition-colors ${
-                                                                cIdx === student.cohorts.length - 1 ? 'rounded-b-[22px]' : ''
-                                                            }`}
+                                                        <div
+                                                            key={cohort.id + cohort.type}
+                                                            className={`p-6 md:px-8 hover:bg-slate-50/30 transition-colors ${cIdx === student.cohorts.length - 1 ? 'rounded-b-[22px]' : ''
+                                                                }`}
                                                         >
                                                             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                                                                 <div className="flex items-center gap-4">
@@ -647,6 +795,110 @@ export default function StudentSearchPage() {
 
                                                                 <CohortActionGroup cohort={cohort} student={student} isUnjoinedSection={true} />
                                                             </div>
+
+                                                            {/* History Logs Panel */}
+                                                            {cohort.type === 'enrollment' && expandedLogs[cohort.id] && (
+                                                                <m.div
+                                                                    initial={{ opacity: 0, height: 0 }}
+                                                                    animate={{ opacity: 1, height: 'auto' }}
+                                                                    exit={{ opacity: 0, height: 0 }}
+                                                                    className="mt-6 pt-6 border-t border-slate-100 space-y-4 overflow-hidden"
+                                                                >
+                                                                    <div className="flex items-center justify-between">
+                                                                        <h4 className="text-xs font-black uppercase tracking-wider text-slate-400">Activity History & Audit Trails</h4>
+                                                                        <button
+                                                                            onClick={() => toggleLogs(cohort.id)}
+                                                                            className="text-xs font-bold text-slate-400 hover:text-navy-950 transition-colors"
+                                                                        >
+                                                                            Hide Logs
+                                                                        </button>
+                                                                    </div>
+
+                                                                    {logsLoading[cohort.id] ? (
+                                                                        <div className="flex items-center gap-2.5 py-4 text-xs text-slate-400 font-medium">
+                                                                            <div className="h-4 w-4 border-2 border-gold-500 border-t-transparent rounded-full animate-spin"></div>
+                                                                            Loading timeline logs...
+                                                                        </div>
+                                                                    ) : !logsData[cohort.id] || logsData[cohort.id].length === 0 ? (
+                                                                        <p className="text-xs text-slate-400 italic py-2">No activity logs recorded for this student yet.</p>
+                                                                    ) : (
+                                                                        <div className="relative pl-6 border-l-2 border-slate-100 space-y-6 py-2 ml-3">
+                                                                            {logsData[cohort.id].map((log) => {
+                                                                                let dotColor = 'border-slate-300 bg-slate-50';
+                                                                                let actionTitle = log.action;
+
+                                                                                if (log.action === 'created') {
+                                                                                    dotColor = 'border-blue-500 bg-blue-50 text-blue-600';
+                                                                                    actionTitle = 'Invite Link Created';
+                                                                                } else if (log.action === 'regenerated') {
+                                                                                    dotColor = 'border-amber-500 bg-amber-50 text-amber-600';
+                                                                                    actionTitle = 'Link Regenerated';
+                                                                                } else if (log.action === 'reminded') {
+                                                                                    dotColor = 'border-violet-500 bg-violet-50 text-violet-600';
+                                                                                    actionTitle = 'Reminder Sent';
+                                                                                } else if (log.action === 'joined') {
+                                                                                    dotColor = 'border-emerald-500 bg-emerald-50 text-emerald-600';
+                                                                                    actionTitle = 'Telegram Joined';
+                                                                                } else if (log.action === 'left') {
+                                                                                    dotColor = 'border-red-500 bg-red-50 text-red-600';
+                                                                                    actionTitle = 'Telegram Left / Reset';
+                                                                                }
+
+                                                                                return (
+                                                                                    <div key={log.id} className="relative group/log">
+                                                                                        {/* Dot */}
+                                                                                        <div className={`absolute -left-[32px] top-1.5 w-3 h-3 rounded-full border-2 bg-white ${dotColor} transition-transform group-hover/log:scale-110 shadow-sm`} />
+
+                                                                                        <div className="space-y-1.5">
+                                                                                            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                                                                                                <span className="text-xs font-bold text-navy-950">{actionTitle}</span>
+                                                                                                <span className="text-[10px] bg-slate-50 text-slate-500 px-2 py-0.5 rounded-full border border-slate-100 font-medium">
+                                                                                                    by {log.created_by}
+                                                                                                </span>
+                                                                                                <span className="text-[10px] text-slate-400 font-medium ml-auto">
+                                                                                                    {format(new Date(log.created_at), 'MMM d, yyyy, h:mm a')}
+                                                                                                </span>
+                                                                                            </div>
+
+                                                                                            {log.invite_link && (
+                                                                                                <div className="flex items-center gap-2 bg-slate-50/50 border border-slate-100 rounded-xl p-2.5 max-w-lg shadow-sm">
+                                                                                                    <span className="text-[11px] font-mono text-slate-600 truncate flex-1">{log.invite_link}</span>
+                                                                                                    <button
+                                                                                                        onClick={() => copyToClipboard(log.invite_link, log.id)}
+                                                                                                        className={`text-[9px] font-black uppercase tracking-wider px-3 py-1.5 rounded-lg transition-all border ${copiedId === log.id
+                                                                                                                ? 'bg-emerald-500 border-emerald-500 text-white shadow-sm'
+                                                                                                                : 'bg-white border-slate-200 text-slate-500 hover:border-navy-900 hover:text-navy-900'
+                                                                                                            }`}
+                                                                                                    >
+                                                                                                        {copiedId === log.id ? 'Copied' : 'Copy Link'}
+                                                                                                    </button>
+                                                                                                </div>
+                                                                                            )}
+
+                                                                                            {log.payload?.old_invite_link && (
+                                                                                                <p className="text-[10px] text-slate-400 italic">
+                                                                                                    Replaced link: <span className="font-mono">{log.payload.old_invite_link}</span>
+                                                                                                </p>
+                                                                                            )}
+
+                                                                                            {log.telegram_username && (
+                                                                                                <div className="text-[11px] text-emerald-800 font-semibold flex items-center gap-1">
+                                                                                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                                                                                    Telegram: {log.telegram_username}
+                                                                                                </div>
+                                                                                            )}
+
+                                                                                            {log.payload?.info && (
+                                                                                                <p className="text-[11px] text-slate-500 leading-relaxed font-medium">{log.payload.info}</p>
+                                                                                            )}
+                                                                                        </div>
+                                                                                    </div>
+                                                                                );
+                                                                            })}
+                                                                        </div>
+                                                                    )}
+                                                                </m.div>
+                                                            )}
                                                         </div>
                                                     ))}
                                                 </div>
@@ -695,7 +947,7 @@ export default function StudentSearchPage() {
             {/* Manual Invite & Enrollment Modal */}
             {isInviteModalOpen && (
                 <div className="fixed inset-0 bg-navy-950/40 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-                    <m.div 
+                    <m.div
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.95 }}
@@ -712,7 +964,7 @@ export default function StudentSearchPage() {
                                     <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mt-0.5">Generate Telegram Invite Link</p>
                                 </div>
                             </div>
-                            <button 
+                            <button
                                 onClick={() => setIsInviteModalOpen(false)}
                                 className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-navy-900 hover:bg-slate-100 rounded-full transition-all"
                             >
@@ -730,7 +982,7 @@ export default function StudentSearchPage() {
                             )}
 
                             {generatedLink ? (
-                                <m.div 
+                                <m.div
                                     initial={{ opacity: 0, y: 10 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     className="space-y-6"
@@ -741,17 +993,16 @@ export default function StudentSearchPage() {
                                             <h4 className="font-bold text-lg">Telegram Link Generated!</h4>
                                             <p className="text-xs text-emerald-700/80 mt-1">This link is single-use and will expire in {inviteExpireHours} hours.</p>
                                         </div>
-                                        
+
                                         <div className="flex items-center gap-2 bg-white border border-emerald-100 rounded-xl p-3 select-all">
                                             <LinkIcon size={16} className="text-emerald-500 shrink-0" />
                                             <span className="text-xs font-mono font-bold text-slate-800 truncate flex-grow text-left">{generatedLink}</span>
-                                            <button 
+                                            <button
                                                 onClick={() => copyToClipboard(generatedLink, 'modal_link')}
-                                                className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all border ${
-                                                    copiedId === 'modal_link' 
-                                                    ? 'bg-green-500 border-green-500 text-white' 
-                                                    : 'bg-emerald-50 border-emerald-100 text-emerald-700 hover:bg-emerald-100'
-                                                }`}
+                                                className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all border ${copiedId === 'modal_link'
+                                                        ? 'bg-green-500 border-green-500 text-white'
+                                                        : 'bg-emerald-50 border-emerald-100 text-emerald-700 hover:bg-emerald-100'
+                                                    }`}
                                             >
                                                 {copiedId === 'modal_link' ? 'Copied' : 'Copy'}
                                             </button>
@@ -771,7 +1022,7 @@ export default function StudentSearchPage() {
                                     )}
 
                                     <div className="pt-4 flex gap-3">
-                                        <a 
+                                        <a
                                             href={generatedLink}
                                             target="_blank"
                                             rel="noopener noreferrer"
@@ -779,7 +1030,7 @@ export default function StudentSearchPage() {
                                         >
                                             <ExternalLink size={14} /> Open Link
                                         </a>
-                                        <button 
+                                        <button
                                             onClick={() => {
                                                 setGeneratedLink('');
                                                 setInviteName('');
@@ -797,8 +1048,8 @@ export default function StudentSearchPage() {
                                     {/* Cohort Select */}
                                     <div className="space-y-1.5">
                                         <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Target Cohort / Batch</label>
-                                        <select 
-                                            value={inviteCohortId} 
+                                        <select
+                                            value={inviteCohortId}
                                             onChange={e => setInviteCohortId(e.target.value)}
                                             className="w-full px-4 py-3 bg-slate-50 border border-slate-100 focus:bg-white focus:border-gold-500 rounded-xl text-sm font-semibold transition-all outline-none"
                                             required
@@ -813,14 +1064,14 @@ export default function StudentSearchPage() {
 
                                     {/* Custom Chat ID Input */}
                                     {inviteCohortId === 'custom' && (
-                                        <m.div 
+                                        <m.div
                                             initial={{ opacity: 0, height: 0 }}
                                             animate={{ opacity: 1, height: 'auto' }}
                                             className="space-y-1.5"
                                         >
                                             <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Telegram Chat ID (with -100 prefix)</label>
-                                            <input 
-                                                type="text" 
+                                            <input
+                                                type="text"
                                                 value={inviteCustomChatId}
                                                 onChange={e => setInviteCustomChatId(e.target.value)}
                                                 placeholder="e.g. -1001890349357"
@@ -833,8 +1084,8 @@ export default function StudentSearchPage() {
                                     {/* Expiration Select */}
                                     <div className="space-y-1.5">
                                         <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Invite Link Validity</label>
-                                        <select 
-                                            value={inviteExpireHours} 
+                                        <select
+                                            value={inviteExpireHours}
                                             onChange={e => setInviteExpireHours(Number(e.target.value))}
                                             className="w-full px-4 py-3 bg-slate-50 border border-slate-100 focus:bg-white focus:border-gold-500 rounded-xl text-sm transition-all outline-none"
                                         >
@@ -848,7 +1099,7 @@ export default function StudentSearchPage() {
 
                                     {/* Student Enrollment Option */}
                                     <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                                        <input 
+                                        <input
                                             type="checkbox"
                                             id="recordEnrollment"
                                             checked={recordEnrollment}
@@ -863,7 +1114,7 @@ export default function StudentSearchPage() {
 
                                     {/* Student Details */}
                                     {recordEnrollment && (
-                                        <m.div 
+                                        <m.div
                                             initial={{ opacity: 0 }}
                                             animate={{ opacity: 1 }}
                                             className="space-y-4 pt-2 border-t border-slate-100"
@@ -871,8 +1122,8 @@ export default function StudentSearchPage() {
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                 <div className="space-y-1.5">
                                                     <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Student Name</label>
-                                                    <input 
-                                                        type="text" 
+                                                    <input
+                                                        type="text"
                                                         value={inviteName}
                                                         onChange={e => setInviteName(e.target.value)}
                                                         placeholder="e.g. Aditi Sharma"
@@ -882,8 +1133,8 @@ export default function StudentSearchPage() {
                                                 </div>
                                                 <div className="space-y-1.5">
                                                     <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Email Address <span className="text-slate-400 normal-case font-normal">(Optional)</span></label>
-                                                    <input 
-                                                        type="email" 
+                                                    <input
+                                                        type="email"
                                                         value={inviteEmail}
                                                         onChange={e => setInviteEmail(e.target.value)}
                                                         placeholder="e.g. aditi@gmail.com"
@@ -894,8 +1145,8 @@ export default function StudentSearchPage() {
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                 <div className="space-y-1.5">
                                                     <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Phone Number <span className="text-slate-400 normal-case font-normal">(Optional)</span></label>
-                                                    <input 
-                                                        type="tel" 
+                                                    <input
+                                                        type="tel"
                                                         value={invitePhone}
                                                         onChange={e => setInvitePhone(e.target.value)}
                                                         placeholder="e.g. +91 98765 43210"
@@ -904,8 +1155,8 @@ export default function StudentSearchPage() {
                                                 </div>
                                                 <div className="space-y-1.5">
                                                     <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Amount Paid (₹) <span className="text-slate-400 normal-case font-normal">(Optional)</span></label>
-                                                    <input 
-                                                        type="number" 
+                                                    <input
+                                                        type="number"
                                                         value={inviteAmount}
                                                         onChange={e => setInviteAmount(e.target.value)}
                                                         placeholder="e.g. 5000"
@@ -920,14 +1171,14 @@ export default function StudentSearchPage() {
 
                                     {/* Action Buttons */}
                                     <div className="pt-4 border-t border-slate-100 flex justify-end gap-3">
-                                        <button 
-                                            type="button" 
+                                        <button
+                                            type="button"
                                             onClick={() => setIsInviteModalOpen(false)}
                                             className="px-5 py-3 text-xs font-bold text-slate-500 hover:bg-slate-100 rounded-xl transition-all"
                                         >
                                             Cancel
                                         </button>
-                                        <button 
+                                        <button
                                             type="submit"
                                             disabled={inviteLoading}
                                             className="bg-navy-900 text-white hover:bg-navy-800 disabled:opacity-50 px-6 py-3 rounded-xl font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition-all shadow-md active:scale-95"
