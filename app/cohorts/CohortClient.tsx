@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, Clock, Lock, Calendar, ArrowRight, X, Star, PartyPopper, Mail } from 'lucide-react';
+import { Check, Clock, Lock, Calendar, ArrowRight, X, Star, PartyPopper, Mail, CreditCard } from 'lucide-react';
 import { Button } from '@/components/system/Button';
 import type { FormField } from '@/components/features/DynamicForm';
 import Image from 'next/image';
@@ -393,7 +393,6 @@ function CohortContent({ initialCohorts }: CohortClientProps) {
                                                 <p className="text-xs text-slate-500 italic">One-time payment for full cohort access</p>
                                             </>
                                         )}
-
                                         <div className="mt-4 p-3 bg-amber-50 rounded-xl border border-amber-100 flex items-start gap-2.5">
                                             <Clock size={16} className="text-amber-600 mt-0.5 flex-shrink-0" />
                                             <p className="text-xs text-amber-800 font-medium leading-relaxed">
@@ -417,6 +416,13 @@ function CohortContent({ initialCohorts }: CohortClientProps) {
                                             successMessage={selectedCohort.success_message || "Welcome aboard! Your payment was successful."}
                                             prefillData={prefillData}
                                         />
+
+                                        <div className="mt-4 p-3 bg-slate-50 rounded-xl border border-slate-100 flex items-start gap-2.5">
+                                            <CreditCard size={15} className="text-slate-500 mt-0.5 flex-shrink-0" />
+                                            <p className="text-xs text-slate-600 font-medium leading-relaxed">
+                                                Those outside India may please make a card payment on the next page. International card payments are accepted.
+                                            </p>
+                                        </div>
                                     </div>
                                 </div>
                             </motion.div>

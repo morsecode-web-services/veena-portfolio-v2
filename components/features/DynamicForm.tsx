@@ -142,7 +142,6 @@ export default function DynamicForm({
     const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
     const [errorMessage, setErrorMessage] = useState<string>('');
     const [uploadingFields, setUploadingFields] = useState<Record<string, boolean>>({});
-    const [isValidating, setIsValidating] = useState(false);
     const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
     // Build dynamic validation schema
@@ -246,33 +245,8 @@ export default function DynamicForm({
         setIsSubmitting(true);
         setSubmitStatus('idle');
         setErrorMessage('');
-
+ 
         try {
-            // 0. Soft Verification (Cohorts only)
-            if (cohortId && (data.email || data.phone)) {
-                setIsValidating(true);
-                try {
-                    const valRes = await fetch('/api/validate', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ email: data.email, phone: data.phone })
-                    });
-                    const valData = await valRes.json();
-                    if (valRes.ok && !valData.isValid) {
-                        throw new Error(valData.error || 'Verification failed. Please check your contact details.');
-                    }
-                } catch (valErr: any) {
-                    // We only block if we got an explicit "invalid" from our API.
-                    // If the API itself failed/timed out, we allow the user through (Fail-Open).
-                    if (valErr.message && !valErr.message.includes('Failed to fetch')) {
-                        throw valErr;
-                    }
-                    console.warn('Validation service unavailable, proceeding to checkout');
-                } finally {
-                    setIsValidating(false);
-                }
-            }
-
             // 1. Payment Flow
             if (requiresPayment && (razorpayPlanId || razorpayAmount || cohortId)) {
                 const customAmountStr = (data as any).custom_amount;
@@ -613,7 +587,7 @@ export default function DynamicForm({
                     disabled={requiresPayment && !turnstileToken}
                     className="mt-6 py-3.5 rounded-xl text-sm font-bold tracking-wide shadow-premium-lg hover:shadow-premium-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                    {isValidating ? 'Verifying Details...' : isSubmitting ? 'Processing...' : submitLabel}
+                    {isSubmitting ? 'Processing...' : submitLabel}
                 </Button>
 
                 <AnimatePresence>
