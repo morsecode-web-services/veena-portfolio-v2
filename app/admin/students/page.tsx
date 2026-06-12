@@ -35,6 +35,7 @@ interface StudentCohort {
     link: string | null;
     telegram_joined?: boolean;
     telegram_username?: string | null;
+    amount?: number | null;
 }
 
 interface StudentResult {
@@ -573,6 +574,11 @@ export default function StudentSearchPage() {
                                                             <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest border ${getStatusStyles(cohort.status, cohort.type)}`}>
                                                                 {cohort.status}
                                                             </span>
+                                                            {cohort.amount !== undefined && cohort.amount !== null && (
+                                                                <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest border bg-navy-50 text-navy-700 border-navy-100/60 shadow-sm">
+                                                                    Paid: ₹{(cohort.amount / 100).toLocaleString('en-IN')}
+                                                                </span>
+                                                            )}
                                                             {cohort.type === 'enrollment' && (
                                                                 <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest border ${cohort.telegram_joined
                                                                         ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
@@ -786,6 +792,11 @@ export default function StudentSearchPage() {
                                                                             <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest border bg-red-50 text-red-700 border-red-100">
                                                                                 Not Joined
                                                                             </span>
+                                                                            {cohort.amount !== undefined && cohort.amount !== null && (
+                                                                                <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest border bg-navy-50 text-navy-700 border-navy-100/60 shadow-sm">
+                                                                                    Paid: ₹{(cohort.amount / 100).toLocaleString('en-IN')}
+                                                                                </span>
+                                                                            )}
                                                                         </div>
                                                                         <div className="flex items-center gap-3 text-[11px] text-slate-400">
                                                                             <span className="flex items-center gap-1"><Clock size={12} /> {formatDateSafe(cohort.date)}</span>

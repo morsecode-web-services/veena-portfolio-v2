@@ -73,7 +73,8 @@ export async function GET(request: Request) {
         date: item.created_at,
         link: item.payment_link_url,
         telegram_joined: item.telegram_joined || false,
-        telegram_username: item.telegram_username || null
+        telegram_username: item.telegram_username || null,
+        amount: item.amount || null
       });
     });
 
