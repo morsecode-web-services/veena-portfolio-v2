@@ -276,16 +276,69 @@ export async function POST(req: Request) {
             console.error('[Webhook] Persistence failed (non-blocking):', dbErr);
           }
 
-          // ── Update Re-enrollment Log (If applicable) ─────────────────────
+          // ── Split & Persist to Normalized Tables (Future Portal Support) ──
+          let targetEnrollmentId: string | null = null;
           if (studentEmail && finalCohortId) {
             try {
+              // 1. Upsert Student Profile
+              const { data: student, error: studentErr } = await supabaseAdmin
+                .from('students')
+                .upsert({
+                  name: studentName,
+                  email: studentEmail,
+                  phone: studentPhone || null
+                }, { onConflict: 'email' })
+                .select('id')
+                .single();
+
+              if (studentErr || !student) {
+                throw new Error(`Failed to upsert student: ${studentErr?.message}`);
+              }
+
+              // 2. Upsert Enrollment (status = 'active')
+              const { data: enrollment, error: enrollErr } = await supabaseAdmin
+                .from('enrollments')
+                .upsert({
+                  student_id: student.id,
+                  cohort_id: finalCohortId,
+                  status: 'active'
+                }, { onConflict: 'student_id,cohort_id' })
+                .select('id')
+                .single();
+
+              if (enrollErr || !enrollment) {
+                throw new Error(`Failed to upsert enrollment: ${enrollErr?.message}`);
+              }
+              targetEnrollmentId = enrollment.id;
+
+              // 3. Upsert Payment
+              const { error: payErr } = await supabaseAdmin
+                .from('payments')
+                .upsert({
+                  student_id: student.id,
+                  enrollment_id: enrollment.id,
+                  razorpay_order_id: orderId,
+                  razorpay_payment_id: paymentId,
+                  razorpay_payment_link_id: paymentLinkId,
+                  razorpay_subscription_id: customerId ? null : (event.payload.subscription?.entity?.id || null),
+                  razorpay_customer_id: customerId,
+                  amount: paymentEntity?.amount || null,
+                  status: 'paid'
+                }, { onConflict: 'razorpay_payment_id' });
+
+              if (payErr) {
+                throw new Error(`Failed to log payment: ${payErr.message}`);
+              }
+
+              // 4. Update Re-enrollment Invitation (instead of legacy reenrollment_logs)
               await supabaseAdmin
-                .from('reenrollment_logs')
+                .from('reenrollment_invitations')
                 .update({ status: 'paid' })
-                .ilike('student_email', studentEmail)
+                .eq('student_id', student.id)
                 .eq('target_cohort_id', finalCohortId);
-            } catch (err) {
-              console.error('[Webhook] Failed to update re-enrollment log:', err);
+
+            } catch (splitErr: any) {
+              console.error('[Webhook] Failed to write to evolution schema tables:', splitErr);
             }
           }
 
@@ -386,10 +439,19 @@ export async function POST(req: Request) {
                   
                   await subUpdateQuery;
 
+                  // Also update the normalized enrollment table if populated
+                  if (targetEnrollmentId) {
+                    await supabaseAdmin.from('enrollments').update({
+                      telegram_invite_link: (telegramResult as any).inviteLink,
+                      telegram_joined: false
+                    }).eq('id', targetEnrollmentId);
+                  }
+
                   // Insert log entry in telegram_invite_logs
                   if (targetSubmissionId) {
                     await supabaseAdmin.from('telegram_invite_logs').insert([{
                       submission_id: targetSubmissionId,
+                      enrollment_id: targetEnrollmentId || null,
                       action: 'created',
                       invite_link: (telegramResult as any).inviteLink,
                       created_by: 'system',

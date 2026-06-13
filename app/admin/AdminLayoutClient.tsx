@@ -84,11 +84,12 @@ export default function AdminLayoutClient({ children }: AdminLayoutClientProps) 
                 }
 
                 // 3. Fetch count badges (these run on page change, but are very fast since auth is cached)
-                // Check for new leads
+                // Check for new leads in form_submissions
                 if (currentProfile.last_leads_viewed_at) {
                     const { count, error: countError } = await supabase
-                        .from('leads')
+                        .from('form_submissions')
                         .select('*', { count: 'exact', head: true })
+                        .in('form_slug', ['classes', 'performance', 'collaboration'])
                         .gt('created_at', currentProfile.last_leads_viewed_at);
 
                     if (!countError && count !== null) {
@@ -96,11 +97,12 @@ export default function AdminLayoutClient({ children }: AdminLayoutClientProps) 
                     }
                 }
 
-                // Check for unread form submissions
+                // Check for unread general/non-lead form submissions
                 const { count: unreadCount, error: unreadError } = await supabase
                     .from('form_submissions')
                     .select('*', { count: 'exact', head: true })
-                    .eq('status', 'unread');
+                    .eq('status', 'unread')
+                    .not('form_slug', 'in', '("classes","performance","collaboration")');
 
                 if (!unreadError && unreadCount !== null) {
                     setResponsesCount(unreadCount);

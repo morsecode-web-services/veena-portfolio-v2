@@ -280,13 +280,30 @@ export function CohortManager() {
         
         try {
             const { data, error } = await supabase
-                .from('reenrollment_logs')
-                .select('*')
+                .from('reenrollment_invitations')
+                .select('*, students(name, email, phone)')
                 .eq('target_cohort_id', cohortId)
                 .order('created_at', { ascending: false });
 
             if (error) throw error;
-            setInvitationLogs(data || []);
+
+            const formattedLogs = (data || []).map((item: any) => ({
+                id: item.id,
+                student_id: item.student_id,
+                student_name: item.students?.name || 'Unknown',
+                student_email: item.students?.email || 'Unknown',
+                student_phone: item.students?.phone || '',
+                source_cohort_id: item.source_cohort_id,
+                target_cohort_id: item.target_cohort_id,
+                payment_link_id: item.payment_link_id,
+                payment_link_url: item.payment_link_url,
+                status: item.status,
+                error_message: item.error_message,
+                created_at: item.created_at,
+                updated_at: item.updated_at
+            }));
+
+            setInvitationLogs(formattedLogs);
         } catch (error) {
             addToast('Failed to fetch invitation logs', 'error');
         } finally {

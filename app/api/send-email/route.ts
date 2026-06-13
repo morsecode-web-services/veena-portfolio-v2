@@ -134,9 +134,8 @@ export async function POST(request: Request) {
     const discoveredMessage = message || getFieldByTypeOrName('textarea', ['message', 'comment', 'inquiry', 'details']) || 'No message provided';
 
     // 1. Route and Store Data
-    // Business Leads vs. General Form Submissions
-    const leadSlugs = ['performance', 'collaboration', 'classes'];
-    const targetTable = leadSlugs.includes(formSlug) ? 'leads' : 'form_submissions';
+    // All submissions route to form_submissions now
+    const targetTable = 'form_submissions';
 
     // For cohort enrollments with a completed payment, the Razorpay webhook is the
     // single source of truth for form_submissions writes. Skip the DB insert here
@@ -219,30 +218,23 @@ export async function POST(request: Request) {
         }
       }
     } else {
-      // Standard flow: lead table or unpaid form submission.
+      // Standard flow: unpaid form submission.
       const submissionRecord: any = {
         form_slug: formSlug || 'general',
         form_data: form_data || body,
+        user_email: discoveredEmail,
+        user_name: discoveredName || 'Anonymous',
+        status: 'unread'
       };
 
-      if (targetTable === 'form_submissions') {
-        submissionRecord.user_email = discoveredEmail;
-        submissionRecord.user_name = discoveredName || 'Anonymous';
-        submissionRecord.status = 'unread';
-        if (cohortId) submissionRecord.cohort_id = cohortId;
-        // Ignore payment_status and is_verified entirely for unpaid forms
-      } else {
-        submissionRecord.name = discoveredName || 'Anonymous';
-        submissionRecord.status = 'new';
-        if (cohortId) submissionRecord.cohort_id = cohortId;
-      }
+      if (cohortId) submissionRecord.cohort_id = cohortId;
 
       const { error: dbError } = await supabaseAdmin
-        .from(targetTable)
+        .from('form_submissions')
         .insert([submissionRecord]);
 
       if (dbError) {
-        console.error(`Failed to store data in ${targetTable}:`, dbError);
+        console.error(`Failed to store data in form_submissions:`, dbError);
         return NextResponse.json(
           { error: 'Database error: Failed to save your submission. Please try again.' },
           { status: 500 }

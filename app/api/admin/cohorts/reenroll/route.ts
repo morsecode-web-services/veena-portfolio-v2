@@ -29,19 +29,32 @@ async function logReenrollmentStatus({
   paymentLinkUrl = null,
   errorMessage = null
 }: LogStatusParams) {
-  // Query if a log already exists
+  // 1. Ensure student profile exists and get student_id
+  const { data: student, error: studentError } = await supabaseAdmin
+    .from('students')
+    .upsert({ 
+      name, 
+      email, 
+      phone: phone || null 
+    }, { onConflict: 'email' })
+    .select('id')
+    .single();
+
+  if (studentError || !student) {
+    throw new Error(`Failed to upsert student: ${studentError?.message}`);
+  }
+
+  // 2. Query if a log already exists in reenrollment_invitations
   const { data: existingLog } = await supabaseAdmin
-    .from('reenrollment_logs')
+    .from('reenrollment_invitations')
     .select('id')
     .eq('target_cohort_id', targetCohortId)
-    .ilike('student_email', email)
+    .eq('student_id', student.id)
     .maybeSingle();
 
   const payload = {
+    student_id: student.id,
     target_cohort_id: targetCohortId,
-    student_name: name,
-    student_email: email,
-    student_phone: phone || null,
     payment_link_id: paymentLinkId,
     payment_link_url: paymentLinkUrl,
     status,
@@ -51,13 +64,13 @@ async function logReenrollmentStatus({
 
   if (existingLog) {
     const { error } = await supabaseAdmin
-      .from('reenrollment_logs')
+      .from('reenrollment_invitations')
       .update(payload)
       .eq('id', existingLog.id);
     if (error) throw error;
   } else {
     const { error } = await supabaseAdmin
-      .from('reenrollment_logs')
+      .from('reenrollment_invitations')
       .insert([payload]);
     if (error) throw error;
   }
@@ -144,31 +157,40 @@ export async function POST(request: Request) {
       }
 
       // ── Duplicate Check ─────────────────────────────────────────────
-      // 1. Check if already invited to this target cohort
-      const { data: existingLog } = await supabaseAdmin
-        .from('reenrollment_logs')
-        .select('id, status')
-        .eq('target_cohort_id', targetCohortId)
-        .ilike('student_email', email)
-        .maybeSingle();
-
-      if (existingLog && (existingLog.status === 'sent' || existingLog.status === 'paid')) {
-        results.skipped++;
-        continue;
-      }
-
-      // 2. Check if already enrolled in target cohort (actual submission)
-      const { data: actualEnrollment } = await supabaseAdmin
-        .from('form_submissions')
+      // First find the student if they exist in our database
+      const { data: studentProfile } = await supabaseAdmin
+        .from('students')
         .select('id')
-        .eq('cohort_id', targetCohortId)
-        .ilike('user_email', email)
-        .eq('payment_status', 'paid')
+        .eq('email', email)
         .maybeSingle();
 
-      if (actualEnrollment) {
-        results.skipped++;
-        continue;
+      if (studentProfile) {
+        // 1. Check if already invited to this target cohort
+        const { data: existingInvitation } = await supabaseAdmin
+          .from('reenrollment_invitations')
+          .select('id, status')
+          .eq('target_cohort_id', targetCohortId)
+          .eq('student_id', studentProfile.id)
+          .maybeSingle();
+
+        if (existingInvitation && (existingInvitation.status === 'sent' || existingInvitation.status === 'paid')) {
+          results.skipped++;
+          continue;
+        }
+
+        // 2. Check if already enrolled in target cohort (actual enrollment)
+        const { data: actualEnrollment } = await supabaseAdmin
+          .from('enrollments')
+          .select('id')
+          .eq('cohort_id', targetCohortId)
+          .eq('student_id', studentProfile.id)
+          .eq('status', 'active')
+          .maybeSingle();
+
+        if (actualEnrollment) {
+          results.skipped++;
+          continue;
+        }
       }
 
       // Use standard cohort price
