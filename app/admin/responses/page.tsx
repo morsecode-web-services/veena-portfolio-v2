@@ -237,21 +237,21 @@ export default function ResponsesPage() {
     const getFormTitle = (slug: string) => configs[slug]?.title || slug.replace(/-/g, ' ').toUpperCase();
 
     return (
-        <div className="space-y-8 animate-in fade-in duration-700">
+        <div className="space-y-6">
             {/* Header Section */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-200 pb-4">
                 <div>
-                    <h1 className="text-3xl font-serif font-bold text-navy-900">Form Responses</h1>
-                    <p className="text-slate-500 mt-1">Manage registrations and inquiries from your dynamic forms.</p>
+                    <h1 className="text-xl font-bold text-slate-900">Form Responses</h1>
+                    <p className="text-slate-500 text-xs mt-0.5">Manage registrations and inquiries from your dynamic forms.</p>
                 </div>
                 <div className="flex items-center gap-3">
                     {submissions.some(s => s.status === 'unread') && (
                         <Button 
                             variant="tertiary" 
                             onClick={markAllAsRead}
-                            className="text-slate-500 hover:text-gold-600 border-none bg-transparent shadow-none"
+                            className="text-slate-500 hover:text-slate-800 text-xs border-none bg-transparent shadow-none"
                         >
-                            <CheckCircle2 className="w-4 h-4 mr-2" />
+                            <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" />
                             Mark all as read
                         </Button>
                     )}
@@ -259,31 +259,31 @@ export default function ResponsesPage() {
                         variant="secondary" 
                         onClick={exportToCSV}
                         disabled={filteredSubmissions.length === 0}
-                        className="bg-white shadow-sm border-slate-200"
+                        className="bg-white hover:bg-slate-50 border-slate-200 text-slate-700 text-xs font-semibold py-1.5 px-3 rounded flex items-center shadow-none"
                     >
-                        <FileSpreadsheet className="w-4 h-4 mr-2 text-green-600" />
+                        <FileSpreadsheet className="w-3.5 h-3.5 mr-1.5 text-emerald-600" />
                         Export to CSV
                     </Button>
                 </div>
             </div>
 
             {/* Filters Bar */}
-            <div className="bg-white p-4 rounded-2xl shadow-premium border border-slate-100 flex flex-wrap items-center gap-4">
-                <div className="flex-1 min-w-[200px] relative">
+            <div className="flex flex-col sm:flex-row gap-3">
+                <div className="relative flex-1">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <input 
                         type="text"
                         placeholder="Search by name, email, or content..."
-                        className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-gold-400 text-sm transition-colors"
+                        className="w-full pl-9 pr-4 py-1.5 bg-slate-50 border border-slate-200 rounded text-xs outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-900 transition-colors text-slate-800"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                     />
                 </div>
                 
                 <div className="flex items-center gap-2">
-                    <Filter className="w-4 h-4 text-slate-400 mr-1" />
+                    <Filter className="w-3.5 h-3.5 text-slate-400" />
                     <select 
-                        className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-gold-400 min-w-[140px]"
+                        className="bg-slate-50 border border-slate-200 rounded px-2.5 py-1.5 text-xs outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-900 transition-colors cursor-pointer text-slate-700 font-semibold"
                         value={slugFilter}
                         onChange={(e) => setSlugFilter(e.target.value)}
                     >
@@ -294,7 +294,7 @@ export default function ResponsesPage() {
                     </select>
 
                     <select 
-                        className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-gold-400 min-w-[120px]"
+                        className="bg-slate-50 border border-slate-200 rounded px-2.5 py-1.5 text-xs outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-900 transition-colors cursor-pointer text-slate-700 font-semibold"
                         value={statusFilter}
                         onChange={(e) => setStatusFilter(e.target.value)}
                     >
@@ -306,112 +306,112 @@ export default function ResponsesPage() {
             </div>
 
             {/* Submissions List */}
-            <div className="bg-white rounded-2xl shadow-premium border border-slate-100 overflow-hidden">
+            <div className="bg-white rounded border border-slate-200 overflow-hidden shadow-none">
                 <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
+                    <table className="w-full text-left border-collapse text-xs">
                         <thead>
-                            <tr className="bg-slate-50/50 border-b border-slate-100">
-                                <th className="px-6 py-4 text-[10px] uppercase font-bold text-slate-400 tracking-widest">User Details</th>
-                                <th className="px-6 py-4 text-[10px] uppercase font-bold text-slate-400 tracking-widest">Form Source</th>
-                                <th className="px-6 py-4 text-[10px] uppercase font-bold text-slate-400 tracking-widest">Received At</th>
-                                <th className="px-6 py-4 text-[10px] uppercase font-bold text-slate-400 tracking-widest">Payment</th>
-                                <th className="px-6 py-4 text-[10px] uppercase font-bold text-slate-400 tracking-widest">Status</th>
-                                <th className="px-6 py-4 text-[10px] uppercase font-bold text-slate-400 tracking-widest text-right">Actions</th>
+                            <tr className="bg-slate-50/50 border-b border-slate-200">
+                                <th className="px-5 py-3 text-[10px] uppercase font-bold text-slate-400 tracking-wider">User Details</th>
+                                <th className="px-5 py-3 text-[10px] uppercase font-bold text-slate-400 tracking-wider">Form Source</th>
+                                <th className="px-5 py-3 text-[10px] uppercase font-bold text-slate-400 tracking-wider">Received At</th>
+                                <th className="px-5 py-3 text-[10px] uppercase font-bold text-slate-400 tracking-wider">Payment</th>
+                                <th className="px-5 py-3 text-[10px] uppercase font-bold text-slate-400 tracking-wider">Status</th>
+                                <th className="px-5 py-3 text-[10px] uppercase font-bold text-slate-400 tracking-wider text-right">Actions</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-50">
+                        <tbody className="divide-y divide-slate-100">
                             {loading ? (
                                 Array(5).fill(0).map((_, i) => (
                                     <tr key={i} className="animate-pulse">
-                                        <td colSpan={5} className="px-6 py-6 border-b border-slate-50"><div className="h-4 bg-slate-100 rounded w-1/2"></div></td>
+                                        <td colSpan={6} className="px-5 py-4 border-b border-slate-100"><div className="h-4 bg-slate-100 rounded w-1/3"></div></td>
                                     </tr>
                                 ))
                             ) : filteredSubmissions.length === 0 ? (
                                 <tr>
-                                    <td colSpan={5} className="px-6 py-20 text-center text-slate-400 italic">No submissions found matching your filters.</td>
+                                    <td colSpan={6} className="px-5 py-12 text-center text-slate-400 italic">No submissions found matching your filters.</td>
                                 </tr>
                             ) : (
                                 filteredSubmissions.map((submission) => (
                                     <tr 
                                         key={submission.id}
-                                        className={`group hover:bg-slate-50/50 transition-colors cursor-pointer ${submission.status === 'unread' ? 'bg-gold-50/10' : ''}`}
+                                        className={`group hover:bg-slate-50/50 transition-colors cursor-pointer ${submission.status === 'unread' ? 'bg-slate-50/50 font-medium' : ''}`}
                                         onClick={() => {
                                             setSelectedSubmission(submission);
                                             if (submission.status === 'unread') updateStatus(submission.id, 'read');
                                         }}
                                     >
-                                        <td className="px-6 py-4">
-                                            <div className="flex items-center gap-3">
-                                                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${submission.status === 'unread' ? 'bg-gold-100 text-gold-700' : 'bg-slate-100 text-slate-500'}`}>
+                                        <td className="px-5 py-3">
+                                            <div className="flex items-center gap-2.5">
+                                                <div className={`w-6 h-6 rounded flex items-center justify-center text-[10px] font-bold ${submission.status === 'unread' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-500'}`}>
                                                     {(submission.user_name || 'A')[0].toUpperCase()}
                                                 </div>
                                                 <div>
-                                                    <div className={`font-bold text-sm ${submission.status === 'unread' ? 'text-navy-900' : 'text-slate-700'}`}>
+                                                    <div className={`font-semibold text-slate-800 ${submission.status === 'unread' ? 'text-slate-950 font-bold' : ''}`}>
                                                         {submission.user_name || 'Anonymous User'}
                                                     </div>
-                                                    <div className="text-xs text-slate-500">{submission.user_email || 'No email provided'}</div>
+                                                    <div className="text-[10px] text-slate-400">{submission.user_email || 'No email provided'}</div>
                                                 </div>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4">
-                                            <span className="px-2 py-1 bg-navy-50 text-navy-600 rounded-lg text-[10px] font-bold uppercase tracking-wider">
+                                        <td className="px-5 py-3">
+                                            <span className="px-2 py-0.5 bg-slate-100 text-slate-700 rounded text-[9px] font-bold uppercase tracking-wider border border-slate-200">
                                                 {getFormTitle(submission.form_slug)}
                                             </span>
                                         </td>
-                                        <td className="px-6 py-4">
-                                            <div className="text-xs text-slate-600 flex items-center gap-1.5">
-                                                <Clock className="w-3 h-3 text-slate-400" />
+                                        <td className="px-5 py-3 text-slate-500">
+                                            <div className="flex items-center gap-1">
+                                                <Clock className="w-3.5 h-3.5 text-slate-400" />
                                                 {new Date(submission.created_at).toLocaleDateString()}
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4">
+                                        <td className="px-5 py-3">
                                             {submission.payment_status === 'paid' ? (
-                                                <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-green-50 text-green-700 text-[10px] font-bold border border-green-100 uppercase tracking-tight shadow-sm">
+                                                <span className="inline-flex items-center px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 text-[9px] font-bold border border-emerald-200 uppercase tracking-wide">
                                                     Paid
                                                 </span>
                                             ) : submission.payment_status === 'none' || !submission.payment_status ? (
-                                                <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-slate-50 text-slate-400 text-[10px] font-bold border border-slate-100 uppercase tracking-tight">
+                                                <span className="inline-flex items-center px-2 py-0.5 rounded bg-slate-50 text-slate-400 text-[9px] font-bold border border-slate-200 uppercase tracking-wide">
                                                     N/A
                                                 </span>
                                             ) : (
-                                                <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-yellow-50 text-yellow-700 text-[10px] font-bold border border-yellow-100 uppercase tracking-tight">
+                                                <span className="inline-flex items-center px-2 py-0.5 rounded bg-amber-50 text-amber-700 text-[9px] font-bold border border-amber-200 uppercase tracking-wide">
                                                     {submission.payment_status}
                                                 </span>
                                             )}
                                         </td>
-                                        <td className="px-6 py-4">
+                                        <td className="px-5 py-3">
                                             {submission.is_verified ? (
-                                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-50 text-green-700 text-[10px] font-bold border border-green-100 uppercase tracking-tight shadow-sm">
+                                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 text-[9px] font-bold border border-emerald-200 uppercase tracking-wide">
                                                     <CheckCircle2 className="w-3 h-3" /> Verified
                                                 </span>
                                             ) : (
-                                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-50 text-slate-400 text-[10px] font-bold border border-slate-100 uppercase tracking-tight">
+                                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-slate-50 text-slate-400 text-[9px] font-bold border border-slate-200 uppercase tracking-wide">
                                                     Pending
                                                 </span>
                                             )}
                                         </td>
-                                        <td className="px-6 py-4 text-right">
-                                            <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <td className="px-5 py-3 text-right">
+                                            <div className="flex items-center justify-end gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
                                                 <button 
                                                     onClick={(e) => { e.stopPropagation(); setSelectedSubmission(submission); }}
-                                                    className="p-2 text-slate-400 hover:text-navy-900 transition-colors"
+                                                    className="p-1.5 text-slate-400 hover:text-slate-800 transition-colors"
                                                     title="View Details"
                                                 >
-                                                    <Eye className="w-4 h-4" />
+                                                    <Eye className="w-3.5 h-3.5" />
                                                 </button>
                                                 <button 
                                                     onClick={(e) => { e.stopPropagation(); toggleVerified(submission.id, !submission.is_verified); }}
-                                                    className={`p-2 transition-colors ${submission.is_verified ? 'text-green-500 hover:text-green-600' : 'text-slate-400 hover:text-green-600'}`}
+                                                    className={`p-1.5 transition-colors ${submission.is_verified ? 'text-emerald-500 hover:text-emerald-600' : 'text-slate-400 hover:text-emerald-600'}`}
                                                     title={submission.is_verified ? "Revoke Verification" : "Verify Response"}
                                                 >
-                                                    <CheckCircle2 className="w-4 h-4" />
+                                                    <CheckCircle2 className="w-3.5 h-3.5" />
                                                 </button>
                                                 <button 
                                                     onClick={(e) => { e.stopPropagation(); deleteSubmission(submission.id); }}
-                                                    className="p-2 text-slate-400 hover:text-red-600 transition-colors"
+                                                    className="p-1.5 text-slate-400 hover:text-red-600 transition-colors"
                                                     title="Delete Submission"
                                                 >
-                                                    <Trash2 className="w-4 h-4" />
+                                                    <Trash2 className="w-3.5 h-3.5" />
                                                 </button>
                                             </div>
                                         </td>
@@ -427,7 +427,7 @@ export default function ResponsesPage() {
             <AnimatePresence>
                 {selectedSubmission && (
                     <div 
-                        className="fixed inset-0 bg-navy-950/40 backdrop-blur-sm z-50 flex justify-end"
+                        className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex justify-end"
                         onClick={() => setSelectedSubmission(null)}
                     >
                         <m.div 
@@ -435,91 +435,89 @@ export default function ResponsesPage() {
                             animate={{ x: 0 }}
                             exit={{ x: '100%' }}
                             transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-                            className="bg-white w-full max-w-xl h-full shadow-premium-xl flex flex-col overflow-hidden border-l border-slate-100"
+                            className="bg-white w-full max-w-lg h-full shadow-lg flex flex-col overflow-hidden border-l border-slate-200"
                             onClick={(e) => e.stopPropagation()}
                         >
                             {/* Modal Header - Sticky */}
-                            <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50 sticky top-0 z-20 backdrop-blur-md">
-                                <div className="flex items-center gap-4">
-                                    <div className="w-12 h-12 bg-navy-900 text-white rounded-2xl flex items-center justify-center text-xl font-bold shadow-lg">
+                            <div className="p-5 border-b border-slate-200 flex items-center justify-between bg-slate-50 sticky top-0 z-20">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 bg-slate-900 text-white rounded flex items-center justify-center text-lg font-bold">
                                         {(selectedSubmission.user_name || 'A')[0].toUpperCase()}
                                     </div>
                                     <div>
-                                        <h2 className="text-xl font-serif font-bold text-navy-900">{selectedSubmission.user_name || 'Anonymous User'}</h2>
-                                        <p className="text-xs text-slate-500 uppercase tracking-widest font-bold">{getFormTitle(selectedSubmission.form_slug)}</p>
+                                        <h2 className="text-base font-bold text-slate-900">{selectedSubmission.user_name || 'Anonymous User'}</h2>
+                                        <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">{getFormTitle(selectedSubmission.form_slug)}</p>
                                     </div>
                                 </div>
                                 <button 
                                     onClick={() => setSelectedSubmission(null)}
-                                    className="p-2 bg-white rounded-full shadow-sm hover:bg-slate-50 transition-colors border border-slate-100"
+                                    className="p-1 bg-white rounded border border-slate-200 text-slate-400 hover:text-slate-600 transition-colors"
                                 >
-                                    <X className="w-5 h-5 text-slate-400" />
+                                    <X className="w-4 h-4" />
                                 </button>
                             </div>
 
                             {/* Modal Content */}
-                            <div className="flex-1 overflow-y-auto p-8 space-y-8">
+                            <div className="flex-1 overflow-y-auto p-6 space-y-6">
                                 {/* Metadata Section */}
                                 <div className="grid grid-cols-2 gap-4">
-                                    <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                                        <div className="flex items-center gap-2 mb-2 text-slate-400">
+                                    <div className="p-3.5 bg-slate-50 rounded border border-slate-200">
+                                        <div className="flex items-center gap-1.5 mb-1.5 text-slate-400">
                                             <Mail className="w-3.5 h-3.5" />
-                                            <span className="text-[10px] font-bold uppercase tracking-widest">Email</span>
+                                            <span className="text-[10px] font-bold uppercase tracking-wider">Email</span>
                                         </div>
-                                        <div className="text-sm font-semibold text-navy-900 truncate">{selectedSubmission.user_email || 'N/A'}</div>
+                                        <div className="text-xs font-semibold text-slate-800 truncate">{selectedSubmission.user_email || 'N/A'}</div>
                                     </div>
-                                    <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                                        <div className="flex items-center gap-2 mb-2 text-slate-400">
+                                    <div className="p-3.5 bg-slate-50 rounded border border-slate-200">
+                                        <div className="flex items-center gap-1.5 mb-1.5 text-slate-400">
                                             <Clock className="w-3.5 h-3.5" />
-                                            <span className="text-[10px] font-bold uppercase tracking-widest">Submitted</span>
+                                            <span className="text-[10px] font-bold uppercase tracking-wider">Submitted</span>
                                         </div>
-                                        <div className="text-sm font-semibold text-navy-900">{new Date(selectedSubmission.created_at).toLocaleString()}</div>
+                                        <div className="text-xs font-semibold text-slate-800">{new Date(selectedSubmission.created_at).toLocaleString()}</div>
                                     </div>
                                     {selectedSubmission.payment_status && selectedSubmission.payment_status !== 'none' && (
-                                        <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 col-span-2">
-                                            <div className="flex items-center justify-between mb-4">
-                                                <div className="flex items-center gap-2 text-slate-400">
-                                                    <span className="text-[10px] font-bold uppercase tracking-widest">Payment Info</span>
-                                                </div>
-                                                <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-green-50 text-green-700 text-[10px] font-bold border border-green-100 uppercase tracking-tight shadow-sm">
+                                        <div className="p-3.5 bg-slate-50 rounded border border-slate-200 col-span-2">
+                                            <div className="flex items-center justify-between mb-3 border-b border-slate-200 pb-2">
+                                                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Payment Info</span>
+                                                <span className="inline-flex items-center px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 text-[9px] font-bold border border-emerald-250 uppercase tracking-wide">
                                                     {selectedSubmission.payment_status}
                                                 </span>
                                             </div>
                                             {selectedSubmission.razorpay_amount !== undefined && selectedSubmission.razorpay_amount !== null && (
                                                 <div className="text-xs text-slate-600 mb-2">
-                                                    <span className="font-bold">Amount Paid:</span> <span className="font-bold text-navy-950">₹{(selectedSubmission.razorpay_amount / 100).toLocaleString('en-IN')}</span>
+                                                    <span className="font-bold">Amount Paid:</span> <span className="font-bold text-slate-900">₹{(selectedSubmission.razorpay_amount / 100).toLocaleString('en-IN')}</span>
                                                 </div>
                                             )}
                                             {selectedSubmission.razorpay_subscription_id && (
-                                                <div className="text-xs text-slate-600 mb-1">
-                                                    <span className="font-bold">Subscription ID:</span> <code className="font-mono bg-white px-1 py-0.5 rounded border border-slate-200">{selectedSubmission.razorpay_subscription_id}</code>
+                                                <div className="text-xs text-slate-600 mb-1.5">
+                                                    <span className="font-bold">Subscription ID:</span> <code className="font-mono bg-white px-1.5 py-0.5 rounded border border-slate-200 text-[10px]">{selectedSubmission.razorpay_subscription_id}</code>
                                                 </div>
                                             )}
                                             {selectedSubmission.razorpay_customer_id && (
-                                                <div className="text-xs text-slate-600 mb-1">
-                                                    <span className="font-bold">Customer ID:</span> <code className="font-mono bg-white px-1 py-0.5 rounded border border-slate-200">{selectedSubmission.razorpay_customer_id}</code>
+                                                <div className="text-xs text-slate-600 mb-1.5">
+                                                    <span className="font-bold">Customer ID:</span> <code className="font-mono bg-white px-1.5 py-0.5 rounded border border-slate-200 text-[10px]">{selectedSubmission.razorpay_customer_id}</code>
                                                 </div>
                                             )}
                                             {selectedSubmission.razorpay_order_id && (
-                                                <div className="text-xs text-slate-600 mb-1">
-                                                    <span className="font-bold">Order ID:</span> <code className="font-mono bg-white px-1 py-0.5 rounded border border-slate-200">{selectedSubmission.razorpay_order_id}</code>
+                                                <div className="text-xs text-slate-600 mb-1.5">
+                                                    <span className="font-bold">Order ID:</span> <code className="font-mono bg-white px-1.5 py-0.5 rounded border border-slate-200 text-[10px]">{selectedSubmission.razorpay_order_id}</code>
                                                 </div>
                                             )}
                                             {selectedSubmission.razorpay_payment_id && (
                                                 <div className="text-xs text-slate-600">
-                                                    <span className="font-bold">Payment ID:</span> <code className="font-mono bg-white px-1 py-0.5 rounded border border-slate-200">{selectedSubmission.razorpay_payment_id}</code>
+                                                    <span className="font-bold">Payment ID:</span> <code className="font-mono bg-white px-1.5 py-0.5 rounded border border-slate-200 text-[10px]">{selectedSubmission.razorpay_payment_id}</code>
                                                 </div>
                                             )}
                                         </div>
                                     )}
 
                                     {selectedSubmission.cohort_id && (
-                                        <div className="p-4 bg-gold-50/30 rounded-2xl border border-gold-100 col-span-2">
-                                            <div className="flex items-center gap-2 mb-2 text-gold-600">
+                                        <div className="p-3.5 bg-slate-50 rounded border border-slate-200 col-span-2">
+                                            <div className="flex items-center gap-1.5 mb-1.5 text-slate-400">
                                                 <Clock className="w-3.5 h-3.5" />
-                                                <span className="text-[10px] font-bold uppercase tracking-widest">Enrolled Cohort</span>
+                                                <span className="text-[10px] font-bold uppercase tracking-wider">Enrolled Cohort</span>
                                             </div>
-                                            <div className="text-sm font-bold text-navy-900">
+                                            <div className="text-xs font-bold text-slate-800">
                                                 {cohorts[selectedSubmission.cohort_id]?.title || 'Unknown Batch'}
                                             </div>
                                         </div>
@@ -528,11 +526,11 @@ export default function ResponsesPage() {
 
                                 {/* Form Data Section */}
                                 <div className="space-y-4">
-                                    <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                                        <h3 className="text-sm font-bold text-navy-900 uppercase tracking-widest">Submission Data</h3>
+                                    <div className="flex items-center justify-between border-b border-slate-200 pb-2">
+                                        <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Submission Data</h3>
                                     </div>
                                     
-                                    <div className="space-y-6">
+                                    <div className="space-y-5">
                                         {Object.entries(selectedSubmission.form_data || {}).map(([key, value]) => {
                                             const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
                                             const isImage = typeof value === 'string' && (
@@ -542,9 +540,9 @@ export default function ResponsesPage() {
 
                                             return (
                                                 <div key={key} className="group">
-                                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">{label}</label>
+                                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">{label}</label>
                                                     {isImage ? (
-                                                        <div className="relative rounded-2xl overflow-hidden border border-slate-200 bg-slate-50 aspect-video shadow-sm">
+                                                        <div className="relative rounded overflow-hidden border border-slate-200 bg-slate-50 aspect-video">
                                                             <Image 
                                                                 src={value as string} 
                                                                 alt={label} 
@@ -552,10 +550,10 @@ export default function ResponsesPage() {
                                                                 className="object-contain"
                                                                 unoptimized // External URLs from submissions
                                                             />
-                                                            <a href={value as string} target="_blank" rel="noopener noreferrer" className="absolute bottom-3 right-3 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-lg text-[10px] font-bold shadow-sm hover:bg-white transition-colors border border-slate-200 z-10">View Full Size</a>
+                                                            <a href={value as string} target="_blank" rel="noopener noreferrer" className="absolute bottom-2 right-2 bg-white/95 backdrop-blur-sm px-2.5 py-1 rounded text-[9px] font-bold border border-slate-200 z-10 hover:bg-white transition-colors">View Full Size</a>
                                                         </div>
                                                     ) : (
-                                                        <div className="text-sm text-navy-800 bg-slate-50/50 p-4 rounded-xl border border-slate-100 leading-relaxed min-h-[46px] flex items-center break-words">
+                                                        <div className="text-xs text-slate-800 bg-slate-50/50 p-3 rounded border border-slate-200 leading-relaxed min-h-[40px] flex items-center break-all">
                                                             {typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value || '—')}
                                                         </div>
                                                     )}
@@ -567,25 +565,25 @@ export default function ResponsesPage() {
                             </div>
 
                             {/* Modal Footer Actions */}
-                            <div className="p-6 bg-slate-50 border-t border-slate-100 flex items-center justify-between gap-4">
-                                <div className="flex items-center gap-3">
+                            <div className="p-5 bg-slate-50 border-t border-slate-200 flex items-center justify-between gap-4">
+                                <div className="flex items-center gap-2">
                                     <Button 
                                         variant="tertiary" 
                                         onClick={() => setSelectedSubmission(null)}
-                                        className="bg-white border-slate-200"
+                                        className="bg-white border-slate-200 text-xs py-1.5 px-3 hover:bg-slate-50"
                                     >
                                         Close
                                     </Button>
                                     <Button 
                                         variant="tertiary" 
-                                        className="text-red-500 hover:text-red-600 hover:bg-red-50 px-2 min-w-0"
+                                        className="text-red-500 hover:text-red-600 hover:bg-red-50 p-1.5 min-w-0"
                                         onClick={() => deleteSubmission(selectedSubmission.id)}
                                     >
-                                        <Trash2 className="w-4 h-4" />
+                                        <Trash2 className="w-3.5 h-3.5" />
                                     </Button>
                                 </div>
                                 
-                                <label className="flex items-center gap-3 cursor-pointer group bg-white px-6 py-3 rounded-2xl border border-slate-200 shadow-sm hover:border-green-300 transition-all">
+                                <label className="flex items-center gap-3.5 cursor-pointer group bg-white px-4 py-2 rounded border border-slate-200 hover:border-slate-350 transition-colors">
                                     <div className="relative">
                                         <input
                                             type="checkbox"
@@ -593,10 +591,10 @@ export default function ResponsesPage() {
                                             checked={selectedSubmission.is_verified || false}
                                             onChange={(e) => toggleVerified(selectedSubmission.id, e.target.checked)}
                                         />
-                                        <div className="w-10 h-5 bg-slate-200 rounded-full peer peer-checked:bg-green-500 transition-colors"></div>
-                                        <div className="absolute left-1 top-1 w-3 h-3 bg-white rounded-full transition-transform peer-checked:translate-x-5 shadow-sm"></div>
+                                        <div className="w-8 h-4 bg-slate-200 rounded-full peer peer-checked:bg-slate-900 transition-colors"></div>
+                                        <div className="absolute left-0.5 top-0.5 w-3 h-3 bg-white rounded-full transition-transform peer-checked:translate-x-4 shadow-sm"></div>
                                     </div>
-                                    <span className="text-xs font-bold text-navy-900 uppercase tracking-widest group-hover:text-green-600 transition-colors">
+                                    <span className="text-[10px] font-bold text-slate-700 peer-checked:text-slate-900 uppercase tracking-wider">
                                         {selectedSubmission.is_verified ? 'Verified' : 'Verify Response'}
                                     </span>
                                 </label>

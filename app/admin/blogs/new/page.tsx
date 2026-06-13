@@ -40,9 +40,11 @@ export default function NewBlogPage() {
     return (
         <div className="space-y-6">
             <ToastContainer toasts={toasts} removeToast={removeToast} />
-            <div>
-                <h1 className="text-2xl font-serif font-bold text-gray-900">Create New Post</h1>
-                <p className="text-sm text-gray-500">Draft your next story with the Medium-style editor</p>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-200 pb-4">
+                <div>
+                    <h1 className="text-xl font-bold text-slate-900">Create New Post</h1>
+                    <p className="text-slate-500 text-xs mt-0.5">Draft your next story.</p>
+                </div>
             </div>
 
             <BlogForm onSubmit={handleSubmit} loading={loading} />

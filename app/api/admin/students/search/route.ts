@@ -29,34 +29,165 @@ export async function GET(request: Request) {
       return NextResponse.json({ results: [] });
     }
 
-    let queryBuilder = supabaseAdmin
-      .from('student_search_view')
-      .select('*');
+    let data: any[] = [];
 
     if (filter === 'unjoined') {
-      queryBuilder = queryBuilder
-        .eq('type', 'enrollment')
-        .eq('status', 'paid')
-        .or('telegram_joined.eq.false,telegram_joined.is.null')
+      const { data: enrollments, error: enrollError } = await supabaseAdmin
+        .from('enrollments')
+        .select(`
+          id,
+          created_at,
+          telegram_joined,
+          telegram_username,
+          telegram_invite_link,
+          status,
+          students (
+            id,
+            name,
+            email,
+            phone
+          ),
+          cohorts (
+            title
+          )
+        `)
+        .eq('status', 'active')
+        .eq('telegram_joined', false)
         .order('created_at', { ascending: false });
+
+      if (enrollError) throw enrollError;
+
+      data = (enrollments || []).map((e: any) => ({
+        id: e.id,
+        student_id: e.students?.id,
+        name: e.students?.name || 'Unknown',
+        email: e.students?.email || 'Unknown',
+        phone: e.students?.phone || '',
+        cohort_title: e.cohorts?.title || 'Unknown',
+        type: 'enrollment',
+        status: 'paid',
+        created_at: e.created_at,
+        payment_link_url: e.telegram_invite_link,
+        telegram_joined: e.telegram_joined,
+        telegram_username: e.telegram_username,
+        amount: null
+      }));
     } else if (query) {
-      queryBuilder = queryBuilder
+      const { data: matchedStudents, error: searchError } = await supabaseAdmin
+        .from('students')
+        .select(`
+          id,
+          name,
+          email,
+          phone,
+          enrollments (
+            id,
+            created_at,
+            telegram_joined,
+            telegram_username,
+            telegram_invite_link,
+            status,
+            cohorts (
+              title
+            ),
+            payments (
+              amount,
+              status
+            )
+          ),
+          reenrollment_invitations (
+            id,
+            created_at,
+            payment_link_url,
+            status,
+            cohorts:target_cohort_id (
+              title
+            )
+          )
+        `)
         .or(`name.ilike.%${query}%,email.ilike.%${query}%`)
         .order('created_at', { ascending: false });
+
+      if (searchError) throw searchError;
+
+      const flatResults: any[] = [];
+      (matchedStudents || []).forEach((student: any) => {
+        // Add enrollments
+        if (student.enrollments) {
+          student.enrollments.forEach((e: any) => {
+            const paidPayment = e.payments?.find((p: any) => p.status === 'paid');
+            flatResults.push({
+              id: e.id,
+              student_id: student.id,
+              name: student.name,
+              email: student.email,
+              phone: student.phone || '',
+              cohort_title: e.cohorts?.title || 'Unknown',
+              type: 'enrollment',
+              status: e.status === 'active' ? 'paid' : e.status,
+              created_at: e.created_at,
+              payment_link_url: e.telegram_invite_link,
+              telegram_joined: e.telegram_joined || false,
+              telegram_username: e.telegram_username || null,
+              amount: paidPayment ? paidPayment.amount : null
+            });
+          });
+        }
+        
+        // Add invitations
+        if (student.reenrollment_invitations) {
+          student.reenrollment_invitations.forEach((ri: any) => {
+            flatResults.push({
+              id: ri.id,
+              student_id: student.id,
+              name: student.name,
+              email: student.email,
+              phone: student.phone || '',
+              cohort_title: ri.cohorts?.title || 'Unknown',
+              type: 'invitation',
+              status: ri.status,
+              created_at: ri.created_at,
+              payment_link_url: ri.payment_link_url,
+              telegram_joined: false,
+              telegram_username: null,
+              amount: null
+            });
+          });
+        }
+
+        // Handle case where student exists but has no enrollments or invitations
+        if ((!student.enrollments || student.enrollments.length === 0) && 
+            (!student.reenrollment_invitations || student.reenrollment_invitations.length === 0)) {
+          flatResults.push({
+            id: student.id,
+            student_id: student.id,
+            name: student.name,
+            email: student.email,
+            phone: student.phone || '',
+            cohort_title: 'No Cohorts Enrolled',
+            type: 'enrollment',
+            status: 'pending',
+            created_at: new Date().toISOString(),
+            payment_link_url: null,
+            telegram_joined: false,
+            telegram_username: null,
+            amount: null
+          });
+        }
+      });
+
+      data = flatResults;
     }
-
-    const { data, error } = await queryBuilder;
-
-    if (error) throw error;
 
     // 3. Group Results by Email
     const groupedMap = new Map<string, any>();
 
-    (data || []).forEach(item => {
+    data.forEach(item => {
       const email = item.email.toLowerCase();
       if (!groupedMap.has(email)) {
         groupedMap.set(email, {
             id: item.id,
+            student_id: item.student_id,
             name: item.name,
             email: item.email,
             phone: item.phone,

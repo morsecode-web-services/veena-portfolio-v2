@@ -69,9 +69,9 @@ function EditBlogContent() {
 
     if (loading) {
         return (
-            <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
-                <Loader2 className="h-8 w-8 text-navy-400 animate-spin" />
-                <p className="text-sm font-bold text-gray-400 uppercase tracking-widest">Loading Post...</p>
+            <div className="flex flex-col items-center justify-center min-h-[400px] gap-2">
+                <Loader2 className="h-6 w-6 text-slate-800 animate-spin" />
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Loading Post...</p>
             </div>
         );
     }
@@ -81,9 +81,11 @@ function EditBlogContent() {
     return (
         <div className="space-y-6">
             <ToastContainer toasts={toasts} removeToast={removeToast} />
-            <div>
-                <h1 className="text-2xl font-serif font-bold text-gray-900">Edit Post</h1>
-                <p className="text-sm text-gray-500">Refining: {blog.title}</p>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-200 pb-4">
+                <div>
+                    <h1 className="text-xl font-bold text-slate-900">Edit Post</h1>
+                    <p className="text-slate-500 text-xs mt-0.5">Refining: {blog.title}</p>
+                </div>
             </div>
 
             <BlogForm initialData={blog} onSubmit={handleSubmit} loading={saving} />

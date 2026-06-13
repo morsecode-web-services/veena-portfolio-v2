@@ -236,20 +236,15 @@ export default function FormManagementPage() {
   if (isLoading)
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-navy-900"></div>
+        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-slate-800"></div>
       </div>
     );
-
   return (
-    <div className="max-w-6xl mx-auto space-y-8">
-      <div className="flex items-center justify-between">
+    <div className="max-w-6xl mx-auto space-y-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-200 pb-4">
         <div>
-          <h1 className="text-3xl font-serif font-bold text-navy-900">
-            Form Configuration
-          </h1>
-          <p className="text-gray-500">
-            Customize the fields for your website contact forms
-          </p>
+          <h1 className="text-xl font-bold text-slate-900">Form Configuration</h1>
+          <p className="text-slate-500 text-xs mt-0.5">Customize fields for your website registration and contact forms.</p>
         </div>
       </div>
 
@@ -257,7 +252,7 @@ export default function FormManagementPage() {
         <div className="md:col-span-1 space-y-4">
           <Button
             variant="secondary"
-            className="w-full justify-start gap-2 bg-navy-50 text-navy-900 border-navy-100 hover:bg-navy-100"
+            className="w-full justify-start gap-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs py-2 rounded-lg font-semibold"
             onClick={() => setShowCreateModal(true)}
           >
             <Plus className="w-4 h-4" /> New Form
@@ -268,22 +263,22 @@ export default function FormManagementPage() {
               <button
                 key={config.id}
                 onClick={() => setSelectedConfig(config)}
-                className={`w-full text-left p-4 rounded-xl border transition-all ${
+                className={`w-full text-left p-3 rounded-lg border transition-all ${
                   selectedConfig?.id === config.id
-                    ? "bg-navy-900 text-white shadow-lg border-navy-900"
-                    : "bg-white text-navy-900 hover:border-navy-300"
+                    ? "bg-slate-900 text-white border-slate-900 shadow-sm"
+                    : "bg-white text-slate-800 border-slate-200 hover:bg-slate-50"
                 }`}
               >
-                <div className="font-bold flex items-center justify-between">
+                <div className="font-bold flex items-center justify-between text-xs tracking-wide">
                   {config.form_slug.toUpperCase()}
                   {!config.is_active && (
-                    <span className="text-[10px] bg-red-100 text-red-600 px-2 py-0.5 rounded-full">
+                    <span className="text-[9px] bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-bold">
                       Inactive
                     </span>
                   )}
                 </div>
                 <div
-                  className={`text-xs mt-1 ${selectedConfig?.id === config.id ? "text-navy-300" : "text-gray-500"}`}
+                  className={`text-[11px] mt-1 ${selectedConfig?.id === config.id ? "text-slate-300" : "text-slate-500"}`}
                 >
                   {config.fields.length} Fields
                 </div>
@@ -298,9 +293,9 @@ export default function FormManagementPage() {
               <m.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="bg-white border-2 border-dashed border-gray-200 rounded-2xl h-64 flex flex-col items-center justify-center text-gray-400"
+                className="bg-white border border-dashed border-slate-200 rounded-lg h-64 flex flex-col items-center justify-center text-slate-400"
               >
-                <Settings2 className="w-12 h-12 mb-4 opacity-20" />
+                <Settings2 className="w-12 h-12 mb-4 opacity-20 text-slate-350" />
                 Select a form to begin editing
               </m.div>
             ) : (
@@ -308,15 +303,15 @@ export default function FormManagementPage() {
                 key={selectedConfig.id}
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
-                className="bg-white rounded-2xl shadow-premium border border-slate-100 p-6 space-y-8"
+                className="bg-white rounded-lg border border-slate-200 p-5 space-y-6"
               >
-                <div className="flex flex-col md:flex-row md:items-start justify-between pb-6 border-b border-gray-100 gap-4 mb-8">
+                <div className="flex flex-col md:flex-row md:items-start justify-between pb-4 border-b border-slate-200 gap-4 mb-6">
                   <div className="flex-1">
-                    <label className="text-[10px] uppercase font-bold text-gray-400 block mb-1">
+                    <label className="text-[10px] uppercase font-bold text-slate-400 block mb-1">
                       Form Title
                     </label>
                     <input
-                      className="text-3xl font-serif font-bold text-navy-900 w-full outline-none focus:border-b focus:border-gold-400 bg-transparent transition-colors"
+                      className="text-lg font-bold text-slate-800 w-full outline-none border-b border-transparent focus:border-slate-300 bg-transparent transition-colors"
                       value={selectedConfig.title}
                       onChange={(e) =>
                         setSelectedConfig({
@@ -336,18 +331,18 @@ export default function FormManagementPage() {
                         navigator.clipboard.writeText(url);
                         addToast("Share link copied to clipboard!", "success");
                       }}
-                      className="bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100 shadow-sm"
+                      className="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded font-semibold text-xs py-1.5 px-3 transition-colors flex items-center gap-1.5"
                     >
-                      <Link className="w-4 h-4 mr-1.5" /> Copy Link
+                      <Link className="w-3.5 h-3.5" /> Copy Link
                     </Button>
 
                     <Button
                       variant="secondary"
                       size="sm"
                       onClick={() => setShowPreviewModal(true)}
-                      className="bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100 shadow-sm"
+                      className="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded font-semibold text-xs py-1.5 px-3 transition-colors flex items-center gap-1.5"
                     >
-                      <Eye className="w-4 h-4 mr-1.5" /> Preview Form
+                      <Eye className="w-3.5 h-3.5" /> Preview Form
                     </Button>
 
                     <Button
@@ -355,41 +350,41 @@ export default function FormManagementPage() {
                       size="sm"
                       onClick={handleSave}
                       isLoading={isSaving}
-                      className="shadow-premium"
+                      className="bg-slate-900 hover:bg-slate-800 text-white rounded font-semibold text-xs py-1.5 px-3 transition-colors flex items-center gap-1.5"
                     >
-                      <Save className="w-4 h-4 mr-1.5" /> Save Changes
+                      <Save className="w-3.5 h-3.5" /> Save Changes
                     </Button>
 
-                    <div className="w-px h-8 bg-gray-200 mx-1 hidden sm:block" />
+                    <div className="w-px h-6 bg-slate-200 mx-1 hidden sm:block" />
 
                     <Button
                       variant="tertiary"
                       size="sm"
                       onClick={() => handleDeleteForm(selectedConfig.id)}
                       isLoading={isSaving}
-                      className="text-red-400 hover:text-red-600 border-transparent hover:bg-red-50 px-2"
+                      className="text-red-500 hover:text-red-700 border border-slate-200 bg-white hover:bg-red-50 rounded p-1.5"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="w-3.5 h-3.5" />
                     </Button>
                   </div>
                 </div>
 
-                <div className="space-y-8 pb-6 border-b border-gray-100">
+                <div className="space-y-6 pb-6 border-b border-slate-200">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <div>
-                      <label className="text-[10px] uppercase font-bold text-gray-400 block mb-1">
+                      <label className="text-[10px] uppercase font-bold text-slate-400 block mb-1">
                         Form Slug (Read-only)
                       </label>
-                      <div className="text-sm font-mono text-navy-600 bg-navy-50 px-3 py-2 rounded-lg border border-navy-100 w-full overflow-hidden text-ellipsis">
+                      <div className="text-xs font-mono text-slate-700 bg-slate-50 px-3 py-2 rounded border border-slate-200 w-full overflow-hidden text-ellipsis">
                         {selectedConfig.form_slug}
                       </div>
                     </div>
                     <div>
-                      <label className="text-[10px] uppercase font-bold text-gray-400 block mb-1">
+                      <label className="text-[10px] uppercase font-bold text-slate-400 block mb-1">
                         Description
                       </label>
                       <textarea
-                        className="text-sm text-navy-800 w-full bg-gray-50 border border-gray-200 p-2 rounded-lg outline-none focus:border-gold-400 min-h-[42px] transition-colors"
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded text-xs outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-900 transition-all text-slate-800 resize-none"
                         value={selectedConfig.description}
                         onChange={(e) =>
                           setSelectedConfig({
@@ -403,7 +398,7 @@ export default function FormManagementPage() {
                     </div>
                   </div>
 
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-6 p-4 bg-gray-50 rounded-xl border border-gray-100">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-6 p-4 bg-slate-50 rounded border border-slate-200">
                     <label className="flex items-center gap-3 cursor-pointer group">
                       <div className="relative">
                         <input
@@ -417,16 +412,16 @@ export default function FormManagementPage() {
                             })
                           }
                         />
-                        <div className="w-10 h-5 bg-gray-200 rounded-full peer peer-checked:bg-navy-900 transition-colors"></div>
+                        <div className="w-10 h-5 bg-slate-200 rounded-full peer peer-checked:bg-slate-900 transition-colors"></div>
                         <div className="absolute left-1 top-1 w-3 h-3 bg-white rounded-full transition-transform peer-checked:translate-x-5 shadow-sm"></div>
                       </div>
-                      <span className="text-xs font-bold text-navy-900 uppercase tracking-widest group-hover:text-gold-600 transition-colors">
+                      <span className="text-xs font-bold text-slate-700 uppercase tracking-widest group-hover:text-slate-900 transition-colors">
                         Status:{" "}
                         {selectedConfig.is_active ? "Active" : "Inactive"}
                       </span>
                     </label>
 
-                    <div className="hidden sm:block w-px h-6 bg-gray-200" />
+                    <div className="hidden sm:block w-px h-6 bg-slate-200" />
 
                     <label className="flex items-center gap-3 cursor-pointer group">
                       <div className="relative">
@@ -441,10 +436,10 @@ export default function FormManagementPage() {
                             })
                           }
                         />
-                        <div className="w-10 h-5 bg-gray-200 rounded-full peer peer-checked:bg-navy-900 transition-colors"></div>
+                        <div className="w-10 h-5 bg-slate-200 rounded-full peer peer-checked:bg-slate-900 transition-colors"></div>
                         <div className="absolute left-1 top-1 w-3 h-3 bg-white rounded-full transition-transform peer-checked:translate-x-5 shadow-sm"></div>
                       </div>
-                      <span className="text-xs font-bold text-navy-900 uppercase tracking-widest group-hover:text-gold-600 transition-colors">
+                      <span className="text-xs font-bold text-slate-700 uppercase tracking-widest group-hover:text-slate-900 transition-colors">
                         Email Alerts:{" "}
                         {selectedConfig.email_notifications_enabled
                           ? "ON"
@@ -452,14 +447,14 @@ export default function FormManagementPage() {
                       </span>
                     </label>
 
-                    <div className="hidden sm:block w-px h-6 bg-gray-200" />
+                    <div className="hidden sm:block w-px h-6 bg-slate-200" />
 
                     <div className="flex-1">
-                      <label className="text-[10px] uppercase font-bold text-gray-400 block mb-1">
+                      <label className="text-[10px] uppercase font-bold text-slate-400 block mb-1">
                         Success Message (On-screen)
                       </label>
                       <input
-                        className="text-xs text-navy-900 bg-white border border-gray-200 p-2 rounded-lg w-full outline-none focus:border-gold-400 transition-colors"
+                        className="text-xs text-slate-800 bg-white border border-slate-200 px-3 py-2 rounded w-full outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-900 transition-colors"
                         value={selectedConfig.success_message || ""}
                         onChange={(e) =>
                           setSelectedConfig({
@@ -474,24 +469,26 @@ export default function FormManagementPage() {
 
                   <button
                     onClick={() => setIsAutoReplyOpen(!isAutoReplyOpen)}
-                    className="flex items-center justify-between w-full text-left focus:outline-none group p-4 border border-gray-100 rounded-xl hover:border-gold-300 transition-colors bg-white shadow-sm"
+                    className="flex items-center justify-between w-full text-left focus:outline-none group p-4 border border-slate-200 rounded-lg hover:border-slate-400 transition-colors bg-white"
                   >
                     <div>
-                      <h3 className="text-sm font-bold text-navy-900 group-hover:text-gold-600 transition-colors">
+                      <h3 className="text-sm font-bold text-slate-800 group-hover:text-slate-900 transition-colors">
                         Auto-Reply Settings
                       </h3>
-                      <p className="text-xs text-gray-500 mt-0.5">
+                      <p className="text-xs text-slate-500 mt-0.5">
                         Customize the email sent to users upon form submission.
                       </p>
                     </div>
-                    <div className="text-gray-400 group-hover:text-gold-600 transition-colors bg-gray-50 rounded-full p-2">
+                    <div className="text-slate-400 group-hover:text-slate-700 bg-slate-50 rounded-full p-2">
                       {isAutoReplyOpen ? (
-                        <ChevronUp className="w-5 h-5" />
+                        <ChevronUp className="w-4 h-4" />
                       ) : (
-                        <ChevronDown className="w-5 h-5" />
+                        <ChevronDown className="w-4 h-4" />
                       )}
                     </div>
                   </button>
+
+
                   <AnimatePresence>
                     {isAutoReplyOpen && (
                       <m.div
@@ -502,11 +499,11 @@ export default function FormManagementPage() {
                       >
                         <div className="pt-4 pb-2 space-y-4 px-2">
                           <div>
-                            <label className="text-[10px] uppercase font-bold text-gray-400 block mb-1">
+                            <label className="text-[10px] uppercase font-bold text-slate-400 block mb-1">
                               Reply Subject
                             </label>
                             <input
-                              className="text-sm text-navy-900 bg-gray-50 p-3 rounded-xl w-full border border-gray-200 outline-none focus:border-gold-400 transition-colors"
+                              className="text-xs text-slate-800 bg-slate-50 p-2.5 rounded border border-slate-200 w-full outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-900 transition-colors"
                               value={selectedConfig.auto_reply_subject || ""}
                               onChange={(e) =>
                                 setSelectedConfig({
@@ -518,10 +515,10 @@ export default function FormManagementPage() {
                             />
                           </div>
                           <div>
-                            <label className="text-[10px] uppercase font-bold text-gray-400 block mb-1">
+                            <label className="text-[10px] uppercase font-bold text-slate-400 block mb-1">
                               Message Body
                             </label>
-                            <div className="mt-1 shadow-sm rounded-xl overflow-hidden ring-1 ring-gray-200">
+                            <div className="mt-1 shadow-sm rounded border border-slate-200 overflow-hidden">
                               <TipTapEditor
                                 content={
                                   selectedConfig.auto_reply_message || ""
@@ -544,22 +541,21 @@ export default function FormManagementPage() {
                     onClick={() =>
                       setIsPaymentSettingsOpen(!isPaymentSettingsOpen)
                     }
-                    className="flex items-center justify-between w-full text-left focus:outline-none group p-4 border border-gray-100 rounded-xl hover:border-gold-300 transition-colors bg-white shadow-sm mt-4"
+                    className="flex items-center justify-between w-full text-left focus:outline-none group p-4 border border-slate-200 rounded-lg hover:border-slate-400 transition-colors bg-white mt-4"
                   >
                     <div>
-                      <h3 className="text-sm font-bold text-navy-900 group-hover:text-gold-600 transition-colors">
+                      <h3 className="text-sm font-bold text-slate-800 group-hover:text-slate-900 transition-colors">
                         Payment Settings (Razorpay)
                       </h3>
-                      <p className="text-xs text-gray-500 mt-0.5">
-                        Require users to pay before their form is successfully
-                        submitted.
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        Require users to pay before their form is successfully submitted.
                       </p>
                     </div>
-                    <div className="text-gray-400 group-hover:text-gold-600 transition-colors bg-gray-50 rounded-full p-2">
+                    <div className="text-slate-400 group-hover:text-slate-700 bg-slate-50 rounded-full p-2">
                       {isPaymentSettingsOpen ? (
-                        <ChevronUp className="w-5 h-5" />
+                        <ChevronUp className="w-4 h-4" />
                       ) : (
-                        <ChevronDown className="w-5 h-5" />
+                        <ChevronDown className="w-4 h-4" />
                       )}
                     </div>
                   </button>
@@ -587,10 +583,10 @@ export default function FormManagementPage() {
                                   })
                                 }
                               />
-                              <div className="w-10 h-5 bg-gray-200 rounded-full peer peer-checked:bg-navy-900 transition-colors"></div>
+                              <div className="w-10 h-5 bg-slate-200 rounded-full peer peer-checked:bg-slate-900 transition-colors"></div>
                               <div className="absolute left-1 top-1 w-3 h-3 bg-white rounded-full transition-transform peer-checked:translate-x-5 shadow-sm"></div>
                             </div>
-                            <span className="text-xs font-bold text-navy-900 uppercase tracking-widest group-hover:text-gold-600 transition-colors">
+                            <span className="text-xs font-bold text-slate-700 uppercase tracking-widest group-hover:text-slate-900 transition-colors">
                               Require Payment:{" "}
                               {selectedConfig.requires_payment ? "ON" : "OFF"}
                             </span>
@@ -599,10 +595,10 @@ export default function FormManagementPage() {
                           {selectedConfig.requires_payment && (
                             <div className="space-y-4">
                               <div>
-                                <label className="text-[10px] uppercase font-bold text-gray-400 block mb-1">
+                                <label className="text-[10px] uppercase font-bold text-slate-400 block mb-1">
                                   Payment Type
                                 </label>
-                                <div className="flex bg-gray-100 p-1 rounded-xl w-fit">
+                                <div className="flex bg-slate-100 p-1 rounded w-fit">
                                   <button
                                     onClick={() =>
                                       setSelectedConfig({
@@ -610,7 +606,7 @@ export default function FormManagementPage() {
                                         payment_type: "subscription",
                                       })
                                     }
-                                    className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${selectedConfig.payment_type === "subscription" || !selectedConfig.payment_type ? "bg-white text-navy-900 shadow-sm" : "text-gray-400 hover:text-gray-600"}`}
+                                    className={`px-4 py-1.5 rounded text-xs font-bold transition-all ${selectedConfig.payment_type === "subscription" || !selectedConfig.payment_type ? "bg-white text-slate-800 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
                                   >
                                     Subscription
                                   </button>
@@ -621,7 +617,7 @@ export default function FormManagementPage() {
                                         payment_type: "one_time",
                                       })
                                     }
-                                    className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${selectedConfig.payment_type === "one_time" ? "bg-white text-navy-900 shadow-sm" : "text-gray-400 hover:text-gray-600"}`}
+                                    className={`px-4 py-1.5 rounded text-xs font-bold transition-all ${selectedConfig.payment_type === "one_time" ? "bg-white text-slate-800 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
                                   >
                                     One-Time
                                   </button>
@@ -630,12 +626,12 @@ export default function FormManagementPage() {
 
                               {selectedConfig.payment_type === "one_time" ? (
                                 <div>
-                                  <label className="text-[10px] uppercase font-bold text-gray-400 block mb-1">
+                                  <label className="text-[10px] uppercase font-bold text-slate-400 block mb-1">
                                     Amount (INR)
                                   </label>
                                   <input
                                     type="number"
-                                    className="text-sm text-navy-900 bg-gray-50 p-3 rounded-xl w-full border border-gray-200 outline-none focus:border-gold-400 transition-colors"
+                                    className="text-xs text-slate-800 bg-slate-50 p-2.5 rounded border border-slate-200 w-full outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-900 transition-colors"
                                     value={(selectedConfig.razorpay_amount ?? 0) / 100}
                                     onChange={(e) =>
                                       setSelectedConfig({
@@ -645,18 +641,17 @@ export default function FormManagementPage() {
                                     }
                                     placeholder="e.g. 500"
                                   />
-                                  <p className="text-xs text-gray-400 mt-2">
-                                    Enter the flat amount in Rupees for this
-                                    vault.
+                                  <p className="text-[11px] text-slate-500 mt-2">
+                                    Enter the flat amount in Rupees for this vault.
                                   </p>
                                 </div>
                               ) : (
                                 <div>
-                                  <label className="text-[10px] uppercase font-bold text-gray-400 block mb-1">
+                                  <label className="text-[10px] uppercase font-bold text-slate-400 block mb-1">
                                     Razorpay Plan ID
                                   </label>
                                   <input
-                                    className="text-sm text-navy-900 bg-gray-50 p-3 rounded-xl w-full border border-gray-200 outline-none focus:border-gold-400 transition-colors"
+                                    className="text-xs text-slate-800 bg-slate-50 p-2.5 rounded border border-slate-200 w-full outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-900 transition-colors"
                                     value={
                                       selectedConfig.razorpay_plan_id || ""
                                     }
@@ -668,19 +663,18 @@ export default function FormManagementPage() {
                                     }
                                     placeholder="e.g. plan_yourplanid123"
                                   />
-                                  <p className="text-xs text-gray-400 mt-2">
-                                    Find this in your Razorpay Dashboard under
-                                    Subscriptions -{">"} Plans.
+                                  <p className="text-[11px] text-slate-500 mt-2">
+                                    Find this in your Razorpay Dashboard under Subscriptions {"->"} Plans.
                                   </p>
                                 </div>
                               )}
 
-                              <div className="pt-4 border-t border-gray-100">
-                                <label className="text-[10px] uppercase font-bold text-gray-400 block mb-1">
+                              <div className="pt-4 border-t border-slate-200">
+                                <label className="text-[10px] uppercase font-bold text-slate-400 block mb-1">
                                   Telegram Chat ID
                                 </label>
                                 <input
-                                  className="text-sm text-navy-900 bg-gray-50 p-3 rounded-xl w-full border border-gray-200 outline-none focus:border-gold-400 transition-colors font-mono"
+                                  className="text-xs text-slate-800 bg-slate-50 p-2.5 rounded border border-slate-200 w-full outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-900 transition-colors font-mono"
                                   value={selectedConfig.telegram_chat_id || ""}
                                   onChange={(e) =>
                                     setSelectedConfig({
@@ -690,7 +684,7 @@ export default function FormManagementPage() {
                                   }
                                   placeholder="e.g. -100123456789"
                                 />
-                                <p className="text-[10px] text-gray-400 mt-2 italic">
+                                <p className="text-[11px] text-slate-500 mt-2 italic">
                                   This channel will receive the invite link request when a user pays. Must start with -100.
                                 </p>
                               </div>
@@ -703,15 +697,15 @@ export default function FormManagementPage() {
                 </div>
 
                 <div className="space-y-6 pt-4">
-                  <div className="flex items-center justify-between border-b border-gray-100 pb-4">
-                    <h4 className="text-lg font-serif font-bold text-navy-900 inline-block">
+                  <div className="flex items-center justify-between border-b border-slate-200 pb-4">
+                    <h4 className="text-sm font-bold text-slate-800 uppercase tracking-wider inline-block">
                       Form Builder
                     </h4>
                     <Button
                       variant="secondary"
                       size="sm"
                       onClick={handleAddField}
-                      className="bg-navy-50 text-navy-700 hover:bg-navy-100 border-0"
+                      className="bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200 hover:text-slate-900"
                     >
                       <Plus className="w-4 h-4 mr-1" /> Add Field
                     </Button>
@@ -724,18 +718,18 @@ export default function FormManagementPage() {
                         layout
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
-                        className="bg-gray-50 p-4 rounded-xl border border-gray-100 flex items-start gap-4 group"
+                        className="bg-slate-50 p-4 rounded border border-slate-200 flex items-start gap-4 group"
                       >
                         <div className="flex flex-col gap-1 mt-2">
                           <button
                             onClick={() => handleMoveField(index, "up")}
-                            className="p-1 hover:bg-gray-200 rounded text-gray-400"
+                            className="p-1 hover:bg-slate-200 rounded text-slate-400"
                           >
                             <MoveUp className="w-3 h-3" />
                           </button>
                           <button
                             onClick={() => handleMoveField(index, "down")}
-                            className="p-1 hover:bg-gray-200 rounded text-gray-400"
+                            className="p-1 hover:bg-slate-200 rounded text-slate-400"
                           >
                             <MoveDown className="w-3 h-3" />
                           </button>
@@ -743,11 +737,11 @@ export default function FormManagementPage() {
 
                         <div className="flex-1 grid grid-cols-1 sm:grid-cols-12 gap-4">
                           <div className="sm:col-span-3">
-                            <label className="text-[10px] uppercase font-bold text-gray-400 block mb-1">
+                            <label className="text-[10px] uppercase font-bold text-slate-400 block mb-1">
                               Type
                             </label>
                             <select
-                              className="w-full bg-white border border-gray-200 p-2 rounded text-sm outline-none font-bold text-navy-900 border-l-4 border-l-gold-400 shadow-sm"
+                              className="w-full bg-white border border-slate-200 p-2 rounded text-xs outline-none font-semibold text-slate-800 shadow-none focus:border-slate-800 transition-colors"
                               value={field.type}
                               onChange={(e) =>
                                 handleUpdateField(index, {
@@ -767,11 +761,11 @@ export default function FormManagementPage() {
                             </select>
                           </div>
                           <div className="sm:col-span-3">
-                            <label className="text-[10px] uppercase font-bold text-gray-400 block mb-1">
+                            <label className="text-[10px] uppercase font-bold text-slate-400 block mb-1">
                               Label
                             </label>
                             <input
-                              className="w-full bg-white border border-gray-200 p-2 rounded text-sm outline-none focus:border-navy-500"
+                              className="w-full bg-white border border-slate-200 p-2 rounded text-xs outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-900 transition-colors"
                               value={field.label}
                               onChange={(e) =>
                                 handleUpdateField(index, {
@@ -784,14 +778,14 @@ export default function FormManagementPage() {
                             />
                           </div>
                           <div className="sm:col-span-3">
-                            <label className="text-[10px] uppercase font-bold text-gray-400 block mb-1">
+                            <label className="text-[10px] uppercase font-bold text-slate-400 block mb-1">
                               Placeholder
                             </label>
                             {["text", "textarea", "email", "tel"].includes(
                               field.type,
                             ) ? (
                               <input
-                                className="w-full bg-white border border-gray-200 p-2 rounded text-sm outline-none focus:border-navy-500"
+                                className="w-full bg-white border border-slate-200 p-2 rounded text-xs outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-900 transition-colors"
                                 value={field.placeholder || ""}
                                 onChange={(e) =>
                                   handleUpdateField(index, {
@@ -801,18 +795,18 @@ export default function FormManagementPage() {
                                 placeholder="Enter hint text..."
                               />
                             ) : (
-                              <div className="w-full bg-slate-50 border border-slate-100 p-2 rounded text-[10px] text-slate-400 italic flex items-center h-[38px]">
+                              <div className="w-full bg-slate-50 border border-slate-200 p-2 rounded text-[10px] text-slate-400 italic flex items-center h-[34px]">
                                 Not applicable
                               </div>
                             )}
                           </div>
                           <div className="sm:col-span-1">
-                            <label className="text-[10px] uppercase font-bold text-gray-400 block mb-1">
+                            <label className="text-[10px] uppercase font-bold text-slate-400 block mb-1">
                               Req.
                             </label>
                             <input
                               type="checkbox"
-                              className="mt-2 w-4 h-4 rounded text-navy-600 focus:ring-navy-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                              className="mt-2 w-4 h-4 rounded text-slate-900 focus:ring-slate-900 disabled:opacity-50 disabled:cursor-not-allowed"
                               checked={field.required}
                               onChange={(e) =>
                                 handleUpdateField(index, {
@@ -825,16 +819,16 @@ export default function FormManagementPage() {
                           <div className="sm:col-span-2 flex items-end">
                             <button
                               onClick={() => handleRemoveField(index)}
-                              className="text-red-400 hover:text-red-600 p-2 transition-colors ml-auto"
+                              className="text-red-400 hover:text-red-650 p-2 transition-colors ml-auto"
                             >
-                              <Trash2 className="w-4 h-4" />
+                              <Trash2 className="w-3.5 h-3.5" />
                             </button>
                           </div>
 
                           {field.type === "select" && (
-                            <div className="col-span-full border-t border-gray-200 pt-4 mt-1 space-y-3">
+                            <div className="col-span-full border-t border-slate-200 pt-4 mt-1 space-y-3">
                               <div className="flex items-center justify-between">
-                                <label className="text-[10px] uppercase font-bold text-gray-400">
+                                <label className="text-[10px] uppercase font-bold text-slate-400">
                                   Dropdown Options
                                 </label>
                                 <button
@@ -847,7 +841,7 @@ export default function FormManagementPage() {
                                       options: newOptions,
                                     });
                                   }}
-                                  className="text-[10px] font-bold text-navy-600 hover:text-navy-900 uppercase tracking-widest flex items-center gap-1"
+                                  className="text-[10px] font-bold text-slate-500 hover:text-slate-800 uppercase tracking-widest flex items-center gap-1"
                                 >
                                   <Plus className="w-3 h-3" /> Add Option
                                 </button>
@@ -857,7 +851,7 @@ export default function FormManagementPage() {
                                   (option, optIndex) => (
                                     <div key={optIndex} className="flex gap-2">
                                       <input
-                                        className="flex-1 bg-white border border-gray-200 p-2 rounded text-sm outline-none focus:border-navy-500"
+                                        className="flex-1 bg-white border border-slate-200 p-2 rounded text-xs outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-900 transition-colors"
                                         value={option}
                                         onChange={(e) => {
                                           const newOptions = [
@@ -933,23 +927,23 @@ export default function FormManagementPage() {
       
       <AnimatePresence>
         {showCreateModal && (
-          <div className="fixed inset-0 bg-navy-950/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
             <m.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white rounded-2xl shadow-premium-xl max-w-md w-full p-8"
+              className="bg-white rounded border border-slate-200 shadow-lg max-w-md w-full p-6"
             >
-              <h2 className="text-2xl font-serif font-bold text-navy-900 mb-6">
+              <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wider mb-4">
                 Create New Form
               </h2>
               <div className="space-y-4">
                 <div>
-                  <label className="text-[10px] uppercase font-bold text-gray-400 block mb-1">
+                  <label className="text-[10px] uppercase font-bold text-slate-400 block mb-1">
                     Display Title
                   </label>
                   <input
-                    className="w-full bg-slate-50 border border-slate-200 p-3 rounded-xl outline-none focus:border-navy-500"
+                    className="w-full bg-slate-50 border border-slate-200 p-2.5 rounded text-xs outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-900 transition-colors"
                     placeholder="e.g. Workshop Registration"
                     value={newFormDetails.title}
                     onChange={(e) =>
@@ -961,11 +955,11 @@ export default function FormManagementPage() {
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] uppercase font-bold text-gray-400 block mb-1">
+                  <label className="text-[10px] uppercase font-bold text-slate-400 block mb-1">
                     Form Slug (Unique Identifier)
                   </label>
                   <input
-                    className="w-full bg-slate-50 border border-slate-200 p-3 rounded-xl outline-none focus:border-navy-500"
+                    className="w-full bg-slate-50 border border-slate-200 p-2.5 rounded text-xs outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-900 transition-colors"
                     placeholder="e.g. workshops"
                     value={newFormDetails.slug}
                     onChange={(e) =>
@@ -977,11 +971,11 @@ export default function FormManagementPage() {
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] uppercase font-bold text-gray-400 block mb-1">
+                  <label className="text-[10px] uppercase font-bold text-slate-400 block mb-1">
                     Description
                   </label>
                   <textarea
-                    className="w-full bg-slate-50 border border-slate-200 p-3 rounded-xl outline-none focus:border-navy-500 h-24"
+                    className="w-full bg-slate-50 border border-slate-200 p-2.5 rounded text-xs outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-900 transition-colors h-20 resize-none"
                     placeholder="What is this form for?"
                     value={newFormDetails.description}
                     onChange={(e) =>
@@ -992,17 +986,17 @@ export default function FormManagementPage() {
                     }
                   />
                 </div>
-                <div className="flex gap-4 pt-4">
+                <div className="flex gap-3 pt-2">
                   <Button
-                    variant="tertiary"
-                    className="flex-1"
+                    variant="secondary"
+                    className="flex-1 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50"
                     onClick={() => setShowCreateModal(false)}
                   >
                     Cancel
                   </Button>
                   <Button
                     variant="primary"
-                    className="flex-1"
+                    className="flex-1 bg-slate-900 text-white hover:bg-slate-850"
                     onClick={handleCreateForm}
                     isLoading={isCreating}
                   >
@@ -1017,40 +1011,40 @@ export default function FormManagementPage() {
 
       <AnimatePresence>
         {showPreviewModal && selectedConfig && (
-          <div className="fixed inset-0 bg-navy-950/80 backdrop-blur-md flex items-center justify-center p-4 sm:p-8 z-[100]">
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 sm:p-8 z-[100]">
             <m.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-gray-100 rounded-2xl shadow-premium-xl w-full max-w-5xl h-[90vh] flex flex-col overflow-hidden border border-gray-200 ring-1 ring-white/10"
+              className="bg-white rounded border border-slate-200 shadow-xl w-full max-w-5xl h-[90vh] flex flex-col overflow-hidden"
             >
-              <div className="bg-white px-6 py-4 border-b border-gray-200 flex items-center justify-between shadow-sm z-10 sticky top-0">
+              <div className="bg-white px-5 py-3 border-b border-slate-200 flex items-center justify-between z-10 sticky top-0">
                 <div>
-                  <h2 className="text-xl font-serif font-bold text-navy-900 flex items-center gap-2">
-                    <Eye className="w-5 h-5 text-gray-400" />
+                  <h2 className="text-xs font-bold text-slate-800 flex items-center gap-2 uppercase tracking-wider">
+                    <Eye className="w-4 h-4 text-slate-400" />
                     Preview: {selectedConfig.title}
                   </h2>
-                  <p className="text-xs text-gray-500 font-mono mt-1">
+                  <p className="text-[10px] text-slate-500 font-mono mt-0.5">
                     {window.location.origin}/forms/{selectedConfig.form_slug}
                   </p>
                 </div>
-                <div className="flex items-center gap-3">
-                  <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-yellow-50 text-yellow-700 rounded-lg text-xs font-medium border border-yellow-100 mr-2">
-                    <div className="w-2 h-2 rounded-full bg-yellow-400 animate-pulse"></div>
+                <div className="flex items-center gap-2">
+                  <div className="hidden sm:flex items-center gap-1.5 px-2 py-0.5 bg-slate-100 text-slate-700 rounded text-[9px] font-semibold border border-slate-250 mr-2 uppercase tracking-wider">
+                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
                     Live Preview
                   </div>
                   <Button
                     variant="secondary"
                     size="sm"
                     onClick={() => setShowPreviewModal(false)}
-                    className="bg-gray-50 text-gray-600 hover:bg-gray-100 border-0"
+                    className="bg-white text-slate-700 hover:bg-slate-50 border border-slate-200 text-xs py-1 px-2.5 rounded shadow-none"
                   >
-                    <X className="w-4 h-4 mr-1.5" /> Close
+                    <X className="w-3.5 h-3.5 mr-1" /> Close
                   </Button>
                 </div>
               </div>
 
-              <div className="flex-1 w-full bg-gray-100 overflow-hidden relative">
+              <div className="flex-1 w-full bg-slate-50 overflow-hidden relative">
                 <iframe
                     src={`/forms/${selectedConfig.form_slug}?preview=true`}
                     className="w-full h-full border-0 absolute inset-0 bg-white"

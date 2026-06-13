@@ -32,14 +32,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing submission ID' }, { status: 400 });
     }
 
-    // 3. Update Submission Status
+    // 3. Update Enrollment Status
     const updateData: any = {
       telegram_joined: !!telegramJoined,
       telegram_username: telegramJoined ? (telegramUsername || null) : null
     };
 
     const { error: dbError } = await supabaseAdmin
-      .from('form_submissions')
+      .from('enrollments')
       .update(updateData)
       .eq('id', submissionId);
 
@@ -49,7 +49,7 @@ export async function POST(request: Request) {
 
     // 4. Log manual status update in telegram_invite_logs
     await supabaseAdmin.from('telegram_invite_logs').insert([{
-      submission_id: submissionId,
+      enrollment_id: submissionId,
       action: telegramJoined ? 'joined' : 'left',
       telegram_username: telegramJoined ? (telegramUsername || 'Manual Admin Overwrite') : null,
       created_by: user.email || 'admin',

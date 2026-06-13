@@ -37,7 +37,7 @@ export async function GET(request: Request) {
     const { data: logs, error: logsError } = await supabaseAdmin
       .from('telegram_invite_logs')
       .select('*')
-      .eq('submission_id', submissionId)
+      .eq('enrollment_id', submissionId)
       .order('created_at', { ascending: false });
 
     if (logsError) {

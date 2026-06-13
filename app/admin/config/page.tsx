@@ -127,8 +127,8 @@ export default function ConfigPage() {
     if (loading) {
         return (
             <div className="flex flex-col items-center justify-center min-h-[400px]">
-                <Loader2 className="h-8 w-8 animate-spin text-navy-900 mb-4" />
-                <p className="text-navy-600 font-medium italic">Loading Architect&apos;s Desk...</p>
+                <Loader2 className="h-5 w-5 animate-spin text-slate-800 mb-2" />
+                <p className="text-xs text-slate-500 font-semibold uppercase tracking-wider">Loading Configuration...</p>
             </div>
         );
     }
@@ -136,28 +136,30 @@ export default function ConfigPage() {
     if (!config) return <div>Error loading configuration.</div>;
 
     return (
-        <div className="max-w-6xl mx-auto py-6">
-            <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+        <div className="max-w-6xl mx-auto">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-200 pb-4 mb-6">
                 <div>
-                    <h1 className="text-3xl font-serif font-bold text-navy-900">Site Architect</h1>
-                    <p className="text-navy-600 mt-1">Configure your digital stage and stagecraft.</p>
+                    <h1 className="text-xl font-bold text-slate-900">Site Architect</h1>
+                    <p className="text-slate-500 text-xs mt-0.5">Configure your digital stage and layout options.</p>
                 </div>
 
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
                     <Button
-                        variant="ghost"
+                        variant="secondary"
                         onClick={handleReset}
                         disabled={saving || JSON.stringify(config) === JSON.stringify(originalConfig)}
+                        className="bg-white border-slate-200 hover:bg-slate-50 text-slate-700 text-xs py-1.5 px-3 rounded shadow-none"
                     >
-                        <RotateCcw className="h-4 w-4 mr-2" />
+                        <RotateCcw className="h-3.5 w-3.5 mr-1.5" />
                         Reset Changes
                     </Button>
                     <Button
                         onClick={handleSave}
                         isLoading={saving}
                         disabled={saving || JSON.stringify(config) === JSON.stringify(originalConfig)}
+                        className="bg-slate-900 text-white hover:bg-slate-800 text-xs py-1.5 px-3 rounded shadow-none"
                     >
-                        <Save className="h-4 w-4 mr-2" />
+                        <Save className="h-3.5 w-3.5 mr-1.5" />
                         Save Changes
                     </Button>
                 </div>
@@ -165,10 +167,10 @@ export default function ConfigPage() {
 
             {/* Status Message - Removed in favor of Toasts */}
 
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
                 {/* Sidebar Navigation */}
                 <aside className="lg:col-span-1">
-                    <nav className="flex flex-col gap-1">
+                    <nav className="flex flex-col gap-1.5">
                         <TabButton
                             active={activeTab === 'artist'}
                             onClick={() => setActiveTab('artist')}
@@ -208,8 +210,8 @@ export default function ConfigPage() {
                 </aside>
 
                 {/* Main Editor Area */}
-                <main className="lg:col-span-3 bg-white rounded-xl shadow-premium border border-slate-100 overflow-hidden">
-                    <div className="p-8">
+                <main className="lg:col-span-3 bg-white rounded border border-slate-200 overflow-hidden shadow-none">
+                    <div className="p-6">
                         <AnimatePresence mode="wait">
                             {activeTab === 'artist' && (
                                 <m.div
@@ -217,7 +219,7 @@ export default function ConfigPage() {
                                     initial={{ opacity: 0, x: 20 }}
                                     animate={{ opacity: 1, x: 0 }}
                                     exit={{ opacity: 0, x: -20 }}
-                                    className="space-y-8"
+                                    className="space-y-6"
                                 >
                                     <SectionTitle title="Artist Profile" description="Basic information about the artist." />
                                     <div className="grid grid-cols-2 gap-6">
@@ -239,7 +241,7 @@ export default function ConfigPage() {
                                     />
 
                                     <div className="space-y-4">
-                                        <label className="text-xs font-bold uppercase tracking-wider text-navy-400 ml-1">Full Biography Blocks</label>
+                                        <label className="text-xs font-bold uppercase tracking-wider text-slate-400 ml-1">Full Biography Blocks</label>
                                         <div className="space-y-3">
                                             {config.artist.fullBio.map((block, idx) => (
                                                 <BioBlockEditor
@@ -296,7 +298,7 @@ export default function ConfigPage() {
                                     <SectionTitle title="Hero Section" description="The grand entrance of your portfolio." />
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-end">
                                         <div className="space-y-2">
-                                            <label className="text-xs font-bold uppercase tracking-wider text-navy-400 ml-1">Hero Background</label>
+                                            <label className="text-xs font-bold uppercase tracking-wider text-slate-400 ml-1">Hero Background</label>
                                             <CloudinaryUpload
                                                 value={config.home.heroBackground}
                                                 onChange={(url) => {
@@ -316,10 +318,10 @@ export default function ConfigPage() {
                                     </div>
 
                                     <div className="space-y-4">
-                                        <label className="text-xs font-bold uppercase tracking-wider text-navy-400 ml-1">Landing Page Stats</label>
+                                        <label className="text-xs font-bold uppercase tracking-wider text-slate-400 ml-1">Landing Page Stats</label>
                                         <div className="grid grid-cols-2 gap-4">
                                             {config.home.heroStats?.map((stat, idx) => (
-                                                <div key={idx} className="p-4 bg-slate-50 border border-slate-200 rounded-xl relative group">
+                                                <div key={idx} className="p-4 bg-slate-50 border border-slate-200 rounded relative group">
                                                     <button
                                                         onClick={() => {
                                                             const newStats = config.home.heroStats?.filter((_, i) => i !== idx);
@@ -356,7 +358,7 @@ export default function ConfigPage() {
 
                                     <div className="space-y-4 pt-4">
                                         <div className="flex items-center justify-between">
-                                            <label className="text-xs font-bold uppercase tracking-wider text-navy-400 ml-1">Hero Highlights (Carousel)</label>
+                                            <label className="text-xs font-bold uppercase tracking-wider text-slate-400 ml-1">Hero Highlights (Carousel)</label>
                                             <div className="flex items-center gap-4">
                                                 <div className="flex items-center gap-2">
                                                     <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Enable Carousel</span>
@@ -373,7 +375,7 @@ export default function ConfigPage() {
                                                                 } 
                                                             } 
                                                         })}
-                                                        className="w-4 h-4 rounded border-gray-300 text-gold-600 focus:ring-gold-500"
+                                                        className="w-4 h-4 rounded border-gray-300 text-slate-600 focus:ring-slate-500"
                                                     />
                                                 </div>
                                                 <div className="flex items-center gap-2">
@@ -391,7 +393,7 @@ export default function ConfigPage() {
                                                                 } 
                                                             } 
                                                         })}
-                                                        className="w-4 h-4 rounded border-gray-300 text-gold-600 focus:ring-gold-500"
+                                                        className="w-4 h-4 rounded border-gray-300 text-slate-600 focus:ring-slate-500"
                                                     />
                                                 </div>
                                                 <Button 
@@ -425,7 +427,7 @@ export default function ConfigPage() {
 
                                         <div className="space-y-4">
                                             {config.home.featuredCarousel?.items.map((item, idx) => (
-                                                <div key={item.id} className="p-4 bg-white border border-slate-200 rounded-xl space-y-4 shadow-sm group relative">
+                                                <div key={item.id} className="p-4 bg-white border border-slate-200 rounded space-y-4 group relative">
                                                     <div className="absolute top-2 right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                                         <button 
                                                             disabled={idx === 0}
@@ -434,7 +436,7 @@ export default function ConfigPage() {
                                                                 [items[idx], items[idx - 1]] = [items[idx - 1], items[idx]];
                                                                 setConfig({ ...config, home: { ...config.home, featuredCarousel: { ...(config.home.featuredCarousel!), items } } });
                                                             }}
-                                                            className="p-1 hover:text-gold-600 disabled:opacity-30"
+                                                            className="p-1 hover:text-slate-600 disabled:opacity-30"
                                                         >
                                                             <MoveUp className="h-3 w-3" />
                                                         </button>
@@ -445,7 +447,7 @@ export default function ConfigPage() {
                                                                 [items[idx], items[idx + 1]] = [items[idx + 1], items[idx]];
                                                                 setConfig({ ...config, home: { ...config.home, featuredCarousel: { ...(config.home.featuredCarousel!), items } } });
                                                             }}
-                                                            className="p-1 hover:text-gold-600 disabled:opacity-30"
+                                                            className="p-1 hover:text-slate-600 disabled:opacity-30"
                                                         >
                                                             <MoveDown className="h-3 w-3" />
                                                         </button>
@@ -563,9 +565,9 @@ export default function ConfigPage() {
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         {config.gallery?.images.map((img, idx) => (
-                                            <div key={img.id} className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-4 group">
+                                            <div key={img.id} className="p-4 bg-slate-50 border border-slate-200 rounded space-y-4 group">
                                                 <div className="flex items-center justify-between">
-                                                    <span className="text-[10px] font-bold uppercase tracking-widest text-navy-400">Image #{config.gallery.images.length - idx}</span>
+                                                    <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Image #{config.gallery.images.length - idx}</span>
                                                     <div className="flex items-center gap-1">
                                                         <button 
                                                             disabled={idx === 0}
@@ -637,17 +639,17 @@ export default function ConfigPage() {
                                 >
                                     <SectionTitle title="Cohorts Page Settings" description="Manage the learning cohorts page experience." />
                                     
-                                    <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100">
+                                    <div className="p-4 bg-slate-50 rounded border border-slate-200">
                                         <div className="flex items-center justify-between">
                                             <div>
-                                                <h3 className="text-sm font-bold text-navy-900 uppercase tracking-wider">Visibility Controls</h3>
-                                                <p className="text-xs text-navy-500 mt-0.5">Control where cohorts are visible on the site.</p>
+                                                <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Visibility Controls</h3>
+                                                <p className="text-xs text-slate-500 mt-0.5">Control where cohorts are visible on the site.</p>
                                             </div>
-                                            <div className="flex items-center gap-4 bg-white p-3 rounded-xl border border-slate-100 shadow-sm">
-                                                <span className="text-xs font-bold text-navy-700">Show Cohorts on Coming Soon Page</span>
+                                            <div className="flex items-center gap-4 bg-white p-3 rounded border border-slate-200">
+                                                <span className="text-xs font-bold text-slate-700">Show Cohorts on Coming Soon Page</span>
                                                 <button
                                                     onClick={() => setConfig({ ...config, showCohortsOnComingSoon: !config.showCohortsOnComingSoon })}
-                                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${config.showCohortsOnComingSoon ? 'bg-gold-500' : 'bg-slate-300'}`}
+                                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${config.showCohortsOnComingSoon ? 'bg-slate-900' : 'bg-slate-300'}`}
                                                 >
                                                     <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${config.showCohortsOnComingSoon ? 'translate-x-6' : 'translate-x-1'}`} />
                                                 </button>
@@ -657,7 +659,7 @@ export default function ConfigPage() {
 
                                     <div className="space-y-6">
                                         <div className="flex items-center justify-between">
-                                            <h3 className="text-sm font-bold text-navy-900 uppercase tracking-wider ml-1">Frequently Asked Questions</h3>
+                                            <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider ml-1">Frequently Asked Questions</h3>
                                             <Button 
                                                 size="sm" 
                                                 variant="secondary"
@@ -673,7 +675,7 @@ export default function ConfigPage() {
 
                                         <div className="space-y-4">
                                             {config.cohorts_faq?.items.map((faq, idx) => (
-                                                <div key={idx} className="p-5 bg-white border border-slate-200 rounded-xl space-y-4 shadow-sm group relative">
+                                                <div key={idx} className="p-4 bg-white border border-slate-200 rounded space-y-4 group relative">
                                                     <div className="absolute top-2 right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                                         <button 
                                                             disabled={idx === 0}
@@ -682,7 +684,7 @@ export default function ConfigPage() {
                                                                 [items[idx], items[idx - 1]] = [items[idx - 1], items[idx]];
                                                                 setConfig({ ...config, cohorts_faq: { items } });
                                                             }}
-                                                            className="p-1 hover:text-gold-600 disabled:opacity-30"
+                                                            className="p-1 hover:text-slate-800 disabled:opacity-30"
                                                         >
                                                             <MoveUp className="h-3 w-3" />
                                                         </button>
@@ -693,7 +695,7 @@ export default function ConfigPage() {
                                                                 [items[idx], items[idx + 1]] = [items[idx + 1], items[idx]];
                                                                 setConfig({ ...config, cohorts_faq: { items } });
                                                             }}
-                                                            className="p-1 hover:text-gold-600 disabled:opacity-30"
+                                                            className="p-1 hover:text-slate-800 disabled:opacity-30"
                                                         >
                                                             <MoveDown className="h-3 w-3" />
                                                         </button>
@@ -731,7 +733,7 @@ export default function ConfigPage() {
                                                 </div>
                                             ))}
                                             {(!config.cohorts_faq?.items || config.cohorts_faq.items.length === 0) && (
-                                                <div className="text-center py-10 border-2 border-dashed border-slate-100 rounded-2xl bg-slate-50/50">
+                                                <div className="text-center py-10 border border-dashed border-slate-200 rounded bg-slate-50/50">
                                                     <p className="text-slate-400 text-sm">No FAQs configured yet.</p>
                                                 </div>
                                             )}
@@ -750,22 +752,22 @@ export default function ConfigPage() {
                                 >
                                     <SectionTitle title="Page Architect" description="Reorder and toggle visibility of landing page sections." />
                                     
-                                    <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100 mb-8">
+                                    <div className="p-4 bg-slate-50 rounded border border-slate-200 mb-6">
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-3">
-                                                <div className="p-2 bg-navy-900 rounded-lg">
-                                                    <Zap className="h-4 w-4 text-gold-400" />
+                                                <div className="p-2 bg-slate-800 rounded">
+                                                    <Zap className="h-4 w-4 text-slate-300" />
                                                 </div>
                                                 <div>
-                                                    <h3 className="text-sm font-bold text-navy-900 uppercase tracking-wider">Maintenance Mode Overrides</h3>
-                                                    <p className="text-xs text-navy-500 mt-0.5">Force visibility of specific features when the site is not live.</p>
+                                                    <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Maintenance Mode Overrides</h3>
+                                                    <p className="text-xs text-slate-500 mt-0.5">Force visibility of specific features when the site is not live.</p>
                                                 </div>
                                             </div>
-                                            <div className="flex items-center gap-4 bg-white p-3 rounded-xl border border-slate-100 shadow-sm">
-                                                <span className="text-xs font-bold text-navy-700">Show Cohorts on Coming Soon</span>
+                                            <div className="flex items-center gap-4 bg-white p-3 rounded border border-slate-200">
+                                                <span className="text-xs font-bold text-slate-700">Show Cohorts on Coming Soon</span>
                                                 <button
                                                     onClick={() => setConfig({ ...config, showCohortsOnComingSoon: !config.showCohortsOnComingSoon })}
-                                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${config.showCohortsOnComingSoon ? 'bg-gold-500' : 'bg-slate-300'}`}
+                                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${config.showCohortsOnComingSoon ? 'bg-slate-900' : 'bg-slate-300'}`}
                                                 >
                                                     <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${config.showCohortsOnComingSoon ? 'translate-x-6' : 'translate-x-1'}`} />
                                                 </button>
@@ -780,28 +782,28 @@ export default function ConfigPage() {
                                                 <m.div
                                                     layout
                                                     key={key}
-                                                    className={`flex items-center gap-4 p-4 rounded-xl border transition-all ${isVisible ? 'bg-white border-slate-200 shadow-sm' : 'bg-slate-50 border-slate-100 opacity-60'
+                                                    className={`flex items-center gap-4 p-4 rounded border transition-all ${isVisible ? 'bg-white border-slate-200' : 'bg-slate-50 border-slate-100 opacity-60'
                                                         }`}
                                                 >
                                                     <div className="flex flex-col gap-1">
                                                         <button
                                                             disabled={idx === 0}
                                                             onClick={() => moveSection(idx, 'up')}
-                                                            className="p-1 text-slate-400 hover:text-gold-600 disabled:opacity-0"
+                                                            className="p-1 text-slate-400 hover:text-slate-800 disabled:opacity-0"
                                                         >
                                                             <ChevronDown className="h-4 w-4 rotate-180" />
                                                         </button>
                                                         <button
                                                             disabled={idx === (config.layoutOrder?.length || 0) - 1}
                                                             onClick={() => moveSection(idx, 'down')}
-                                                            className="p-1 text-slate-400 hover:text-gold-600 disabled:opacity-0"
+                                                            className="p-1 text-slate-400 hover:text-slate-800 disabled:opacity-0"
                                                         >
                                                             <ChevronDown className="h-4 w-4" />
                                                         </button>
                                                     </div>
 
                                                     <div className="flex-1">
-                                                        <span className="font-bold text-navy-900">{key}</span>
+                                                        <span className="font-bold text-slate-800 capitalize">{key}</span>
                                                     </div>
 
                                                     <button
@@ -809,7 +811,7 @@ export default function ConfigPage() {
                                                             const newSections = { ...config.sections, [key]: !isVisible };
                                                             setConfig({ ...config, sections: newSections });
                                                         }}
-                                                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${isVisible ? 'bg-gold-500' : 'bg-slate-300'
+                                                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${isVisible ? 'bg-slate-900' : 'bg-slate-300'
                                                             }`}
                                                     >
                                                         <span
@@ -847,7 +849,7 @@ function BioBlockEditor({ block, onUpdate, onRemove, onMove, isFirst, isLast }: 
     const content = isString ? block : block.content;
 
     return (
-        <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl group relative">
+        <div className="p-4 bg-slate-50 border border-slate-200 rounded group relative">
             <div className="flex items-center gap-2 mb-3">
                 <select
                     value={type}
@@ -859,7 +861,7 @@ function BioBlockEditor({ block, onUpdate, onRemove, onMove, isFirst, isLast }: 
                             onUpdate({ type: newType, content: content || '' });
                         }
                     }}
-                    className="text-[10px] font-bold uppercase tracking-widest bg-white border border-slate-200 rounded px-2 py-1 text-navy-600 outline-none focus:border-gold-400"
+                    className="text-[10px] font-bold uppercase tracking-widest bg-white border border-slate-200 rounded px-2 py-1 text-slate-700 outline-none focus:border-slate-800"
                 >
                     <option value="paragraph">Paragraph</option>
                     <option value="heading">Heading</option>
@@ -867,8 +869,8 @@ function BioBlockEditor({ block, onUpdate, onRemove, onMove, isFirst, isLast }: 
                 </select>
 
                 <div className="ml-auto flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button onClick={() => onMove('up')} disabled={isFirst} className="p-1 hover:text-gold-600 disabled:opacity-30"><ChevronDown className="h-3 w-3 rotate-180" /></button>
-                    <button onClick={() => onMove('down')} disabled={isLast} className="p-1 hover:text-gold-600 disabled:opacity-30"><ChevronDown className="h-3 w-3" /></button>
+                    <button onClick={() => onMove('up')} disabled={isFirst} className="p-1 hover:text-slate-800 disabled:opacity-30"><ChevronDown className="h-3 w-3 rotate-180" /></button>
+                    <button onClick={() => onMove('down')} disabled={isLast} className="p-1 hover:text-slate-800 disabled:opacity-30"><ChevronDown className="h-3 w-3" /></button>
                     <button onClick={onRemove} className="p-1 hover:text-red-500 ml-2"><AlertCircle className="h-3 w-3" /></button>
                 </div>
             </div>
@@ -885,7 +887,7 @@ function BioBlockEditor({ block, onUpdate, onRemove, onMove, isFirst, isLast }: 
                                     newItems[i] = e.target.value;
                                     onUpdate({ ...block, items: newItems });
                                 }}
-                                className="flex-1 bg-white border border-slate-200 rounded px-3 py-2 text-sm text-navy-900 focus:border-gold-400 outline-none"
+                                className="flex-1 bg-white border border-slate-200 rounded px-3 py-2 text-xs text-slate-800 focus:border-slate-800 outline-none"
                             />
                             <button
                                 onClick={() => {
@@ -900,7 +902,7 @@ function BioBlockEditor({ block, onUpdate, onRemove, onMove, isFirst, isLast }: 
                     ))}
                     <button
                         onClick={() => onUpdate({ ...block, items: [...(block.items || []), ''] })}
-                        className="text-[10px] font-bold text-gold-600 uppercase hover:text-gold-700 transition-colors"
+                        className="text-[10px] font-bold text-slate-600 uppercase hover:text-slate-900 transition-colors"
                     >
                         + Add Item
                     </button>
@@ -910,7 +912,7 @@ function BioBlockEditor({ block, onUpdate, onRemove, onMove, isFirst, isLast }: 
                     value={content}
                     onChange={(e) => onUpdate(isString ? e.target.value : { ...block, content: e.target.value })}
                     rows={content?.length > 100 ? 4 : 2}
-                    className="w-full bg-white border border-slate-200 rounded px-3 py-2 text-sm text-navy-900 resize-none focus:border-gold-400 outline-none"
+                    className="w-full bg-white border border-slate-200 rounded px-3 py-2 text-xs text-slate-800 resize-none focus:border-slate-800 outline-none"
                 />
             )}
         </div>
@@ -919,9 +921,9 @@ function BioBlockEditor({ block, onUpdate, onRemove, onMove, isFirst, isLast }: 
 
 function SectionTitle({ title, description }: { title: string; description: string }) {
     return (
-        <div className="pb-4 border-b border-slate-100">
-            <h2 className="text-xl font-serif font-bold text-navy-900">{title}</h2>
-            <p className="text-sm text-navy-500">{description}</p>
+        <div className="pb-3 border-b border-slate-200">
+            <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wider">{title}</h2>
+            <p className="text-xs text-slate-500 mt-0.5">{description}</p>
         </div>
     );
 }
@@ -930,32 +932,32 @@ function TabButton({ active, onClick, icon: Icon, label, description }: any) {
     return (
         <button
             onClick={onClick}
-            className={`flex items-center gap-4 p-4 rounded-xl text-left transition-all duration-300 ${active
-                ? 'bg-navy-900 text-white shadow-lg ring-1 ring-white/10'
-                : 'bg-white text-navy-600 hover:bg-slate-50 border border-transparent'
+            className={`flex items-center gap-3 p-3 rounded text-left transition-colors duration-150 ${active
+                ? 'bg-slate-900 text-white shadow-sm'
+                : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-200'
                 }`}
         >
-            <div className={`p-2 rounded-lg ${active ? 'bg-navy-800' : 'bg-slate-100'}`}>
-                <Icon className="h-5 w-5" />
+            <div className={`p-1.5 rounded ${active ? 'bg-slate-800' : 'bg-slate-100'}`}>
+                <Icon className="h-4 w-4" />
             </div>
-            <div>
-                <p className="font-bold text-sm">{label}</p>
-                <p className={`text-[11px] ${active ? 'text-navy-300' : 'text-navy-400'}`}>{description}</p>
+            <div className="min-w-0 flex-1">
+                <p className="font-semibold text-xs truncate">{label}</p>
+                <p className={`text-[10px] truncate ${active ? 'text-slate-400' : 'text-slate-500'}`}>{description}</p>
             </div>
-            {active && <m.div layoutId="activeTabMarker" className="ml-auto"><ChevronRight className="h-4 w-4" /></m.div>}
+            {active && <m.div layoutId="activeTabMarker" className="ml-auto"><ChevronRight className="h-3.5 w-3.5" /></m.div>}
         </button>
     );
 }
 
 function InputField({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
     return (
-        <div className="space-y-1.5">
-            <label className="text-xs font-bold uppercase tracking-wider text-navy-400 ml-1">{label}</label>
+        <div className="space-y-1">
+            <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 ml-1">{label}</label>
             <input
                 type="text"
                 value={value}
                 onChange={(e) => onChange(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 text-navy-900 focus:outline-none focus:ring-2 focus:ring-gold-400/50 focus:border-gold-400 transition-all font-sans"
+                className="w-full bg-slate-50 border border-slate-200 rounded px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-slate-900 focus:border-slate-800 transition-colors font-sans"
             />
         </div>
     );
@@ -963,13 +965,13 @@ function InputField({ label, value, onChange }: { label: string; value: string; 
 
 function TextAreaField({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
     return (
-        <div className="space-y-1.5">
-            <label className="text-xs font-bold uppercase tracking-wider text-navy-400 ml-1">{label}</label>
+        <div className="space-y-1">
+            <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 ml-1">{label}</label>
             <textarea
                 value={value}
                 rows={4}
                 onChange={(e) => onChange(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 text-navy-900 focus:outline-none focus:ring-2 focus:ring-gold-400/50 focus:border-gold-400 transition-all font-sans resize-none"
+                className="w-full bg-slate-50 border border-slate-200 rounded px-2.5 py-1.5 text-xs text-slate-850 focus:outline-none focus:ring-1 focus:ring-slate-900 focus:border-slate-800 transition-colors font-sans resize-none"
             />
         </div>
     );

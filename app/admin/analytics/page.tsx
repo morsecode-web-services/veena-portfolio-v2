@@ -14,7 +14,7 @@ import {
 
 const C = {
     blue: '#3B82F6', green: '#10B981', purple: '#8B5CF6', orange: '#F59E0B',
-    pink: '#EC4899', cyan: '#06B6D4', red: '#EF4444', slate: '#64748B', gold: '#d4af37',
+    pink: '#EC4899', cyan: '#06B6D4', red: '#EF4444', slate: '#64748B', gold: '#64748B',
 };
 const PIE = [C.blue, C.green, C.purple, C.orange, C.pink, C.cyan];
 
@@ -25,8 +25,8 @@ function fdate(d: string) { return `${d.substring(4, 6)}/${d.substring(6, 8)}`; 
 const Tip = ({ active, payload, label }: any) => {
     if (!active || !payload?.length) return null;
     return (
-        <div className="bg-navy-950 text-white text-xs rounded-lg px-3 py-2 shadow-xl border border-white/10">
-            <p className="font-bold text-amber-400 mb-1">{label}</p>
+        <div className="bg-slate-900 text-slate-100 text-xs rounded px-2.5 py-1.5 shadow border border-slate-800">
+            <p className="font-bold text-slate-200 mb-1">{label}</p>
             {payload.map((e: any, i: number) => (
                 <p key={i} className="flex items-center gap-1.5">
                     <span className="w-2 h-2 rounded-full inline-block" style={{ background: e.color }} />
@@ -40,16 +40,16 @@ const Tip = ({ active, payload, label }: any) => {
 function KPI({ title, value, change, icon, color }: any) {
     const pos = title === 'Bounce Rate' ? change <= 0 : change >= 0;
     return (
-        <div className="bg-white rounded-xl border border-gray-100 p-4 hover:shadow-md transition-shadow">
+        <div className="bg-white rounded border border-slate-200 p-4">
             <div className="flex items-start justify-between mb-2">
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{title}</p>
-                <div className="p-1.5 rounded-lg" style={{ background: `${color}15`, color }}>{icon}</div>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{title}</p>
+                <div className="p-1.5 rounded" style={{ background: `${color}15`, color }}>{icon}</div>
             </div>
-            <p className="text-2xl font-bold text-navy-900">{typeof value === 'number' ? fmt(value) : value}</p>
+            <p className="text-2xl font-bold text-slate-900">{typeof value === 'number' ? fmt(value) : value}</p>
             <div className="mt-2 flex items-center gap-1">
                 {pos ? <TrendingUp className="w-3 h-3 text-emerald-500" /> : <TrendingDown className="w-3 h-3 text-red-400" />}
                 <span className={`text-[11px] font-bold ${pos ? 'text-emerald-500' : 'text-red-400'}`}>{change > 0 ? '+' : ''}{change}%</span>
-                <span className="text-[11px] text-gray-400">vs prev</span>
+                <span className="text-[11px] text-slate-400">vs prev</span>
             </div>
         </div>
     );
@@ -58,12 +58,12 @@ function KPI({ title, value, change, icon, color }: any) {
 function Bar1({ label, value, max, color, sub }: any) {
     const pct = max > 0 ? Math.round((value / max) * 100) : 0;
     return (
-        <div className="relative py-2 px-3 rounded-lg overflow-hidden">
-            <div className="absolute inset-0 rounded-lg opacity-10" style={{ background: color, width: `${pct}%` }} />
+        <div className="relative py-2 px-3 rounded overflow-hidden">
+            <div className="absolute inset-0 rounded opacity-10" style={{ background: color, width: `${pct}%` }} />
             <div className="relative flex items-center justify-between">
                 <div className="min-w-0 flex-1 pr-3">
-                    <p className="text-sm font-medium text-navy-900 truncate">{label}</p>
-                    {sub && <p className="text-[10px] text-gray-400 truncate">{sub}</p>}
+                    <p className="text-sm font-medium text-slate-900 truncate">{label}</p>
+                    {sub && <p className="text-[10px] text-slate-400 truncate">{sub}</p>}
                 </div>
                 <p className="text-sm font-bold flex-shrink-0" style={{ color }}>{typeof value === 'number' ? value.toLocaleString() : value}</p>
             </div>
@@ -73,11 +73,11 @@ function Bar1({ label, value, max, color, sub }: any) {
 
 function Section({ title, icon, action, children }: any) {
     return (
-        <div className="bg-white rounded-xl border border-gray-100 p-5 hover:shadow-sm transition-shadow">
+        <div className="bg-white rounded border border-slate-200 p-5">
             <div className="flex items-center justify-between gap-2 mb-4">
                 <div className="flex items-center gap-2">
-                    <div className="text-gray-400">{icon}</div>
-                    <h2 className="text-sm font-bold text-navy-900 uppercase tracking-wide">{title}</h2>
+                    <div className="text-slate-400">{icon}</div>
+                    <h2 className="text-xs font-bold text-slate-800 uppercase tracking-wider">{title}</h2>
                 </div>
                 {action && <div className="flex-shrink-0">{action}</div>}
             </div>
@@ -151,12 +151,11 @@ export default function AnalyticsPage() {
         // Fetch cohorts pricing details
         const { data: cohorts } = await supabase.from('cohorts').select('id, title, price, pricing_type');
         
-        // Fetch only paid submissions for revenue calculations
-        const { data: subs } = await supabase
-            .from('form_submissions')
-            .select('cohort_id, razorpay_payment_id, razorpay_amount')
-            .eq('payment_status', 'paid')
-            .not('cohort_id', 'is', null);
+        // Fetch only paid payments (instead of form_submissions and webhook_logs)
+        const { data: payments } = await supabase
+            .from('payments')
+            .select('id, amount, razorpay_payment_id, enrollment_id, enrollments(cohort_id)')
+            .eq('status', 'paid');
             
         // Fetch leads for total interest metrics
         const { data: leads } = await supabase.from('leads').select('cohort_id').not('cohort_id', 'is', null);
@@ -168,54 +167,26 @@ export default function AnalyticsPage() {
             .neq('payment_status', 'paid')
             .not('cohort_id', 'is', null);
 
-        // Map matching webhook logs for actual payment amount lookup (handles custom "Pay As You Wish" amounts)
-        const paymentIds = subs?.map(s => s.razorpay_payment_id).filter(Boolean) || [];
-        const logsMap = new Map();
-        
-        try {
-            if (paymentIds.length > 0) {
-                // Paginate or fetch in batches if extremely large, but a standard .in is perfect here
-                const { data: logs, error: logsError } = await supabase
-                    .from('webhook_logs')
-                    .select('event_id, payload')
-                    .in('event_id', paymentIds);
-                    
-                if (logsError) throw logsError;
-                
-                logs?.forEach(log => {
-                    if (log.event_id) {
-                        logsMap.set(log.event_id, log.payload);
-                    }
-                });
-            }
-        } catch (err) {
-            console.warn('[Analytics] Failed to fetch actual payment amounts from webhook_logs:', err);
-        }
-
         if (cohorts) {
-                const stats = cohorts.map(c => {
-                const cohortSubs = subs?.filter(s => s.cohort_id === c.id) || [];
+            const formattedPayments = (payments || []).map(p => {
+                const cohortId = p.enrollments && !Array.isArray(p.enrollments)
+                    ? (p.enrollments as any).cohort_id
+                    : null;
+                return {
+                    id: p.id,
+                    cohort_id: cohortId,
+                    razorpay_payment_id: p.razorpay_payment_id,
+                    amount: p.amount // in paise
+                };
+            }).filter(p => p.cohort_id !== null);
+
+            const stats = cohorts.map(c => {
+                const cohortPayments = formattedPayments.filter(p => p.cohort_id === c.id);
                 
                 // Sum actual payments
                 let totalRevenue = 0;
-                cohortSubs.forEach(s => {
-                    let amount = 0;
-                    if (s.razorpay_amount !== undefined && s.razorpay_amount !== null) {
-                        amount = Number(s.razorpay_amount) / 100;
-                    } else if (s.razorpay_payment_id && logsMap.has(s.razorpay_payment_id)) {
-                        const payload = logsMap.get(s.razorpay_payment_id);
-                        const paise = payload?.payload?.payment?.entity?.amount;
-                        if (paise !== undefined && paise !== null) {
-                            amount = Number(paise) / 100;
-                        }
-                    }
-                    
-                    // Fallback to default set price if no webhook payload log exists
-                    if (amount === 0) {
-                        amount = c.price / 100;
-                    }
-                    
-                    totalRevenue += amount;
+                cohortPayments.forEach(p => {
+                    totalRevenue += (p.amount || 0) / 100;
                 });
 
                 // Lead/Interest count
@@ -227,10 +198,10 @@ export default function AnalyticsPage() {
                     title: c.title,
                     pricing_type: c.pricing_type || 'fixed',
                     cohort_price: c.price / 100,
-                    student_count: cohortSubs.length,
+                    student_count: cohortPayments.length,
                     lead_count: leadCount,
                     revenue: totalRevenue,
-                    average: cohortSubs.length > 0 ? (totalRevenue / cohortSubs.length) : 0
+                    average: cohortPayments.length > 0 ? (totalRevenue / cohortPayments.length) : 0
                 };
             });
 
@@ -257,8 +228,7 @@ export default function AnalyticsPage() {
             });
 
             setCohortsList(cohorts || []);
-            setPaidSubmissions(subs || []);
-            setWebhookLogsMap(logsMap);
+            setPaidSubmissions(formattedPayments);
         }
     }, []);
 
@@ -271,22 +241,7 @@ export default function AnalyticsPage() {
             : paidSubmissions.filter(s => s.cohort_id === selectedCohortId);
 
         filteredSubs.forEach(s => {
-            let amount = 0;
-            if (s.razorpay_amount !== undefined && s.razorpay_amount !== null) {
-                amount = Number(s.razorpay_amount) / 100;
-            } else if (s.razorpay_payment_id && webhookLogsMap.has(s.razorpay_payment_id)) {
-                const payload = webhookLogsMap.get(s.razorpay_payment_id);
-                const paise = payload?.payload?.payment?.entity?.amount;
-                if (paise !== undefined && paise !== null) {
-                    amount = Number(paise) / 100;
-                }
-            }
-            
-            if (amount === 0 && s.cohort_id) {
-                const c = cohortsList.find(x => x.id === s.cohort_id);
-                if (c) amount = c.price / 100;
-            }
-            
+            const amount = (s.amount || 0) / 100;
             if (amount > 0) {
                 distMap.set(amount, (distMap.get(amount) || 0) + 1);
             }
@@ -299,7 +254,7 @@ export default function AnalyticsPage() {
                 students: count
             }))
             .sort((a, b) => a.amount - b.amount);
-    }, [paidSubmissions, cohortsList, webhookLogsMap, selectedCohortId]);
+    }, [paidSubmissions, selectedCohortId]);
 
     useEffect(() => { 
         fetch_(); 
@@ -307,16 +262,16 @@ export default function AnalyticsPage() {
     }, [dateRange, fetch_, fetchCohortStats]);
 
     if (error) return (
-        <div className="p-6 bg-red-50 rounded-xl border border-red-100 text-red-600">
+        <div className="p-6 bg-red-50 rounded border border-red-100 text-red-650">
             <p className="font-bold">Error</p><p>{error}</p>
         </div>
     );
 
     if (loading && !data) return (
         <div className="space-y-4 animate-pulse">
-            <div className="h-8 w-48 bg-gray-200 rounded" />
-            <div className="grid grid-cols-6 gap-3">{Array.from({ length: 6 }).map((_, i) => <div key={i} className="h-24 bg-gray-200 rounded-xl" />)}</div>
-            <div className="h-72 bg-gray-200 rounded-xl" />
+            <div className="h-6 w-36 bg-slate-200 rounded" />
+            <div className="grid grid-cols-6 gap-3">{Array.from({ length: 6 }).map((_, i) => <div key={i} className="h-24 bg-slate-200 rounded" />)}</div>
+            <div className="h-72 bg-slate-200 rounded" />
         </div>
     );
 
@@ -334,55 +289,55 @@ export default function AnalyticsPage() {
         <div className="max-w-[1400px] mx-auto pb-20 relative">
             {/* Loading overlay */}
             {loading && data && (
-                <div className="absolute inset-0 z-50 flex items-center justify-center bg-white/60 backdrop-blur-sm rounded-xl">
-                    <div className="flex flex-col items-center gap-2 bg-white rounded-xl shadow-xl px-6 py-4 border border-gray-100">
-                        <RefreshCw className="w-7 h-7 text-amber-500 animate-spin" />
-                        <p className="text-xs font-bold text-navy-900">Loading {getRangeLabel(dateRange).toLowerCase()} data…</p>
+                <div className="absolute inset-0 z-50 flex items-center justify-center bg-white/60 backdrop-blur-sm rounded">
+                    <div className="flex flex-col items-center gap-2 bg-white rounded shadow-sm px-6 py-4 border border-slate-200">
+                        <RefreshCw className="w-5 h-5 text-slate-800 animate-spin" />
+                        <p className="text-xs font-bold text-slate-800">Loading {getRangeLabel(dateRange).toLowerCase()} data…</p>
                     </div>
                 </div>
             )}
 
             <div className={`space-y-5 transition-opacity duration-200 ${loading ? 'opacity-40 pointer-events-none' : ''}`}>
                 {/* Header */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-200 pb-4">
                     <div>
-                        <h1 className="text-3xl font-serif font-bold text-navy-900">Analytics</h1>
-                        <p className="text-sm text-slate-500 mt-0.5">Google Analytics · Unified Dashboard</p>
+                        <h1 className="text-xl font-bold text-slate-900">Analytics</h1>
+                        <p className="text-xs text-slate-500 mt-0.5">Google Analytics · Unified Dashboard</p>
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
-                        <div className="flex bg-white rounded-lg border border-gray-200 p-1">
+                        <div className="flex bg-slate-50 rounded border border-slate-200 p-1">
                             {PRESETS.map(p => (
                                 <button key={p.value} onClick={() => setDateRange(p.value)}
-                                    className={`px-3 py-1.5 rounded-md text-xs font-bold transition-colors ${dateRange === p.value ? 'bg-navy-900 text-white' : 'text-gray-500 hover:text-navy-900'}`}>
+                                    className={`px-2.5 py-1 rounded text-xs font-semibold transition-colors ${dateRange === p.value ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}>
                                     {p.label}
                                 </button>
                             ))}
                         </div>
                         {dateRange === 'custom' && (
-                            <div className="flex items-center gap-2 bg-white rounded-lg border border-gray-200 p-1 animate-in slide-in-from-right-4">
+                            <div className="flex items-center gap-2 bg-white rounded border border-slate-200 p-1 animate-in slide-in-from-right-4">
                                 <input 
                                     type="date" 
                                     value={customStart} 
                                     onChange={(e) => setCustomStart(e.target.value)}
-                                    className="text-[10px] font-bold p-1 border-none focus:ring-0 bg-transparent"
+                                    className="text-[10px] font-bold p-1 border-none focus:ring-0 bg-transparent text-slate-700"
                                 />
-                                <span className="text-[10px] text-gray-400 font-bold">TO</span>
+                                <span className="text-[10px] text-slate-400 font-bold">TO</span>
                                 <input 
                                     type="date" 
                                     value={customEnd} 
                                     onChange={(e) => setCustomEnd(e.target.value)}
-                                    className="text-[10px] font-bold p-1 border-none focus:ring-0 bg-transparent"
+                                    className="text-[10px] font-bold p-1 border-none focus:ring-0 bg-transparent text-slate-700"
                                 />
                             </div>
                         )}
                         {today && (
-                            <div className="flex items-center gap-1.5 bg-emerald-50 text-emerald-700 px-3 py-2 rounded-lg border border-emerald-100 text-xs font-bold">
+                            <div className="flex items-center gap-1 bg-emerald-50 text-emerald-700 px-2.5 py-1.5 rounded border border-emerald-250 text-xs font-semibold">
                                 <Zap className="w-3.5 h-3.5" />{today.users} users today · {today.pageViews} views
                             </div>
                         )}
                         <button onClick={() => fetch_(true)} disabled={refreshing}
-                            className="p-2 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-40">
-                            <RefreshCw className={`w-4 h-4 text-gray-500 ${refreshing ? 'animate-spin' : ''}`} />
+                            className="p-1.5 rounded border border-slate-200 hover:bg-slate-50 disabled:opacity-40 bg-white">
+                            <RefreshCw className={`w-3.5 h-3.5 text-slate-500 ${refreshing ? 'animate-spin' : ''}`} />
                         </button>
                     </div>
                 </div>
@@ -398,8 +353,8 @@ export default function AnalyticsPage() {
                 </div>
 
                 {/* Traffic Chart */}
-                <div className="bg-white rounded-xl border border-gray-100 p-5">
-                    <h2 className="text-sm font-bold text-navy-900 uppercase tracking-wide mb-4">Traffic Trend · {getRangeLabel(dateRange)}</h2>
+                <div className="bg-white rounded border border-slate-200 p-5">
+                    <h2 className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-4">Traffic Trend · {getRangeLabel(dateRange)}</h2>
                     <div className="h-64">
                         <ResponsiveContainer width="100%" height="100%">
                             <AreaChart data={daily} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
@@ -427,7 +382,7 @@ export default function AnalyticsPage() {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
                     <div className="lg:col-span-2">
                         {data.funnel ? (
-                            <Section title="Cohort Enrollment Funnel" icon={<Zap className="w-4 h-4 text-gold-500" />}>
+                            <Section title="Cohort Enrollment Funnel" icon={<Zap className="w-4 h-4 text-slate-450" />}>
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
                                     {[
                                         { label: 'Cohort Views', value: data.funnel.view_item, color: C.blue, sub: 'Initial Interest' },
@@ -439,24 +394,24 @@ export default function AnalyticsPage() {
                                         
                                         return (
                                             <div key={step.label} className="relative group">
-                                                <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100 hover:border-gold-200 transition-all hover:bg-white hover:shadow-md">
+                                                <div className="p-4 bg-slate-50 rounded border border-slate-200 transition-all hover:bg-white hover:border-slate-350">
                                                     <div className="flex items-center justify-between mb-2">
                                                         <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">{step.label}</span>
                                                         {i > 0 && (
-                                                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                                                            <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${
                                                                 conversion > 50 ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-100 text-slate-500'
                                                             }`}>
                                                                 {conversion}% conv.
                                                             </span>
                                                         )}
                                                     </div>
-                                                    <div className="text-3xl font-bold text-navy-900 mb-1">{step.value.toLocaleString()}</div>
+                                                    <div className="text-2xl font-bold text-slate-900 mb-1">{step.value.toLocaleString()}</div>
                                                     <div className="text-[10px] font-medium text-slate-400">{step.sub}</div>
                                                 </div>
                                                 {i < arr.length - 1 && (
                                                     <div className="hidden md:block absolute -right-3 top-1/2 -translate-y-1/2 z-10">
-                                                        <div className="w-6 h-6 bg-white border border-slate-100 rounded-full flex items-center justify-center shadow-sm">
-                                                            <ArrowUpRight className="w-3 h-3 text-slate-300 rotate-90" />
+                                                        <div className="w-5 h-5 bg-white border border-slate-205 rounded-full flex items-center justify-center shadow-none">
+                                                            <ArrowUpRight className="w-3 h-3 text-slate-400 rotate-90" />
                                                         </div>
                                                     </div>
                                                 )}
@@ -466,7 +421,7 @@ export default function AnalyticsPage() {
                                 </div>
                             </Section>
                         ) : (
-                            <div className="bg-slate-50 border border-dashed border-slate-200 rounded-2xl p-8 flex items-center justify-center text-slate-400 text-sm h-full">
+                            <div className="bg-slate-50 border border-dashed border-slate-200 rounded p-8 flex items-center justify-center text-slate-400 text-sm h-full">
                                 Funnel data currently unavailable
                             </div>
                         )}
@@ -476,15 +431,15 @@ export default function AnalyticsPage() {
                         <Section title="Cohort Revenue & Enrollment" icon={<TrendingUp className="w-4 h-4 text-emerald-500" />}>
                             <div className="space-y-4 pt-1">
                                 <div className="grid grid-cols-3 gap-2">
-                                    <div className="bg-emerald-50/50 border border-emerald-100 rounded-xl p-2 text-center shadow-sm">
+                                    <div className="bg-emerald-50/50 border border-emerald-200 rounded p-2 text-center">
                                         <span className="text-[8px] font-bold text-emerald-600 block uppercase tracking-wider">Revenue</span>
                                         <span className="text-xs font-black text-emerald-800">₹{overallStats.totalRevenue.toLocaleString()}</span>
                                     </div>
-                                    <div className="bg-blue-50/50 border border-blue-100 rounded-xl p-2 text-center shadow-sm">
+                                    <div className="bg-blue-50/50 border border-blue-200 rounded p-2 text-center">
                                         <span className="text-[8px] font-bold text-blue-600 block uppercase tracking-wider">Students</span>
                                         <span className="text-xs font-black text-blue-800">{overallStats.totalPaidStudents}</span>
                                     </div>
-                                    <div className="bg-purple-50/50 border border-purple-100 rounded-xl p-2 text-center shadow-sm">
+                                    <div className="bg-purple-50/50 border border-purple-200 rounded p-2 text-center">
                                         <span className="text-[8px] font-bold text-purple-600 block uppercase tracking-wider">Average</span>
                                         <span className="text-xs font-black text-purple-800">₹{Math.round(overallStats.overallAverage).toLocaleString()}</span>
                                     </div>
@@ -493,20 +448,20 @@ export default function AnalyticsPage() {
                                 <div className="space-y-2 max-h-[140px] overflow-y-auto pr-1">
                                     {cohortStats.length > 0 ? (
                                         cohortStats.map((c: any, i: number) => (
-                                            <div key={i} className="p-2.5 rounded-xl border border-slate-100 bg-slate-50/30 hover:bg-white hover:shadow-sm transition-all">
+                                            <div key={i} className="p-2.5 rounded border border-slate-200 bg-slate-50/30 hover:bg-white transition-all">
                                                 <div className="flex items-center justify-between mb-1">
-                                                    <div className="font-bold text-[11px] text-navy-900 truncate max-w-[140px]" title={c.title}>
+                                                    <div className="font-bold text-[11px] text-slate-800 truncate max-w-[140px]" title={c.title}>
                                                         {c.title}
                                                     </div>
                                                     <span className={`px-1.5 py-0.5 rounded text-[8px] font-extrabold uppercase tracking-wider ${
-                                                        c.pricing_type === 'pay_as_you_wish' ? 'bg-purple-100 text-purple-700' : 'bg-slate-100 text-slate-700'
+                                                        c.pricing_type === 'pay_as_you_wish' ? 'bg-purple-50 text-purple-700' : 'bg-slate-100 text-slate-700'
                                                     }`}>
                                                         {c.pricing_type === 'pay_as_you_wish' ? 'Dakshina' : 'Fixed'}
                                                     </span>
                                                 </div>
                                                 <div className="flex items-center justify-between text-[10px] text-slate-500 font-medium">
                                                     <span>{c.student_count} Paid {c.lead_count > 0 && <span className="text-slate-400">({c.lead_count} Leads)</span>}</span>
-                                                    <span className="font-bold text-navy-950">₹{c.revenue.toLocaleString()}</span>
+                                                    <span className="font-bold text-slate-800">₹{c.revenue.toLocaleString()}</span>
                                                 </div>
                                                 <div className="flex items-center justify-between text-[9px] text-slate-400 mt-0.5">
                                                     <span>Suggested: ₹{c.cohort_price}</span>
@@ -515,7 +470,7 @@ export default function AnalyticsPage() {
                                             </div>
                                         ))
                                     ) : (
-                                        <p className="text-xs text-gray-400 py-4 text-center">No enrollments yet.</p>
+                                        <p className="text-xs text-slate-400 py-4 text-center">No enrollments yet.</p>
                                     )}
                                 </div>
                             </div>
@@ -529,11 +484,11 @@ export default function AnalyticsPage() {
                     icon={<BarChart3 className="w-4 h-4 text-purple-500" />}
                     action={
                         <div className="flex items-center gap-2">
-                            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Cohort:</span>
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Cohort:</span>
                             <select
                                 value={selectedCohortId}
                                 onChange={(e) => setSelectedCohortId(e.target.value)}
-                                className="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-bold text-navy-900 focus:outline-none focus:ring-2 focus:ring-navy-500/10 focus:border-navy-500"
+                                className="bg-slate-50 border border-slate-200 rounded px-2.5 py-1.5 text-xs font-semibold text-slate-850 focus:outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-900 transition-colors cursor-pointer"
                             >
                                 <option value="all">All Cohorts</option>
                                 {cohortsList.map((c) => (
@@ -555,7 +510,7 @@ export default function AnalyticsPage() {
                                 </BarChart>
                             </ResponsiveContainer>
                         ) : (
-                            <p className="text-xs text-gray-400 py-20 text-center">No payment distribution data available for this cohort.</p>
+                            <p className="text-xs text-slate-400 py-20 text-center">No payment distribution data available for this cohort.</p>
                         )}
                     </div>
                 </Section>
@@ -569,7 +524,7 @@ export default function AnalyticsPage() {
                         <div className="overflow-x-auto">
                             <table className="w-full text-xs">
                                 <thead>
-                                    <tr className="text-gray-400 border-b border-gray-100">
+                                    <tr className="text-slate-400 border-b border-slate-100">
                                         <th className="pb-2 text-left font-semibold">Page</th>
                                         <th className="pb-2 text-right font-semibold">Views</th>
                                         <th className="pb-2 text-right font-semibold">Users</th>
@@ -577,16 +532,16 @@ export default function AnalyticsPage() {
                                         <th className="pb-2 text-right font-semibold">Bounce</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-gray-50">
+                                <tbody className="divide-y divide-slate-50">
                                     {topPages?.map((p: any, i: number) => (
-                                        <tr key={i} className="hover:bg-gray-50/50">
+                                        <tr key={i} className="hover:bg-slate-50/50">
                                             <td className="py-2 pr-2">
-                                                <div className="font-medium text-navy-900 truncate max-w-[160px]" title={p.title}>{p.title || p.path}</div>
-                                                <div className="text-gray-400 truncate max-w-[160px]">{p.path}</div>
+                                                <div className="font-medium text-slate-900 truncate max-w-[160px]" title={p.title}>{p.title || p.path}</div>
+                                                <div className="text-slate-400 truncate max-w-[160px]">{p.path}</div>
                                             </td>
-                                            <td className="py-2 text-right font-bold text-navy-900">{p.views.toLocaleString()}</td>
-                                            <td className="py-2 text-right text-gray-500">{p.users.toLocaleString()}</td>
-                                            <td className="py-2 text-right text-gray-500">{dur(p.avgDuration)}</td>
+                                            <td className="py-2 text-right font-bold text-slate-850">{p.views.toLocaleString()}</td>
+                                            <td className="py-2 text-right text-slate-500">{p.users.toLocaleString()}</td>
+                                            <td className="py-2 text-right text-slate-500">{dur(p.avgDuration)}</td>
                                             <td className={`py-2 text-right font-medium ${p.bounceRate > 70 ? 'text-red-500' : p.bounceRate > 50 ? 'text-orange-500' : 'text-emerald-500'}`}>
                                                 {p.bounceRate}%
                                             </td>
@@ -602,22 +557,22 @@ export default function AnalyticsPage() {
                         <div className="overflow-x-auto">
                             <table className="w-full text-xs">
                                 <thead>
-                                    <tr className="text-gray-400 border-b border-gray-100">
+                                    <tr className="text-slate-400 border-b border-slate-100">
                                         <th className="pb-2 text-left font-semibold">Channel / Source</th>
                                         <th className="pb-2 text-right font-semibold">Sessions</th>
                                         <th className="pb-2 text-right font-semibold">Users</th>
                                         <th className="pb-2 text-right font-semibold">Bounce</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-gray-50">
+                                <tbody className="divide-y divide-slate-50">
                                     {sources?.map((s: any, i: number) => (
-                                        <tr key={i} className="hover:bg-gray-50/50">
+                                        <tr key={i} className="hover:bg-slate-50/50">
                                             <td className="py-2 pr-2">
-                                                <div className="font-medium text-navy-900">{s.channel}</div>
-                                                <div className="text-gray-400">{s.source !== '(direct)' && s.source !== s.channel ? s.source : ''}</div>
+                                                <div className="font-medium text-slate-900">{s.channel}</div>
+                                                <div className="text-slate-400">{s.source !== '(direct)' && s.source !== s.channel ? s.source : ''}</div>
                                             </td>
-                                            <td className="py-2 text-right font-bold text-navy-900">{s.sessions.toLocaleString()}</td>
-                                            <td className="py-2 text-right text-gray-500">{s.users.toLocaleString()}</td>
+                                            <td className="py-2 text-right font-bold text-slate-850">{s.sessions.toLocaleString()}</td>
+                                            <td className="py-2 text-right text-slate-500">{s.users.toLocaleString()}</td>
                                             <td className={`py-2 text-right font-medium ${s.bounceRate > 70 ? 'text-red-500' : s.bounceRate > 50 ? 'text-orange-500' : 'text-emerald-500'}`}>
                                                 {s.bounceRate}%
                                             </td>
@@ -648,12 +603,12 @@ export default function AnalyticsPage() {
                                         <th className="pb-2 text-right font-semibold">Users</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-gray-50">
+                                <tbody className="divide-y divide-slate-50">
                                     {cities?.map((c: any, i: number) => (
-                                        <tr key={i} className="hover:bg-gray-50/50">
-                                            <td className="py-2 font-medium text-navy-900">{c.city}</td>
-                                            <td className="py-2 text-right text-gray-400">{c.country}</td>
-                                            <td className="py-2 text-right font-bold text-navy-900">{c.users.toLocaleString()}</td>
+                                        <tr key={i} className="hover:bg-slate-50/50">
+                                            <td className="py-2 font-medium text-slate-900">{c.city}</td>
+                                            <td className="py-2 text-right text-slate-450">{c.country}</td>
+                                            <td className="py-2 text-right font-bold text-slate-850">{c.users.toLocaleString()}</td>
                                         </tr>
                                     ))}
                                 </tbody>
@@ -694,11 +649,11 @@ export default function AnalyticsPage() {
                             {operatingSystems?.map((o: any, i: number) => (
                                 <div key={o.os}>
                                     <div className="flex justify-between text-xs mb-1">
-                                        <span className="font-medium text-navy-900">{o.os}</span>
-                                        <span className="font-bold text-gray-600">{o.users.toLocaleString()}</span>
+                                        <span className="font-medium text-slate-800">{o.os}</span>
+                                        <span className="font-bold text-slate-500">{o.users.toLocaleString()}</span>
                                     </div>
-                                    <div className="w-full h-1.5 bg-gray-100 rounded-full">
-                                        <div className="h-full rounded-full" style={{ width: `${Math.round((o.users / maxOS) * 100)}%`, background: PIE[i % PIE.length] }} />
+                                    <div className="w-full h-1.5 bg-slate-100 rounded">
+                                        <div className="h-full rounded" style={{ width: `${Math.round((o.users / maxOS) * 100)}%`, background: PIE[i % PIE.length] }} />
                                     </div>
                                 </div>
                             ))}
@@ -710,11 +665,11 @@ export default function AnalyticsPage() {
                             {browsers?.map((b: any, i: number) => (
                                 <div key={b.browser}>
                                     <div className="flex justify-between text-xs mb-1">
-                                        <span className="font-medium text-navy-900">{b.browser}</span>
-                                        <span className="font-bold text-gray-600">{b.sessions.toLocaleString()}</span>
+                                        <span className="font-medium text-slate-800">{b.browser}</span>
+                                        <span className="font-bold text-slate-500">{b.sessions.toLocaleString()}</span>
                                     </div>
-                                    <div className="w-full h-1.5 bg-gray-100 rounded-full">
-                                        <div className="h-full rounded-full" style={{ width: `${Math.round((b.sessions / (browsers[0]?.sessions || 1)) * 100)}%`, background: C.purple }} />
+                                    <div className="w-full h-1.5 bg-slate-100 rounded">
+                                        <div className="h-full rounded" style={{ width: `${Math.round((b.sessions / (browsers[0]?.sessions || 1)) * 100)}%`, background: C.purple }} />
                                     </div>
                                 </div>
                             ))}
@@ -738,11 +693,11 @@ export default function AnalyticsPage() {
                             {events?.map((e: any, i: number) => (
                                 <div key={e.event}>
                                     <div className="flex justify-between text-xs mb-1">
-                                        <span className="font-medium text-navy-900 font-mono">{e.event}</span>
-                                        <span className="font-bold text-gray-600">{e.count.toLocaleString()}</span>
+                                        <span className="font-medium text-slate-800 font-mono">{e.event}</span>
+                                        <span className="font-bold text-slate-500">{e.count.toLocaleString()}</span>
                                     </div>
-                                    <div className="w-full h-1.5 bg-gray-100 rounded-full">
-                                        <div className="h-full rounded-full" style={{ width: `${Math.round((e.count / maxEvt) * 100)}%`, background: C.pink }} />
+                                    <div className="w-full h-1.5 bg-slate-100 rounded">
+                                        <div className="h-full rounded" style={{ width: `${Math.round((e.count / maxEvt) * 100)}%`, background: C.pink }} />
                                     </div>
                                 </div>
                             ))}
@@ -755,7 +710,7 @@ export default function AnalyticsPage() {
                                 ? smartLinks.map((l: any, i: number) => (
                                     <Bar1 key={i} label={l.title} value={l.clicks} max={smartLinks[0]?.clicks} color={C.gold} sub={`/link/${l.slug}`} />
                                 ))
-                                : <p className="text-xs text-gray-400 py-4 text-center">No clicks recorded yet.</p>
+                                : <p className="text-xs text-slate-400 py-4 text-center">No clicks recorded yet.</p>
                             }
                         </div>
                     </Section>

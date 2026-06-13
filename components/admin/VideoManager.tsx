@@ -193,19 +193,15 @@ export function VideoManager() {
     );
 
     return (
-        <div className="space-y-8">
-            <div className="flex justify-between items-center">
-                <h1 className="text-2xl font-serif font-bold text-navy-900">Video Management</h1>
-            </div>
-
+        <div className="space-y-6">
             {/* Add Video Form */}
-            <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-                <h2 className="text-lg font-serif font-bold text-navy-900 mb-6 flex items-center gap-2">
-                    <Plus className="h-5 w-5 text-gold-500" /> Add New Performance
+            <div className="bg-white p-5 rounded border border-slate-200 shadow-none">
+                <h2 className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-4 flex items-center gap-2">
+                    <Plus className="h-4 w-4" /> Add New Performance
                 </h2>
                 <form onSubmit={handleSync} className="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
                     <div className="md:col-span-2">
-                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
                             YouTube URL
                         </label>
                         <input
@@ -213,17 +209,17 @@ export function VideoManager() {
                             value={url}
                             onChange={(e) => setUrl(e.target.value)}
                             placeholder="https://www.youtube.com/watch?v=..."
-                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-navy-500 outline-none text-sm"
+                            className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded text-xs outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-900 transition-all text-slate-800"
                         />
                     </div>
                     <div>
-                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
                             Category
                         </label>
                         <select
                             value={category}
                             onChange={(e) => setCategory(e.target.value)}
-                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-navy-500 outline-none text-sm font-bold"
+                            className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded text-xs outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-900 transition-all text-slate-800 font-semibold"
                         >
                             {siteConfig.music.categories.map(cat => (
                                 <option key={cat.id} value={cat.id}>{cat.name}</option>
@@ -231,13 +227,13 @@ export function VideoManager() {
                         </select>
                     </div>
                     <div>
-                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
                             Subcategory
                         </label>
                         <select
                             value={subcategory}
                             onChange={(e) => setSubcategory(e.target.value)}
-                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-navy-500 outline-none text-sm font-bold"
+                            className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded text-xs outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-900 transition-all text-slate-800 font-semibold"
                             disabled={!activeCategory || activeCategory.subcategories.length === 0}
                         >
                             {activeCategory?.subcategories.map(sub => (
@@ -246,51 +242,51 @@ export function VideoManager() {
                         </select>
                     </div>
                     <div className="flex items-center gap-4">
-                        <label className="flex items-center gap-2 cursor-pointer pt-4">
+                        <label className="flex items-center gap-2 cursor-pointer pb-2">
                             <input
                                 type="checkbox"
                                 checked={isFeatured}
                                 onChange={(e) => setIsFeatured(e.target.checked)}
-                                className="w-4 h-4 rounded border-gray-300 text-navy-900 focus:ring-navy-500"
+                                className="w-4 h-4 rounded border-slate-350 text-slate-900 focus:ring-slate-900"
                             />
-                            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Featured</span>
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Featured</span>
                         </label>
                         <button
                             type="submit"
                             disabled={syncing || !url}
-                            className="bg-navy-900 text-white px-6 py-3 rounded-xl font-bold uppercase tracking-widest text-[10px] flex items-center gap-2 hover:bg-navy-800 disabled:opacity-50 transition-all shadow-md active:scale-95"
+                            className="bg-slate-900 text-white px-4 py-2 rounded font-bold uppercase tracking-wider text-[10px] flex items-center gap-1.5 hover:bg-slate-800 disabled:opacity-50 transition-colors cursor-pointer"
                         >
-                            {syncing ? <RefreshCw className="h-4 w-4 animate-spin" /> : 'Sync & Add'}
+                            {syncing ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : 'Sync & Add'}
                         </button>
                     </div>
                 </form>
             </div>
 
             {/* Video List */}
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                <div className="p-6 border-b border-gray-50 flex items-center justify-between">
-                    <h3 className="font-serif font-bold text-navy-900">All Performances ({videos.length})</h3>
-                    <button onClick={fetchVideos} className="p-2 hover:bg-gray-50 rounded-lg transition-colors">
-                        <RefreshCw className={`h-4 w-4 text-gray-400 ${loading ? 'animate-spin' : ''}`} />
+            <div className="bg-white rounded border border-slate-200 shadow-none overflow-hidden">
+                <div className="p-4 border-b border-slate-200 flex items-center justify-between bg-slate-50/50">
+                    <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">All Performances ({videos.length})</h3>
+                    <button onClick={fetchVideos} className="p-1.5 hover:bg-slate-100 rounded transition-colors text-slate-400 hover:text-slate-650">
+                        <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
                     </button>
                 </div>
                 <div className="overflow-x-auto">
                     <table className="w-full text-left">
-                        <thead className="bg-gray-50/50 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                        <thead className="bg-slate-50 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-200">
                             <tr>
-                                <th className="px-6 py-4 text-left text-xs font-black text-navy-400 uppercase tracking-widest">Preview</th>
-                                <th className="px-6 py-4 text-left text-xs font-black text-navy-400 uppercase tracking-widest">Title</th>
-                                <th className="px-6 py-4 text-left text-xs font-black text-navy-400 uppercase tracking-widest">Category</th>
-                                <th className="px-6 py-4 text-left text-xs font-black text-navy-400 uppercase tracking-widest">Subcategory</th>
-                                <th className="px-6 py-4 text-center text-xs font-black text-navy-400 uppercase tracking-widest">Featured</th>
-                                <th className="px-6 py-4 text-right text-xs font-black text-navy-400 uppercase tracking-widest">Actions</th>
+                                <th className="px-4 py-3 text-left">Preview</th>
+                                <th className="px-4 py-3 text-left">Title</th>
+                                <th className="px-4 py-3 text-left">Category</th>
+                                <th className="px-4 py-3 text-left">Subcategory</th>
+                                <th className="px-4 py-3 text-center">Featured</th>
+                                <th className="px-4 py-3 text-right">Actions</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-50">
+                        <tbody className="divide-y divide-slate-200">
                             {videos.map((video) => (
-                                <tr key={video.id} className="hover:bg-gray-50/50 transition-colors group">
-                                    <td className="px-6 py-4">
-                                        <div className="relative w-24 aspect-video rounded-lg overflow-hidden border border-gray-200 bg-gray-50">
+                                <tr key={video.id} className="hover:bg-slate-50/50 transition-colors">
+                                    <td className="px-4 py-3">
+                                        <div className="relative w-24 aspect-video rounded overflow-hidden border border-slate-200 bg-slate-50">
                                             {video.thumbnail_url ? (
                                                 <Image
                                                     src={video.thumbnail_url}
@@ -306,28 +302,28 @@ export function VideoManager() {
                                                     }}
                                                 />
                                             ) : (
-                                                <div className="flex items-center justify-center h-full text-[8px] text-gray-400">No Image</div>
+                                                <div className="flex items-center justify-center h-full text-[8px] text-slate-400">No Image</div>
                                             )}
                                         </div>
                                     </td>
-                                    <td className="px-6 py-4">
+                                    <td className="px-4 py-3">
                                         {editingId === video.id ? (
                                             <input
                                                 type="text"
                                                 value={editData.title || ''}
                                                 onChange={(e) => setEditData({ ...editData, title: e.target.value })}
-                                                className="w-full px-2 py-1 text-sm border border-gold-300 rounded focus:outline-none focus:ring-1 focus:ring-gold-500"
+                                                className="w-full px-2 py-1 text-xs border border-slate-350 rounded focus:outline-none focus:ring-1 focus:ring-slate-900 text-slate-800 bg-white"
                                             />
                                         ) : (
-                                            <div className="text-sm font-serif font-bold text-navy-900 leading-tight">
+                                            <div className="text-xs font-semibold text-slate-800 leading-tight">
                                                 {video.title}
                                             </div>
                                         )}
-                                        <div className="text-[10px] text-gray-400 mt-1 truncate max-w-[200px]">
+                                        <div className="text-[10px] text-slate-400 mt-1 truncate max-w-[200px]">
                                             {video.url}
                                         </div>
                                     </td>
-                                    <td className="px-6 py-4">
+                                    <td className="px-4 py-3">
                                         {editingId === video.id ? (
                                             <select
                                                 value={editData.category_id || ''}
@@ -336,24 +332,24 @@ export function VideoManager() {
                                                     const subcatId = siteConfig.music.categories.find(c => c.id === catId)?.subcategories[0]?.id || '';
                                                     setEditData({ ...editData, category_id: catId, subcategory_id: subcatId });
                                                 }}
-                                                className="w-full px-2 py-1 text-xs border border-gold-300 rounded"
+                                                className="w-full px-2 py-1 text-xs border border-slate-350 rounded focus:outline-none focus:ring-1 focus:ring-slate-900 bg-white"
                                             >
                                                 {siteConfig.music.categories.map(c => (
                                                     <option key={c.id} value={c.id}>{c.name}</option>
                                                 ))}
                                             </select>
                                         ) : (
-                                            <span className="px-2 py-1 bg-navy-50 text-navy-400 text-[10px] font-black uppercase tracking-widest rounded">
+                                            <span className="px-2 py-0.5 bg-slate-100 text-slate-600 text-[9px] font-bold uppercase tracking-wider rounded border border-slate-200">
                                                 {video.category_id}
                                             </span>
                                         )}
                                     </td>
-                                    <td className="px-6 py-4 text-xs font-medium text-gray-400 capitalize">
+                                    <td className="px-4 py-3 text-xs font-medium text-slate-500 capitalize">
                                         {editingId === video.id ? (
                                             <select
                                                 value={editData.subcategory_id || ''}
                                                 onChange={(e) => setEditData({ ...editData, subcategory_id: e.target.value })}
-                                                className="w-full px-2 py-1 text-xs border border-gold-300 rounded"
+                                                className="w-full px-2 py-1 text-xs border border-slate-350 rounded focus:outline-none focus:ring-1 focus:ring-slate-900 bg-white"
                                             >
                                                 {siteConfig.music.categories
                                                     .find(c => c.id === editData.category_id)
@@ -365,55 +361,57 @@ export function VideoManager() {
                                             video.subcategory_id || '-'
                                         )}
                                     </td>
-                                    <td className="px-6 py-4 text-center">
+                                    <td className="px-4 py-3 text-center">
                                         <button
                                             onClick={() => handleToggleFeatured(video.id, video.is_featured)}
-                                            className={`transition-colors ${video.is_featured ? 'text-gold-500' : 'text-gray-300 hover:text-gold-300'}`}
+                                            className={`transition-colors ${video.is_featured ? 'text-amber-500' : 'text-slate-300 hover:text-amber-500'}`}
                                         >
-                                            <Star className={`w-5 h-5 ${video.is_featured ? 'fill-current' : ''}`} />
+                                            <Star className={`w-4 h-4 ${video.is_featured ? 'fill-current' : ''}`} />
                                         </button>
                                     </td>
-                                    <td className="px-6 py-4 text-right">
-                                        <div className="flex justify-end gap-2">
+                                    <td className="px-4 py-3 text-right">
+                                        <div className="flex justify-end gap-1.5">
                                             {editingId === video.id ? (
                                                 <>
                                                     <button
                                                         onClick={() => handleUpdateVideo(video.id)}
-                                                        className="p-1.5 text-green-600 hover:bg-green-50 rounded"
+                                                        className="p-1 text-emerald-600 hover:bg-emerald-50 rounded"
                                                         title="Save Changes"
                                                     >
                                                         <Check className="w-4 h-4" />
                                                     </button>
                                                     <button
                                                         onClick={() => setEditingId(null)}
-                                                        className="p-1.5 text-gray-400 hover:bg-gray-100 rounded"
+                                                        className="p-1 text-slate-400 hover:bg-slate-100 rounded"
                                                         title="Cancel"
                                                     >
-                                                        <Plus className="w-4 h-4 rotate-45 text-red-400" />
+                                                        <Plus className="w-4 h-4 rotate-45 text-red-500" />
                                                     </button>
                                                 </>
                                             ) : (
                                                 <>
                                                     <button
                                                         onClick={() => startEditing(video)}
-                                                        className="p-1.5 text-navy-400 hover:bg-navy-50 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                                                        className="p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded transition-all"
                                                         title="Edit Details"
                                                     >
-                                                        <Edit2 className="w-4 h-4" />
+                                                        <Edit2 className="w-3.5 h-3.5" />
                                                     </button>
                                                     <a
                                                         href={video.url}
                                                         target="_blank"
                                                         rel="noopener noreferrer"
-                                                        className="p-1.5 text-navy-400 hover:bg-navy-50 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                                                        className="p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded transition-all inline-block"
+                                                        title="Open in YouTube"
                                                     >
-                                                        <ExternalLink className="w-4 h-4" />
+                                                        <ExternalLink className="w-3.5 h-3.5" />
                                                     </a>
                                                     <button
                                                         onClick={() => handleDelete(video.id)}
-                                                        className="p-1.5 text-red-400 hover:bg-red-50 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                                                        className="p-1 text-red-400 hover:text-red-650 hover:bg-red-50 rounded transition-all"
+                                                        title="Delete Performance"
                                                     >
-                                                        <Trash2 className="w-4 h-4" />
+                                                        <Trash2 className="w-3.5 h-3.5" />
                                                     </button>
                                                 </>
                                             )}
@@ -423,7 +421,7 @@ export function VideoManager() {
                             ))}
                             {videos.length === 0 && !loading && (
                                 <tr>
-                                    <td colSpan={6} className="px-6 py-12 text-center text-gray-400 font-medium italic">
+                                    <td colSpan={6} className="px-4 py-12 text-center text-slate-400 font-medium italic text-xs">
                                         No performances added yet.
                                     </td>
                                 </tr>

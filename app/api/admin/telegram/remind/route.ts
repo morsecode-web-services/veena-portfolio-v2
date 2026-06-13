@@ -34,29 +34,33 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing submission ID' }, { status: 400 });
     }
 
-    // 3. Fetch Submission Details and Cohort Info
-    const { data: submission, error: subError } = await supabaseAdmin
-      .from('form_submissions')
-      .select('user_name, user_email, cohort_id, telegram_invite_link')
+    // 3. Fetch Enrollment Details and Cohort Info
+    const { data: enrollment, error: enrollError } = await supabaseAdmin
+      .from('enrollments')
+      .select('cohort_id, telegram_invite_link, students(name, email)')
       .eq('id', submissionId)
       .single();
 
-    if (subError || !submission) {
-      return NextResponse.json({ error: 'Submission not found' }, { status: 404 });
+    if (enrollError || !enrollment) {
+      return NextResponse.json({ error: 'Enrollment not found' }, { status: 404 });
     }
 
-    if (!submission.cohort_id) {
-      return NextResponse.json({ error: 'No cohort assigned to this student' }, { status: 400 });
+    if (!enrollment.cohort_id) {
+      return NextResponse.json({ error: 'No cohort assigned to this enrollment' }, { status: 400 });
     }
 
-    if (!submission.user_email) {
+    const studentData = enrollment.students as any;
+    const studentName = studentData?.name || 'Student';
+    const studentEmail = studentData?.email;
+
+    if (!studentEmail) {
       return NextResponse.json({ error: 'Student has no email address configured' }, { status: 400 });
     }
 
     const { data: cohort, error: cohortError } = await supabaseAdmin
       .from('cohorts')
       .select('telegram_chat_id, title')
-      .eq('id', submission.cohort_id)
+      .eq('id', enrollment.cohort_id)
       .single();
 
     if (cohortError || !cohort || !cohort.telegram_chat_id) {
@@ -64,7 +68,7 @@ export async function POST(request: Request) {
     }
 
     // 4. Generate A Fresh Telegram Invite Link (Ensures it is active for 1 week)
-    const inviteResult = await generateTelegramInviteLink(cohort.telegram_chat_id, expireHours, submission.user_name);
+    const inviteResult = await generateTelegramInviteLink(cohort.telegram_chat_id, expireHours, studentName);
 
     if (!inviteResult.success || !inviteResult.inviteLink) {
       return NextResponse.json(
@@ -75,8 +79,8 @@ export async function POST(request: Request) {
 
     // 5. Send Reminder Email via Resend
     const emailResult = await sendCohortWelcomeEmail(
-      submission.user_email,
-      submission.user_name || 'Student',
+      studentEmail,
+      studentName,
       inviteResult.inviteLink,
       cohort.title || 'Cohort',
       true
@@ -91,7 +95,7 @@ export async function POST(request: Request) {
 
     // 6. Update Database Record
     const { error: updateError } = await supabaseAdmin
-      .from('form_submissions')
+      .from('enrollments')
       .update({
         telegram_invite_link: inviteResult.inviteLink,
         telegram_joined: false
@@ -104,12 +108,12 @@ export async function POST(request: Request) {
 
     // 7. Log reminder in telegram_invite_logs
     await supabaseAdmin.from('telegram_invite_logs').insert([{
-      submission_id: submissionId,
+      enrollment_id: submissionId,
       action: 'reminded',
       invite_link: inviteResult.inviteLink,
       created_by: user.email || 'admin',
       payload: { 
-        old_invite_link: submission.telegram_invite_link,
+        old_invite_link: enrollment.telegram_invite_link,
         info: 'Email reminder sent to student' 
       }
     }]);

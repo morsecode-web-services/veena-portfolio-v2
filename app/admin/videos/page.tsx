@@ -7,14 +7,14 @@ import { Video } from 'lucide-react';
 export default function VideosAdminPage() {
     return (
         <div className="space-y-6">
-            <header className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-200 pb-4">
                 <div>
-                    <h1 className="text-3xl font-serif font-bold text-navy-900">Management</h1>
-                    <p className="text-gray-500 mt-1 uppercase tracking-widest text-[10px] font-black">
-                        Manage performances and video content
+                    <h1 className="text-xl font-bold text-slate-900">Video Management</h1>
+                    <p className="text-slate-500 text-xs mt-0.5">
+                        Manage performances and video content.
                     </p>
                 </div>
-            </header>
+            </div>
 
             <VideoManager />
         </div>

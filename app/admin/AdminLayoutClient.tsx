@@ -128,10 +128,10 @@ export default function AdminLayoutClient({ children }: AdminLayoutClientProps) 
 
     if (checkingAuth) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50 text-navy-900 font-serif">
+            <div className="min-h-screen flex items-center justify-center bg-slate-50 text-slate-800 font-sans">
                 <div className="flex flex-col items-center gap-4">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-navy-900"></div>
-                    <p className="text-sm font-bold uppercase tracking-widest">Verifying Session...</p>
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-800"></div>
+                    <p className="text-xs font-semibold uppercase tracking-wider">Verifying Session...</p>
                 </div>
             </div>
         );
@@ -161,7 +161,7 @@ export default function AdminLayoutClient({ children }: AdminLayoutClientProps) 
     ];
 
     return (
-        <div className="min-h-screen bg-gray-50 flex">
+        <div className="min-h-screen bg-slate-50 flex">
             {/* Mobile Sidebar Overlay */}
             {isSidebarOpen && (
                 <div
@@ -175,7 +175,7 @@ export default function AdminLayoutClient({ children }: AdminLayoutClientProps) 
                 onMouseEnter={() => setIsCollapsed(false)}
                 onMouseLeave={() => setIsCollapsed(true)}
                 className={`
-                    fixed inset-y-0 left-0 z-30 bg-navy-950 text-white transform transition-all duration-300 ease-in-out
+                    fixed inset-y-0 left-0 z-30 bg-slate-900 text-slate-100 border-r border-slate-850 transform transition-all duration-300 ease-in-out
                     lg:static lg:inset-0
                     ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
                     ${isCollapsed ? 'lg:w-[72px]' : 'lg:w-64'}
@@ -184,8 +184,8 @@ export default function AdminLayoutClient({ children }: AdminLayoutClientProps) 
                 <div className="h-full flex flex-col overflow-hidden">
                     <div className={`p-6 transition-all duration-300 ${isCollapsed ? 'px-4' : 'px-6'}`}>
                         <div className="flex items-center gap-3 overflow-hidden">
-                            <div className="min-w-[40px] h-10 bg-gold-500/10 rounded-lg flex items-center justify-center border border-gold-500/20">
-                                <PenTool className="h-5 w-5 text-gold-400" />
+                            <div className="min-w-[40px] h-10 bg-slate-800 rounded flex items-center justify-center border border-slate-700">
+                                <PenTool className="h-5 w-5 text-slate-200" />
                             </div>
                             {!isCollapsed && (
                                 <m.div 
@@ -193,8 +193,8 @@ export default function AdminLayoutClient({ children }: AdminLayoutClientProps) 
                                     animate={{ opacity: 1 }} 
                                     className="whitespace-nowrap"
                                 >
-                                    <h1 className="text-xl font-serif font-bold text-gold-400">Admin</h1>
-                                    <p className="text-[10px] text-navy-300 uppercase tracking-[0.2em]">Portfolio CMS</p>
+                                    <h1 className="text-sm font-bold text-slate-200 tracking-wider">ADMIN</h1>
+                                    <p className="text-[10px] text-slate-500 uppercase tracking-widest">Portfolio CMS</p>
                                 </m.div>
                             )}
                         </div>
@@ -212,22 +212,22 @@ export default function AdminLayoutClient({ children }: AdminLayoutClientProps) 
                                     href={item.href}
                                     title={isCollapsed ? item.name : ''}
                                     className={`
-                                        flex items-center gap-4 px-3 py-3 rounded-xl transition-all relative group
+                                        flex items-center gap-4 px-3 py-2 rounded transition-all relative group
                                         ${isActive
-                                            ? 'bg-gold-500/10 text-gold-400 shadow-[inset_0_0_20px_rgba(234,179,8,0.05)]'
-                                            : 'text-navy-300 hover:bg-white/5 hover:text-white'}
+                                            ? 'bg-slate-850 text-white font-medium'
+                                            : 'text-slate-400 hover:bg-slate-850 hover:text-white'}
                                     `}
                                     onClick={() => setIsSidebarOpen(false)}
                                 >
                                     <div className="min-w-[24px] flex justify-center">
-                                        <Icon className={`h-5 w-5 transition-transform duration-300 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`} />
+                                        <Icon className={`h-4 w-4 transition-transform duration-300 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`} />
                                     </div>
                                     
                                     {!isCollapsed && (
                                         <m.span 
                                             initial={{ opacity: 0, x: -10 }} 
                                             animate={{ opacity: 1, x: 0 }}
-                                            className="font-medium text-sm whitespace-nowrap"
+                                            className="font-medium text-xs whitespace-nowrap"
                                         >
                                             {item.name}
                                         </m.span>
@@ -235,10 +235,10 @@ export default function AdminLayoutClient({ children }: AdminLayoutClientProps) 
 
                                     {badgeCount > 0 && (
                                         <span className={`
-                                            absolute bg-red-500 text-white text-[10px] font-bold rounded-full text-center
+                                            absolute text-[9px] font-bold rounded text-center
                                             ${isCollapsed 
-                                                ? 'top-2 right-2 w-4 h-4 flex items-center justify-center' 
-                                                : 'right-3 px-1.5 py-0.5 min-w-[18px]'}
+                                                ? 'top-2 right-2 w-4 h-4 bg-slate-800 text-slate-200 border border-slate-700 flex items-center justify-center' 
+                                                : 'right-3 px-1.5 py-0.5 bg-slate-800 text-slate-350 border border-slate-700'}
                                         `}>
                                             {badgeCount}
                                         </span>
@@ -247,7 +247,7 @@ export default function AdminLayoutClient({ children }: AdminLayoutClientProps) 
                                     {isActive && !isCollapsed && (
                                         <m.div 
                                             layoutId="active-indicator" 
-                                            className="absolute left-0 w-1 h-6 bg-gold-400 rounded-r-full" 
+                                            className="absolute left-0 w-1 h-6 bg-slate-400 rounded-r-full" 
                                         />
                                     )}
                                 </Link>
@@ -255,15 +255,15 @@ export default function AdminLayoutClient({ children }: AdminLayoutClientProps) 
                         })}
                     </nav>
 
-                    <div className="p-3 mt-auto border-t border-white/5">
+                    <div className="p-3 mt-auto border-t border-slate-800/50">
                         <button
                             onClick={handleLogout}
-                            className="flex items-center gap-4 w-full px-3 py-3 text-navy-400 hover:text-red-400 hover:bg-red-500/5 rounded-xl transition-all group"
+                            className="flex items-center gap-4 w-full px-3 py-2 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded transition-all group"
                         >
                             <div className="min-w-[24px] flex justify-center">
-                                <LogOut className="h-5 w-5 group-hover:-translate-x-1 transition-transform" />
+                                <LogOut className="h-4 w-4 group-hover:-translate-x-1 transition-transform" />
                             </div>
-                            {!isCollapsed && <span className="font-medium text-sm">Logout</span>}
+                            {!isCollapsed && <span className="font-medium text-xs">Logout</span>}
                         </button>
                     </div>
                 </div>
@@ -272,14 +272,14 @@ export default function AdminLayoutClient({ children }: AdminLayoutClientProps) 
             {/* Main Content */}
             <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
                 {/* Top Header (Mobile only) */}
-                <header className="bg-white border-b border-gray-200 p-4 lg:hidden flex items-center justify-between">
+                <header className="bg-white border-b border-slate-200 p-4 lg:hidden flex items-center justify-between">
                     <button
                         onClick={() => setIsSidebarOpen(true)}
-                        className="text-navy-900 p-1"
+                        className="text-slate-900 p-1"
                     >
                         <Menu className="h-6 w-6" />
                     </button>
-                    <span className="font-serif font-bold text-navy-900">Admin Portal</span>
+                    <span className="font-sans font-bold text-slate-900">Admin Portal</span>
                     <div className="w-6" /> {/* Placeholder for symmetry */}
                 </header>
 
