@@ -19,6 +19,7 @@ interface StudentCohort {
     link: string | null;
     telegram_joined?: boolean;
     telegram_username?: string | null;
+    telegram_display_name?: string | null;
     amount?: number | null;
 }
 
@@ -508,6 +509,19 @@ export default function StudentSearchPage() {
                                                         <div className="text-[10px] text-slate-400 mt-0.5 space-y-0.5">
                                                             <div className="flex items-center gap-1"><Mail size={10} /> {student.email}</div>
                                                             {student.phone && <div className="flex items-center gap-1"><Phone size={10} /> {student.phone}</div>}
+                                                            {(() => {
+                                                                const tgCohort = student.cohorts.find(c => c.telegram_username || c.telegram_display_name);
+                                                                if (!tgCohort) return null;
+                                                                const username = tgCohort.telegram_username ? `@${tgCohort.telegram_username.replace('@', '')}` : '';
+                                                                const displayName = tgCohort.telegram_display_name || '';
+                                                                const displayText = displayName && username ? `${displayName} (${username})` : displayName || username;
+                                                                return (
+                                                                    <div className="flex items-center gap-1 text-sky-500">
+                                                                        <Send size={10} className="-ml-0.5 rotate-[-45deg] mt-0.5" />
+                                                                        <span>{displayText}</span>
+                                                                    </div>
+                                                                );
+                                                            })()}
                                                         </div>
                                                     </td>
                                                     <td className="px-5 py-3">
@@ -630,8 +644,21 @@ export default function StudentSearchPage() {
                                                                 )}
                                                             </div>
                                                             <div className="text-[10px] text-slate-400 mt-0.5 space-y-0.5">
-                                                                <div>{student.email}</div>
-                                                                {student.phone && <div>{student.phone}</div>}
+                                                                <div className="flex items-center gap-1"><Mail size={10} /> {student.email}</div>
+                                                                {student.phone && <div className="flex items-center gap-1"><Phone size={10} /> {student.phone}</div>}
+                                                                {(() => {
+                                                                    const tgCohort = student.cohorts.find(c => c.telegram_username || c.telegram_display_name);
+                                                                    if (!tgCohort) return null;
+                                                                    const username = tgCohort.telegram_username ? `@${tgCohort.telegram_username.replace('@', '')}` : '';
+                                                                    const displayName = tgCohort.telegram_display_name || '';
+                                                                    const displayText = displayName && username ? `${displayName} (${username})` : displayName || username;
+                                                                    return (
+                                                                        <div className="flex items-center gap-1 text-sky-500">
+                                                                            <Send size={10} className="-ml-0.5 rotate-[-45deg] mt-0.5" />
+                                                                            <span>{displayText}</span>
+                                                                        </div>
+                                                                    );
+                                                                })()}
                                                             </div>
                                                         </td>
                                                         <td className="px-5 py-3">

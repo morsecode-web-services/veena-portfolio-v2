@@ -69,7 +69,9 @@ export function CohortManager() {
         const query = studentSearchQuery.toLowerCase();
         return (
             (s.name || '').toLowerCase().includes(query) ||
-            (s.email || '').toLowerCase().includes(query)
+            (s.email || '').toLowerCase().includes(query) ||
+            (s.phone || '').toLowerCase().includes(query) ||
+            (s.telegram_username || '').toLowerCase().includes(query)
         );
     });
 
@@ -85,7 +87,7 @@ export function CohortManager() {
             try {
                 const { data: enrollments, error } = await supabase
                     .from('enrollments')
-                    .select('id, students(name, email, phone)')
+                    .select('id, telegram_username, students(name, email, phone)')
                     .eq('cohort_id', reenrollSourceId)
                     .eq('status', 'active');
 
@@ -99,7 +101,8 @@ export function CohortManager() {
                         uniqueStudentsMap.set(s.email.toLowerCase(), {
                             name: s.name || 'Student',
                             email: s.email,
-                            phone: s.phone || ''
+                            phone: s.phone || '',
+                            telegram_username: e.telegram_username || ''
                         });
                     }
                 });
@@ -125,8 +128,10 @@ export function CohortManager() {
     const [logStatusFilter, setLogStatusFilter] = useState('all');
 
     const filteredLogs = invitationLogs.filter(log => {
-        const matchesSearch = log.student_name.toLowerCase().includes(logSearchQuery.toLowerCase()) || 
-                             log.student_email.toLowerCase().includes(logSearchQuery.toLowerCase());
+        const query = logSearchQuery.toLowerCase();
+        const matchesSearch = log.student_name.toLowerCase().includes(query) || 
+                             log.student_email.toLowerCase().includes(query) ||
+                             (log.student_phone || '').toLowerCase().includes(query);
         const matchesStatus = logStatusFilter === 'all' || log.status === logStatusFilter;
         return matchesSearch && matchesStatus;
     });

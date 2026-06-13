@@ -39,6 +39,7 @@ export async function GET(request: Request) {
           created_at,
           telegram_joined,
           telegram_username,
+          telegram_display_name,
           telegram_invite_link,
           status,
           students (
@@ -70,9 +71,25 @@ export async function GET(request: Request) {
         payment_link_url: e.telegram_invite_link,
         telegram_joined: e.telegram_joined,
         telegram_username: e.telegram_username,
+        telegram_display_name: e.telegram_display_name,
         amount: null
       }));
     } else if (query) {
+      // 1. Find matched student IDs based on name, email, phone, or telegram_username
+      const { data: matchedIdsData, error: idError } = await supabaseAdmin
+        .from('student_search_view')
+        .select('student_id')
+        .or(`name.ilike.%${query}%,email.ilike.%${query}%,phone.ilike.%${query}%,telegram_username.ilike.%${query}%`);
+        
+      if (idError) throw idError;
+      
+      const matchedIds = Array.from(new Set((matchedIdsData || []).map((d: any) => d.student_id)));
+
+      if (matchedIds.length === 0) {
+         return NextResponse.json({ results: [] });
+      }
+
+      // 2. Fetch full profiles for matched IDs
       const { data: matchedStudents, error: searchError } = await supabaseAdmin
         .from('students')
         .select(`
@@ -85,6 +102,7 @@ export async function GET(request: Request) {
             created_at,
             telegram_joined,
             telegram_username,
+            telegram_display_name,
             telegram_invite_link,
             status,
             cohorts (
@@ -105,7 +123,7 @@ export async function GET(request: Request) {
             )
           )
         `)
-        .or(`name.ilike.%${query}%,email.ilike.%${query}%`)
+        .in('id', matchedIds)
         .order('created_at', { ascending: false });
 
       if (searchError) throw searchError;
@@ -129,6 +147,7 @@ export async function GET(request: Request) {
               payment_link_url: e.telegram_invite_link,
               telegram_joined: e.telegram_joined || false,
               telegram_username: e.telegram_username || null,
+              telegram_display_name: e.telegram_display_name || null,
               amount: paidPayment ? paidPayment.amount : null
             });
           });
@@ -150,6 +169,7 @@ export async function GET(request: Request) {
               payment_link_url: ri.payment_link_url,
               telegram_joined: false,
               telegram_username: null,
+              telegram_display_name: null,
               amount: null
             });
           });
@@ -171,6 +191,7 @@ export async function GET(request: Request) {
             payment_link_url: null,
             telegram_joined: false,
             telegram_username: null,
+            telegram_display_name: null,
             amount: null
           });
         }
@@ -205,6 +226,7 @@ export async function GET(request: Request) {
         link: item.payment_link_url,
         telegram_joined: item.telegram_joined || false,
         telegram_username: item.telegram_username || null,
+        telegram_display_name: item.telegram_display_name || null,
         amount: item.amount || null
       });
     });

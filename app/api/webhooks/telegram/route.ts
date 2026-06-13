@@ -45,7 +45,7 @@ export async function POST(request: Request) {
     // First, search form_submissions directly
     let { data: studentSubmission, error: subError } = await supabaseAdmin
       .from('form_submissions')
-      .select('id, user_name, user_email, telegram_joined, telegram_username')
+      .select('id, user_name, user_email, telegram_joined, telegram_username, telegram_display_name')
       .eq('telegram_invite_link', inviteLink)
       .maybeSingle();
 
@@ -70,7 +70,7 @@ export async function POST(request: Request) {
       if (logEntry && logEntry.submission_id) {
         const { data: subData, error: subFetchErr } = await supabaseAdmin
           .from('form_submissions')
-          .select('id, user_name, user_email, telegram_joined, telegram_username')
+          .select('id, user_name, user_email, telegram_joined, telegram_username, telegram_display_name')
           .eq('id', logEntry.submission_id)
           .maybeSingle();
 
@@ -101,7 +101,7 @@ export async function POST(request: Request) {
         // Find their submission
         const { data: matchingSubmission } = await supabaseAdmin
           .from('form_submissions')
-          .select('id, user_name, user_email, telegram_joined, telegram_username')
+          .select('id, user_name, user_email, telegram_joined, telegram_username, telegram_display_name')
           .ilike('user_email', webhookLog.student_email)
           .eq('payment_status', 'paid')
           .order('created_at', { ascending: false })
@@ -139,7 +139,8 @@ export async function POST(request: Request) {
         .from('form_submissions')
         .update({
           telegram_joined: true,
-          telegram_username: telegramIdentifier
+          telegram_username: username || null,
+          telegram_display_name: displayName || null
         })
         .eq('id', studentSubmission.id);
 
@@ -157,6 +158,16 @@ export async function POST(request: Request) {
           telegram_username: telegramIdentifier,
           created_by: 'telegram_webhook',
           payload: { info: `User joined Telegram group via link: ${inviteLink}` }
+        }]);
+
+        // Also push the raw event payload to the global webhook_logs table for central dashboard viewing
+        await supabaseAdmin.from('webhook_logs').insert([{
+          event_id: update.update_id ? `tg_upd_${update.update_id}` : `tg_join_${Date.now()}`,
+          event_type: 'telegram.join',
+          student_name: studentSubmission.user_name,
+          student_email: studentSubmission.user_email,
+          status: 'success',
+          payload: update
         }]);
       }
 

@@ -352,7 +352,8 @@ export default function WebhookDashboard() {
                 </div>
 
                 <div className="flex-1 overflow-y-auto p-6 space-y-6">
-                  {/* Notification Details */}
+                  {/* Notification Details (Only for outgoing webhooks) */}
+                  {selectedLog.event_type !== 'telegram.join' && (
                   <div className="space-y-3">
                     <h4 className="text-xs font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
                       <Send className="h-3.5 w-3.5" />
@@ -427,12 +428,13 @@ export default function WebhookDashboard() {
                       )}
                     </div>
                   </div>
+                  )}
 
                   {/* Raw Payload */}
                   <div className="space-y-3">
                     <h4 className="text-xs font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
                       <Eye className="h-3.5 w-3.5" />
-                      Razorpay Payload
+                      Raw Payload
                     </h4>
                     <div className="relative">
                       <pre className="text-[10px] bg-slate-900 text-slate-300 p-4 rounded overflow-x-auto max-h-[300px] custom-scrollbar">
