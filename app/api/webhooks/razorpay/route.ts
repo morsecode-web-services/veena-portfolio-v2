@@ -72,7 +72,7 @@ export async function POST(req: Request) {
     }
 
     // ── Event Routing ─────────────────────────────────────────────────
-    const validEvents = ['order.paid', 'payment_link.paid'];
+    const validEvents = ['order.paid', 'payment_link.paid', 'payment.failed'];
 
     // Razorpay fires several events per payment (e.g. payment.captured + order.paid).
     // Acknowledge unhandled events immediately — no log row, no processing.
@@ -104,8 +104,48 @@ export async function POST(req: Request) {
       }
 
       try {
+        // ── Handle Payment Failed Event ─────────────────────────────────────
+        if (event.event === 'payment.failed') {
+          const paymentEntity = event.payload?.payment?.entity;
+          const errorDesc = paymentEntity?.error_description || paymentEntity?.error_code || 'Unknown reason';
+          const errorSource = paymentEntity?.error_source || '';
+          const method = paymentEntity?.method || 'unknown';
+          const amountPaise = paymentEntity?.amount || 0;
+          const amountFormatted = amountPaise ? `₹${(amountPaise / 100).toLocaleString('en-IN')}` : 'N/A';
+          const notes = paymentEntity?.notes || {};
+          const studentName = notes.studentName || notes.name || paymentEntity?.email || 'Unknown';
+          const studentEmail = notes.studentEmail || notes.email || paymentEntity?.email || 'N/A';
+          const studentPhone = notes.studentPhone || notes.phone || paymentEntity?.contact || 'N/A';
+          const cohortTitle = notes.cohortTitle || notes.cohort || 'Unknown Cohort';
+          const paymentId = paymentEntity?.id || 'N/A';
+          const now = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', hour12: true, day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+
+          const alertMsg = `❌ <b>Payment Failed</b>\n\n` +
+            `👤 ${studentName}\n` +
+            `📧 ${studentEmail}\n` +
+            `📱 ${studentPhone}\n` +
+            `💳 ${amountFormatted} via ${method}\n` +
+            `🎓 ${cohortTitle}\n` +
+            `🆔 ${paymentId}\n` +
+            `⚠️ ${errorDesc}${errorSource ? ` (${errorSource})` : ''}\n` +
+            `⏰ ${now}`;
+
+          await sendAdminAlert(alertMsg);
+
+          if (logId) {
+            await supabaseAdmin.from('webhook_logs').update({
+              event_id: paymentId,
+              status: 'failed',
+              student_email: studentEmail !== 'N/A' ? studentEmail : null,
+              student_name: studentName !== 'Unknown' ? studentName : null,
+              error_message: errorDesc,
+            }).eq('id', logId);
+          }
+          return;
+        }
+
         // ── Handle Payment Events ───────────────────────────────────────────
-        if (validEvents.includes(event.event)) {
+        if (['order.paid', 'payment_link.paid'].includes(event.event)) {
           const isPaymentLink = event.event === 'payment_link.paid';
           
           // 1. Extract the primary entity (Order or Payment Link)
