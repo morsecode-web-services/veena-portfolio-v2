@@ -9,6 +9,7 @@ import Image from 'next/image';
 import { analytics, trackEvent } from '@/components/GoogleAnalytics';
 import { useSearchParams, useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
+import type { SiteConfig } from '@/types';
 
 const DynamicForm = dynamic(() => import('@/components/features/DynamicForm'), {
     ssr: false,
@@ -49,9 +50,10 @@ interface Cohort {
 
 interface CohortClientProps {
     initialCohorts: Cohort[];
+    config?: SiteConfig;
 }
 
-function CohortContent({ initialCohorts }: CohortClientProps) {
+function CohortContent({ initialCohorts, config }: CohortClientProps) {
     const [selectedCohort, setSelectedCohort] = useState<Cohort | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [showCelebration, setShowCelebration] = useState(false);
@@ -212,6 +214,15 @@ function CohortContent({ initialCohorts }: CohortClientProps) {
 
     return (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-0 pb-12">
+            {config?.cohorts?.registrationsPaused && (
+                <div className="mb-8 p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-3">
+                    <Clock className="text-amber-600 mt-0.5 flex-shrink-0" size={20} />
+                    <div>
+                        <h3 className="font-bold text-amber-900 text-sm">Registrations Temporarily Paused</h3>
+                        <p className="text-amber-800 text-sm mt-1">{config.cohorts.registrationsPausedMessage || 'We are currently not accepting new registrations. Please check back later.'}</p>
+                    </div>
+                </div>
+            )}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                 {initialCohorts.map((cohort, index) => (
                     <motion.button
@@ -219,9 +230,9 @@ function CohortContent({ initialCohorts }: CohortClientProps) {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.1 }}
-                        onClick={() => cohort.status === 'active' && handleEnroll(cohort)}
-                        disabled={cohort.status !== 'active'}
-                        className={`group relative bg-white rounded-2xl border border-slate-100 overflow-hidden transition-all duration-500 text-left w-full outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-4 ${cohort.status === 'active' ? 'cursor-pointer hover:shadow-premium-xl hover:-translate-y-2' : 'opacity-75 cursor-not-allowed'
+                        onClick={() => !config?.cohorts?.registrationsPaused && cohort.status === 'active' && handleEnroll(cohort)}
+                        disabled={config?.cohorts?.registrationsPaused || cohort.status !== 'active'}
+                        className={`group relative bg-white rounded-2xl border border-slate-100 overflow-hidden transition-all duration-500 text-left w-full outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-4 ${!config?.cohorts?.registrationsPaused && cohort.status === 'active' ? 'cursor-pointer hover:shadow-premium-xl hover:-translate-y-2' : 'opacity-75 cursor-not-allowed'
                             }`}
                     >
                         <div className="relative aspect-video overflow-hidden bg-slate-100">
@@ -284,11 +295,11 @@ function CohortContent({ initialCohorts }: CohortClientProps) {
                                         )}
                                     </div>
 
-                                    <div className={`h-10 px-5 text-[10px] font-black uppercase tracking-widest rounded-lg flex items-center justify-center transition-all duration-300 ${cohort.status === 'active'
+                                    <div className={`h-10 px-5 text-[10px] font-black uppercase tracking-widest rounded-lg flex items-center justify-center transition-all duration-300 ${!config?.cohorts?.registrationsPaused && cohort.status === 'active'
                                         ? 'bg-navy-900 text-white group-hover:bg-gold-600'
                                         : 'bg-slate-100 text-slate-400'
                                         }`}>
-                                        {cohort.status === 'active' ? 'Enroll Now' : 'Stay Tuned'}
+                                        {config?.cohorts?.registrationsPaused ? 'Paused' : cohort.status === 'active' ? 'Enroll Now' : 'Stay Tuned'}
                                     </div>
                                 </div>
                             </div>

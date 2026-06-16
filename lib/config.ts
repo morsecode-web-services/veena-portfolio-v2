@@ -142,6 +142,10 @@ const SiteConfigSchema = z.object({
   cohorts_faq: z.object({
     items: z.array(FAQItemSchema),
   }).optional(),
+  cohorts: z.object({
+    registrationsPaused: z.boolean().optional(),
+    registrationsPausedMessage: z.string().optional(),
+  }).optional(),
   automation: z.object({
     email_enabled: z.boolean(),
     whatsapp_enabled: z.boolean(),

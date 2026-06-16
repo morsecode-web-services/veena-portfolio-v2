@@ -657,6 +657,35 @@ export default function ConfigPage() {
                                         </div>
                                     </div>
 
+                                    <div className="p-4 bg-slate-50 rounded border border-slate-200">
+                                        <div className="flex flex-col gap-4">
+                                            <div className="flex items-center justify-between">
+                                                <div>
+                                                    <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Registration Controls</h3>
+                                                    <p className="text-xs text-slate-500 mt-0.5">Temporarily pause all new cohort registrations.</p>
+                                                </div>
+                                                <div className="flex items-center gap-4 bg-white p-3 rounded border border-slate-200">
+                                                    <span className="text-xs font-bold text-slate-700">Pause Registrations</span>
+                                                    <button
+                                                        onClick={() => setConfig({ ...config, cohorts: { ...config.cohorts, registrationsPaused: !config.cohorts?.registrationsPaused } })}
+                                                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${config.cohorts?.registrationsPaused ? 'bg-amber-600' : 'bg-slate-300'}`}
+                                                    >
+                                                        <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${config.cohorts?.registrationsPaused ? 'translate-x-6' : 'translate-x-1'}`} />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            {config.cohorts?.registrationsPaused && (
+                                                <div className="pt-2 border-t border-slate-200">
+                                                    <TextAreaField
+                                                        label="Pause Message"
+                                                        value={config.cohorts?.registrationsPausedMessage || ''}
+                                                        onChange={(v) => setConfig({ ...config, cohorts: { ...config.cohorts, registrationsPausedMessage: v } })}
+                                                    />
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+
                                     <div className="space-y-6">
                                         <div className="flex items-center justify-between">
                                             <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider ml-1">Frequently Asked Questions</h3>

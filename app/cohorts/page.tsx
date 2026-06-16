@@ -48,7 +48,7 @@ export default async function CohortsPage() {
                     </p>
                 </div>
 
-                <CohortClient initialCohorts={cohorts || []} />
+                <CohortClient initialCohorts={cohorts || []} config={config} />
                 <CohortFAQ items={config.cohorts_faq?.items} />
             </div>
 

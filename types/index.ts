@@ -107,6 +107,10 @@ export interface SiteConfig {
   cohorts_faq?: {
     items: FAQItem[];
   };
+  cohorts?: {
+    registrationsPaused?: boolean;
+    registrationsPausedMessage?: string;
+  };
   automation?: {
     email_enabled: boolean;
     whatsapp_enabled: boolean;
