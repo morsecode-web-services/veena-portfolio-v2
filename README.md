@@ -416,6 +416,7 @@ If styles aren't applying:
 
 Detailed guides and implementation notes can be found in the [docs/](docs/) folder:
 
+- [Local Supabase Quick Links](docs/SUPABASE_LOCAL.md)
 - [Razorpay Setup Guide](docs/RAZORPAY_SETUP_GUIDE.md)
 - [Make.com Automation Guide](docs/MAKE_COM_SETUP_GUIDE.md)
 - [Twilio WhatsApp Setup](docs/TWILIO_WHATSAPP_SETUP.md)

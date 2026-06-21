@@ -17,80 +17,41 @@ import {
     PenTool,
     Link as LinkIcon,
     BarChart3,
-    Search
+    Search,
+    BookOpen
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { motion as m, AnimatePresence } from 'framer-motion';
 
 interface AdminLayoutClientProps {
     children: ReactNode;
+    profile: {
+        role: string;
+        last_leads_viewed_at: string | null;
+    } | null;
 }
 
-export default function AdminLayoutClient({ children }: AdminLayoutClientProps) {
+export default function AdminLayoutClient({ children, profile }: AdminLayoutClientProps) {
     const pathname = usePathname();
     const router = useRouter();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-    const [checkingAuth, setCheckingAuth] = useState(true);
     const [isCollapsed, setIsCollapsed] = useState(true);
 
     const [leadsCount, setLeadsCount] = useState(0);
     const [responsesCount, setResponsesCount] = useState(0);
 
-    // Cache session and profile to prevent slow DB roundtrips on every page change
-    const [userSession, setUserSession] = useState<any>(null);
-    const [profileData, setProfileData] = useState<any>(null);
-
     useEffect(() => {
-        async function checkAuth() {
-            const isLoginPage = pathname === '/admin/login' || pathname === '/admin/login/';
-            if (isLoginPage) {
-                setCheckingAuth(false);
-                return;
-            }
+        if (!profile) return;
 
+        async function fetchCounts(lastLeadsViewedAt: string | null) {
             try {
-                let currentSession = userSession;
-                let currentProfile = profileData;
-
-                // 1. Fetch session if not cached
-                if (!currentSession) {
-                    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-
-                    if (sessionError || !session) {
-                        if (sessionError) console.error('Session error:', sessionError);
-                        router.push('/admin/login');
-                        return;
-                    }
-                    currentSession = session;
-                    setUserSession(session);
-                }
-
-                // 2. Fetch profile role if not cached
-                if (!currentProfile) {
-                    const { data: profile, error: profileError } = await supabase
-                        .from('profiles')
-                        .select('role, last_leads_viewed_at')
-                        .eq('id', currentSession.user.id)
-                        .single();
-
-                    if (profileError || !profile || (profile.role !== 'admin' && profile.role !== 'editor')) {
-                        if (profileError) console.error('Profile error:', profileError);
-                        await supabase.auth.signOut();
-                        router.push('/admin/login');
-                        return;
-                    }
-                    currentProfile = profile;
-                    setProfileData(profile);
-                }
-
-                // 3. Fetch count badges (these run on page change, but are very fast since auth is cached)
                 // Check for new leads in form_submissions
-                if (currentProfile.last_leads_viewed_at) {
+                if (lastLeadsViewedAt) {
                     const { count, error: countError } = await supabase
                         .from('form_submissions')
                         .select('*', { count: 'exact', head: true })
                         .in('form_slug', ['classes', 'performance', 'collaboration'])
-                        .gt('created_at', currentProfile.last_leads_viewed_at);
+                        .gt('created_at', lastLeadsViewedAt);
 
                     if (!countError && count !== null) {
                         setLeadsCount(count);
@@ -107,18 +68,13 @@ export default function AdminLayoutClient({ children }: AdminLayoutClientProps) 
                 if (!unreadError && unreadCount !== null) {
                     setResponsesCount(unreadCount);
                 }
-
-                setCheckingAuth(false);
             } catch (err) {
-                console.error('Unexpected auth check error:', err);
-                // Clear poisoned session data
-                await supabase.auth.signOut().catch(() => { });
-                router.push('/admin/login');
+                console.error('Error fetching badge counts:', err);
             }
         }
 
-        checkAuth();
-    }, [pathname, router, userSession, profileData]);
+        fetchCounts(profile.last_leads_viewed_at);
+    }, [pathname, profile]);
 
     // Don't show layout on login page
     const isLoginPage = pathname?.includes('/admin/login');
@@ -126,26 +82,14 @@ export default function AdminLayoutClient({ children }: AdminLayoutClientProps) 
         return <>{children}</>;
     }
 
-    if (checkingAuth) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-slate-50 text-slate-800 font-sans">
-                <div className="flex flex-col items-center gap-4">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-800"></div>
-                    <p className="text-xs font-semibold uppercase tracking-wider">Verifying Session...</p>
-                </div>
-            </div>
-        );
-    }
-
     const handleLogout = async () => {
         await supabase.auth.signOut();
-        setUserSession(null);
-        setProfileData(null);
         router.push('/admin/login');
     };
 
     const navItems = [
         { name: 'Cohorts', href: '/admin/cohorts', icon: Users },
+        { name: 'Courses', href: '/admin/courses', icon: BookOpen },
         { name: 'Students', href: '/admin/students', icon: Search },
         { name: 'Events', href: '/admin/events', icon: Calendar },
         { name: 'Blog', href: '/admin/blogs', icon: FileText },

@@ -31,11 +31,13 @@ interface Cohort {
     registration_count?: number;
     pricing_type?: 'fixed' | 'pay_as_you_wish';
     invite_conversion?: { total: number; paid: number };
+    course_id?: string | null;
 }
 
 export function CohortManager() {
     const { addToast } = useToast();
     const [cohorts, setCohorts] = useState<Cohort[]>([]);
+    const [coursesList, setCoursesList] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [isCreating, setIsCreating] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null);
@@ -51,7 +53,8 @@ export function CohortManager() {
         learning_outcomes_raw: '',
         curriculum_highlights_raw: '',
         success_message: 'Welcome aboard! Your enrollment is successful.',
-        pricing_type: 'fixed'
+        pricing_type: 'fixed',
+        course_id: null
     });
 
     const [isReenrolling, setIsReenrolling] = useState(false);
@@ -149,6 +152,15 @@ export function CohortManager() {
 
     const fetchCohorts = async () => {
         setLoading(true);
+        
+        // Fetch courses list for selector
+        const { data: coursesData } = await supabase
+            .from('courses')
+            .select('id, title')
+            .order('title', { ascending: true });
+        if (coursesData) {
+            setCoursesList(coursesData);
+        }
         
         // 1. Fetch Cohorts
         const { data: cohortData } = await supabase
@@ -352,7 +364,8 @@ export function CohortManager() {
             learning_outcomes_raw: '',
             curriculum_highlights_raw: '',
             success_message: 'Welcome aboard! Your enrollment is successful.',
-            pricing_type: 'fixed'
+            pricing_type: 'fixed',
+            course_id: null
         });
         setIsCreating(false);
         setEditingId(null);
@@ -376,7 +389,8 @@ export function CohortManager() {
                 success_message: formData.success_message,
                 learning_outcomes: (formData.learning_outcomes_raw || '').split('\n').filter((s: string) => s.trim()),
                 curriculum_highlights: (formData.curriculum_highlights_raw || '').split('\n').filter((s: string) => s.trim()),
-                pricing_type: formData.pricing_type || 'fixed'
+                pricing_type: formData.pricing_type || 'fixed',
+                course_id: formData.course_id || null
             };
 
             if (editingId) {
@@ -413,7 +427,8 @@ export function CohortManager() {
         setFormData({
             ...cohort,
             learning_outcomes_raw: cohort.learning_outcomes?.join('\n') || '',
-            curriculum_highlights_raw: cohort.curriculum_highlights?.join('\n') || ''
+            curriculum_highlights_raw: cohort.curriculum_highlights?.join('\n') || '',
+            course_id: cohort.course_id || null
         });
         setEditingId(cohort.id);
         setIsCreating(false);
@@ -498,6 +513,19 @@ export function CohortManager() {
                                                 <option value="active">Active (Enrollment Open)</option>
                                                 <option value="coming_soon">Coming Soon</option>
                                                 <option value="completed">Completed</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">LINKED COURSE CONTENT (OPTIONAL)</label>
+                                            <select 
+                                                value={formData.course_id || ''} 
+                                                onChange={e => setFormData({...formData, course_id: e.target.value || null})}
+                                                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded text-xs outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-900 transition-all text-slate-805"
+                                            >
+                                                <option value="">None (No course linked)</option>
+                                                {coursesList.map(c => (
+                                                    <option key={c.id} value={c.id}>{c.title}</option>
+                                                ))}
                                             </select>
                                         </div>
                                         <div className="md:col-span-2">
@@ -707,7 +735,14 @@ export function CohortManager() {
                                             <span className="font-bold text-slate-800">{cohort.title}</span>
                                             {cohort.is_highlighted && <Star size={10} className="text-amber-500 fill-current" />}
                                         </div>
-                                        <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">{cohort.month_name}</span>
+                                        <div className="flex flex-col gap-0.5">
+                                            <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">{cohort.month_name}</span>
+                                            {cohort.course_id && (
+                                                <span className="text-[9px] text-slate-500 font-semibold italic">
+                                                    Course: {coursesList.find(c => c.id === cohort.course_id)?.title || 'Linked Course'}
+                                                </span>
+                                            )}
+                                        </div>
                                     </td>
                                     <td className="px-5 py-3">
                                         <div className="flex flex-col">

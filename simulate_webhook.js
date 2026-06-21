@@ -25,7 +25,7 @@ const payload = {
         order_id: "order_sim_12345",
         status: "captured",
         amount: 10000,
-        email: "test@example.com",
+        email: "admin@gmail.com",
         contact: "+919876543210"
       }
     },
@@ -35,10 +35,10 @@ const payload = {
         amount: 10000,
         status: "paid",
         notes: {
-          name: "Local Test User",
-          email: "test@example.com",
+          name: "Admin User",
+          email: "admin@gmail.com",
           phone: "+919876543210",
-          cohortId: "e51726b8-eac3-4f0f-a062-42c1faf9f6a7",
+          cohortId: "fa1c903a-5946-46b5-acd2-0a88f6a809bf",
           formSlug: "cohort_enrollment",
           telegram_chat_id: "-1003890349357"
         }

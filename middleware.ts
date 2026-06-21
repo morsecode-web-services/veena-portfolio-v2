@@ -17,6 +17,8 @@ const WHITELISTED_PREFIXES = [
     '/forms/',      // Standalone registration forms
     '/api/',        // API routes for forms to function
     '/cohorts',     // Cohort landing page
+    '/portal',      // Student portal (always accessible)
+    '/auth',        // Auth callback routes
     '/coming-soon', // The page itself (avoid infinite redirect loop)
     '/_next/',      // Next.js internals
     '/favicon',
@@ -29,6 +31,9 @@ const WHITELISTED_PREFIXES = [
 
 export async function middleware(request: NextRequest, event: NextFetchEvent) {
     const { pathname } = request.nextUrl;
+
+    const requestHeaders = new Headers(request.headers);
+    requestHeaders.set('x-pathname', pathname);
 
     // --- Smart Link fast-path: handle /link/{slug} redirects at the edge ---
     const linkMatch = pathname.match(/^\/link\/([^/]+)$/);
@@ -64,7 +69,7 @@ export async function middleware(request: NextRequest, event: NextFetchEvent) {
 
         if (!link || error) {
             // Fall through to the page which will render notFound()
-            return NextResponse.next();
+            return NextResponse.next({ request: { headers: requestHeaders } });
         }
 
         // Track click asynchronously in the background using event.waitUntil
@@ -85,8 +90,6 @@ export async function middleware(request: NextRequest, event: NextFetchEvent) {
         }
 
         // Deep link: pass data via headers so the page skips the Supabase query
-        const requestHeaders = new Headers(request.headers);
-        requestHeaders.set('x-pathname', pathname);
         requestHeaders.set('x-link-target-url', link.target_url);
         requestHeaders.set('x-link-platform', link.platform);
         requestHeaders.set('x-link-id', link.id);
@@ -94,7 +97,7 @@ export async function middleware(request: NextRequest, event: NextFetchEvent) {
     }
 
     if (SITE_LIVE) {
-        return NextResponse.next();
+        return NextResponse.next({ request: { headers: requestHeaders } });
     }
 
     const isWhitelisted = WHITELISTED_PREFIXES.some((prefix) =>
@@ -102,7 +105,7 @@ export async function middleware(request: NextRequest, event: NextFetchEvent) {
     );
 
     if (isWhitelisted) {
-        return NextResponse.next();
+        return NextResponse.next({ request: { headers: requestHeaders } });
     }
 
     // Redirect everything else to coming soon
