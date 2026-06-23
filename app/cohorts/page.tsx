@@ -40,11 +40,11 @@ export default async function CohortsPage() {
         <main className="min-h-screen bg-slate-50 pt-24 pb-20">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="text-center mb-8">
-                    <h1 className="text-4xl md:text-5xl font-serif font-bold text-navy-900 mb-4">
+                    <h1 className="text-2xl md:text-3xl font-serif font-medium italic text-navy-900 tracking-tight mb-4">
                         &quot;Next Avarthanam&quot;
                     </h1>
-                    <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-                        A 3 month Veena-driven learning journey. Learn two Indian classical / contemporary & raaga-based songs every month. Breaking the barrier to entry with a flexible, accessible music learning community.
+                    <p className="text-sm text-slate-600 max-w-2xl mx-auto leading-relaxed">
+                        A 3 month Veena-driven learning journey. Learn two Indian classical / contemporary &amp; raaga-based songs every month. Breaking the barrier to entry with a flexible, accessible music learning community.
                     </p>
                 </div>
 

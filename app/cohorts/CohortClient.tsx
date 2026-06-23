@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, Clock, Lock, Calendar, ArrowRight, X, Star, PartyPopper, Mail, CreditCard } from 'lucide-react';
+import { Check, Clock, Calendar, ArrowRight, X, Mail, CreditCard } from 'lucide-react';
 import { Button } from '@/components/system/Button';
 import type { FormField } from '@/components/features/DynamicForm';
 import Image from 'next/image';
@@ -212,6 +212,9 @@ function CohortContent({ initialCohorts, config }: CohortClientProps) {
         }).format(amount / 100);
     };
 
+    const activeCohorts = initialCohorts.filter(c => c.status !== 'completed');
+    const completedCohorts = initialCohorts.filter(c => c.status === 'completed');
+
     return (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-0 pb-12">
             {config?.cohorts?.registrationsPaused && (
@@ -223,94 +226,123 @@ function CohortContent({ initialCohorts, config }: CohortClientProps) {
                     </div>
                 </div>
             )}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-                {initialCohorts.map((cohort, index) => (
-                    <motion.button
-                        key={cohort.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.1 }}
-                        onClick={() => !config?.cohorts?.registrationsPaused && cohort.status === 'active' && handleEnroll(cohort)}
-                        disabled={config?.cohorts?.registrationsPaused || cohort.status !== 'active'}
-                        className={`group relative bg-white rounded-2xl border border-slate-100 overflow-hidden transition-all duration-500 text-left w-full outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-4 ${!config?.cohorts?.registrationsPaused && cohort.status === 'active' ? 'cursor-pointer hover:shadow-premium-xl hover:-translate-y-2' : 'opacity-75 cursor-not-allowed'
+
+            {/* ── Active & Coming Soon Batches ── */}
+            {activeCohorts.length > 0 && (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                    {activeCohorts.map((cohort, index) => (
+                        <motion.button
+                            key={cohort.id}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: index * 0.1 }}
+                            onClick={() => !config?.cohorts?.registrationsPaused && cohort.status === 'active' && handleEnroll(cohort)}
+                            disabled={config?.cohorts?.registrationsPaused || cohort.status !== 'active'}
+                            className={`group relative bg-white rounded-2xl border border-slate-100 overflow-hidden transition-all duration-500 text-left w-full outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-4 ${
+                                !config?.cohorts?.registrationsPaused && cohort.status === 'active'
+                                    ? 'cursor-pointer hover:shadow-premium-xl hover:-translate-y-2'
+                                    : 'opacity-75 cursor-not-allowed'
                             }`}
-                    >
-                        <div className="relative aspect-video overflow-hidden bg-slate-100">
-                            {cohort.image_url ? (
-                                <Image
-                                    src={cohort.image_url}
-                                    alt={cohort.title}
-                                    fill
-                                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 300px"
-                                    className="object-cover transition-transform duration-700 group-hover:scale-105"
-                                />
-                            ) : (
-                                <div className="absolute inset-0 flex items-center justify-center bg-navy-50/50">
-                                    <div className="text-navy-200 font-serif italic text-xl">
-                                        {cohort.month_name}
+                        >
+                            <div className="relative aspect-video overflow-hidden bg-slate-100">
+                                {cohort.image_url ? (
+                                    <Image
+                                        src={cohort.image_url}
+                                        alt={cohort.title}
+                                        fill
+                                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 300px"
+                                        className="object-cover transition-transform duration-700 group-hover:scale-105"
+                                    />
+                                ) : (
+                                    <div className="absolute inset-0 flex items-center justify-center bg-navy-50/50">
+                                        <div className="text-navy-200 font-serif italic text-xl">
+                                            {cohort.month_name}
+                                        </div>
                                     </div>
-                                </div>
-                            )}
-
-                            {cohort.is_highlighted && (
-                                <div className="absolute top-3 left-3">
-                                    <div className="bg-gold-400 text-navy-950 text-[10px] font-black px-2.5 py-1 rounded shadow-sm uppercase tracking-wider">
-                                        Recommended
+                                )}
+                                {cohort.is_highlighted && (
+                                    <div className="absolute top-3 left-3">
+                                        <div className="bg-gold-400 text-navy-950 text-[10px] font-black px-2.5 py-1 rounded shadow-sm uppercase tracking-wider">
+                                            Recommended
+                                        </div>
                                     </div>
-                                </div>
-                            )}
-                        </div>
+                                )}
+                            </div>
 
-                        <div className="p-5 flex flex-col">
-                            <div className="flex-grow">
-                                <h3 className="text-lg font-serif font-bold text-navy-900 leading-snug group-hover:text-gold-600 transition-colors line-clamp-2 min-h-[3.5rem]">
-                                    {cohort.title}
-                                </h3>
-
-                                {/* Short description instead of features checklist */}
-                                <div className="mb-4 min-h-[4rem]">
-                                    {cohort.description && (
-                                        <p className="text-xs text-slate-500 leading-relaxed line-clamp-3">
-                                            {cohort.description}
-                                        </p>
-                                    )}
-                                </div>
-
-                                <div className="flex items-center justify-between mt-2 pt-4 border-t border-slate-50">
-                                    <div className="flex flex-col">
-                                        {cohort.pricing_type === 'pay_as_you_wish' ? (
-                                            <>
-                                                <span className="text-[9px] font-black uppercase tracking-wider text-purple-600 bg-purple-50 px-2 py-0.5 rounded w-max mb-1">Pay as you wish</span>
-                                                {cohort.price > 0 && (
-                                                    <span className="text-sm font-bold text-navy-900 tracking-tight">Suggested: {formatCurrency(cohort.price)}</span>
-                                                )}
-                                            </>
-                                        ) : (
-                                            <>
-                                                {cohort.original_price && (
-                                                    <span className="text-[10px] text-slate-400 line-through leading-none decoration-red-200 italic">{formatCurrency(cohort.original_price)}</span>
-                                                )}
-                                                <span className="text-xl font-bold text-navy-900 tracking-tight">{formatCurrency(cohort.price)}</span>
-                                            </>
+                            <div className="p-5 flex flex-col">
+                                <div className="flex-grow">
+                                    <h3 className="text-lg font-serif font-bold text-navy-900 leading-snug group-hover:text-gold-600 transition-colors line-clamp-2 min-h-[3.5rem]">
+                                        {cohort.title}
+                                    </h3>
+                                    <div className="mb-4 min-h-[4rem]">
+                                        {cohort.description && (
+                                            <p className="text-xs text-slate-500 leading-relaxed line-clamp-3">
+                                                {cohort.description}
+                                            </p>
                                         )}
                                     </div>
-
-                                    <div className={`h-10 px-5 text-[10px] font-black uppercase tracking-widest rounded-lg flex items-center justify-center transition-all duration-300 ${!config?.cohorts?.registrationsPaused && cohort.status === 'active'
-                                        ? 'bg-navy-900 text-white group-hover:bg-gold-600'
-                                        : 'bg-slate-100 text-slate-400'
+                                    <div className="flex items-center justify-between mt-2 pt-4 border-t border-slate-50">
+                                        <div className="flex flex-col">
+                                            {cohort.pricing_type === 'pay_as_you_wish' ? (
+                                                <>
+                                                    <span className="text-[9px] font-black uppercase tracking-wider text-purple-600 bg-purple-50 px-2 py-0.5 rounded w-max mb-1">Pay as you wish</span>
+                                                    {cohort.price > 0 && (
+                                                        <span className="text-sm font-bold text-navy-900 tracking-tight">Suggested: {formatCurrency(cohort.price)}</span>
+                                                    )}
+                                                </>
+                                            ) : (
+                                                <>
+                                                    {cohort.original_price && (
+                                                        <span className="text-[10px] text-slate-400 line-through leading-none decoration-red-200 italic">{formatCurrency(cohort.original_price)}</span>
+                                                    )}
+                                                    <span className="text-xl font-bold text-navy-900 tracking-tight">{formatCurrency(cohort.price)}</span>
+                                                </>
+                                            )}
+                                        </div>
+                                        <div className={`h-10 px-5 text-[10px] font-black uppercase tracking-widest rounded-lg flex items-center justify-center transition-all duration-300 ${
+                                            !config?.cohorts?.registrationsPaused && cohort.status === 'active'
+                                                ? 'bg-navy-900 text-white group-hover:bg-gold-600'
+                                                : 'bg-slate-100 text-slate-400'
                                         }`}>
-                                        {config?.cohorts?.registrationsPaused ? 'Paused' : cohort.status === 'active' ? 'Enroll Now' : 'Stay Tuned'}
+                                            {config?.cohorts?.registrationsPaused ? 'Paused' : cohort.status === 'active' ? 'Enroll Now' : 'Coming Soon'}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
 
-                        {cohort.status === 'coming_soon' && (
-                            <div className="absolute inset-0 bg-white/10 backdrop-blur-[1px] pointer-events-none" />
-                        )}
-                    </motion.button>
-                ))}
-            </div>
+                            {cohort.status === 'coming_soon' && (
+                                <div className="absolute inset-0 bg-white/10 backdrop-blur-[1px] pointer-events-none" />
+                            )}
+                        </motion.button>
+                    ))}
+                </div>
+            )}
+
+            {/* ── Past Batches — compact strip ── */}
+            {completedCohorts.length > 0 && (
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.3 }}
+                    className="mt-8 flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5"
+                >
+                    <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">Past batches:</span>
+                    {completedCohorts.map((cohort) => (
+                        <div
+                            key={cohort.id}
+                            className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-slate-200 text-[11px] text-slate-400 font-medium"
+                        >
+                            <Check size={10} strokeWidth={3} className="text-slate-300" />
+                            {cohort.title}
+                        </div>
+                    ))}
+                    <span className="text-slate-300 text-xs select-none">·</span>
+                    <p className="text-[11px] text-slate-400 italic">
+                        Already enrolled? Your group stays active — no need to re-enroll.
+                    </p>
+                </motion.div>
+            )}
+
 
             <AnimatePresence>
                 {isModalOpen && selectedCohort && (
