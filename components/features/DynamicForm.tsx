@@ -9,7 +9,7 @@ import { z } from 'zod';
 import { m, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/system/Button';
 import { analytics } from '@/components/GoogleAnalytics';
-import { CheckCircle2, AlertCircle, Loader2, UploadCloud, X } from 'lucide-react';
+import { CheckCircle2, AlertCircle, Loader2, UploadCloud, X, CreditCard } from 'lucide-react';
 import PhoneInput, { getCountryCallingCode, getCountries, parsePhoneNumber } from 'react-phone-number-input';
 import en from 'react-phone-number-input/locale/en';
 import Input from 'react-phone-number-input/input';
@@ -41,7 +41,7 @@ interface DynamicFormProps {
     prefillData?: { name?: string; email?: string; phone?: string; [key: string]: any } | null;
 }
 
-const CustomPhoneInput = ({ name, placeholder, control, error }: { name: string, placeholder?: string, control: any, error?: any }) => {
+const CustomPhoneInput = ({ name, placeholder, control, error, showInternationalPaymentHint }: { name: string, placeholder?: string, control: any, error?: any, showInternationalPaymentHint?: boolean }) => {
     const [country, setCountry] = useState<any>('IN');
 
     const value = useWatch({
@@ -83,11 +83,11 @@ const CustomPhoneInput = ({ name, placeholder, control, error }: { name: string,
                     }`}>
                         {/* The Grouped Selector (Left) */}
                         <div className="flex items-center gap-2 pl-4 pr-3 py-3 border-r border-slate-200 bg-slate-50/50 hover:bg-slate-100 transition-colors cursor-pointer group relative">
-                            <div className="flex items-center gap-1.5 pointer-events-none">
-                                <span className="text-xl leading-none">
+                            <div className="flex items-center gap-1.5 pointer-events-none mt-0.5">
+                                <span className="text-sm md:text-base leading-none">
                                     {getFlagEmoji(country)}
                                 </span>
-                                <span className="text-sm font-bold text-navy-900">+{getCountryCallingCode(country)}</span>
+                                <span className="text-[13px] md:text-sm font-bold text-navy-900 leading-none">+{getCountryCallingCode(country)}</span>
                             </div>
                             <select 
                                 className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
@@ -108,12 +108,30 @@ const CustomPhoneInput = ({ name, placeholder, control, error }: { name: string,
                             value={value}
                             onChange={onChange}
                             placeholder={placeholder || 'Enter phone number'}
-                            className="flex-1 bg-transparent border-none outline-none font-medium text-navy-900 px-4 py-3 text-sm placeholder:text-slate-400"
+                            className="flex-1 bg-transparent border-none outline-none font-medium text-navy-900 px-4 py-3 text-[13px] md:text-sm placeholder:text-slate-400"
                         />
                     </div>
                 )}
             />
             
+            <AnimatePresence>
+                {showInternationalPaymentHint && country !== 'IN' && (
+                    <m.div 
+                        initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                        animate={{ opacity: 1, height: 'auto', marginTop: 10 }}
+                        exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                        className="overflow-hidden"
+                    >
+                        <div className="flex items-start gap-2 p-2.5 bg-indigo-50/80 border border-indigo-100 rounded-lg">
+                            <CreditCard className="w-4 h-4 text-indigo-500 mt-0.5 flex-shrink-0" />
+                            <p className="text-[11px] text-indigo-800 font-medium leading-snug">
+                                For international payments, please select the <strong>Card</strong> option on the upcoming Razorpay checkout screen.
+                            </p>
+                        </div>
+                    </m.div>
+                )}
+            </AnimatePresence>
+
             <style jsx global>{`
                 .phone-input-wrapper .PhoneInputInput {
                     width: 100%;
@@ -455,7 +473,7 @@ export default function DynamicForm({
                             <div className="prose prose-sm md:prose-base prose-navy max-w-none my-4" dangerouslySetInnerHTML={{ __html: field.content || field.label || '' }} />
                         ) : (
                             <>
-                                <label htmlFor={`${formSlug}-${field.name}`} className="block text-xs font-semibold text-navy-700 uppercase tracking-wider mb-1.5">
+                                <label htmlFor={`${formSlug}-${field.name}`} className="block text-[10px] md:text-[11px] font-bold text-navy-700 uppercase tracking-wider mb-1.5">
                                     {field.label} {field.required && <span className="text-red-500">*</span>}
                                 </label>
 
@@ -465,7 +483,7 @@ export default function DynamicForm({
                                         {...register(field.name)}
                                         rows={4}
                                         placeholder={field.placeholder}
-                                        className={`w-full px-4 py-3 rounded-xl border transition-all text-sm font-medium focus:ring-2 focus:ring-navy-500/10 focus:border-navy-500 outline-none ${errors[field.name] ? 'border-red-500 bg-red-50/30' : 'border-slate-200 hover:border-slate-300'
+                                        className={`w-full px-4 py-3 rounded-xl border transition-all text-[13px] md:text-sm font-medium focus:ring-2 focus:ring-navy-500/10 focus:border-navy-500 outline-none ${errors[field.name] ? 'border-red-500 bg-red-50/30' : 'border-slate-200 hover:border-slate-300'
                                             }`}
                                         disabled={isSubmitting}
                                     />
@@ -473,7 +491,7 @@ export default function DynamicForm({
                                     <select
                                 id={`${formSlug}-${field.name}`}
                                 {...register(field.name)}
-                                className={`w-full px-4 py-3 rounded-xl border transition-all text-sm font-medium focus:ring-2 focus:ring-navy-500/10 focus:border-navy-500 outline-none appearance-none bg-no-repeat bg-[length:16px_16px] bg-[right_1.5rem_center] cursor-pointer ${errors[field.name] ? 'border-red-500 bg-red-50/30' : 'border-slate-200 hover:border-slate-300'
+                                className={`w-full px-4 py-3 rounded-xl border transition-all text-[13px] md:text-sm font-medium focus:ring-2 focus:ring-navy-500/10 focus:border-navy-500 outline-none appearance-none bg-no-repeat bg-[length:16px_16px] bg-[right_1.5rem_center] cursor-pointer ${errors[field.name] ? 'border-red-500 bg-red-50/30' : 'border-slate-200 hover:border-slate-300'
                                     }`}
                                 style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23475569'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")` }}
                                 disabled={isSubmitting}
@@ -542,6 +560,7 @@ export default function DynamicForm({
                                 placeholder={field.placeholder}
                                 control={control}
                                 error={errors[field.name]}
+                                showInternationalPaymentHint={requiresPayment}
                             />
                         ) : (
                             <input
@@ -549,7 +568,7 @@ export default function DynamicForm({
                                 type={field.type}
                                 {...register(field.name)}
                                 placeholder={field.placeholder}
-                                className={`w-full px-4 py-3 rounded-xl border transition-all text-sm font-medium focus:ring-2 focus:ring-navy-500/10 focus:border-navy-500 outline-none ${errors[field.name] ? 'border-red-500 bg-red-50/30' : 'border-slate-200 hover:border-slate-300'
+                                className={`w-full px-4 py-3 rounded-xl border transition-all text-[13px] md:text-sm font-medium focus:ring-2 focus:ring-navy-500/10 focus:border-navy-500 outline-none ${errors[field.name] ? 'border-red-500 bg-red-50/30' : 'border-slate-200 hover:border-slate-300'
                                     }`}
                                 disabled={isSubmitting}
                             />
@@ -566,16 +585,19 @@ export default function DynamicForm({
                 ))}
 
                 {requiresPayment && (
-                    <div className="flex justify-center my-4">
-                        <Turnstile 
-                            siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || '1x00000000000000000000AA'} 
-                            onSuccess={(token) => setTurnstileToken(token)}
-                            onError={() => setTurnstileToken(null)}
-                            onExpire={() => setTurnstileToken(null)}
-                            options={{
-                                theme: 'light',
-                            }}
-                        />
+                    <div className="flex justify-center w-full mt-6 mb-2 overflow-hidden">
+                        <div className="scale-[0.85] md:scale-100 origin-center">
+                            <Turnstile 
+                                siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || '1x00000000000000000000AA'} 
+                                onSuccess={(token) => setTurnstileToken(token)}
+                                onError={() => setTurnstileToken(null)}
+                                onExpire={() => setTurnstileToken(null)}
+                                options={{
+                                    theme: 'light',
+                                    size: 'normal'
+                                }}
+                            />
+                        </div>
                     </div>
                 )}
 

@@ -34,3 +34,8 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 docs/aishwaryamanikarnike.com (DNS Records).csv
+
+# local supabase files
+supabase/config.toml
+supabase/seed.sql
+supabase/snippets/
