@@ -585,8 +585,8 @@ export default function DynamicForm({
                 ))}
 
                 {requiresPayment && (
-                    <div className="flex justify-center w-full mt-6 mb-2 overflow-hidden">
-                        <div className="scale-[0.85] md:scale-100 origin-center">
+                    <div className="flex justify-center w-full mt-6 mb-2">
+                        <div className="scale-[0.9] sm:scale-100 origin-center">
                             <Turnstile 
                                 siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || '1x00000000000000000000AA'} 
                                 onSuccess={(token) => setTurnstileToken(token)}

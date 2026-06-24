@@ -383,7 +383,7 @@ function CohortContent({ initialCohorts, config }: CohortClientProps) {
                                 <X size={24} />
                             </button>
 
-                            <div className={`md:w-[38%] p-8 bg-slate-50 border-r border-slate-100 overflow-y-auto ${mobileStep === 'form' ? 'hidden md:block' : 'block'}`}>
+                            <div className={`md:w-[38%] p-4 sm:p-6 md:p-8 bg-slate-50 border-r border-slate-100 overflow-y-auto ${mobileStep === 'form' ? 'hidden md:block' : 'block'}`}>
                                 <div className="space-y-10">
                                     <div>
                                         <h2 className="text-xl font-bold text-slate-900 mb-3 leading-snug pr-10 md:pr-0">
@@ -425,7 +425,7 @@ function CohortContent({ initialCohorts, config }: CohortClientProps) {
                                         </div>
                                     </div>
                                     
-                                    <div className="md:hidden sticky -bottom-8 -mx-8 px-6 py-5 bg-slate-50/95 backdrop-blur-md border-t border-slate-200 shadow-[0_-15px_30px_-5px_rgba(0,0,0,0.05)] z-20 mt-12">
+                                    <div className="md:hidden sticky -bottom-4 -mx-4 px-4 py-4 bg-slate-50/95 backdrop-blur-md border-t border-slate-200 shadow-[0_-15px_30px_-5px_rgba(0,0,0,0.05)] z-20 mt-8">
                                         <Button
                                             variant="primary"
                                             fullWidth
@@ -437,7 +437,7 @@ function CohortContent({ initialCohorts, config }: CohortClientProps) {
                                     </div>
                                 </div>
 
-                            <div className={`flex-1 p-8 lg:p-12 bg-white overflow-y-auto ${mobileStep === 'details' ? 'hidden md:block' : 'block'}`}>
+                            <div className={`flex-1 p-4 sm:p-6 md:p-8 lg:p-12 bg-white overflow-y-auto overflow-x-hidden ${mobileStep === 'details' ? 'hidden md:block' : 'block'}`}>
                                 <div className="max-w-md mx-auto">
                                     <div className="md:hidden flex items-center justify-between mb-6 -mt-2">
                                         <button 
