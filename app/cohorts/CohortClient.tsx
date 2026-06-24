@@ -70,7 +70,7 @@ function CohortContent({ initialCohorts, config }: CohortClientProps) {
         setInviteLink(null);
         setIsPolling(false);
         setPollingTimedOut(false);
-        const params = new URLSearchParams(searchParams.toString());
+        const params = new URLSearchParams(searchParams?.toString() || '');
         params.delete('success');
         params.delete('payment_id');
         const query = params.toString();
@@ -78,11 +78,11 @@ function CohortContent({ initialCohorts, config }: CohortClientProps) {
     }, [searchParams, router]);
 
     useEffect(() => {
-        if (searchParams.get('success') === 'true') {
+        if (searchParams?.get('success') === 'true') {
             setShowCelebration(true);
             trackEvent('purchase_complete', { status: 'success' });
             
-            const paymentId = searchParams.get('payment_id');
+            const paymentId = searchParams?.get('payment_id');
             
             if (paymentId) {
                 setIsPolling(true);
@@ -132,16 +132,16 @@ function CohortContent({ initialCohorts, config }: CohortClientProps) {
     }, [searchParams, closeCelebration]);
 
     useEffect(() => {
-        const enrollId = searchParams.get('enroll');
+        const enrollId = searchParams?.get('enroll');
         if (enrollId) {
             const cohort = initialCohorts.find(c => c.id === enrollId);
             if (cohort && cohort.status === 'active') {
                 setSelectedCohort(cohort);
                 setIsModalOpen(true);
                 
-                const name = searchParams.get('name') || undefined;
-                const email = searchParams.get('email') || undefined;
-                const phone = searchParams.get('phone') || undefined;
+                const name = searchParams?.get('name') || undefined;
+                const email = searchParams?.get('email') || undefined;
+                const phone = searchParams?.get('phone') || undefined;
                 setPrefillData({ name, email, phone });
                 
                 // Clean the URL parameters silently without reloading

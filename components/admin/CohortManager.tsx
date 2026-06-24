@@ -6,7 +6,7 @@ import {
     Trash2, Plus, Edit2, RefreshCw, Star, 
     Info, DollarSign, Layout, List, 
     X, Save, MailPlus, Send, ListTree, AlertCircle, Search, Filter, Copy, ExternalLink, TrendingUp,
-    Image as ImageIcon
+    Image as ImageIcon, Award
 } from 'lucide-react';
 import { useToast } from '@/context/ToastContext';
 import { CloudinaryUpload } from './CloudinaryUpload';
@@ -60,10 +60,95 @@ export function CohortManager() {
     const [reenrollLoading, setReenrollLoading] = useState(false);
     const [reenrollProgress, setReenrollProgress] = useState({ current: 0, total: 0, success: 0, failed: 0, skipped: 0 });
 
+
     const [sourceStudents, setSourceStudents] = useState<any[]>([]);
     const [sourceStudentsLoading, setSourceStudentsLoading] = useState(false);
     const [selectedStudentEmails, setSelectedStudentEmails] = useState<Set<string>>(new Set());
     const [studentSearchQuery, setStudentSearchQuery] = useState('');
+
+    // ── Bulk Send Certificates ──────────────────────────────────────────────────
+    const [isSendingCertificates, setIsSendingCertificates] = useState(false);
+    const [certificateCohort, setCertificateCohort] = useState<Cohort | null>(null);
+    const [eligibleStudents, setEligibleStudents] = useState<any[]>([]);
+    const [selectedCertStudents, setSelectedCertStudents] = useState<Set<string>>(new Set());
+    const [certLoading, setCertLoading] = useState(false);
+    const [certSearchQuery, setCertSearchQuery] = useState('');
+    const [certProgress, setCertProgress] = useState({ current: 0, total: 0 });
+
+    const openCertificateModal = async (cohort: Cohort) => {
+        setCertificateCohort(cohort);
+        setCertLoading(true);
+        setIsSendingCertificates(true);
+        try {
+            const { data: enrollments, error } = await supabase
+                .from('enrollments')
+                .select('id, student_id, students(name, email, phone), telegram_joined, certificate_sent_at')
+                .eq('cohort_id', cohort.id)
+                .eq('status', 'active');
+
+            if (error) throw error;
+
+            const eligible = (enrollments || [])
+                .filter(e => e.telegram_joined === true && !e.certificate_sent_at)
+                .map(e => ({
+                    id: e.id,
+                    student_id: e.student_id,
+                    name: (e.students as any)?.name || 'Unknown',
+                    email: (e.students as any)?.email || '',
+                }));
+
+            setEligibleStudents(eligible);
+            setSelectedCertStudents(new Set(eligible.map(e => e.student_id)));
+        } catch (err: any) {
+            addToast(err.message, 'error');
+        } finally {
+            setCertLoading(false);
+        }
+    };
+
+    const handleSendCertificates = async () => {
+        if (!certificateCohort || selectedCertStudents.size === 0) return;
+        
+        setCertLoading(true);
+        const studentIds = Array.from(selectedCertStudents);
+        setCertProgress({ current: 0, total: studentIds.length });
+        let totalSuccess = 0;
+
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            
+            // Chunk into batches of 5
+            const BATCH_SIZE = 5;
+            for (let i = 0; i < studentIds.length; i += BATCH_SIZE) {
+                const chunk = studentIds.slice(i, i + BATCH_SIZE);
+                
+                const response = await fetch(`/api/admin/cohorts/${certificateCohort.id}/send-certificates`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${session?.access_token}`
+                    },
+                    body: JSON.stringify({ student_ids: chunk })
+                });
+
+                const result = await response.json();
+                if (!response.ok) throw new Error(result.error || 'Failed to send certificates in batch');
+                
+                totalSuccess += result.success_count || 0;
+                setCertProgress(prev => ({ ...prev, current: prev.current + chunk.length }));
+            }
+
+            addToast(`Successfully sent ${totalSuccess} certificates!`, 'success');
+            setIsSendingCertificates(false);
+            setCertificateCohort(null);
+            fetchCohorts(); // Refresh data
+        } catch (err: any) {
+            addToast(err.message, 'error');
+        } finally {
+            setCertLoading(false);
+            setCertProgress({ current: 0, total: 0 });
+        }
+    };
 
     const filteredStudents = sourceStudents.filter(s => {
         const query = studentSearchQuery.toLowerCase();
@@ -680,7 +765,7 @@ export function CohortManager() {
                     <table className="w-full text-left border-collapse">
                         <thead>
                             <tr className="bg-slate-50 border-b border-slate-200 text-[10px] font-bold uppercase tracking-wider text-slate-505">
-                                <th className="px-5 py-3.5 w-24">Preview</th>
+
                                 <th className="px-5 py-3.5">Title & Month</th>
                                 <th className="px-5 py-3.5">Pricing</th>
                                 <th className="px-5 py-3.5">Students</th>
@@ -750,6 +835,21 @@ export function CohortManager() {
                                     </td>
                                     <td className="px-5 py-3 text-right">
                                         <div className="flex justify-end gap-1.5">
+
+                                            <button 
+                                                onClick={() => openCertificateModal(cohort)}
+                                                className="p-1.5 text-emerald-500 hover:text-emerald-700 hover:bg-emerald-50 rounded border border-emerald-200 bg-white transition-colors"
+                                                title="Send Certificates"
+                                            >
+                                                <Award size={12} />
+                                            </button>
+                                            <button 
+                                                onClick={() => window.location.href = `/admin/cohorts/${cohort.id}/template-builder`}
+                                                className="p-1.5 text-indigo-500 hover:text-indigo-700 hover:bg-indigo-50 rounded border border-indigo-200 bg-white transition-colors"
+                                                title="Configure Certificate Template"
+                                            >
+                                                <Layout size={12} />
+                                            </button>
                                             <button 
                                                 onClick={() => fetchInvitationLogs(cohort.id)}
                                                 className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-50 rounded border border-slate-200 bg-white transition-colors"
@@ -972,6 +1072,165 @@ export function CohortManager() {
                                         Send Invitations
                                     </>
                                 )}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Send Certificates Modal */}
+            {isSendingCertificates && (
+                <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-[100] flex items-center justify-center p-4">
+                    <div className="bg-white rounded-lg shadow-lg w-full max-w-md overflow-hidden flex flex-col max-h-[90vh] border border-slate-200">
+                        {/* Header */}
+                        <div className="px-5 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50/50">
+                            <div className="flex items-center gap-2">
+                                <Award size={16} className="text-emerald-500" />
+                                <h3 className="font-bold text-slate-900 text-sm">Send Participation Certificates</h3>
+                            </div>
+                            <button onClick={() => setIsSendingCertificates(false)} className="w-6 h-6 flex items-center justify-center text-slate-400 hover:text-slate-800 hover:bg-slate-100 rounded transition-all">
+                                <X size={14} />
+                            </button>
+                        </div>
+
+                        <div className="flex-1 overflow-y-auto p-5 space-y-4">
+                            <div>
+                                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Target Cohort</label>
+                                <div className="text-xs font-bold text-slate-800 bg-slate-50 border border-slate-200 rounded px-3 py-2 mb-3">
+                                    {certificateCohort?.title}
+                                </div>
+                                <p className="mt-1.5 text-[10px] text-slate-400 leading-relaxed italic">
+                                    Only active students who have joined the Telegram group and haven&apos;t received a certificate yet are shown below.
+                                </p>
+                            </div>
+
+                            <div className="space-y-3 pt-3 border-t border-slate-200">
+                                {certLoading ? (
+                                    <div className="flex flex-col items-center justify-center py-4 text-slate-400">
+                                        <RefreshCw className="h-4 w-4 animate-spin mb-1 text-slate-500" />
+                                        <span className="text-[9px] font-bold uppercase tracking-wider">Loading students...</span>
+                                    </div>
+                                ) : eligibleStudents.length === 0 ? (
+                                    <div className="text-center py-4 text-slate-400 bg-slate-50/50 rounded border border-slate-200">
+                                        <p className="text-xs font-bold">No eligible students found.</p>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-2">
+                                        <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                                            <span>Eligible Students</span>
+                                            <span className="font-bold text-slate-700">{selectedCertStudents.size} of {eligibleStudents.length} selected</span>
+                                        </div>
+
+                                        <div className="flex items-center gap-2">
+                                            <div className="relative flex-grow">
+                                                <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                                                <input 
+                                                    type="text"
+                                                    placeholder="Search name..."
+                                                    value={certSearchQuery}
+                                                    onChange={(e) => setCertSearchQuery(e.target.value)}
+                                                    className="w-full pl-8 pr-2.5 py-1.5 bg-white border border-slate-200 rounded text-xs outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-900 transition-all font-medium text-slate-800"
+                                                />
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    const filtered = eligibleStudents.filter(s => s.name.toLowerCase().includes(certSearchQuery.toLowerCase()));
+                                                    const allSelected = filtered.every(s => selectedCertStudents.has(s.student_id));
+                                                    const newSelected = new Set(selectedCertStudents);
+                                                    filtered.forEach(s => {
+                                                        if (allSelected) {
+                                                            newSelected.delete(s.student_id);
+                                                        } else {
+                                                            newSelected.add(s.student_id);
+                                                        }
+                                                    });
+                                                    setSelectedCertStudents(newSelected);
+                                                }}
+                                                className="px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded border border-slate-200 hover:bg-slate-50 transition-all text-slate-700 shrink-0"
+                                            >
+                                                {eligibleStudents.filter(s => s.name.toLowerCase().includes(certSearchQuery.toLowerCase())).every(s => selectedCertStudents.has(s.student_id)) ? 'Deselect All' : 'Select All'}
+                                            </button>
+                                        </div>
+
+                                        <div className="max-h-40 overflow-y-auto border border-slate-200 rounded divide-y divide-slate-100 bg-white">
+                                            {eligibleStudents.filter(s => s.name.toLowerCase().includes(certSearchQuery.toLowerCase())).length === 0 ? (
+                                                <div className="p-3 text-center text-xs text-slate-400 italic">No matching students</div>
+                                            ) : (
+                                                eligibleStudents.filter(s => s.name.toLowerCase().includes(certSearchQuery.toLowerCase())).map(student => {
+                                                    const isSelected = selectedCertStudents.has(student.student_id);
+                                                    return (
+                                                        <label 
+                                                            key={student.student_id} 
+                                                            className="flex items-center gap-2.5 p-2 hover:bg-slate-50/50 cursor-pointer transition-colors"
+                                                        >
+                                                            <input 
+                                                                type="checkbox"
+                                                                checked={isSelected}
+                                                                onChange={() => {
+                                                                    const newSelected = new Set(selectedCertStudents);
+                                                                    if (newSelected.has(student.student_id)) {
+                                                                        newSelected.delete(student.student_id);
+                                                                    } else {
+                                                                        newSelected.add(student.student_id);
+                                                                    }
+                                                                    setSelectedCertStudents(newSelected);
+                                                                }}
+                                                                className="h-3.5 w-3.5 rounded border-slate-300 text-slate-900 focus:ring-slate-900 transition-colors cursor-pointer"
+                                                            />
+                                                            <div className="flex flex-col">
+                                                                <span className="text-xs font-bold text-slate-800">{student.name}</span>
+                                                                <span className="text-[10px] text-slate-400">{student.email}</span>
+                                                            </div>
+                                                        </label>
+                                                    );
+                                                })
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="bg-emerald-50 border border-emerald-200 rounded p-3 flex items-start gap-2">
+                                <Info size={14} className="text-emerald-600 mt-0.5 flex-shrink-0" />
+                                <p className="text-[10px] text-emerald-800 leading-normal">
+                                    Certificates will be generated dynamically and sent directly to the students via WhatsApp.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="px-5 py-4 bg-slate-50 border-t border-slate-200 flex gap-3">
+                            <button 
+                                onClick={() => setIsSendingCertificates(false)}
+                                className="flex-1 px-4 py-2 rounded border border-slate-250 text-xs font-semibold text-slate-600 hover:bg-slate-100 transition-all"
+                            >
+                                Cancel
+                            </button>
+                            <button 
+                                onClick={handleSendCertificates}
+                                disabled={certLoading || eligibleStudents.length === 0 || selectedCertStudents.size === 0}
+                                className="flex-1 px-4 py-2 rounded text-xs font-semibold bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5 transition-all relative overflow-hidden"
+                            >
+                                {certLoading && certProgress.total > 0 && (
+                                    <div 
+                                        className="absolute inset-0 bg-emerald-800/30 transition-all duration-300"
+                                        style={{ width: `${(certProgress.current / certProgress.total) * 100}%` }}
+                                    ></div>
+                                )}
+                                <span className="relative flex items-center gap-1.5 z-10">
+                                    {certLoading ? (
+                                        <>
+                                            <RefreshCw size={14} className="animate-spin" />
+                                            {certProgress.total > 0 
+                                                ? `Sending ${certProgress.current} / ${certProgress.total}...` 
+                                                : 'Processing...'}
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Send size={14} /> Send Certificates
+                                        </>
+                                    )}
+                                </span>
                             </button>
                         </div>
                     </div>

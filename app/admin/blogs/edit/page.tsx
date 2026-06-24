@@ -13,7 +13,7 @@ import { ToastContainer, useToast } from '@/components/ui/Toast';
 function EditBlogContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const id = searchParams.get('id');
+    const id = searchParams?.get('id');
     const [blog, setBlog] = useState<Blog | null>(null);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);

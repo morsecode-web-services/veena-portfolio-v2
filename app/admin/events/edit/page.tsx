@@ -9,7 +9,7 @@ import { Event } from '@/types/event';
 export default function EditEventPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const id = searchParams.get('id');
+    const id = searchParams?.get('id');
     const [event, setEvent] = useState<Event | null>(null);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);

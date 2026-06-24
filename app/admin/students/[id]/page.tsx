@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { 
     User, Mail, Phone, Calendar, ArrowLeft, RefreshCw, 
     CheckCircle2, Clock, AlertCircle, Copy, ExternalLink, 
-    CreditCard, Award, MessageSquare, History, Check
+    CreditCard, Award, MessageSquare, History, Check, Download
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { supabase } from '@/lib/supabase';
@@ -28,6 +28,8 @@ interface Enrollment {
     telegram_username: string | null;
     telegram_invite_link: string | null;
     created_at: string;
+    certificate_url?: string | null;
+    certificate_sent_at?: string | null;
     cohorts: {
         title: string;
         price: number;
@@ -92,7 +94,7 @@ export default function StudentDetailPage() {
     const params = useParams();
     const router = useRouter();
     const { addToast } = useToast();
-    const studentId = params.id as string;
+    const studentId = params?.id as string;
 
     const [loading, setLoading] = useState(true);
     const [student, setStudent] = useState<StudentProfile | null>(null);
@@ -158,6 +160,7 @@ export default function StudentDetailPage() {
 
     useEffect(() => {
         if (studentId) fetchData();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [studentId]);
 
     const copyToClipboard = (text: string, id: string) => {
@@ -228,6 +231,54 @@ export default function StudentDetailPage() {
             fetchData();
         } catch (err: any) {
             addToast(err.message || 'Failed to regenerate link', 'error');
+        } finally {
+            setActionLoadingId(null);
+        }
+    };
+
+    const handleDownloadCertificate = async (enrollment: Enrollment) => {
+        setActionLoadingId(enrollment.id + '_cert');
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            let urlToDownload = enrollment.certificate_url;
+            
+            if (!urlToDownload) {
+                // Generate and upload to Supabase Storage
+                const res = await fetch('/api/admin/cohorts/generate-certificate', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${session?.access_token || ''}` 
+                    },
+                    body: JSON.stringify({ enrollment_id: enrollment.id })
+                });
+                
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) throw new Error(data.error || 'Failed to generate certificate');
+                
+                urlToDownload = data.url;
+                
+                // Refresh UI so it knows we have a cert now
+                fetchData();
+            }
+            
+            // Download the file from the public URL
+            const imgRes = await fetch(urlToDownload!);
+            if (!imgRes.ok) throw new Error('Failed to fetch certificate image');
+            
+            const blob = await imgRes.blob();
+            const downloadUrl = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = downloadUrl;
+            a.download = `Certificate_${student?.name || 'Student'}.jpg`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(downloadUrl);
+            
+            addToast('Certificate downloaded successfully!', 'success');
+        } catch (err: any) {
+            addToast(err.message || 'Failed to download certificate', 'error');
         } finally {
             setActionLoadingId(null);
         }
@@ -414,6 +465,22 @@ export default function StudentDetailPage() {
                                                             </button>
                                                         </>
                                                     )}
+                                                    
+                                                    <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
+                                                    
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleDownloadCertificate(enrollment)}
+                                                        disabled={actionLoadingId !== null}
+                                                        className="w-7 h-7 rounded flex items-center justify-center text-slate-400 hover:text-amber-700 hover:bg-amber-50 transition-all"
+                                                        title="Download Certificate"
+                                                    >
+                                                        {actionLoadingId === enrollment.id + '_cert' ? (
+                                                            <div className="h-3 w-3 border-2 border-amber-700 border-t-transparent rounded-full animate-spin" />
+                                                        ) : (
+                                                            <Download size={13} />
+                                                        )}
+                                                    </button>
                                                 </div>
                                             </div>
                                         </div>
