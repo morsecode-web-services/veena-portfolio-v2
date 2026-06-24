@@ -14,8 +14,7 @@
     "type-check": "tsc --noEmit",
     "analyze": "ANALYZE=true next build",
     "optimize-gallery": "node scripts/optimize-gallery.js",
-    "optimize-images": "node scripts/optimize-images.js",
-    "postinstall": "node scripts/patch-next-og.js"
+    "optimize-images": "node scripts/optimize-images.js"
   },
   "dependencies": {
     "@google-analytics/data": "^5.2.2",
