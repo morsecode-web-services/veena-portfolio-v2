@@ -362,7 +362,7 @@ function CohortContent({ initialCohorts, config }: CohortClientProps) {
 
             <AnimatePresence>
                 {isModalOpen && selectedCohort && (
-                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center px-2 py-4 sm:p-6">
                         <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
@@ -511,7 +511,7 @@ function CohortContent({ initialCohorts, config }: CohortClientProps) {
             {/* Minimal Celebration Modal */}
             <AnimatePresence>
                 {showCelebration && (
-                    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+                    <div className="fixed inset-0 z-[200] flex items-center justify-center px-2 py-4 sm:p-6">
                         <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}

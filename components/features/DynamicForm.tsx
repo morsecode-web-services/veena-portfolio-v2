@@ -82,7 +82,7 @@ const CustomPhoneInput = ({ name, placeholder, control, error, showInternational
                             : 'border-slate-200 focus-within:ring-2 focus-within:ring-navy-500/10 focus-within:border-navy-500 hover:border-slate-300'
                     }`}>
                         {/* The Grouped Selector (Left) */}
-                        <div className="flex items-center gap-2 pl-4 pr-3 py-3 border-r border-slate-200 bg-slate-50/50 hover:bg-slate-100 transition-colors cursor-pointer group relative">
+                        <div className="flex items-center gap-2 pl-3 md:pl-4 pr-2 md:pr-3 py-3 border-r border-slate-200 bg-slate-50/50 hover:bg-slate-100 transition-colors cursor-pointer group relative">
                             <div className="flex items-center gap-1.5 pointer-events-none mt-0.5">
                                 <span className="text-sm md:text-base leading-none">
                                     {getFlagEmoji(country)}
@@ -108,7 +108,7 @@ const CustomPhoneInput = ({ name, placeholder, control, error, showInternational
                             value={value}
                             onChange={onChange}
                             placeholder={placeholder || 'Enter phone number'}
-                            className="flex-1 bg-transparent border-none outline-none font-medium text-navy-900 px-4 py-3 text-[13px] md:text-sm placeholder:text-slate-400"
+                            className="flex-1 bg-transparent border-none outline-none font-medium text-navy-900 px-3 md:px-4 py-3 text-[13px] md:text-sm placeholder:text-slate-400"
                         />
                     </div>
                 )}
@@ -466,7 +466,7 @@ export default function DynamicForm({
                     strategy="lazyOnload"
                 />
             )}
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                 {fields.map((field) => (
                     <div key={field.name}>
                         {field.type === 'content' ? (
@@ -568,7 +568,7 @@ export default function DynamicForm({
                                 type={field.type}
                                 {...register(field.name)}
                                 placeholder={field.placeholder}
-                                className={`w-full px-4 py-3 rounded-xl border transition-all text-[13px] md:text-sm font-medium focus:ring-2 focus:ring-navy-500/10 focus:border-navy-500 outline-none ${errors[field.name] ? 'border-red-500 bg-red-50/30' : 'border-slate-200 hover:border-slate-300'
+                                className={`w-full px-3 md:px-4 py-3 rounded-xl border transition-all text-[13px] md:text-sm font-medium focus:ring-2 focus:ring-navy-500/10 focus:border-navy-500 outline-none ${errors[field.name] ? 'border-red-500 bg-red-50/30' : 'border-slate-200 hover:border-slate-300'
                                     }`}
                                 disabled={isSubmitting}
                             />
