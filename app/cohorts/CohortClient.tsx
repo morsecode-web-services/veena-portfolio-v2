@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect, Suspense, useCallback } from 'react';
+import { useState, useEffect, Suspense, useCallback, Fragment } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, Clock, Calendar, ArrowRight, X, Mail, CreditCard, ArrowLeft } from 'lucide-react';
+import { Check, Clock, Calendar, ArrowLeft, ArrowRight, X, Mail, CreditCard, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/system/Button';
 import type { FormField } from '@/components/features/DynamicForm';
 import Image from 'next/image';
@@ -231,20 +231,12 @@ function CohortContent({ initialCohorts, config }: CohortClientProps) {
                 </div>
             )}
 
-            {/* Mobile Swipe Indicator */}
-            {sortedCohorts.length > 1 && (
-                <div className="md:hidden flex items-center justify-end mb-3 px-2 text-slate-400">
-                    <span className="text-[10px] uppercase tracking-widest font-bold flex items-center gap-1 animate-pulse">
-                        Swipe for more <ArrowRight size={12} strokeWidth={3} />
-                    </span>
-                </div>
-            )}
 
             {/* ── All Batches ── */}
             {sortedCohorts.length > 0 && (
-                <div className="flex overflow-x-auto pb-10 -mx-4 px-4 snap-x snap-mandatory md:grid md:grid-cols-2 lg:grid-cols-4 md:overflow-visible md:pb-0 md:mx-0 md:px-0 md:snap-none gap-6 md:gap-8 scrollbar-hide">
+                <div className="flex flex-col gap-4 md:grid md:grid-cols-2 lg:grid-cols-4 md:gap-8">
                     {sortedCohorts.map((cohort, index) => (
-                        <div key={cohort.id} className="flex flex-col w-[85vw] max-w-[340px] flex-shrink-0 snap-center md:w-auto md:max-w-none">
+                        <div key={cohort.id} className="flex flex-col w-full">
                             <motion.button
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
@@ -259,7 +251,7 @@ function CohortContent({ initialCohorts, config }: CohortClientProps) {
                                         : 'opacity-75 cursor-not-allowed'
                                 }`}
                             >
-                                <div className="relative aspect-video overflow-hidden bg-slate-100">
+                                <div className="relative aspect-[2/1] md:aspect-video overflow-hidden bg-slate-100 shrink-0">
                                     {cohort.image_url ? (
                                         <Image
                                             src={cohort.image_url}
@@ -284,14 +276,14 @@ function CohortContent({ initialCohorts, config }: CohortClientProps) {
                                     )}
                                 </div>
 
-                                <div className="p-5 flex flex-col">
+                                <div className="p-4 md:p-5 flex flex-col">
                                     <div className="flex-grow">
                                         <h3 className="text-lg font-serif font-bold text-navy-900 leading-snug group-hover:text-gold-600 transition-colors line-clamp-2 min-h-[3.5rem]">
                                             {cohort.title}
                                         </h3>
-                                        <div className="mb-4 min-h-[4rem] flex flex-col">
+                                        <div className="mb-4 min-h-[3.5rem] md:min-h-[4rem] flex flex-col">
                                             {cohort.description && (
-                                                <p className="text-xs text-slate-500 leading-relaxed line-clamp-3 mb-3">
+                                                <p className="text-xs text-slate-500 leading-relaxed line-clamp-2 md:line-clamp-3 mb-3">
                                                     {cohort.description}
                                                 </p>
                                             )}

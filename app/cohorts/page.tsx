@@ -33,6 +33,7 @@ export default async function CohortsPage() {
     const { data: cohorts } = await supabase
         .from('cohorts')
         .select('*')
+        .neq('status', 'completed')
         .order('order_index', { ascending: true })
         .order('created_at', { ascending: false });
 

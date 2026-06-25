@@ -45,13 +45,16 @@ export function CohortManager() {
         month_name: '',
         price: 0,
         original_price: 0,
+        razorpay_plan_id: '',
+        telegram_chat_id: '',
         status: 'coming_soon',
         is_highlighted: false,
         image_url: '',
         learning_outcomes_raw: '',
         curriculum_highlights_raw: '',
         success_message: 'Welcome aboard! Your enrollment is successful.',
-        pricing_type: 'fixed'
+        pricing_type: 'fixed',
+        order_index: 0
     });
 
     const [isReenrolling, setIsReenrolling] = useState(false);
@@ -429,6 +432,8 @@ export function CohortManager() {
             month_name: '',
             price: 0,
             original_price: 0,
+            razorpay_plan_id: '',
+            telegram_chat_id: '',
             status: 'coming_soon',
             is_highlighted: false,
             image_url: '',
@@ -437,7 +442,8 @@ export function CohortManager() {
             learning_outcomes_raw: '',
             curriculum_highlights_raw: '',
             success_message: 'Welcome aboard! Your enrollment is successful.',
-            pricing_type: 'fixed'
+            pricing_type: 'fixed',
+            order_index: cohorts.length
         });
         setIsCreating(false);
         setEditingId(null);
@@ -461,7 +467,8 @@ export function CohortManager() {
                 success_message: formData.success_message,
                 learning_outcomes: (formData.learning_outcomes_raw || '').split('\n').filter((s: string) => s.trim()),
                 curriculum_highlights: (formData.curriculum_highlights_raw || '').split('\n').filter((s: string) => s.trim()),
-                pricing_type: formData.pricing_type || 'fixed'
+                pricing_type: formData.pricing_type || 'fixed',
+                order_index: formData.order_index ?? cohorts.length
             };
 
             if (editingId) {
@@ -474,7 +481,7 @@ export function CohortManager() {
             } else {
                 const { error } = await supabase
                     .from('cohorts')
-                    .insert([{ ...payload, order_index: cohorts.length }]);
+                    .insert([payload]);
                 if (error) throw error;
                 addToast('Cohort created successfully', 'success');
             }
@@ -513,6 +520,7 @@ export function CohortManager() {
             ...rest,
             // Clear identity/unique fields
             telegram_chat_id: '',
+            razorpay_plan_id: '',
             // Suggest a new title so it's obvious this is a clone
             title: `Copy of ${cohort.title}`,
             // Reset status to coming_soon for safety
