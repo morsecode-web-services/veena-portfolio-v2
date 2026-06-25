@@ -289,12 +289,25 @@ function CohortContent({ initialCohorts, config }: CohortClientProps) {
                                         <h3 className="text-lg font-serif font-bold text-navy-900 leading-snug group-hover:text-gold-600 transition-colors line-clamp-2 min-h-[3.5rem]">
                                             {cohort.title}
                                         </h3>
-                                        <div className="mb-4 min-h-[4rem]">
+                                        <div className="mb-4 min-h-[4rem] flex flex-col">
                                             {cohort.description && (
-                                                <p className="text-xs text-slate-500 leading-relaxed line-clamp-3">
+                                                <p className="text-xs text-slate-500 leading-relaxed line-clamp-3 mb-3">
                                                     {cohort.description}
                                                 </p>
                                             )}
+                                            <div className="mt-auto">
+                                                {!config?.cohorts?.registrationsPaused && cohort.status === 'active' && (
+                                                    <div className="inline-flex items-start md:items-center gap-1.5 mt-1">
+                                                        <span className="relative flex h-1.5 w-1.5 mt-1 md:mt-0 flex-shrink-0">
+                                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                                            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+                                                        </span>
+                                                        <span className="text-[11px] font-bold text-emerald-600 leading-tight">
+                                                            {cohort.month_name} Batch — Registration Open
+                                                        </span>
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
                                         <div className="flex items-center justify-between mt-2 pt-4 border-t border-slate-50 min-h-[4.5rem]">
                                             {cohort.status === 'completed' ? (
@@ -348,12 +361,6 @@ function CohortContent({ initialCohorts, config }: CohortClientProps) {
                                     </div>
                                 )}
                             </motion.button>
-                            
-                            <div className="mt-1 text-center">
-                                <span className="font-serif italic text-slate-400 text-lg tracking-wide">
-                                    {cohort.month_name}
-                                </span>
-                            </div>
                         </div>
                     ))}
                 </div>
@@ -477,12 +484,12 @@ function CohortContent({ initialCohorts, config }: CohortClientProps) {
                                                 <p className="text-[11px] md:text-xs text-slate-500 italic">One-time payment for full cohort access</p>
                                             </>
                                         )}
-                                        <div className="mt-4 p-3 bg-amber-50 rounded-xl border border-amber-100 flex items-start gap-2.5">
-                                            <Clock size={16} className="text-amber-600 mt-0.5 flex-shrink-0" />
-                                            <p className="text-[11px] md:text-xs text-amber-800 font-medium leading-relaxed">
-                                                Kindly note this registration is for the 1st month of the 3 month program.
+                                        <div className="mt-3 px-3 py-2 bg-blue-50 rounded-lg border border-blue-100 flex items-start gap-2">
+                                            <Clock size={14} className="text-blue-500 mt-0.5 flex-shrink-0" />
+                                            <p className="text-[10px] md:text-[11px] text-blue-800 font-medium leading-relaxed">
+                                                You are signing up for this 1-month chapter only. There are no automatic payments for next month.
                                                 {selectedCohort.pricing_type === 'pay_as_you_wish' && (
-                                                    <span> The remaining 2 months will also be Pay as you wish.</span>
+                                                    <span> When you finish, you can decide if you want to join the next chapters, which will also be &quot;pay as you wish.&quot;</span>
                                                 )}
                                             </p>
                                         </div>

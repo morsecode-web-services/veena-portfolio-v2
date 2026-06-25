@@ -125,7 +125,7 @@ const CustomPhoneInput = ({ name, placeholder, control, error, showInternational
                         <div className="flex items-start gap-2 p-2.5 bg-indigo-50/80 border border-indigo-100 rounded-lg">
                             <CreditCard className="w-4 h-4 text-indigo-500 mt-0.5 flex-shrink-0" />
                             <p className="text-[11px] text-indigo-800 font-medium leading-snug">
-                                For international payments, please select the <strong>Card</strong> option on the upcoming Razorpay checkout screen.
+                                International learners, please select <strong>&quot;Cards&quot;</strong> on the next screen to pay.
                             </p>
                         </div>
                     </m.div>
