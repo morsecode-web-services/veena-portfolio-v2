@@ -505,6 +505,27 @@ export function CohortManager() {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
+    const handleClone = (cohort: Cohort) => {
+        // Explicitly exclude `id` so the cloned form data has no association
+        // with the original cohort's database record — prevents any accidental overwrite
+        const { id: _discardedId, ...rest } = cohort;
+        setFormData({
+            ...rest,
+            // Clear identity/unique fields
+            telegram_chat_id: '',
+            // Suggest a new title so it's obvious this is a clone
+            title: `Copy of ${cohort.title}`,
+            // Reset status to coming_soon for safety
+            status: 'coming_soon',
+            // Pre-populate raw text areas from arrays
+            learning_outcomes_raw: cohort.learning_outcomes?.join('\n') || '',
+            curriculum_highlights_raw: cohort.curriculum_highlights?.join('\n') || '',
+        });
+        setEditingId(null);
+        setIsCreating(true);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
     if (loading) return (
         <div className="flex flex-col items-center justify-center h-64 text-slate-400">
             <RefreshCw className="h-6 w-6 animate-spin mb-3" />
@@ -870,6 +891,13 @@ export function CohortManager() {
                                                 title="Invite Previous Batch"
                                             >
                                                 <MailPlus size={12} />
+                                            </button>
+                                            <button 
+                                                onClick={() => handleClone(cohort)}
+                                                className="p-1.5 text-sky-500 hover:text-sky-700 hover:bg-sky-50 rounded border border-sky-200 bg-white transition-colors"
+                                                title="Clone Cohort (Telegram Chat ID not copied)"
+                                            >
+                                                <Copy size={12} />
                                             </button>
                                             <button 
                                                 onClick={() => startEditing(cohort)}
