@@ -50,7 +50,6 @@ const GalleryImageSchema = z.object({
   caption: z.string().optional(),
 });
 
-
 const FeaturedCarouselItemSchema = z.object({
   id: z.string().min(1),
   image: z.string().min(1).optional(),
@@ -77,27 +76,35 @@ const SiteConfigSchema = z.object({
     heroBackground: z.string().optional(),
     heroBackgroundPosition: z.string().optional(),
     heroTagline: z.string().optional(),
-    heroStats: z.array(z.object({
-      label: z.string().min(1),
-      value: z.string().min(1),
-    })).optional(),
-    heroCta: z.object({
-      text: z.string().min(1),
-      link: z.string().min(1),
-    }).optional(),
+    heroStats: z
+      .array(
+        z.object({
+          label: z.string().min(1),
+          value: z.string().min(1),
+        })
+      )
+      .optional(),
+    heroCta: z
+      .object({
+        text: z.string().min(1),
+        link: z.string().min(1),
+      })
+      .optional(),
     images: z.object({
       veena: z.string().min(1),
       vocal: z.string().min(1),
     }),
     featuredVideos: z.array(z.union([z.string().url(), MusicVideoSchema])),
-    featuredCarousel: z.object({
-      enabled: z.boolean(),
-      autoScrollInterval: z.number().optional(),
-      items: z.array(FeaturedCarouselItemSchema),
-      showUpcomingEvent: z.boolean().optional(),
-      eventSubtitle: z.string().optional(),
-      eventLinkText: z.string().optional(),
-    }).optional(),
+    featuredCarousel: z
+      .object({
+        enabled: z.boolean(),
+        autoScrollInterval: z.number().optional(),
+        items: z.array(FeaturedCarouselItemSchema),
+        showUpcomingEvent: z.boolean().optional(),
+        eventSubtitle: z.string().optional(),
+        eventLinkText: z.string().optional(),
+      })
+      .optional(),
   }),
   gallery: z.object({
     images: z.array(GalleryImageSchema),
@@ -121,37 +128,51 @@ const SiteConfigSchema = z.object({
   }),
   layoutOrder: z.array(z.string()).optional(),
   sections: z.record(z.boolean()).optional(),
-  blog: z.object({
-    title: z.string(),
-    subtitle: z.string(),
-  }).optional(),
-  pdf: z.object({
-    backgroundOpacity: z.number().optional(),
-    backgroundBrightness: z.number().optional(),
-    gradients: z.object({
-      enabled: z.boolean().optional(),
-      opacity: z.number().min(0).max(1).optional(),
-    }).optional(),
-  }).optional(),
-  contact: z.object({
-    imageUrl: z.string().optional(),
-    imageAlt: z.string().optional(),
-    formSlugs: z.array(z.string()).optional(),
-  }).optional(),
+  blog: z
+    .object({
+      title: z.string(),
+      subtitle: z.string(),
+    })
+    .optional(),
+  pdf: z
+    .object({
+      backgroundOpacity: z.number().optional(),
+      backgroundBrightness: z.number().optional(),
+      gradients: z
+        .object({
+          enabled: z.boolean().optional(),
+          opacity: z.number().min(0).max(1).optional(),
+        })
+        .optional(),
+    })
+    .optional(),
+  contact: z
+    .object({
+      imageUrl: z.string().optional(),
+      imageAlt: z.string().optional(),
+      formSlugs: z.array(z.string()).optional(),
+    })
+    .optional(),
   showCohortsOnComingSoon: z.boolean().optional(),
-  cohorts_faq: z.object({
-    items: z.array(FAQItemSchema),
-  }).optional(),
-  cohorts: z.object({
-    registrationsPaused: z.boolean().optional(),
-    registrationsPausedMessage: z.string().optional(),
-  }).optional(),
-  automation: z.object({
-    email_enabled: z.boolean(),
-    whatsapp_enabled: z.boolean(),
-    telegram_enabled: z.boolean(),
-    twilio_whatsapp_enabled: z.boolean(),
-  }).optional(),
+  cohorts_faq: z
+    .object({
+      items: z.array(FAQItemSchema),
+    })
+    .optional(),
+  cohorts: z
+    .object({
+      registrationsPaused: z.boolean().optional(),
+      registrationsPausedMessage: z.string().optional(),
+    })
+    .optional(),
+  automation: z
+    .object({
+      email_enabled: z.boolean(),
+      whatsapp_enabled: z.boolean(),
+      telegram_enabled: z.boolean(),
+      twilio_whatsapp_enabled: z.boolean(),
+    })
+    .optional(),
 });
 
 // Default fallback configuration
@@ -207,22 +228,26 @@ const defaultConfig: SiteConfig = {
   cohorts_faq: {
     items: [
       {
-        question: "What is the format of these monthly cohorts?",
-        answer: "Each cohort is designed for a specific learning goal over a 4-week period. It includes weekly live interactive sessions, structured practice assignments, and ongoing support via our private community."
+        question: 'What is the format of these monthly cohorts?',
+        answer:
+          'Each cohort is designed for a specific learning goal over a 4-week period. It includes weekly live interactive sessions, structured practice assignments, and ongoing support via our private community.',
       },
       {
-        question: "Are the live sessions recorded?",
-        answer: "Yes, all live sessions are recorded and uploaded to the student portal within 24 hours. You will have lifetime access to these recordings so you can revisit the lessons anytime."
+        question: 'Are the live sessions recorded?',
+        answer:
+          'Yes, all live sessions are recorded and uploaded to the student portal within 24 hours. You will have lifetime access to these recordings so you can revisit the lessons anytime.',
       },
       {
-        question: "Do I need to own a Veena to join the classes?",
-        answer: "For the Veena cohorts, having an instrument is essential for practice. If you are a beginner looking to buy one, I can provide guidance on selecting a quality instrument once you enroll."
+        question: 'Do I need to own a Veena to join the classes?',
+        answer:
+          'For the Veena cohorts, having an instrument is essential for practice. If you are a beginner looking to buy one, I can provide guidance on selecting a quality instrument once you enroll.',
       },
       {
-        question: "How do I access the private Telegram group?",
-        answer: "Upon successful enrollment, our system automatically sends a personalized invite link to your registered email and WhatsApp. This link is single-use and secure."
-      }
-    ]
+        question: 'How do I access the private Telegram group?',
+        answer:
+          'Upon successful enrollment, our system automatically sends a personalized invite link to your registered email and WhatsApp. This link is single-use and secure.',
+      },
+    ],
   },
   automation: {
     email_enabled: true,
@@ -237,9 +262,9 @@ const defaultConfig: SiteConfig = {
  * @param data - The configuration data to validate
  * @returns Validation result with success status and parsed data or error
  */
-export function validateConfig(data: unknown):
-  | { success: true; data: SiteConfig }
-  | { success: false; error: z.ZodError } {
+export function validateConfig(
+  data: unknown
+): { success: true; data: SiteConfig } | { success: false; error: z.ZodError } {
   try {
     const parsed = SiteConfigSchema.parse(data);
     return { success: true, data: parsed as SiteConfig };
@@ -322,11 +347,9 @@ export async function loadConfig(): Promise<SiteConfig> {
     console.warn('[config] Failed to load from DB, falling back to local file:', err);
   }
 
-
   // 3. Ultimate Fallback: The hardcoded default config
   return defaultConfig;
 }
-
 
 /**
  * Synchronously loads configuration (for server-side use)

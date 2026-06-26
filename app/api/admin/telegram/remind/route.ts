@@ -12,7 +12,10 @@ export async function POST(request: Request) {
     }
 
     const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
+    const {
+      data: { user },
+      error: authError,
+    } = await supabaseAdmin.auth.getUser(token);
     if (authError || !user) {
       return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
     }
@@ -54,7 +57,10 @@ export async function POST(request: Request) {
     const studentEmail = studentData?.email;
 
     if (!studentEmail) {
-      return NextResponse.json({ error: 'Student has no email address configured' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Student has no email address configured' },
+        { status: 400 }
+      );
     }
 
     const { data: cohort, error: cohortError } = await supabaseAdmin
@@ -64,11 +70,18 @@ export async function POST(request: Request) {
       .single();
 
     if (cohortError || !cohort || !cohort.telegram_chat_id) {
-      return NextResponse.json({ error: 'Cohort Telegram Chat ID not configured' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Cohort Telegram Chat ID not configured' },
+        { status: 400 }
+      );
     }
 
     // 4. Generate A Fresh Telegram Invite Link (Ensures it is active for 1 week)
-    const inviteResult = await generateTelegramInviteLink(cohort.telegram_chat_id, expireHours, studentName);
+    const inviteResult = await generateTelegramInviteLink(
+      cohort.telegram_chat_id,
+      expireHours,
+      studentName
+    );
 
     if (!inviteResult.success || !inviteResult.inviteLink) {
       return NextResponse.json(
@@ -98,7 +111,7 @@ export async function POST(request: Request) {
       .from('enrollments')
       .update({
         telegram_invite_link: inviteResult.inviteLink,
-        telegram_joined: false
+        telegram_joined: false,
       })
       .eq('id', submissionId);
 
@@ -107,22 +120,23 @@ export async function POST(request: Request) {
     }
 
     // 7. Log reminder in telegram_invite_logs
-    await supabaseAdmin.from('telegram_invite_logs').insert([{
-      enrollment_id: submissionId,
-      action: 'reminded',
-      invite_link: inviteResult.inviteLink,
-      created_by: user.email || 'admin',
-      payload: { 
-        old_invite_link: enrollment.telegram_invite_link,
-        info: 'Email reminder sent to student' 
-      }
-    }]);
+    await supabaseAdmin.from('telegram_invite_logs').insert([
+      {
+        enrollment_id: submissionId,
+        action: 'reminded',
+        invite_link: inviteResult.inviteLink,
+        created_by: user.email || 'admin',
+        payload: {
+          old_invite_link: enrollment.telegram_invite_link,
+          info: 'Email reminder sent to student',
+        },
+      },
+    ]);
 
     return NextResponse.json({
       success: true,
-      inviteLink: inviteResult.inviteLink
+      inviteLink: inviteResult.inviteLink,
     });
-
   } catch (error: any) {
     console.error('[Remind Email API] Error:', error);
     return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });

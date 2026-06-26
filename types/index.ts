@@ -94,8 +94,8 @@ export interface SiteConfig {
     backgroundOpacity?: number;
     backgroundBrightness?: number;
     gradients?: {
-      enabled?: boolean;    // Toggle: true = gradients, false = legacy grayscale images
-      opacity?: number;     // Override default opacity (0-1, default: 0.3)
+      enabled?: boolean; // Toggle: true = gradients, false = legacy grayscale images
+      opacity?: number; // Override default opacity (0-1, default: 0.3)
     };
   };
   contact?: {
@@ -152,11 +152,7 @@ export interface FAQItem {
   answer: string;
 }
 
-export type InquiryType =
-  | 'performance'
-  | 'classes'
-  | 'collaboration'
-  | 'general';
+export type InquiryType = 'performance' | 'classes' | 'collaboration' | 'general';
 
 export interface ContactFormData {
   name: string;

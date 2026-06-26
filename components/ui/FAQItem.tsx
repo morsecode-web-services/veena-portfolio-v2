@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { m, AnimatePresence } from 'framer-motion';
+import { m } from 'framer-motion';
 import { FAQItem as FAQItemType } from '@/types';
 
 interface FAQItemProps {
@@ -45,7 +45,10 @@ export default function FAQItem({ item, isOpen, onToggle, index }: FAQItemProps)
         aria-controls={`faq-answer-${index}`}
         className="w-full text-left py-4 px-5 flex items-center justify-between transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gold-600 focus:ring-inset"
       >
-        <h3 className="text-base md:text-lg font-serif font-semibold text-navy-900 pr-6" id={`faq-question-${index}`}>
+        <h3
+          className="text-base md:text-lg font-serif font-semibold text-navy-900 pr-6"
+          id={`faq-question-${index}`}
+        >
           {item.question}
         </h3>
         <m.div
@@ -59,12 +62,7 @@ export default function FAQItem({ item, isOpen, onToggle, index }: FAQItemProps)
             stroke="currentColor"
             viewBox="0 0 24 24"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M19 9l-7 7-7-7"
-            />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
           </svg>
         </m.div>
       </m.button>

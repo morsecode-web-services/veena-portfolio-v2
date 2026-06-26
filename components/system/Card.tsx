@@ -52,7 +52,8 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
       ? 'hover:shadow-premium-lg hover:-translate-y-1 cursor-pointer'
       : '';
 
-    const combinedStyles = `${baseStyles} ${variantStyles[variant]} ${paddingStyles[padding]} ${hoverStyles} ${className}`.trim();
+    const combinedStyles =
+      `${baseStyles} ${variantStyles[variant]} ${paddingStyles[padding]} ${hoverStyles} ${className}`.trim();
 
     // Use motion.div for hoverable cards for smooth animation
     if (hoverable) {

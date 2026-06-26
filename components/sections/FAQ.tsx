@@ -29,7 +29,6 @@ export default function FAQ({ config }: FAQProps) {
       />
 
       <div id="faq-section">
-
         {/* FAQ Accordion */}
         <m.div
           initial={{ opacity: 0, y: 30 }}

@@ -8,7 +8,10 @@ export async function GET(request: Request) {
     if (!authHeader) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
+    const {
+      data: { user },
+      error: authError,
+    } = await supabaseAdmin.auth.getUser(token);
     if (authError || !user) return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
 
     const { data: profile } = await supabaseAdmin
@@ -34,7 +37,8 @@ export async function GET(request: Request) {
     if (filter === 'unjoined') {
       const { data: enrollments, error: enrollError } = await supabaseAdmin
         .from('enrollments')
-        .select(`
+        .select(
+          `
           id,
           created_at,
           telegram_joined,
@@ -51,7 +55,8 @@ export async function GET(request: Request) {
           cohorts (
             title
           )
-        `)
+        `
+        )
         .eq('status', 'active')
         .eq('telegram_joined', false)
         .order('created_at', { ascending: false });
@@ -72,27 +77,30 @@ export async function GET(request: Request) {
         telegram_joined: e.telegram_joined,
         telegram_username: e.telegram_username,
         telegram_display_name: e.telegram_display_name,
-        amount: null
+        amount: null,
       }));
     } else if (query) {
       // 1. Find matched student IDs based on name, email, phone, or telegram_username
       const { data: matchedIdsData, error: idError } = await supabaseAdmin
         .from('student_search_view')
         .select('student_id')
-        .or(`name.ilike.%${query}%,email.ilike.%${query}%,phone.ilike.%${query}%,telegram_username.ilike.%${query}%`);
-        
+        .or(
+          `name.ilike.%${query}%,email.ilike.%${query}%,phone.ilike.%${query}%,telegram_username.ilike.%${query}%`
+        );
+
       if (idError) throw idError;
-      
+
       const matchedIds = Array.from(new Set((matchedIdsData || []).map((d: any) => d.student_id)));
 
       if (matchedIds.length === 0) {
-         return NextResponse.json({ results: [] });
+        return NextResponse.json({ results: [] });
       }
 
       // 2. Fetch full profiles for matched IDs
       const { data: matchedStudents, error: searchError } = await supabaseAdmin
         .from('students')
-        .select(`
+        .select(
+          `
           id,
           name,
           email,
@@ -122,7 +130,8 @@ export async function GET(request: Request) {
               title
             )
           )
-        `)
+        `
+        )
         .in('id', matchedIds)
         .order('created_at', { ascending: false });
 
@@ -148,11 +157,11 @@ export async function GET(request: Request) {
               telegram_joined: e.telegram_joined || false,
               telegram_username: e.telegram_username || null,
               telegram_display_name: e.telegram_display_name || null,
-              amount: paidPayment ? paidPayment.amount : null
+              amount: paidPayment ? paidPayment.amount : null,
             });
           });
         }
-        
+
         // Add invitations
         if (student.reenrollment_invitations) {
           student.reenrollment_invitations.forEach((ri: any) => {
@@ -170,14 +179,16 @@ export async function GET(request: Request) {
               telegram_joined: false,
               telegram_username: null,
               telegram_display_name: null,
-              amount: null
+              amount: null,
             });
           });
         }
 
         // Handle case where student exists but has no enrollments or invitations
-        if ((!student.enrollments || student.enrollments.length === 0) && 
-            (!student.reenrollment_invitations || student.reenrollment_invitations.length === 0)) {
+        if (
+          (!student.enrollments || student.enrollments.length === 0) &&
+          (!student.reenrollment_invitations || student.reenrollment_invitations.length === 0)
+        ) {
           flatResults.push({
             id: student.id,
             student_id: student.id,
@@ -192,7 +203,7 @@ export async function GET(request: Request) {
             telegram_joined: false,
             telegram_username: null,
             telegram_display_name: null,
-            amount: null
+            amount: null,
           });
         }
       });
@@ -203,19 +214,19 @@ export async function GET(request: Request) {
     // 3. Group Results by Email
     const groupedMap = new Map<string, any>();
 
-    data.forEach(item => {
+    data.forEach((item) => {
       const email = item.email.toLowerCase();
       if (!groupedMap.has(email)) {
         groupedMap.set(email, {
-            id: item.id,
-            student_id: item.student_id,
-            name: item.name,
-            email: item.email,
-            phone: item.phone,
-            cohorts: []
+          id: item.id,
+          student_id: item.student_id,
+          name: item.name,
+          email: item.email,
+          phone: item.phone,
+          cohorts: [],
         });
       }
-      
+
       const student = groupedMap.get(email);
       student.cohorts.push({
         id: item.id,
@@ -227,7 +238,7 @@ export async function GET(request: Request) {
         telegram_joined: item.telegram_joined || false,
         telegram_username: item.telegram_username || null,
         telegram_display_name: item.telegram_display_name || null,
-        amount: item.amount || null
+        amount: item.amount || null,
       });
     });
 

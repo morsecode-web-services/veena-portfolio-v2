@@ -2,7 +2,7 @@ import dynamic from 'next/dynamic';
 import { SectionErrorBoundary } from '@/components/ErrorBoundary';
 import HomeSection from '@/components/sections/Home';
 import PortfolioGeneratorWrapper from '@/components/features/PortfolioGeneratorWrapper';
-import { validateConfig, loadConfig } from '@/lib/config';
+import { loadConfig } from '@/lib/config';
 import { supabase } from '@/lib/supabase'; // Use anon client for public fetch
 import { LoadingCard } from '@/components/system/LoadingCard';
 
@@ -72,10 +72,7 @@ export default async function Page() {
   // Fetch config and videos in parallel to improve TTFB
   const [config, videosResult] = await Promise.all([
     loadConfig(),
-    supabase
-      .from('videos')
-      .select('*')
-      .order('order_index', { ascending: true })
+    supabase.from('videos').select('*').order('order_index', { ascending: true }),
   ]);
 
   const dbVideos = videosResult.data || [];
@@ -83,7 +80,7 @@ export default async function Page() {
     console.error('Failed to fetch videos from Supabase:', videosResult.error);
   }
 
-  const featuredVideos = dbVideos.filter(v => v.is_featured);
+  const featuredVideos = dbVideos.filter((v) => v.is_featured);
 
   return (
     <main id="main-content" className="min-h-screen" role="main">
@@ -162,7 +159,10 @@ export default async function Page() {
       })}
 
       {/* Portfolio Download Section */}
-      <div id="pdf-generator-section" className="py-8 sm:py-10 md:py-12 bg-white border-t border-gray-200">
+      <div
+        id="pdf-generator-section"
+        className="py-8 sm:py-10 md:py-12 bg-white border-t border-gray-200"
+      >
         <div className="max-w-4xl mx-auto px-4 sm:px-6 md:px-8">
           <SectionErrorBoundary sectionName="Portfolio Generator">
             <PortfolioGeneratorWrapper />
@@ -172,4 +172,3 @@ export default async function Page() {
     </main>
   );
 }
-

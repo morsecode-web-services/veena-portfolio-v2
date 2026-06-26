@@ -6,15 +6,13 @@ import { ToastProvider } from '@/context/ToastContext';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 export function Providers({ children }: { children: React.ReactNode }) {
-    return (
-        <ErrorBoundary>
-            <VideoProvider>
-                <ToastProvider>
-                    <LazyMotion features={domAnimation}>
-                        {children}
-                    </LazyMotion>
-                </ToastProvider>
-            </VideoProvider>
-        </ErrorBoundary>
-    );
+  return (
+    <ErrorBoundary>
+      <VideoProvider>
+        <ToastProvider>
+          <LazyMotion features={domAnimation}>{children}</LazyMotion>
+        </ToastProvider>
+      </VideoProvider>
+    </ErrorBoundary>
+  );
 }

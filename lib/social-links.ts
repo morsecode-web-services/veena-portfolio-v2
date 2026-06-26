@@ -31,8 +31,10 @@ export function detectDevice(): DeviceType {
   const platform = navigator.platform || '';
 
   // iOS detection (iPhone, iPad, iPod)
-  if (/iPad|iPhone|iPod/.test(userAgent) ||
-      (platform === 'MacIntel' && navigator.maxTouchPoints > 1)) {
+  if (
+    /iPad|iPhone|iPod/.test(userAgent) ||
+    (platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+  ) {
     return 'ios';
   }
 

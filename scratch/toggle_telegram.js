@@ -6,10 +6,12 @@ const path = require('path');
 const envPath = path.join(__dirname, '../.env.local');
 const env = {};
 if (fs.existsSync(envPath)) {
-  fs.readFileSync(envPath, 'utf8').split('\n').forEach(line => {
-    const [key, ...val] = line.split('=');
-    if (key) env[key.trim()] = val.join('=').trim();
-  });
+  fs.readFileSync(envPath, 'utf8')
+    .split('\n')
+    .forEach((line) => {
+      const [key, ...val] = line.split('=');
+      if (key) env[key.trim()] = val.join('=').trim();
+    });
 }
 
 const supabase = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
@@ -31,8 +33,8 @@ async function toggleTelegram(enabled) {
     ...data.data,
     automation: {
       ...data.data?.automation,
-      telegram_enabled: enabled
-    }
+      telegram_enabled: enabled,
+    },
   };
 
   const { error: updateError } = await supabase

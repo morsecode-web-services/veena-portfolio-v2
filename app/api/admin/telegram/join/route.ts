@@ -10,7 +10,10 @@ export async function POST(request: Request) {
     }
 
     const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
+    const {
+      data: { user },
+      error: authError,
+    } = await supabaseAdmin.auth.getUser(token);
     if (authError || !user) {
       return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
     }
@@ -35,7 +38,7 @@ export async function POST(request: Request) {
     // 3. Update Enrollment Status
     const updateData: any = {
       telegram_joined: !!telegramJoined,
-      telegram_username: telegramJoined ? (telegramUsername || null) : null
+      telegram_username: telegramJoined ? telegramUsername || null : null,
     };
 
     const { error: dbError } = await supabaseAdmin
@@ -48,16 +51,21 @@ export async function POST(request: Request) {
     }
 
     // 4. Log manual status update in telegram_invite_logs
-    await supabaseAdmin.from('telegram_invite_logs').insert([{
-      enrollment_id: submissionId,
-      action: telegramJoined ? 'joined' : 'left',
-      telegram_username: telegramJoined ? (telegramUsername || 'Manual Admin Overwrite') : null,
-      created_by: user.email || 'admin',
-      payload: { info: telegramJoined ? 'Manually marked as joined by admin' : 'Manually marked as left by admin' }
-    }]);
+    await supabaseAdmin.from('telegram_invite_logs').insert([
+      {
+        enrollment_id: submissionId,
+        action: telegramJoined ? 'joined' : 'left',
+        telegram_username: telegramJoined ? telegramUsername || 'Manual Admin Overwrite' : null,
+        created_by: user.email || 'admin',
+        payload: {
+          info: telegramJoined
+            ? 'Manually marked as joined by admin'
+            : 'Manually marked as left by admin',
+        },
+      },
+    ]);
 
     return NextResponse.json({ success: true, telegram_joined: !!telegramJoined });
-
   } catch (error: any) {
     console.error('[Manual Join API] Error:', error);
     return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });

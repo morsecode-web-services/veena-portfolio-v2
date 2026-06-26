@@ -1,13 +1,4 @@
-import {
-  Html,
-  Head,
-  Body,
-  Container,
-  Heading,
-  Text,
-  Link,
-  Hr,
-} from '@react-email/components';
+import { Html, Head, Body, Container, Heading, Text, Link, Hr } from '@react-email/components';
 import * as styles from './styles';
 
 interface PerformanceInquiryProps {
@@ -23,11 +14,12 @@ export default function PerformanceInquiry({ name }: PerformanceInquiryProps) {
           <Heading style={styles.heading}>Dear {name},</Heading>
 
           <Text style={styles.text}>
-            Thank you for your interest in booking a performance. I'm honored by your inquiry.
+            Thank you for your interest in booking a performance. I&apos;m honored by your inquiry.
           </Text>
 
           <Text style={styles.text}>
-            I will review your message and respond within 24-48 hours with my availability and details.
+            I will review your message and respond within 24-48 hours with my availability and
+            details.
           </Text>
 
           <Text style={styles.text}>
@@ -39,14 +31,10 @@ export default function PerformanceInquiry({ name }: PerformanceInquiryProps) {
 
           <Hr style={styles.hr} />
 
-          <Text style={styles.footer}>
-            Warm regards,
-          </Text>
-          <Text style={styles.signature}>
-            Aishwarya Manikarnike
-          </Text>
+          <Text style={styles.footer}>Warm regards,</Text>
+          <Text style={styles.signature}>Aishwarya Manikarnike</Text>
           <Text style={styles.title}>
-            'A'-Grade Veena Artist (AIR) | Vidwat Antima Rank-Holding Vocalist
+            &apos;A&apos;-Grade Veena Artist (AIR) | Vidwat Antima Rank-Holding Vocalist
           </Text>
         </Container>
       </Body>

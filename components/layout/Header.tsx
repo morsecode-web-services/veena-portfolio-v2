@@ -74,10 +74,11 @@ export default function Header({ config }: HeaderProps) {
       initial={{ y: -100, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${showSolidHeader
-        ? 'bg-white shadow-premium-md border-b border-slate-200'
-        : 'bg-gradient-to-b from-black/40 to-transparent'
-        }`}
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        showSolidHeader
+          ? 'bg-white shadow-premium-md border-b border-slate-200'
+          : 'bg-gradient-to-b from-black/40 to-transparent'
+      }`}
       role="banner"
     >
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-2 md:py-3">
@@ -88,9 +89,14 @@ export default function Header({ config }: HeaderProps) {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="flex items-center"
           >
-            <a href="/" className="focus:outline-none focus:ring-2 focus:ring-blue-600 rounded flex items-center gap-2 md:gap-3 group">
+            <a
+              href="/"
+              className="focus:outline-none focus:ring-2 focus:ring-blue-600 rounded flex items-center gap-2 md:gap-3 group"
+            >
               {logo && (
-                <div className={`relative w-8 h-8 md:w-10 md:h-10 transition-transform duration-300 group-hover:scale-110 ${!showSolidHeader ? 'brightness-0 invert' : ''}`}>
+                <div
+                  className={`relative w-8 h-8 md:w-10 md:h-10 transition-transform duration-300 group-hover:scale-110 ${!showSolidHeader ? 'brightness-0 invert' : ''}`}
+                >
                   <Image
                     src={getAssetPath(logo)}
                     alt={`${artistName} Logo`}
@@ -100,29 +106,33 @@ export default function Header({ config }: HeaderProps) {
                   />
                 </div>
               )}
-              <h1 className={`text-base sm:text-lg md:text-xl font-serif font-bold mb-0 transition-colors duration-300 ${showSolidHeader
-                ? 'text-navy-900 group-hover:text-gold-600'
-                : 'text-white group-hover:text-gold-300'
-                }`}>
+              <h1
+                className={`text-base sm:text-lg md:text-xl font-serif font-bold mb-0 transition-colors duration-300 ${
+                  showSolidHeader
+                    ? 'text-navy-900 group-hover:text-gold-600'
+                    : 'text-white group-hover:text-gold-300'
+                }`}
+              >
                 {artistName}
               </h1>
             </a>
           </m.div>
- 
+
           <div className="flex items-center gap-4">
-            {!(process.env.NEXT_PUBLIC_SITE_LIVE === 'false' && pathname?.startsWith('/forms/')) && pathname !== '/cohorts' && (
-              <>
-                <Navigation config={config} isScrolled={showSolidHeader} />
-                <m.div
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.6, delay: 0.4 }}
-                  className="hidden sm:block"
-                >
-                  <HeaderPDFButton isScrolled={showSolidHeader} />
-                </m.div>
-              </>
-            )}
+            {!(process.env.NEXT_PUBLIC_SITE_LIVE === 'false' && pathname?.startsWith('/forms/')) &&
+              pathname !== '/cohorts' && (
+                <>
+                  <Navigation config={config} isScrolled={showSolidHeader} />
+                  <m.div
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.6, delay: 0.4 }}
+                    className="hidden sm:block"
+                  >
+                    <HeaderPDFButton isScrolled={showSolidHeader} />
+                  </m.div>
+                </>
+              )}
           </div>
         </div>
       </div>

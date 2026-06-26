@@ -49,7 +49,11 @@ function Footer({ config }: FooterProps) {
   }
 
   return (
-    <footer className="bg-gradient-navy text-white py-6 sm:py-8 md:py-10 border-t border-premium" role="contentinfo" suppressHydrationWarning>
+    <footer
+      className="bg-gradient-navy text-white py-6 sm:py-8 md:py-10 border-t border-premium"
+      role="contentinfo"
+      suppressHydrationWarning
+    >
       <div className="container mx-auto px-4 sm:px-6 md:px-8">
         <div className="flex flex-col items-center space-y-6 md:space-y-8">
           {/* Logo */}
@@ -82,19 +86,25 @@ function Footer({ config }: FooterProps) {
           >
             {Object.entries(socialMedia).map(([platform, url], index) => {
               if (!url) return null;
-              const Icon =
-                socialMediaIcons[platform as keyof typeof socialMediaIcons];
+              const Icon = socialMediaIcons[platform as keyof typeof socialMediaIcons];
               if (!Icon) return null;
 
               // Get platform-specific link configuration
-              const linkConfig = platform === 'instagram'
-                ? getSocialLinkConfig('instagram', url, deviceType)
-                : { href: url, target: '_blank' as const, deviceType, linkType: 'https' as const };
+              const linkConfig =
+                platform === 'instagram'
+                  ? getSocialLinkConfig('instagram', url, deviceType)
+                  : {
+                      href: url,
+                      target: '_blank' as const,
+                      deviceType,
+                      linkType: 'https' as const,
+                    };
 
               // Determine aria-label based on target
-              const ariaLabel = linkConfig.target === '_blank'
-                ? `Visit our ${platform.charAt(0).toUpperCase() + platform.slice(1)} page (opens in new tab)`
-                : `Visit our ${platform.charAt(0).toUpperCase() + platform.slice(1)} page`;
+              const ariaLabel =
+                linkConfig.target === '_blank'
+                  ? `Visit our ${platform.charAt(0).toUpperCase() + platform.slice(1)} page (opens in new tab)`
+                  : `Visit our ${platform.charAt(0).toUpperCase() + platform.slice(1)} page`;
 
               return (
                 <m.a
@@ -102,13 +112,23 @@ function Footer({ config }: FooterProps) {
                   initial={shouldReduceMotion ? undefined : { opacity: 0, scale: 0.8 }}
                   whileInView={shouldReduceMotion ? undefined : { opacity: 1, scale: 1 }}
                   viewport={{ once: true }}
-                  transition={{ duration: shouldReduceMotion ? 0 : 0.3, delay: shouldReduceMotion ? 0 : index * 0.1 }}
+                  transition={{
+                    duration: shouldReduceMotion ? 0 : 0.3,
+                    delay: shouldReduceMotion ? 0 : index * 0.1,
+                  }}
                   whileHover={shouldReduceMotion ? {} : { scale: 1.2, y: -3 }}
                   whileTap={shouldReduceMotion ? {} : { scale: 0.95 }}
                   href={linkConfig.href}
                   target={linkConfig.target}
                   rel="noopener noreferrer"
-                  onClick={() => analytics.socialMediaClick(platform, 'footer', linkConfig.deviceType, linkConfig.linkType)}
+                  onClick={() =>
+                    analytics.socialMediaClick(
+                      platform,
+                      'footer',
+                      linkConfig.deviceType,
+                      linkConfig.linkType
+                    )
+                  }
                   className="text-slate-400 hover:text-white active:text-gray-300 transition-colors duration-200 touch-manipulation p-1.5"
                   aria-label={ariaLabel}
                   suppressHydrationWarning
@@ -125,7 +145,10 @@ function Footer({ config }: FooterProps) {
               initial={shouldReduceMotion ? undefined : { opacity: 0, y: 10 }}
               whileInView={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: shouldReduceMotion ? 0 : 0.6, delay: shouldReduceMotion ? 0 : 0.2 }}
+              transition={{
+                duration: shouldReduceMotion ? 0 : 0.6,
+                delay: shouldReduceMotion ? 0 : 0.2,
+              }}
               className="text-center"
             >
               <a
@@ -143,13 +166,15 @@ function Footer({ config }: FooterProps) {
             initial={shouldReduceMotion ? undefined : { opacity: 0 }}
             whileInView={shouldReduceMotion ? undefined : { opacity: 1 }}
             viewport={{ once: true }}
-            transition={{ duration: shouldReduceMotion ? 0 : 0.6, delay: shouldReduceMotion ? 0 : 0.3 }}
+            transition={{
+              duration: shouldReduceMotion ? 0 : 0.6,
+              delay: shouldReduceMotion ? 0 : 0.3,
+            }}
             className="text-center text-slate-400 text-xs px-4"
           >
             <p>
-              &copy; {new Date().getFullYear()}{' '}
-              {config?.artist.name || 'Aishwarya Manikarnike'}. All rights
-              reserved.
+              &copy; {new Date().getFullYear()} {config?.artist.name || 'Aishwarya Manikarnike'}.
+              All rights reserved.
             </p>
           </m.div>
         </div>

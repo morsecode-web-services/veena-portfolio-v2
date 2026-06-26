@@ -25,7 +25,7 @@ async function logReenrollmentStatus({
   status,
   paymentLinkId = null,
   paymentLinkUrl = null,
-  errorMessage = null
+  errorMessage = null,
 }: LogStatusParams) {
   // 1. Query if a log already exists in reenrollment_invitations
   const { data: existingLog } = await supabaseAdmin
@@ -43,7 +43,7 @@ async function logReenrollmentStatus({
     payment_link_url: paymentLinkUrl,
     status,
     error_message: errorMessage,
-    updated_at: new Date().toISOString()
+    updated_at: new Date().toISOString(),
   };
 
   if (existingLog) {
@@ -53,9 +53,7 @@ async function logReenrollmentStatus({
       .eq('id', existingLog.id);
     if (error) throw error;
   } else {
-    const { error } = await supabaseAdmin
-      .from('reenrollment_invitations')
-      .insert([payload]);
+    const { error } = await supabaseAdmin.from('reenrollment_invitations').insert([payload]);
     if (error) throw error;
   }
 }
@@ -70,7 +68,10 @@ export async function POST(request: Request) {
     }
 
     const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
+    const {
+      data: { user },
+      error: authError,
+    } = await supabaseAdmin.auth.getUser(token);
     if (authError || !user) {
       console.error('[Re-enroll API] Invalid session:', authError);
       return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
@@ -91,8 +92,14 @@ export async function POST(request: Request) {
     const { targetCohortId, sourceCohortId, students } = await request.json();
 
     if (!targetCohortId || !students || !Array.isArray(students)) {
-      console.error('[Re-enroll API] Missing target cohort ID or student list:', { targetCohortId, students });
-      return NextResponse.json({ error: 'Missing target cohort ID or student list' }, { status: 400 });
+      console.error('[Re-enroll API] Missing target cohort ID or student list:', {
+        targetCohortId,
+        students,
+      });
+      return NextResponse.json(
+        { error: 'Missing target cohort ID or student list' },
+        { status: 400 }
+      );
     }
 
     // 3. Fetch Cohort Details
@@ -113,11 +120,13 @@ export async function POST(request: Request) {
       .select('data')
       .eq('id', '00000000-0000-0000-0000-000000000000')
       .single();
-    
+
     const automation = configData?.data?.automation || { email_enabled: true };
-    
+
     if (!automation.email_enabled && !automation.twilio_whatsapp_enabled) {
-      console.error('[Re-enroll API] Both Email and WhatsApp notifications are disabled in site config');
+      console.error(
+        '[Re-enroll API] Both Email and WhatsApp notifications are disabled in site config'
+      );
       return NextResponse.json({ error: 'Notifications are currently disabled.' }, { status: 400 });
     }
 
@@ -127,7 +136,7 @@ export async function POST(request: Request) {
       sent: 0,
       skipped: 0,
       failed: 0,
-      details: [] as any[]
+      details: [] as any[],
     };
 
     // ── Bulk Pre-fetch Duplicate Checks (Solves N+1 Query Problem) ────────
@@ -140,13 +149,15 @@ export async function POST(request: Request) {
       supabaseAdmin
         .from('reenrollment_invitations')
         .select('student_id, status')
-        .eq('target_cohort_id', targetCohortId)
+        .eq('target_cohort_id', targetCohortId),
     ]);
 
-    const enrolledStudentIds = new Set((enrollmentsRes.data || []).map(e => e.student_id));
-    const invitedStudentIds = new Set((invitationsRes.data || [])
-      .filter(i => i.status === 'sent' || i.status === 'paid')
-      .map(i => i.student_id));
+    const enrolledStudentIds = new Set((enrollmentsRes.data || []).map((e) => e.student_id));
+    const invitedStudentIds = new Set(
+      (invitationsRes.data || [])
+        .filter((i) => i.status === 'sent' || i.status === 'paid')
+        .map((i) => i.student_id)
+    );
 
     // ── Student Processing Function ─────────────────────────────────────────
     const processStudent = async (student: any) => {
@@ -214,7 +225,7 @@ export async function POST(request: Request) {
             phone,
             amount: finalPrice,
             description: `Hi ${name}! Enrollment for ${targetCohort.title}`,
-            cohortId: targetCohortId
+            cohortId: targetCohortId,
           });
 
           if (!plink.success) {
@@ -224,7 +235,7 @@ export async function POST(request: Request) {
               sourceCohortId,
               targetCohortId,
               status: 'failed',
-              errorMessage: plink.error
+              errorMessage: plink.error,
             });
             return;
           }
@@ -237,12 +248,14 @@ export async function POST(request: Request) {
         let emailError = '';
         if (automation.email_enabled) {
           try {
-            const html = await render(ReenrollInvite({
-              name,
-              cohortTitle: targetCohort.title,
-              paymentLink: inviteLinkUrl,
-              price: isPAYW ? 'Pay as you wish' : `₹${(finalPrice / 100).toLocaleString()}`
-            }));
+            const html = await render(
+              ReenrollInvite({
+                name,
+                cohortTitle: targetCohort.title,
+                paymentLink: inviteLinkUrl,
+                price: isPAYW ? 'Pay as you wish' : `₹${(finalPrice / 100).toLocaleString()}`,
+              })
+            );
 
             await resend.emails.send({
               from: 'Aishwarya Manikarnike <official@email.aishwaryamanikarnike.com>',
@@ -266,25 +279,22 @@ export async function POST(request: Request) {
           const contentSid = process.env.TWILIO_WHATSAPP_REENROLL_CONTENT_SID;
           if (!contentSid) {
             waError = 'Missing TWILIO_WHATSAPP_REENROLL_CONTENT_SID env variable';
-            console.error('[Re-enroll API] Missing TWILIO_WHATSAPP_REENROLL_CONTENT_SID env variable');
+            console.error(
+              '[Re-enroll API] Missing TWILIO_WHATSAPP_REENROLL_CONTENT_SID env variable'
+            );
           } else {
             try {
               // As per template configuration: https://aishwaryamanikarnike.com/cohorts?{{3}}
               // So we only pass the query parameter suffix as variable 3
               const querySuffix = `enroll=${targetCohortId}&name=${encodeURIComponent(name)}&email=${encodeURIComponent(email)}&phone=${encodeURIComponent(phone)}`;
               const variables = JSON.stringify({
-                "1": name,
-                "2": targetCohort.title,
-                "3": querySuffix
+                '1': name,
+                '2': targetCohort.title,
+                '3': querySuffix,
               });
               const fallbackBody = `Hi ${name}! Registration for ${targetCohort.title} is now open. Secure your spot here: https://aishwaryamanikarnike.com/cohorts?${querySuffix}`;
 
-              const waRes = await sendTwilioWhatsApp(
-                phone,
-                fallbackBody,
-                contentSid,
-                variables
-              );
+              const waRes = await sendTwilioWhatsApp(phone, fallbackBody, contentSid, variables);
               if (waRes.success) {
                 waSent = true;
               } else {
@@ -312,7 +322,7 @@ export async function POST(request: Request) {
             status: 'sent',
             paymentLinkId,
             paymentLinkUrl: inviteLinkUrl,
-            errorMessage: logMsg || null
+            errorMessage: logMsg || null,
           });
         } else {
           results.failed++;
@@ -322,13 +332,13 @@ export async function POST(request: Request) {
             sourceCohortId,
             targetCohortId,
             status: 'failed',
-            errorMessage: logMsg
+            errorMessage: logMsg,
           });
         }
       } catch (err: any) {
         console.error('[Re-enroll API] Unexpected error processing student:', err);
         results.failed++;
-        // If we have a studentId by this point, we could log it. 
+        // If we have a studentId by this point, we could log it.
         // But since error could happen anywhere, just increment failed.
       }
     };
@@ -338,7 +348,7 @@ export async function POST(request: Request) {
     const CHUNK_SIZE = 5;
     for (let i = 0; i < students.length; i += CHUNK_SIZE) {
       const chunk = students.slice(i, i + CHUNK_SIZE);
-      await Promise.all(chunk.map(student => processStudent(student)));
+      await Promise.all(chunk.map((student) => processStudent(student)));
     }
 
     return NextResponse.json(results);

@@ -9,17 +9,25 @@ import { analytics } from '@/components/GoogleAnalytics';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { Button } from '@/components/system/Button';
 import { useToast } from '@/context/ToastContext';
-import type { InquiryType } from '@/types';
 
 // Zod validation schema
 const contactFormSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters').max(100, 'Name is too long'),
-  phone: z.string().min(10, 'Please enter a valid phone number').regex(/^[+]?[(]?[0-9]{1,4}[)]?[-\s.]?[(]?[0-9]{1,4}[)]?[-\s.]?[0-9]{1,9}$/, 'Please enter a valid phone number'),
+  phone: z
+    .string()
+    .min(10, 'Please enter a valid phone number')
+    .regex(
+      /^[+]?[(]?[0-9]{1,4}[)]?[-\s.]?[(]?[0-9]{1,4}[)]?[-\s.]?[0-9]{1,9}$/,
+      'Please enter a valid phone number'
+    ),
   email: z.string().email('Please enter a valid email address'),
   inquiryType: z.enum(['performance', 'classes', 'collaboration', 'general'], {
     required_error: 'Please select an inquiry type',
   }),
-  purpose: z.string().min(10, 'Please provide more details (at least 10 characters)').max(1000, 'Message is too long'),
+  purpose: z
+    .string()
+    .min(10, 'Please provide more details (at least 10 characters)')
+    .max(1000, 'Message is too long'),
 });
 
 type ContactFormData = z.infer<typeof contactFormSchema>;
@@ -45,9 +53,14 @@ export default function ContactForm() {
   useEffect(() => {
     if (Object.keys(errors).length > 0) {
       // Find the first field with an error
-      const firstErrorField = ['name', 'phone', 'email', 'inquiryType', 'purpose'].find(field => errors[field as keyof ContactFormData]);
+      const firstErrorField = ['name', 'phone', 'email', 'inquiryType', 'purpose'].find(
+        (field) => errors[field as keyof ContactFormData]
+      );
       if (firstErrorField) {
-        const element = document.getElementById(firstErrorField) as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
+        const element = document.getElementById(firstErrorField) as
+          | HTMLInputElement
+          | HTMLTextAreaElement
+          | HTMLSelectElement;
         if (element) {
           element.focus();
           firstErrorFieldRef.current = element as HTMLInputElement | HTMLTextAreaElement;
@@ -94,7 +107,6 @@ export default function ContactForm() {
       addToast('Message sent successfully! You will receive a confirmation email.', 'success');
       setLastSubmitTime(now);
       reset();
-
     } catch (error) {
       console.error('Form submission error:', error);
 
@@ -115,7 +127,11 @@ export default function ContactForm() {
 
   return (
     <div className="max-w-2xl mx-auto px-2">
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 sm:space-y-5" aria-label="Contact form">
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="space-y-4 sm:space-y-5"
+        aria-label="Contact form"
+      >
         {/* Name Field */}
         <div>
           <label htmlFor="name" className="block text-xs font-medium text-charcoal-700 mb-1.5">
@@ -126,8 +142,9 @@ export default function ContactForm() {
             type="text"
             {...register('name')}
             onFocus={() => analytics.contactFormStart()}
-            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-navy-500 focus:border-transparent transition-all text-xs sm:text-sm ${errors.name ? 'border-red-500' : 'border-slate-300'
-              }`}
+            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-navy-500 focus:border-transparent transition-all text-xs sm:text-sm ${
+              errors.name ? 'border-red-500' : 'border-slate-300'
+            }`}
             placeholder="Your full name"
             disabled={isSubmitting}
             aria-required="true"
@@ -156,8 +173,9 @@ export default function ContactForm() {
             id="phone"
             type="tel"
             {...register('phone')}
-            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-navy-500 focus:border-transparent transition-all text-xs sm:text-sm ${errors.phone ? 'border-red-500' : 'border-slate-300'
-              }`}
+            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-navy-500 focus:border-transparent transition-all text-xs sm:text-sm ${
+              errors.phone ? 'border-red-500' : 'border-slate-300'
+            }`}
             placeholder="+91 9876543210"
             disabled={isSubmitting}
             aria-required="true"
@@ -186,8 +204,9 @@ export default function ContactForm() {
             id="email"
             type="email"
             {...register('email')}
-            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-navy-500 focus:border-transparent transition-all text-xs sm:text-sm ${errors.email ? 'border-red-500' : 'border-slate-300'
-              }`}
+            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-navy-500 focus:border-transparent transition-all text-xs sm:text-sm ${
+              errors.email ? 'border-red-500' : 'border-slate-300'
+            }`}
             placeholder="your.email@example.com"
             disabled={isSubmitting}
             aria-required="true"
@@ -209,14 +228,18 @@ export default function ContactForm() {
 
         {/* Inquiry Type Field */}
         <div>
-          <label htmlFor="inquiryType" className="block text-xs font-medium text-charcoal-700 mb-1.5">
+          <label
+            htmlFor="inquiryType"
+            className="block text-xs font-medium text-charcoal-700 mb-1.5"
+          >
             I&apos;m interested in *
           </label>
           <select
             id="inquiryType"
             {...register('inquiryType')}
-            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-navy-500 focus:border-transparent transition-all text-xs sm:text-sm ${errors.inquiryType ? 'border-red-500' : 'border-slate-300'
-              }`}
+            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-navy-500 focus:border-transparent transition-all text-xs sm:text-sm ${
+              errors.inquiryType ? 'border-red-500' : 'border-slate-300'
+            }`}
             disabled={isSubmitting}
             aria-required="true"
             aria-invalid={errors.inquiryType ? 'true' : 'false'}
@@ -250,8 +273,9 @@ export default function ContactForm() {
             id="purpose"
             {...register('purpose')}
             rows={4}
-            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-navy-500 focus:border-transparent transition-all resize-none text-xs sm:text-sm ${errors.purpose ? 'border-red-500' : 'border-slate-300'
-              }`}
+            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-navy-500 focus:border-transparent transition-all resize-none text-xs sm:text-sm ${
+              errors.purpose ? 'border-red-500' : 'border-slate-300'
+            }`}
             placeholder="Please describe your inquiry, booking request, or collaboration opportunity..."
             disabled={isSubmitting}
             aria-required="true"

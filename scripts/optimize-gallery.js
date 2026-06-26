@@ -15,7 +15,9 @@ const QUALITY = 85; // JPEG quality (85 is good balance)
  */
 async function convertHeifToJpeg(inputPath, outputPath) {
   try {
-    const { stdout, stderr } = await execAsync(`sips -s format jpeg "${inputPath}" --out "${outputPath}"`);
+    const { stdout, stderr } = await execAsync(
+      `sips -s format jpeg "${inputPath}" --out "${outputPath}"`
+    );
     if (stderr && !stderr.includes('Warning')) {
       console.warn('  ⚠️  sips warning:', stderr);
     }
@@ -56,7 +58,7 @@ async function optimizeImages(customPath = null) {
         console.log(`📁 Processing directory: ${targetDir}\n`);
 
         const files = await fs.readdir(targetDir);
-        imageFiles = files.filter(file => {
+        imageFiles = files.filter((file) => {
           const ext = path.extname(file).toLowerCase();
           return ['.jpg', '.jpeg', '.png', '.heic', '.heif'].includes(ext);
         });
@@ -87,7 +89,7 @@ async function optimizeImages(customPath = null) {
       console.log(`📁 Processing default gallery directory: ${targetDir}\n`);
 
       const files = await fs.readdir(targetDir);
-      imageFiles = files.filter(file => {
+      imageFiles = files.filter((file) => {
         const ext = path.extname(file).toLowerCase();
         return ['.jpg', '.jpeg', '.png', '.heic', '.heif'].includes(ext);
       });
@@ -141,7 +143,7 @@ async function optimizeImages(customPath = null) {
         if (metadata.width > MAX_WIDTH) {
           processedImage = processedImage.resize(MAX_WIDTH, null, {
             fit: 'inside',
-            withoutEnlargement: true
+            withoutEnlargement: true,
           });
         }
 
@@ -150,7 +152,7 @@ async function optimizeImages(customPath = null) {
           .jpeg({
             quality: QUALITY,
             progressive: true,
-            mozjpeg: true
+            mozjpeg: true,
           })
           .toFile(tempPath);
 
@@ -186,11 +188,12 @@ async function optimizeImages(customPath = null) {
           optimizedSize,
           savings,
           savingsPercent,
-          dimensions: `${metadata.width}x${metadata.height}`
+          dimensions: `${metadata.width}x${metadata.height}`,
         });
 
-        console.log(`  ✅ ${formatBytes(originalSize)} → ${formatBytes(optimizedSize)} (saved ${savingsPercent}%)\n`);
-
+        console.log(
+          `  ✅ ${formatBytes(originalSize)} → ${formatBytes(optimizedSize)} (saved ${savingsPercent}%)\n`
+        );
       } catch (error) {
         console.error(`  ❌ Error processing ${file}:`, error.message, '\n');
       }
@@ -200,14 +203,15 @@ async function optimizeImages(customPath = null) {
     console.log('\n📊 Optimization Summary\n');
     console.log('─'.repeat(70));
 
-    results.forEach(result => {
+    results.forEach((result) => {
       console.log(`${result.file.padEnd(50)} ${formatBytes(result.savings).padStart(10)} saved`);
     });
 
     console.log('─'.repeat(70));
     console.log(`\n✅ Total space saved: ${formatBytes(totalSavings)}`);
-    console.log(`📁 Optimized ${results.length} ${results.length === 1 ? 'image' : 'images'} in ${targetDir}\n`);
-
+    console.log(
+      `📁 Optimized ${results.length} ${results.length === 1 ? 'image' : 'images'} in ${targetDir}\n`
+    );
   } catch (error) {
     console.error('❌ Error:', error);
     process.exit(1);

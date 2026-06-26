@@ -43,13 +43,13 @@ export async function createPersonalizedPaymentLink({
         sms: false,
       },
       reminder_enable: true,
-      expire_by: Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60), // 7 days from now
+      expire_by: Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60, // 7 days from now
       notes: {
         cohortId: cohortId,
         studentEmail: email,
         studentName: name,
         formSlug: 'cohort_reenrollment',
-        source: 'automated_reenrollment'
+        source: 'automated_reenrollment',
       },
       // Callback URL - where student goes after payment
       callback_url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://aishwaryamanikarnike.com'}/cohorts?success=true`,

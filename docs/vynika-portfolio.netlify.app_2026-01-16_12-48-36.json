@@ -19,12 +19,7 @@
     "emulatedFormFactor": "desktop",
     "formFactor": "desktop",
     "locale": "en-GB",
-    "onlyCategories": [
-      "performance",
-      "accessibility",
-      "best-practices",
-      "seo"
-    ],
+    "onlyCategories": ["performance", "accessibility", "best-practices", "seo"],
     "channel": "lr"
   },
   "audits": {
@@ -51,9 +46,7 @@
         "items": [],
         "overallSavingsBytes": 0,
         "overallSavingsMs": 0,
-        "sortedBy": [
-          "wastedBytes"
-        ]
+        "sortedBy": ["wastedBytes"]
       },
       "numericValue": 0,
       "numericUnit": "millisecond"
@@ -789,9 +782,7 @@
           },
           "type": "debugdata"
         },
-        "sortedBy": [
-          "wastedBytes"
-        ]
+        "sortedBy": ["wastedBytes"]
       },
       "warnings": [],
       "numericValue": 0,
@@ -825,9 +816,7 @@
         },
         "items": [],
         "overallSavingsMs": 0,
-        "sortedBy": [
-          "wastedBytes"
-        ],
+        "sortedBy": ["wastedBytes"],
         "overallSavingsBytes": 0,
         "type": "opportunity"
       },
@@ -983,12 +972,8 @@
           }
         ],
         "type": "table",
-        "sortedBy": [
-          "duration"
-        ],
-        "skipSumming": [
-          "startTime"
-        ],
+        "sortedBy": ["duration"],
+        "skipSumming": ["startTime"],
         "headings": [
           {
             "valueType": "url",
@@ -1787,9 +1772,7 @@
           }
         ],
         "type": "table",
-        "sortedBy": [
-          "duration"
-        ]
+        "sortedBy": ["duration"]
       },
       "numericValue": 3086.862000000037,
       "numericUnit": "millisecond"
@@ -3753,11 +3736,7 @@
           }
         ],
         "debugData": {
-          "tags": [
-            "cat.sensory-and-visual-cues",
-            "wcag22aa",
-            "wcag258"
-          ],
+          "tags": ["cat.sensory-and-visual-cues", "wcag22aa", "wcag258"],
           "impact": "serious",
           "type": "debugdata"
         },
@@ -3829,9 +3808,7 @@
             "url": "https://vynika-portfolio.netlify.app/_next/static/chunks/4bd1b696-f7922f59c862479b.js"
           }
         ],
-        "sortedBy": [
-          "totalBytes"
-        ],
+        "sortedBy": ["totalBytes"],
         "headings": [
           {
             "label": "URL",
@@ -3898,9 +3875,7 @@
             "origin": "https://www.transparenttextures.com"
           }
         ],
-        "sortedBy": [
-          "serverResponseTime"
-        ],
+        "sortedBy": ["serverResponseTime"],
         "headings": [
           {
             "key": "origin",
@@ -4334,9 +4309,7 @@
         ],
         "overallSavingsBytes": 138685,
         "type": "opportunity",
-        "sortedBy": [
-          "wastedBytes"
-        ],
+        "sortedBy": ["wastedBytes"],
         "debugData": {
           "type": "debugdata",
           "metricSavings": {
@@ -4402,9 +4375,7 @@
             "key": "wastedMs"
           }
         ],
-        "skipSumming": [
-          "wastedMs"
-        ]
+        "skipSumming": ["wastedMs"]
       }
     },
     "list": {
@@ -5787,12 +5758,8 @@
             "label": "Transfer size"
           }
         ],
-        "sortedBy": [
-          "wastedBytes"
-        ],
-        "skipSumming": [
-          "cacheLifetimeMs"
-        ],
+        "sortedBy": ["wastedBytes"],
+        "skipSumming": ["cacheLifetimeMs"],
         "debugData": {
           "wastedBytes": 50032.5,
           "type": "debugdata"
@@ -6377,9 +6344,7 @@
             "key": "scriptParseCompile"
           }
         ],
-        "sortedBy": [
-          "total"
-        ]
+        "sortedBy": ["total"]
       },
       "numericValue": 1050.191999999997,
       "numericUnit": "millisecond"
@@ -6751,9 +6716,7 @@
             "valueType": "ms"
           }
         ],
-        "sortedBy": [
-          "rtt"
-        ],
+        "sortedBy": ["rtt"],
         "items": [
           {
             "rtt": 4.698479999999997,
@@ -7680,31 +7643,23 @@
       "name": "netlify.app",
       "isFirstParty": true,
       "isUnrecognized": true,
-      "origins": [
-        "https://vynika-portfolio.netlify.app"
-      ]
+      "origins": ["https://vynika-portfolio.netlify.app"]
     },
     {
       "name": "transparenttextures.com",
       "isUnrecognized": true,
-      "origins": [
-        "https://www.transparenttextures.com"
-      ]
+      "origins": ["https://www.transparenttextures.com"]
     },
     {
       "name": "youtu.be",
       "isUnrecognized": true,
-      "origins": [
-        "https://youtu.be"
-      ]
+      "origins": ["https://youtu.be"]
     },
     {
       "name": "YouTube",
       "homepage": "https://youtube.com",
       "category": "video",
-      "origins": [
-        "https://img.youtube.com"
-      ]
+      "origins": ["https://img.youtube.com"]
     }
   ],
   "fullPageScreenshot": {

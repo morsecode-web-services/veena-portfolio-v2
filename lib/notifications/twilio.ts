@@ -10,15 +10,14 @@ export interface TwilioResult {
  */
 function formatE164(phone: string): string {
   const digits = phone.replace(/\D/g, '');
-  
+
   // Indian number handling
   if (digits.length === 10) return `+91${digits}`;
   if (digits.length === 12 && digits.startsWith('91')) return `+${digits}`;
-  
+
   // If already has + or seems complete, just ensure + prefix
   return phone.startsWith('+') ? phone : `+${digits}`;
 }
-
 
 /**
  * Sends a WhatsApp message via Twilio.
@@ -48,7 +47,7 @@ export async function sendTwilioWhatsApp(
 
   try {
     const auth = Buffer.from(`${accountSid}:${authToken}`).toString('base64');
-    
+
     const params: any = {
       To: waTo,
       From: waFrom,

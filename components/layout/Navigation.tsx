@@ -4,7 +4,6 @@ import { m, AnimatePresence } from 'framer-motion';
 import { FaBars, FaTimes } from 'react-icons/fa';
 import { Mail, Instagram, Youtube } from 'lucide-react';
 import HeaderPDFButton from './HeaderPDFButton';
-import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { SiteConfig } from '@/types';
 
@@ -38,10 +37,10 @@ export default function Navigation({ config, isScrolled = false }: NavigationPro
     if (!config?.layoutOrder) return defaultItems;
 
     return config.layoutOrder
-      .filter(section => !config.sections || config.sections[section] !== false)
-      .map(section => ({
+      .filter((section) => !config.sections || config.sections[section] !== false)
+      .map((section) => ({
         id: section.toLowerCase(),
-        label: section
+        label: section,
       }));
   }, [config]);
 
@@ -59,7 +58,11 @@ export default function Navigation({ config, isScrolled = false }: NavigationPro
 
   // Return focus to hamburger button when menu closes
   useEffect(() => {
-    if (!isMenuOpen && hamburgerButtonRef.current && document.activeElement !== hamburgerButtonRef.current) {
+    if (
+      !isMenuOpen &&
+      hamburgerButtonRef.current &&
+      document.activeElement !== hamburgerButtonRef.current
+    ) {
       // Only return focus if user closed the menu (not if they navigated)
       const wasMenuClosed = !isMenuOpen;
       if (wasMenuClosed && mounted) {
@@ -93,7 +96,7 @@ export default function Navigation({ config, isScrolled = false }: NavigationPro
     return () => window.removeEventListener('scroll', handleScroll);
   }, [pathname, navItems]);
 
-  const handleNavClick = (item: { id: string, label: string }) => {
+  const handleNavClick = (item: { id: string; label: string }) => {
     if (pathname !== '/') {
       router.push(`/#${item.id}`);
       setIsMenuOpen(false);
@@ -135,12 +138,13 @@ export default function Navigation({ config, isScrolled = false }: NavigationPro
             >
               <button
                 onClick={() => handleNavClick(item)}
-                className={`relative text-xs font-medium transition-all duration-300 min-h-[44px] flex items-center justify-center px-1.5 lg:px-3 ${activeSection === item.id
-                  ? 'text-gold-600'
-                  : isScrolled
-                    ? 'text-charcoal-700 hover:text-gold-600'
-                    : 'text-white hover:text-gold-300'
-                  }`}
+                className={`relative text-xs font-medium transition-all duration-300 min-h-[44px] flex items-center justify-center px-1.5 lg:px-3 ${
+                  activeSection === item.id
+                    ? 'text-gold-600'
+                    : isScrolled
+                      ? 'text-charcoal-700 hover:text-gold-600'
+                      : 'text-white hover:text-gold-300'
+                }`}
                 role="menuitem"
                 aria-label={`Navigate to ${item.label} section`}
                 aria-current={activeSection === item.id ? 'page' : undefined}
@@ -163,12 +167,13 @@ export default function Navigation({ config, isScrolled = false }: NavigationPro
       <button
         ref={hamburgerButtonRef}
         onClick={() => setIsMenuOpen(!isMenuOpen)}
-        className={`md:hidden transition-colors z-[10012] relative flex items-center justify-center ${isMenuOpen
-          ? 'text-gold-600'
-          : isScrolled
-            ? 'text-charcoal-700 hover:text-gold-600'
-            : 'text-white hover:text-gold-300'
-          }`}
+        className={`md:hidden transition-colors z-[10012] relative flex items-center justify-center ${
+          isMenuOpen
+            ? 'text-gold-600'
+            : isScrolled
+              ? 'text-charcoal-700 hover:text-gold-600'
+              : 'text-white hover:text-gold-300'
+        }`}
         aria-label={isMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
         aria-expanded={isMenuOpen}
         aria-controls="mobile-menu"
@@ -177,136 +182,140 @@ export default function Navigation({ config, isScrolled = false }: NavigationPro
       </button>
 
       {/* Mobile Navigation Portal */}
-      {mounted && createPortal(
-        <AnimatePresence>
-          {isMenuOpen && (
-            <>
-              {/* Backdrop */}
-              <m.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                onClick={() => setIsMenuOpen(false)}
-                className="fixed inset-0 bg-black/60 z-[100] md:hidden backdrop-blur-sm"
-                aria-hidden="true"
-              />
+      {mounted &&
+        createPortal(
+          <AnimatePresence>
+            {isMenuOpen && (
+              <>
+                {/* Backdrop */}
+                <m.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  onClick={() => setIsMenuOpen(false)}
+                  className="fixed inset-0 bg-black/60 z-[100] md:hidden backdrop-blur-sm"
+                  aria-hidden="true"
+                />
 
-              {/* Slide-in Menu */}
-              <m.nav
-                ref={mobileMenuRef}
-                id="mobile-menu"
-                initial={{ x: '100%' }}
-                animate={{ x: 0 }}
-                exit={{ x: '100%' }}
-                transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                className="fixed top-0 right-0 bottom-0 w-80 max-w-[85vw] bg-white shadow-2xl z-[110] md:hidden overflow-hidden flex flex-col"
-                role="navigation"
-                aria-label="Mobile navigation"
-              >
-                {/* Header inside mobile menu */}
-                <div className="flex items-center justify-between px-8 py-6 border-b border-slate-50">
-                  <span className="text-xs font-semibold text-slate-500 tracking-[0.2em] uppercase">Menu</span>
-                  <button
-                    onClick={() => setIsMenuOpen(false)}
-                    className="p-2 text-gold-600 hover:bg-gold-50 rounded-full transition-colors"
-                    aria-label="Close menu"
-                  >
-                    <FaTimes size={20} />
-                  </button>
-                </div>
+                {/* Slide-in Menu */}
+                <m.nav
+                  ref={mobileMenuRef}
+                  id="mobile-menu"
+                  initial={{ x: '100%' }}
+                  animate={{ x: 0 }}
+                  exit={{ x: '100%' }}
+                  transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                  className="fixed top-0 right-0 bottom-0 w-80 max-w-[85vw] bg-white shadow-2xl z-[110] md:hidden overflow-hidden flex flex-col"
+                  role="navigation"
+                  aria-label="Mobile navigation"
+                >
+                  {/* Header inside mobile menu */}
+                  <div className="flex items-center justify-between px-8 py-6 border-b border-slate-50">
+                    <span className="text-xs font-semibold text-slate-500 tracking-[0.2em] uppercase">
+                      Menu
+                    </span>
+                    <button
+                      onClick={() => setIsMenuOpen(false)}
+                      className="p-2 text-gold-600 hover:bg-gold-50 rounded-full transition-colors"
+                      aria-label="Close menu"
+                    >
+                      <FaTimes size={20} />
+                    </button>
+                  </div>
 
-                <div className="flex-1 overflow-y-auto px-6 py-4 scrollbar-hide">
-                  <ul className="flex flex-col space-y-1" role="menu">
-                    {navItems.map((item) => (
-                      <li key={item.id} role="none">
-                        <button
-                          onClick={() => handleNavClick(item)}
-                          className={`text-base font-medium py-3.5 px-2 transition-colors hover:text-gold-600 w-full text-left flex items-center justify-between ${activeSection === item.id
-                            ? 'text-gold-600'
-                            : 'text-charcoal-700'
+                  <div className="flex-1 overflow-y-auto px-6 py-4 scrollbar-hide">
+                    <ul className="flex flex-col space-y-1" role="menu">
+                      {navItems.map((item) => (
+                        <li key={item.id} role="none">
+                          <button
+                            onClick={() => handleNavClick(item)}
+                            className={`text-base font-medium py-3.5 px-2 transition-colors hover:text-gold-600 w-full text-left flex items-center justify-between ${
+                              activeSection === item.id ? 'text-gold-600' : 'text-charcoal-700'
                             }`}
-                          role="menuitem"
-                          aria-label={`Navigate to ${item.label} section`}
-                          aria-current={activeSection === item.id ? 'page' : undefined}
-                        >
-                          {item.label}
-                          {activeSection === item.id && (
-                            <m.div
-                              layoutId="activeDot"
-                              className="w-1.5 h-1.5 rounded-full bg-gold-600"
-                            />
-                          )}
-                        </button>
-                      </li>
-                    ))}
-                    <li role="none" className="pt-4 border-t border-gray-100 mt-4">
-                      <HeaderPDFButton showLabel={true} />
-                    </li>
-
-                    {/* Premium Quick Contact Section */}
-                    {config?.artist.email && (
-                      <li role="none" className="pt-12 mt-10 border-t border-slate-50 px-2 pb-12">
-                        <div className="space-y-10">
-                          {/* Social Icons Row - Uniform and High End */}
-                          <div className="flex justify-start gap-4 px-2">
-                            {config.socialMedia?.instagram && (
-                              <a
-                                href={config.socialMedia.instagram}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center text-navy-400 hover:text-gold-600 hover:bg-gold-50 hover:shadow-premium-sm transition-all duration-500 border border-slate-100"
-                                aria-label="Instagram"
-                              >
-                                <Instagram size={20} />
-                              </a>
+                            role="menuitem"
+                            aria-label={`Navigate to ${item.label} section`}
+                            aria-current={activeSection === item.id ? 'page' : undefined}
+                          >
+                            {item.label}
+                            {activeSection === item.id && (
+                              <m.div
+                                layoutId="activeDot"
+                                className="w-1.5 h-1.5 rounded-full bg-gold-600"
+                              />
                             )}
-                            {config.socialMedia?.youtube && (
-                              <a
-                                href={config.socialMedia.youtube}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center text-navy-400 hover:text-gold-600 hover:bg-gold-50 hover:shadow-premium-sm transition-all duration-500 border border-slate-100"
-                                aria-label="YouTube"
-                              >
-                                <Youtube size={20} />
-                              </a>
-                            )}
-                            <a
-                              href={`mailto:${config.artist.email}`}
-                              className="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center text-navy-400 hover:text-gold-600 hover:bg-gold-50 hover:shadow-premium-sm transition-all duration-500 border border-slate-100"
-                              aria-label="Email"
-                            >
-                              <Mail size={20} />
-                            </a>
-                          </div>
-
-                          {/* Email Display - Single Line Emphasis */}
-                          <div className="space-y-4 px-2">
-                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] block">Get in Touch</span>
-                            <a
-                              href={`mailto:${config.artist.email}`}
-                              className="group block"
-                              onClick={() => setIsMenuOpen(false)}
-                            >
-                              <div className="flex flex-col">
-                                <span className="text-[13px] font-bold text-navy-900 group-hover:text-gold-600 transition-colors duration-300 break-all leading-tight">
-                                  {config.artist.email}
-                                </span>
-                                <div className="h-0.5 w-8 bg-gold-400 mt-2 group-hover:w-full transition-all duration-500" />
-                              </div>
-                            </a>
-                          </div>
-                        </div>
+                          </button>
+                        </li>
+                      ))}
+                      <li role="none" className="pt-4 border-t border-gray-100 mt-4">
+                        <HeaderPDFButton showLabel={true} />
                       </li>
-                    )}
-                  </ul>
-                </div>
-              </m.nav>
-            </>
-          )}
-        </AnimatePresence>,
-        document.body
-      )}
+
+                      {/* Premium Quick Contact Section */}
+                      {config?.artist.email && (
+                        <li role="none" className="pt-12 mt-10 border-t border-slate-50 px-2 pb-12">
+                          <div className="space-y-10">
+                            {/* Social Icons Row - Uniform and High End */}
+                            <div className="flex justify-start gap-4 px-2">
+                              {config.socialMedia?.instagram && (
+                                <a
+                                  href={config.socialMedia.instagram}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center text-navy-400 hover:text-gold-600 hover:bg-gold-50 hover:shadow-premium-sm transition-all duration-500 border border-slate-100"
+                                  aria-label="Instagram"
+                                >
+                                  <Instagram size={20} />
+                                </a>
+                              )}
+                              {config.socialMedia?.youtube && (
+                                <a
+                                  href={config.socialMedia.youtube}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center text-navy-400 hover:text-gold-600 hover:bg-gold-50 hover:shadow-premium-sm transition-all duration-500 border border-slate-100"
+                                  aria-label="YouTube"
+                                >
+                                  <Youtube size={20} />
+                                </a>
+                              )}
+                              <a
+                                href={`mailto:${config.artist.email}`}
+                                className="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center text-navy-400 hover:text-gold-600 hover:bg-gold-50 hover:shadow-premium-sm transition-all duration-500 border border-slate-100"
+                                aria-label="Email"
+                              >
+                                <Mail size={20} />
+                              </a>
+                            </div>
+
+                            {/* Email Display - Single Line Emphasis */}
+                            <div className="space-y-4 px-2">
+                              <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] block">
+                                Get in Touch
+                              </span>
+                              <a
+                                href={`mailto:${config.artist.email}`}
+                                className="group block"
+                                onClick={() => setIsMenuOpen(false)}
+                              >
+                                <div className="flex flex-col">
+                                  <span className="text-[13px] font-bold text-navy-900 group-hover:text-gold-600 transition-colors duration-300 break-all leading-tight">
+                                    {config.artist.email}
+                                  </span>
+                                  <div className="h-0.5 w-8 bg-gold-400 mt-2 group-hover:w-full transition-all duration-500" />
+                                </div>
+                              </a>
+                            </div>
+                          </div>
+                        </li>
+                      )}
+                    </ul>
+                  </div>
+                </m.nav>
+              </>
+            )}
+          </AnimatePresence>,
+          document.body
+        )}
     </>
   );
 }

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, MessageSquare, HelpCircle } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 import { FAQItem } from '@/types';
 
 interface CohortFAQProps {
@@ -36,14 +36,18 @@ export default function CohortFAQ({ items = [] }: CohortFAQProps) {
                 onClick={() => setOpenIndex(openIndex === index ? null : index)}
                 className="w-full text-left px-6 py-4 flex items-center justify-between gap-4 hover:bg-slate-50 transition-colors"
               >
-                <span className={`font-bold transition-colors duration-300 ${
-                  openIndex === index ? 'text-navy-900' : 'text-slate-700'
-                }`}>
+                <span
+                  className={`font-bold transition-colors duration-300 ${
+                    openIndex === index ? 'text-navy-900' : 'text-slate-700'
+                  }`}
+                >
                   {faq.question}
                 </span>
-                <div className={`transition-transform duration-300 ${
-                  openIndex === index ? 'rotate-180' : ''
-                }`}>
+                <div
+                  className={`transition-transform duration-300 ${
+                    openIndex === index ? 'rotate-180' : ''
+                  }`}
+                >
                   <ChevronDown size={18} className="text-slate-400" />
                 </div>
               </button>

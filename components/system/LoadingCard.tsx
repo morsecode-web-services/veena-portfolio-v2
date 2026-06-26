@@ -49,9 +49,7 @@ export function LoadingCard({ variant = 'default', count = 1 }: LoadingCardProps
         );
 
       case 'gallery':
-        return (
-          <div className="aspect-[3/2] bg-slate-200 rounded-lg animate-pulse shadow-md" />
-        );
+        return <div className="aspect-[3/2] bg-slate-200 rounded-lg animate-pulse shadow-md" />;
 
       case 'blog':
         return (

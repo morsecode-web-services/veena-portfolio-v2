@@ -62,20 +62,31 @@ export async function POST(request: Request) {
 
     // Parse request body
     const body = await request.json();
-    const { name, email, phone, inquiryType, message, formSlug, form_data, payment_status, razorpay_subscription_id, razorpay_customer_id, razorpay_order_id, razorpay_payment_id, cohortId } = body;
+    const {
+      name,
+      email,
+      phone,
+      inquiryType,
+      message,
+      formSlug,
+      form_data,
+      payment_status,
+      razorpay_subscription_id,
+      razorpay_customer_id,
+      razorpay_order_id,
+      razorpay_payment_id,
+      cohortId,
+    } = body;
 
     // Validate if either old style or new style dynamic form is used
     if (!formSlug && (!name || !email || !phone || !inquiryType || !message)) {
-      return NextResponse.json(
-        { error: 'All fields are required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'All fields are required' }, { status: 400 });
     }
 
     // Check if email notifications are enabled for this specific form
     let emailEnabled = true; // Default to enabled for legacy forms
     let formFields: any[] = [];
-    let customAutoReply: { subject?: string, message?: string } | null = null;
+    let customAutoReply: { subject?: string; message?: string } | null = null;
     let formConfig: any = null;
     if (formSlug) {
       const { data: config } = await supabaseAdmin
@@ -91,10 +102,10 @@ export async function POST(request: Request) {
         }
         formFields = config.fields || [];
         if (config.auto_reply_subject || config.auto_reply_message) {
-           customAutoReply = {
-              subject: config.auto_reply_subject,
-              message: config.auto_reply_message
-           };
+          customAutoReply = {
+            subject: config.auto_reply_subject,
+            message: config.auto_reply_message,
+          };
         }
       }
     }
@@ -107,23 +118,23 @@ export async function POST(request: Request) {
 
       // 2. Try to find by name/label keywords
       const byName = formFields.find((f: any) =>
-        nameKeywords.some(kw =>
-          f.name.toLowerCase().includes(kw) ||
-          f.label.toLowerCase().includes(kw)
+        nameKeywords.some(
+          (kw) => f.name.toLowerCase().includes(kw) || f.label.toLowerCase().includes(kw)
         )
       );
       if (byName && form_data?.[byName.name]) return form_data[byName.name];
 
       // 3. Fallback to hardcoded keys
-      return form_data?.[type] || nameKeywords.map(kw => form_data?.[kw]).find(v => !!v);
+      return form_data?.[type] || nameKeywords.map((kw) => form_data?.[kw]).find((v) => !!v);
     };
 
     // Smart discovery of identity from dynamic fields
     const discoveredEmail = email || getFieldByTypeOrName('email', ['email', 'mail', 'address']);
-    
+
     // For name, we try to find a real name and avoid using a phone number if possible
     let discoveredName = name || getFieldByTypeOrName('text', ['name', 'full name', 'first name']);
-    const discoveredPhone = phone || getFieldByTypeOrName('tel', ['phone', 'mobile', 'whatsapp', 'tel']);
+    const discoveredPhone =
+      phone || getFieldByTypeOrName('tel', ['phone', 'mobile', 'whatsapp', 'tel']);
 
     // If discoveredName looks exactly like the phone, it's likely a mis-mapped field, so we default to null to trigger 'Anonymous'
     if (discoveredName && discoveredPhone && String(discoveredName) === String(discoveredPhone)) {
@@ -131,7 +142,10 @@ export async function POST(request: Request) {
     }
 
     if (!discoveredName) discoveredName = 'Anonymous';
-    const discoveredMessage = message || getFieldByTypeOrName('textarea', ['message', 'comment', 'inquiry', 'details']) || 'No message provided';
+    const discoveredMessage =
+      message ||
+      getFieldByTypeOrName('textarea', ['message', 'comment', 'inquiry', 'details']) ||
+      'No message provided';
 
     // 1. Route and Store Data
     // All submissions route to form_submissions now
@@ -173,7 +187,7 @@ export async function POST(request: Request) {
           is_verified: existingSubmission.payment_status === 'paid',
           cohort_id: cohortId || existingSubmission.cohort_id,
           razorpay_payment_id: razorpay_payment_id || existingSubmission.razorpay_payment_id,
-          razorpay_customer_id: razorpay_customer_id || existingSubmission.razorpay_customer_id
+          razorpay_customer_id: razorpay_customer_id || existingSubmission.razorpay_customer_id,
         };
 
         const { error: dbError } = await supabaseAdmin
@@ -202,7 +216,7 @@ export async function POST(request: Request) {
           razorpay_customer_id: razorpay_customer_id || null,
           razorpay_order_id: razorpay_order_id || null,
           razorpay_payment_id: razorpay_payment_id || null,
-          cohort_id: cohortId || null
+          cohort_id: cohortId || null,
         };
 
         const { error: dbError } = await supabaseAdmin
@@ -224,7 +238,7 @@ export async function POST(request: Request) {
         form_data: form_data || body,
         user_email: discoveredEmail,
         user_name: discoveredName || 'Anonymous',
-        status: 'unread'
+        status: 'unread',
       };
 
       if (cohortId) submissionRecord.cohort_id = cohortId;
@@ -254,8 +268,7 @@ export async function POST(request: Request) {
     // Use formSlug if available, fallback to inquiryType
     const effectiveSlug = formSlug || inquiryType || 'general';
     const templateConfig =
-      emailTemplates[effectiveSlug as keyof typeof emailTemplates] ||
-      emailTemplates.general;
+      emailTemplates[effectiveSlug as keyof typeof emailTemplates] || emailTemplates.general;
 
     // 3. Render React component to HTML
     const userName = discoveredName || 'Valued Visitor';
@@ -272,7 +285,7 @@ export async function POST(request: Request) {
         inquiryType: effectiveSlug,
         message: userMessage,
         formData: form_data,
-        formFields: formFields
+        formFields: formFields,
       })
     );
 
@@ -280,15 +293,15 @@ export async function POST(request: Request) {
     // Skip for cohort_enrollment — the Razorpay webhook handles all notifications
     // for that flow (welcome email + Telegram invite). Sending here too is duplicate noise.
     if (formSlug === 'cohort_enrollment') {
-      return NextResponse.json({ success: true, message: 'Cohort submission stored (notifications handled by webhook)' });
+      return NextResponse.json({
+        success: true,
+        message: 'Cohort submission stored (notifications handled by webhook)',
+      });
     }
 
     const resendClient = getResend();
     if (!resendClient) {
-      return NextResponse.json(
-        { error: 'Email service not configured' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: 'Email service not configured' }, { status: 500 });
     }
 
     const notificationResult = await resendClient.emails.send({
@@ -301,23 +314,20 @@ export async function POST(request: Request) {
 
     if (notificationResult.error) {
       console.error('Failed to send notification email:', notificationResult.error);
-      return NextResponse.json(
-        { error: 'Failed to send notification email' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: 'Failed to send notification email' }, { status: 500 });
     }
 
     // 5. Send auto-reply to user (if email exists and it's NOT a cohort enrollment)
     if (userEmail && formSlug !== 'cohort_enrollment') {
       const finalSubject = customAutoReply?.subject || templateConfig.subject;
-      
+
       let processedCustomMsg = customAutoReply?.message || '';
       if (processedCustomMsg) {
-          processedCustomMsg = processedCustomMsg.replace(/{{name}}/g, userName);
+        processedCustomMsg = processedCustomMsg.replace(/{{name}}/g, userName);
       }
 
-      const finalHtml = processedCustomMsg 
-        ? `<div style="font-family: Arial, sans-serif; line-height: 1.5; color: #333333;">${processedCustomMsg}</div>` 
+      const finalHtml = processedCustomMsg
+        ? `<div style="font-family: Arial, sans-serif; line-height: 1.5; color: #333333;">${processedCustomMsg}</div>`
         : autoReplyHtml;
 
       const autoReplyResult = await resendClient.emails.send({
@@ -348,9 +358,6 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     console.error('Error in send-email API route:', error);
-    return NextResponse.json(
-      { error: 'An unexpected error occurred' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'An unexpected error occurred' }, { status: 500 });
   }
 }

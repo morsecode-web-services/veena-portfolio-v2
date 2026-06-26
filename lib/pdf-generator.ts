@@ -1,6 +1,6 @@
 import jsPDF from 'jspdf';
 import QRCode from 'qrcode';
-import { getBasePath, getAssetPath } from './config';
+import { getBasePath } from './config';
 import { extractYoutubeId } from './utils';
 import { supabase } from './supabase';
 
@@ -16,12 +16,12 @@ export interface PDFGenerationResult {
 
 // Color palette
 const COLORS = {
-  navy: { r: 20, g: 33, b: 61 },      // #14213d
-  gold: { r: 184, g: 134, b: 11 },    // #b8860b
-  cream: { r: 250, g: 248, b: 245 },  // #faf8f5
-  gray: { r: 107, g: 114, b: 128 },   // #6b7280
-  charcoal: { r: 64, g: 64, b: 64 },  // #404040
-  slate: { r: 51, g: 65, b: 85 },     // #334155
+  navy: { r: 20, g: 33, b: 61 }, // #14213d
+  gold: { r: 184, g: 134, b: 11 }, // #b8860b
+  cream: { r: 250, g: 248, b: 245 }, // #faf8f5
+  gray: { r: 107, g: 114, b: 128 }, // #6b7280
+  charcoal: { r: 64, g: 64, b: 64 }, // #404040
+  slate: { r: 51, g: 65, b: 85 }, // #334155
   white: { r: 255, g: 255, b: 255 },
   lightGray: { r: 240, g: 240, b: 240 },
 };
@@ -30,38 +30,38 @@ const COLORS = {
 // Each section gets bold, distinctive color variation
 const GRADIENT_SCHEMES = {
   cover: {
-    start: { r: 245, g: 235, b: 220 },  // Warm rich cream
-    end: { r: 255, g: 250, b: 240 },    // Soft ivory
+    start: { r: 245, g: 235, b: 220 }, // Warm rich cream
+    end: { r: 255, g: 250, b: 240 }, // Soft ivory
     angle: 180, // vertical (top to bottom)
   },
   about: {
-    start: { r: 210, g: 225, b: 245 },  // Rich light blue (navy tint)
-    end: { r: 250, g: 248, b: 245 },    // Cream
+    start: { r: 210, g: 225, b: 245 }, // Rich light blue (navy tint)
+    end: { r: 250, g: 248, b: 245 }, // Cream
     angle: 135, // diagonal
   },
   featuredCarousel: {
-    start: { r: 255, g: 235, b: 205 },  // Rich gold/peachy cream
-    end: { r: 245, g: 240, b: 230 },    // Warm beige
+    start: { r: 255, g: 235, b: 205 }, // Rich gold/peachy cream
+    end: { r: 245, g: 240, b: 230 }, // Warm beige
     angle: 180, // vertical
   },
   music: {
-    start: { r: 240, g: 230, b: 245 },  // Soft lavender
-    end: { r: 230, g: 240, b: 250 },    // Light sky blue
+    start: { r: 240, g: 230, b: 245 }, // Soft lavender
+    end: { r: 230, g: 240, b: 250 }, // Light sky blue
     angle: 135, // diagonal
   },
   gallery: {
-    start: { r: 255, g: 240, b: 220 },  // Warm peach-cream
-    end: { r: 235, g: 245, b: 255 },    // Cool light blue
+    start: { r: 255, g: 240, b: 220 }, // Warm peach-cream
+    end: { r: 235, g: 245, b: 255 }, // Cool light blue
     angle: 180, // vertical
   },
   press: {
-    start: { r: 240, g: 230, b: 250 },  // Lavender-pink
-    end: { r: 250, g: 245, b: 240 },    // Warm cream
+    start: { r: 240, g: 230, b: 250 }, // Lavender-pink
+    end: { r: 250, g: 245, b: 240 }, // Warm cream
     angle: 135, // diagonal
   },
   contact: {
-    start: { r: 225, g: 240, b: 250 },  // Sky blue
-    end: { r: 245, g: 238, b: 230 },    // Warm sand
+    start: { r: 225, g: 240, b: 250 }, // Sky blue
+    end: { r: 245, g: 238, b: 230 }, // Warm sand
     angle: 180, // vertical
   },
 };
@@ -114,13 +114,13 @@ export async function generatePDF(
 
     const pageWidth = pdf.internal.pageSize.getWidth();
     const pageHeight = pdf.internal.pageSize.getHeight();
-    const contentWidth = pageWidth - (MARGIN * 2);
+    const contentWidth = pageWidth - MARGIN * 2;
 
     // Initialize Cursor
     const cursor: Cursor = { y: MARGIN };
 
     // Yield to main thread helper to prevent UI freezing
-    const yieldToMain = () => new Promise(resolve => setTimeout(resolve, 0));
+    const yieldToMain = () => new Promise((resolve) => setTimeout(resolve, 0));
 
     // --- Helpers ---
 
@@ -164,11 +164,7 @@ export async function generatePDF(
       pdf.setTextColor(COLORS.gold.r, COLORS.gold.g, COLORS.gold.b);
     };
 
-    const calculateTextHeight = (
-      text: string,
-      fontSize: number,
-      maxWidth: number
-    ): number => {
+    const calculateTextHeight = (text: string, fontSize: number, maxWidth: number): number => {
       const lines = pdf.splitTextToSize(text, maxWidth);
       const lineHeight = fontSize * LINE_HEIGHT_SCALE + 1; // 1mm line spacing
       return lines.length * lineHeight;
@@ -197,7 +193,13 @@ export async function generatePDF(
       cursor.y += 3; // Extra spacing after paragraph
     };
 
-    const addLink = async (text: string, url: string, size: number = 12, withQR = false, x = MARGIN) => {
+    const addLink = async (
+      text: string,
+      url: string,
+      size: number = 12,
+      withQR = false,
+      x = MARGIN
+    ) => {
       setFontBody(size);
       pdf.setTextColor(0, 102, 204);
 
@@ -220,7 +222,7 @@ export async function generatePDF(
           // Align top of QR mostly with top of text (approx adjustment)
           pdf.addImage(qrDataUrl, 'PNG', xPos, cursor.y - size * 0.8, qrSize, qrSize);
         } catch (e) {
-          console.warn("Failed to generate QR code", e);
+          console.warn('Failed to generate QR code', e);
         }
       }
 
@@ -235,7 +237,9 @@ export async function generatePDF(
         const gradientOpacity = config.pdf?.gradients?.opacity ?? 0.65; // Enhanced visibility while maintaining elegance
         const scheme = GRADIENT_SCHEMES[sectionType];
 
-        console.log(`[PDF] Rendering gradient for section: ${sectionType}, opacity: ${gradientOpacity}`);
+        console.log(
+          `[PDF] Rendering gradient for section: ${sectionType}, opacity: ${gradientOpacity}`
+        );
 
         // Create canvas for gradient
         const canvas = document.createElement('canvas');
@@ -250,7 +254,10 @@ export async function generatePDF(
         canvas.height = pageHeight * 3;
 
         // Calculate gradient direction based on angle
-        let x0 = 0, y0 = 0, x1 = 0, y1 = canvas.height;
+        let x0 = 0,
+          y0 = 0,
+          x1 = 0,
+          y1 = canvas.height;
         if (scheme.angle === 135) {
           // Diagonal: top-left to bottom-right
           x0 = 0;
@@ -284,7 +291,7 @@ export async function generatePDF(
 
         console.log(`[PDF] Gradient rendered successfully for ${sectionType}`);
       } catch (e) {
-        console.error("[PDF] Failed to render gradient background", e);
+        console.error('[PDF] Failed to render gradient background', e);
       }
     };
 
@@ -293,7 +300,9 @@ export async function generatePDF(
         const gradientOpacity = config.pdf?.gradients?.opacity ?? 0.85; // Strong and vibrant for radial effect
         const scheme = GRADIENT_SCHEMES[sectionType];
 
-        console.log(`[PDF] Rendering radial gradient for section: ${sectionType}, opacity: ${gradientOpacity}`);
+        console.log(
+          `[PDF] Rendering radial gradient for section: ${sectionType}, opacity: ${gradientOpacity}`
+        );
 
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
@@ -313,7 +322,10 @@ export async function generatePDF(
         const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
 
         // Multi-stop gradient for richer effect
-        gradient.addColorStop(0, `rgba(${scheme.start.r}, ${scheme.start.g}, ${scheme.start.b}, 1)`);
+        gradient.addColorStop(
+          0,
+          `rgba(${scheme.start.r}, ${scheme.start.g}, ${scheme.start.b}, 1)`
+        );
 
         // Add middle color stops for complexity
         const midR = Math.round((scheme.start.r + scheme.end.r) / 2);
@@ -335,11 +347,14 @@ export async function generatePDF(
 
         console.log(`[PDF] Radial gradient rendered successfully for ${sectionType}`);
       } catch (e) {
-        console.error("[PDF] Failed to render radial gradient background", e);
+        console.error('[PDF] Failed to render radial gradient background', e);
       }
     };
 
-    const renderArtisticImageBackground = async (imageSrc: string, sectionType: keyof typeof GRADIENT_SCHEMES) => {
+    const renderArtisticImageBackground = async (
+      imageSrc: string,
+      sectionType: keyof typeof GRADIENT_SCHEMES
+    ) => {
       try {
         const bgOpacity = config.pdf?.backgroundOpacity ?? 0.3;
         const scheme = GRADIENT_SCHEMES[sectionType];
@@ -425,7 +440,7 @@ export async function generatePDF(
 
         console.log(`[PDF] Artistic image background rendered successfully for ${sectionType}`);
       } catch (e) {
-        console.warn("Failed to render artistic image background", e);
+        console.warn('Failed to render artistic image background', e);
       }
     };
 
@@ -500,7 +515,7 @@ export async function generatePDF(
 
         pdf.restoreGraphicsState();
       } catch (e) {
-        console.warn("Failed to render background image", e);
+        console.warn('Failed to render background image', e);
       }
     };
 
@@ -547,7 +562,7 @@ export async function generatePDF(
       }
 
       drawPremiumElements(); // Border AFTER (on top)
-      
+
       // Yield to main thread after creating a new page and its background
       await yieldToMain();
     };
@@ -560,11 +575,8 @@ export async function generatePDF(
 
       // Calculate actual space if content provided
       if (actualContent) {
-        requiredSpace = calculateTextHeight(
-          actualContent.text,
-          actualContent.fontSize,
-          actualContent.width
-        ) + 10; // Add 10mm buffer
+        requiredSpace =
+          calculateTextHeight(actualContent.text, actualContent.fontSize, actualContent.width) + 10; // Add 10mm buffer
       }
 
       if (cursor.y + requiredSpace > pageHeight - MARGIN) {
@@ -587,7 +599,9 @@ export async function generatePDF(
     currentSection = 'cover';
     const useGradients = config.pdf?.gradients?.enabled ?? true;
     const backgroundStyle = config.pdf?.backgroundStyle || 'linear';
-    console.log(`[PDF] Starting cover page, useGradients: ${useGradients}, style: ${backgroundStyle}`);
+    console.log(
+      `[PDF] Starting cover page, useGradients: ${useGradients}, style: ${backgroundStyle}`
+    );
 
     if (useGradients) {
       if (backgroundStyle === 'radial') {
@@ -632,7 +646,15 @@ export async function generatePDF(
     await checkPageBreak(60);
     addHeader(pdf, 'Music', cursor, setFontHeader);
     cursor.y += 10;
-    await renderMusicSection(pdf, config.music, dbVideos || [], cursor, addLink, loadImage, addNewPage);
+    await renderMusicSection(
+      pdf,
+      config.music,
+      dbVideos || [],
+      cursor,
+      addLink,
+      loadImage,
+      addNewPage
+    );
 
     // 5. Gallery
     onProgress?.(75);
@@ -640,7 +662,15 @@ export async function generatePDF(
     cursor.y = MARGIN;
     addHeader(pdf, 'Performance Gallery', cursor, setFontHeader);
     cursor.y += 15;
-    await renderGallery(pdf, config.gallery?.images || [], contentWidth, pageHeight, cursor, loadImage, addNewPage);
+    await renderGallery(
+      pdf,
+      config.gallery?.images || [],
+      contentWidth,
+      pageHeight,
+      cursor,
+      loadImage,
+      addNewPage
+    );
 
     // Add spacing after gallery
     cursor.y += 20;
@@ -672,7 +702,11 @@ export async function generatePDF(
           cursor.y += 6;
 
           setFontAccent(10);
-          pdf.text(`${article.publication} - ${new Date(article.date).toLocaleDateString()}`, MARGIN, cursor.y);
+          pdf.text(
+            `${article.publication} - ${new Date(article.date).toLocaleDateString()}`,
+            MARGIN,
+            cursor.y
+          );
           cursor.y += 6;
 
           await addText(article.excerpt, 10);
@@ -688,7 +722,7 @@ export async function generatePDF(
     addHeader(pdf, 'Contact', cursor, setFontHeader);
     cursor.y += 10;
 
-    addText("For bookings, collaborations, or inquiries, please reach out:", 11);
+    addText('For bookings, collaborations, or inquiries, please reach out:', 11);
     cursor.y += 5;
 
     if (config.artist?.email) {
@@ -696,11 +730,16 @@ export async function generatePDF(
     }
 
     if (config.socialMedia) {
-      if (config.socialMedia.youtube) await addLink('YouTube Channel', config.socialMedia.youtube, 12, true);
-      if (config.socialMedia.instagram) await addLink('Instagram Profile', config.socialMedia.instagram, 12, true);
-      if (config.socialMedia.linkedin) await addLink('LinkedIn Profile', config.socialMedia.linkedin, 12, true);
-      if (config.socialMedia.facebook) await addLink('Facebook Page', config.socialMedia.facebook, 12, true);
-      if (config.socialMedia.twitter) await addLink('Twitter Profile', config.socialMedia.twitter, 12, true);
+      if (config.socialMedia.youtube)
+        await addLink('YouTube Channel', config.socialMedia.youtube, 12, true);
+      if (config.socialMedia.instagram)
+        await addLink('Instagram Profile', config.socialMedia.instagram, 12, true);
+      if (config.socialMedia.linkedin)
+        await addLink('LinkedIn Profile', config.socialMedia.linkedin, 12, true);
+      if (config.socialMedia.facebook)
+        await addLink('Facebook Page', config.socialMedia.facebook, 12, true);
+      if (config.socialMedia.twitter)
+        await addLink('Twitter Profile', config.socialMedia.twitter, 12, true);
     }
 
     addFooter(pdf, config, pageWidth, pageHeight);
@@ -713,7 +752,6 @@ export async function generatePDF(
 
     onProgress?.(100);
     return { success: true };
-
   } catch (error) {
     console.error('PDF generation error:', error);
     return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
@@ -729,51 +767,61 @@ async function loadCustomFonts(pdf: jsPDF, basePath: string) {
     { name: 'Inter', style: 'bold', file: 'Inter-Bold.ttf' },
   ];
 
-  await Promise.all(fonts.map(async (font) => {
-    try {
-      const url = basePath ? `${basePath}/fonts/${font.file}` : `/fonts/${font.file}`;
-      const resp = await fetch(url);
-      if (resp.ok) {
-        const text = await resp.clone().text();
-        if (text.startsWith('404') || text.includes('Not Found') || text.length < 1000) {
-          console.warn(`Invalid font file detected for ${font.file}`);
-          return;
-        }
+  await Promise.all(
+    fonts.map(async (font) => {
+      try {
+        const url = basePath ? `${basePath}/fonts/${font.file}` : `/fonts/${font.file}`;
+        const resp = await fetch(url);
+        if (resp.ok) {
+          const text = await resp.clone().text();
+          if (text.startsWith('404') || text.includes('Not Found') || text.length < 1000) {
+            console.warn(`Invalid font file detected for ${font.file}`);
+            return;
+          }
 
-        const blob = await resp.blob();
-        const reader = new FileReader();
-        await new Promise<void>((resolve) => {
-          reader.onloadend = () => {
-            const result = reader.result as string;
-            if (result && result.includes(',')) {
-              const base64 = result.split(',')[1];
-              if (base64) {
-                try {
-                  pdf.addFileToVFS(font.file, base64);
-                  pdf.addFont(font.file, font.name, font.style);
-                } catch (fontError) {
-                  console.warn(`Failed to add font ${font.file} to jsPDF`, fontError);
+          const blob = await resp.blob();
+          const reader = new FileReader();
+          await new Promise<void>((resolve) => {
+            reader.onloadend = () => {
+              const result = reader.result as string;
+              if (result && result.includes(',')) {
+                const base64 = result.split(',')[1];
+                if (base64) {
+                  try {
+                    pdf.addFileToVFS(font.file, base64);
+                    pdf.addFont(font.file, font.name, font.style);
+                  } catch (fontError) {
+                    console.warn(`Failed to add font ${font.file} to jsPDF`, fontError);
+                  }
                 }
               }
-            }
-            resolve();
-          };
-          reader.readAsDataURL(blob);
-        });
-      } else {
-        console.warn(`Could not load font ${font.file}: ${resp.status}`);
+              resolve();
+            };
+            reader.readAsDataURL(blob);
+          });
+        } else {
+          console.warn(`Could not load font ${font.file}: ${resp.status}`);
+        }
+      } catch (e) {
+        console.warn(`Error loading font ${font.file}`, e);
       }
-    } catch (e) {
-      console.warn(`Error loading font ${font.file}`, e);
-    }
-  }));
+    })
+  );
 }
 
-async function renderCoverPage(pdf: jsPDF, config: any, pageWidth: number, pageHeight: number, loadImg: any, useGradients: boolean = true) {
+async function renderCoverPage(
+  pdf: jsPDF,
+  config: any,
+  pageWidth: number,
+  pageHeight: number,
+  loadImg: any,
+  useGradients: boolean = true
+) {
   // Premium minimal design with full-bleed hero image
 
   // 1. Load and add full-bleed hero image (use the hero background image)
-  let heroImgUrl = config.home?.heroBackground || 'https://placehold.co/1920x1080/14213d/d4af37?text=Hero+Image';
+  let heroImgUrl =
+    config.home?.heroBackground || 'https://placehold.co/1920x1080/14213d/d4af37?text=Hero+Image';
 
   if (heroImgUrl) {
     const imgData = await loadImg(heroImgUrl);
@@ -819,7 +867,11 @@ async function renderCoverPage(pdf: jsPDF, config: any, pageWidth: number, pageH
   pdf.line(MARGIN, MARGIN + 8, pageWidth - MARGIN, MARGIN + 8);
 
   // 3. Artist Name (Top, centered, elegant serif)
-  try { pdf.setFont('PlayfairDisplay', 'bold'); } catch { pdf.setFont('times', 'bold'); }
+  try {
+    pdf.setFont('PlayfairDisplay', 'bold');
+  } catch {
+    pdf.setFont('times', 'bold');
+  }
   pdf.setFontSize(32);
   pdf.setTextColor(255, 255, 255);
 
@@ -829,7 +881,11 @@ async function renderCoverPage(pdf: jsPDF, config: any, pageWidth: number, pageH
   pdf.text(artistName, nameX, MARGIN + 25);
 
   // 4. Tagline (Small, gold, centered below name)
-  try { pdf.setFont('Inter', 'normal'); } catch { pdf.setFont('helvetica', 'normal'); }
+  try {
+    pdf.setFont('Inter', 'normal');
+  } catch {
+    pdf.setFont('helvetica', 'normal');
+  }
   pdf.setFontSize(10);
   pdf.setTextColor(COLORS.gold.r, COLORS.gold.g, COLORS.gold.b);
 
@@ -844,7 +900,11 @@ async function renderCoverPage(pdf: jsPDF, config: any, pageWidth: number, pageH
   pdf.line(MARGIN, pageHeight - 40, pageWidth - MARGIN, pageHeight - 40);
 
   // 6. "PORTFOLIO" - centered, elegant
-  try { pdf.setFont('Inter', 'bold'); } catch { pdf.setFont('helvetica', 'bold'); }
+  try {
+    pdf.setFont('Inter', 'bold');
+  } catch {
+    pdf.setFont('helvetica', 'bold');
+  }
   pdf.setFontSize(12);
   pdf.setTextColor(255, 255, 255);
 
@@ -854,11 +914,17 @@ async function renderCoverPage(pdf: jsPDF, config: any, pageWidth: number, pageH
   pdf.text(portfolioText, portfolioX, pageHeight - 28);
 
   // 7. Date - centered, subtle
-  try { pdf.setFont('Inter', 'normal'); } catch { pdf.setFont('helvetica', 'normal'); }
+  try {
+    pdf.setFont('Inter', 'normal');
+  } catch {
+    pdf.setFont('helvetica', 'normal');
+  }
   pdf.setFontSize(9);
   pdf.setTextColor(200, 200, 200);
 
-  const dateText = new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'long' }).toUpperCase();
+  const dateText = new Date()
+    .toLocaleDateString(undefined, { year: 'numeric', month: 'long' })
+    .toUpperCase();
   const dateWidth = pdf.getTextWidth(dateText);
   const dateX = (pageWidth - dateWidth) / 2;
   pdf.text(dateText, dateX, pageHeight - 18);
@@ -879,7 +945,9 @@ function addFooter(pdf: jsPDF, config: any, pageWidth: number, pageHeight: numbe
     pdf.setFontSize(9);
     pdf.setTextColor(COLORS.gray.r, COLORS.gray.g, COLORS.gray.b);
     pdf.text(`${config.artist?.name || 'Artist'} - Portfolio`, MARGIN, pageHeight - 10);
-    pdf.text(`Page ${i - 1} of ${totalPages - 1}`, pageWidth - MARGIN, pageHeight - 10, { align: 'right' });
+    pdf.text(`Page ${i - 1} of ${totalPages - 1}`, pageWidth - MARGIN, pageHeight - 10, {
+      align: 'right',
+    });
   }
 }
 
@@ -893,7 +961,10 @@ async function loadExternalImage(url: string, basePath: string): Promise<string 
       // Optimize Cloudinary URLs for PDF generation to drastically reduce download size
       const uploadIndex = url.indexOf('/upload/');
       if (uploadIndex !== -1 && !url.includes('w_')) {
-        finalUrl = url.substring(0, uploadIndex + 8) + 'w_1200,c_limit,q_80,f_auto/' + url.substring(uploadIndex + 8);
+        finalUrl =
+          url.substring(0, uploadIndex + 8) +
+          'w_1200,c_limit,q_80,f_auto/' +
+          url.substring(uploadIndex + 8);
       }
     }
     const response = await fetch(finalUrl);
@@ -956,7 +1027,7 @@ async function loadExternalImage(url: string, basePath: string): Promise<string 
       img.src = URL.createObjectURL(blob);
     });
   } catch (e) {
-    console.error("Image load fail", e);
+    console.error('Image load fail', e);
     return null;
   }
 }
@@ -1009,7 +1080,11 @@ async function renderFeaturedCarousel(
     const titleHeight = 10;
 
     // Calculate description height (for justified text)
-    try { pdf.setFont('Inter', 'normal'); } catch { pdf.setFont('helvetica', 'normal'); }
+    try {
+      pdf.setFont('Inter', 'normal');
+    } catch {
+      pdf.setFont('helvetica', 'normal');
+    }
     pdf.setFontSize(11);
     const descLines = pdf.splitTextToSize(description, textWidth);
     const descHeight = descLines.length * 5.5; // Slightly more spacing for justified text
@@ -1035,7 +1110,11 @@ async function renderFeaturedCarousel(
       let textY = startY;
 
       // Title (gold, large serif)
-      try { pdf.setFont('PlayfairDisplay', 'bold'); } catch { pdf.setFont('times', 'bold'); }
+      try {
+        pdf.setFont('PlayfairDisplay', 'bold');
+      } catch {
+        pdf.setFont('times', 'bold');
+      }
       pdf.setFontSize(15);
       pdf.setTextColor(COLORS.gold.r, COLORS.gold.g, COLORS.gold.b);
       const titleLines = pdf.splitTextToSize(item.title, textWidth);
@@ -1043,7 +1122,11 @@ async function renderFeaturedCarousel(
       textY += titleLines.length * 6;
 
       // Description (charcoal, justified)
-      try { pdf.setFont('Inter', 'normal'); } catch { pdf.setFont('helvetica', 'normal'); }
+      try {
+        pdf.setFont('Inter', 'normal');
+      } catch {
+        pdf.setFont('helvetica', 'normal');
+      }
       pdf.setFontSize(11);
       pdf.setTextColor(COLORS.charcoal.r, COLORS.charcoal.g, COLORS.charcoal.b);
       pdf.text(description, textX, textY, { maxWidth: textWidth, align: 'justify' });
@@ -1053,7 +1136,11 @@ async function renderFeaturedCarousel(
       let textY = startY;
 
       // Title (gold, large serif)
-      try { pdf.setFont('PlayfairDisplay', 'bold'); } catch { pdf.setFont('times', 'bold'); }
+      try {
+        pdf.setFont('PlayfairDisplay', 'bold');
+      } catch {
+        pdf.setFont('times', 'bold');
+      }
       pdf.setFontSize(15);
       pdf.setTextColor(COLORS.gold.r, COLORS.gold.g, COLORS.gold.b);
       const titleLines = pdf.splitTextToSize(item.title, textWidth);
@@ -1061,7 +1148,11 @@ async function renderFeaturedCarousel(
       textY += titleLines.length * 6;
 
       // Description (charcoal, justified)
-      try { pdf.setFont('Inter', 'normal'); } catch { pdf.setFont('helvetica', 'normal'); }
+      try {
+        pdf.setFont('Inter', 'normal');
+      } catch {
+        pdf.setFont('helvetica', 'normal');
+      }
       pdf.setFontSize(11);
       pdf.setTextColor(COLORS.charcoal.r, COLORS.charcoal.g, COLORS.charcoal.b);
       pdf.text(description, textX, textY, { maxWidth: textWidth, align: 'justify' });
@@ -1087,7 +1178,11 @@ async function renderAboutSection(
   addNewPage: any
 ) {
   headerFn(pdf, 'About', cursor, (s: number) => {
-    try { pdf.setFont('PlayfairDisplay', 'bold'); } catch { pdf.setFont('times', 'bold'); }
+    try {
+      pdf.setFont('PlayfairDisplay', 'bold');
+    } catch {
+      pdf.setFont('times', 'bold');
+    }
     pdf.setFontSize(s);
     pdf.setTextColor(COLORS.navy.r, COLORS.navy.g, COLORS.navy.b);
   });
@@ -1099,7 +1194,11 @@ async function renderAboutSection(
     // Check if block is structured or legacy string format
     if (typeof block === 'string') {
       // Legacy format: render as paragraph (justified)
-      try { pdf.setFont('Inter', 'normal'); } catch { pdf.setFont('helvetica', 'normal'); }
+      try {
+        pdf.setFont('Inter', 'normal');
+      } catch {
+        pdf.setFont('helvetica', 'normal');
+      }
       pdf.setFontSize(11);
       pdf.setTextColor(COLORS.charcoal.r, COLORS.charcoal.g, COLORS.charcoal.b);
 
@@ -1131,14 +1230,21 @@ async function renderAboutSection(
       pdf.line(MARGIN, cursor.y - 4, MARGIN, cursor.y + 5);
 
       // Heading text
-      try { pdf.setFont('PlayfairDisplay', 'bold'); } catch { pdf.setFont('times', 'bold'); }
+      try {
+        pdf.setFont('PlayfairDisplay', 'bold');
+      } catch {
+        pdf.setFont('times', 'bold');
+      }
       pdf.setFontSize(14);
       pdf.setTextColor(COLORS.navy.r, COLORS.navy.g, COLORS.navy.b);
       pdf.text(block.content, MARGIN + 4, cursor.y);
       cursor.y += headingHeight;
-
     } else if (block.type === 'paragraph') {
-      try { pdf.setFont('Inter', 'normal'); } catch { pdf.setFont('helvetica', 'normal'); }
+      try {
+        pdf.setFont('Inter', 'normal');
+      } catch {
+        pdf.setFont('helvetica', 'normal');
+      }
       pdf.setFontSize(11);
       pdf.setTextColor(COLORS.charcoal.r, COLORS.charcoal.g, COLORS.charcoal.b);
 
@@ -1152,9 +1258,12 @@ async function renderAboutSection(
 
       pdf.text(block.content, MARGIN, cursor.y, { maxWidth: width, align: 'justify' });
       cursor.y += blockHeight;
-
     } else if (block.type === 'list') {
-      try { pdf.setFont('Inter', 'normal'); } catch { pdf.setFont('helvetica', 'normal'); }
+      try {
+        pdf.setFont('Inter', 'normal');
+      } catch {
+        pdf.setFont('helvetica', 'normal');
+      }
       pdf.setFontSize(11);
       pdf.setTextColor(COLORS.charcoal.r, COLORS.charcoal.g, COLORS.charcoal.b);
 
@@ -1196,7 +1305,8 @@ async function renderMusicCard(
 
   // 1. Thumbnail area - preserve aspect ratio
   const youtubeId = extractYoutubeId(video.url);
-  const thumbUrl = video.thumbnail_url ||
+  const thumbUrl =
+    video.thumbnail_url ||
     (youtubeId ? `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg` : null);
 
   let actualThumbHeight = THUMB_MAX_HEIGHT;
@@ -1222,15 +1332,24 @@ async function renderMusicCard(
           const xOffset = (width - constrainedWidth) / 2;
           thumbWidth = constrainedWidth;
           thumbX = x + xOffset;
-          pdf.addImage(thumbData, 'JPEG', thumbX, y, thumbWidth, THUMB_MAX_HEIGHT, undefined, 'MEDIUM');
+          pdf.addImage(
+            thumbData,
+            'JPEG',
+            thumbX,
+            y,
+            thumbWidth,
+            THUMB_MAX_HEIGHT,
+            undefined,
+            'MEDIUM'
+          );
         } else {
           // Normal: full width, preserved aspect ratio
           pdf.addImage(thumbData, 'JPEG', x, y, width, actualThumbHeight, undefined, 'MEDIUM');
         }
 
         // Draw Play Button Overlay to indicate clickability
-        const centerX = thumbX + (thumbWidth / 2);
-        const centerY = y + (actualThumbHeight / 2);
+        const centerX = thumbX + thumbWidth / 2;
+        const centerY = y + actualThumbHeight / 2;
         const radius = 6;
 
         // Semi-transparent dark circle background
@@ -1246,14 +1365,17 @@ async function renderMusicCard(
         // Pointing right
         const triangleSize = 2.5;
         pdf.triangle(
-          centerX - 1.5, centerY - triangleSize, // Top left
-          centerX - 1.5, centerY + triangleSize, // Bottom left
-          centerX + 2.5, centerY,                // Right tip
+          centerX - 1.5,
+          centerY - triangleSize, // Top left
+          centerX - 1.5,
+          centerY + triangleSize, // Bottom left
+          centerX + 2.5,
+          centerY, // Right tip
           'F'
         );
       }
     } catch (e) {
-      console.warn("Failed to load video thumbnail", e);
+      console.warn('Failed to load video thumbnail', e);
     }
   }
 
@@ -1322,10 +1444,10 @@ async function renderMusicCard(
     // If we exited loop because we ran out of words - check if there were actually more words
     // (Wait, the loop iterates until words.length. If we broke, we added ellipsis.)
 
-    // There is a edge case: If the LAST word fit perfectly, but it was just barely fitting, 
+    // There is a edge case: If the LAST word fit perfectly, but it was just barely fitting,
     // we don't need ellipsis.
 
-    // One final check: if there are still words remaining that we didn't even attempt 
+    // One final check: if there are still words remaining that we didn't even attempt
     // (e.g. we broke out), we effectively handled them with the ellipsis.
     // However, if we broke out, `wordIndex` isn't fully at end, but we shouldn't care.
     // But `wordIndex` is used in the for loop condition `wordIndex < words.length`.
@@ -1343,14 +1465,14 @@ async function renderMusicCard(
   // If we don't break, we consumed all words.
   // There is NO case "ignored words".
 
-  const displayLines = [line1, line2].filter(l => l);
+  const displayLines = [line1, line2].filter((l) => l);
 
   // Render text with small spacing below thumbnail
   const lineHeight = 3.2;
   const titleStartY = y + actualThumbHeight + 4; // 4mm spacing below thumbnail
 
   for (let i = 0; i < displayLines.length; i++) {
-    pdf.text(displayLines[i], TEXT_START_X, titleStartY + (i * lineHeight));
+    pdf.text(displayLines[i], TEXT_START_X, titleStartY + i * lineHeight);
   }
 
   // 3. Make entire card clickable
@@ -1359,7 +1481,15 @@ async function renderMusicCard(
   }
 }
 
-async function renderMusicSection(pdf: jsPDF, musicConfig: any, dbVideos: any[], cursor: Cursor, linkFn: any, loadImageFn: any, addNewPage: any) {
+async function renderMusicSection(
+  pdf: jsPDF,
+  musicConfig: any,
+  dbVideos: any[],
+  cursor: Cursor,
+  linkFn: any,
+  loadImageFn: any,
+  addNewPage: any
+) {
   if (!musicConfig || !musicConfig.categories) {
     return;
   }
@@ -1377,7 +1507,7 @@ async function renderMusicSection(pdf: jsPDF, musicConfig: any, dbVideos: any[],
     if (cat.subcategories) {
       for (const sub of cat.subcategories) {
         const dbMatches = dbVideos.filter(
-          v => v.category_id === cat.id && v.subcategory_id === sub.id
+          (v) => v.category_id === cat.id && v.subcategory_id === sub.id
         );
         if (dbMatches.length > 0 || (sub.videos && sub.videos.length > 0)) {
           hasVideos = true;
@@ -1402,7 +1532,11 @@ async function renderMusicSection(pdf: jsPDF, musicConfig: any, dbVideos: any[],
     }
 
     // Category header
-    try { pdf.setFont('PlayfairDisplay', 'bold'); } catch { pdf.setFont('helvetica', 'bold'); }
+    try {
+      pdf.setFont('PlayfairDisplay', 'bold');
+    } catch {
+      pdf.setFont('helvetica', 'bold');
+    }
     pdf.setFontSize(16);
     pdf.setTextColor(COLORS.navy.r, COLORS.navy.g, COLORS.navy.b);
     pdf.text(cat.name, MARGIN, cursor.y);
@@ -1422,9 +1556,9 @@ async function renderMusicSection(pdf: jsPDF, musicConfig: any, dbVideos: any[],
 
         // Add DB videos first
         const dbMatches = dbVideos.filter(
-          v => v.category_id === cat.id && v.subcategory_id === sub.id
+          (v) => v.category_id === cat.id && v.subcategory_id === sub.id
         );
-        dbMatches.forEach(v => {
+        dbMatches.forEach((v) => {
           const id = extractYoutubeId(v.url);
           if (id) {
             seenIds.add(id);
@@ -1455,7 +1589,11 @@ async function renderMusicSection(pdf: jsPDF, musicConfig: any, dbVideos: any[],
         }
 
         // Subcategory header (only if we have videos)
-        try { pdf.setFont('Inter', 'bold'); } catch { pdf.setFont('helvetica', 'bold'); }
+        try {
+          pdf.setFont('Inter', 'bold');
+        } catch {
+          pdf.setFont('helvetica', 'bold');
+        }
         pdf.setFontSize(12);
         pdf.setTextColor(COLORS.slate.r, COLORS.slate.g, COLORS.slate.b);
         pdf.text(sub.name, MARGIN + 2, cursor.y);
@@ -1470,8 +1608,8 @@ async function renderMusicSection(pdf: jsPDF, musicConfig: any, dbVideos: any[],
           const col = cardIndex % CARDS_PER_ROW;
           const row = Math.floor(cardIndex / CARDS_PER_ROW);
 
-          let cardX = MARGIN + (col * (CARD_WIDTH + CARD_GAP));
-          let cardY = startY + (row * (CARD_HEIGHT + ROW_SPACING));
+          let cardX = MARGIN + col * (CARD_WIDTH + CARD_GAP);
+          let cardY = startY + row * (CARD_HEIGHT + ROW_SPACING);
 
           // Page break check: ensure full row fits on page
           // Only check at start of new row (col === 0)
@@ -1485,8 +1623,8 @@ async function renderMusicSection(pdf: jsPDF, musicConfig: any, dbVideos: any[],
             // Recalculate positions for this video on the new page
             const newCol = cardIndex % CARDS_PER_ROW;
             const newRow = Math.floor(cardIndex / CARDS_PER_ROW);
-            cardX = MARGIN + (newCol * (CARD_WIDTH + CARD_GAP));
-            cardY = startY + (newRow * (CARD_HEIGHT + ROW_SPACING));
+            cardX = MARGIN + newCol * (CARD_WIDTH + CARD_GAP);
+            cardY = startY + newRow * (CARD_HEIGHT + ROW_SPACING);
           }
 
           await renderMusicCard(
@@ -1518,7 +1656,15 @@ async function renderMusicSection(pdf: jsPDF, musicConfig: any, dbVideos: any[],
   }
 }
 
-async function renderGallery(pdf: jsPDF, images: any[], width: number, pageHeight: number, cursor: Cursor, loadImg: any, addNewPage: any) {
+async function renderGallery(
+  pdf: jsPDF,
+  images: any[],
+  width: number,
+  pageHeight: number,
+  cursor: Cursor,
+  loadImg: any,
+  addNewPage: any
+) {
   const imgW = (width - 10) / 2;
   const imgH = imgW * 0.67;
 

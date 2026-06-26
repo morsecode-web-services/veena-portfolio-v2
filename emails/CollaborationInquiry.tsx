@@ -1,12 +1,4 @@
-import {
-  Html,
-  Head,
-  Body,
-  Container,
-  Heading,
-  Text,
-  Hr,
-} from '@react-email/components';
+import { Html, Head, Body, Container, Heading, Text, Hr } from '@react-email/components';
 import * as styles from './styles';
 
 interface CollaborationInquiryProps {
@@ -22,7 +14,8 @@ export default function CollaborationInquiry({ name }: CollaborationInquiryProps
           <Heading style={styles.heading}>Dear {name},</Heading>
 
           <Text style={styles.text}>
-            Thank you for reaching out about a potential collaboration. I'm always excited to explore creative partnerships.
+            Thank you for reaching out about a potential collaboration. I&apos;m always excited to
+            explore creative partnerships.
           </Text>
 
           <Text style={styles.text}>
@@ -31,12 +24,8 @@ export default function CollaborationInquiry({ name }: CollaborationInquiryProps
 
           <Hr style={styles.hr} />
 
-          <Text style={styles.footer}>
-            Looking forward to connecting,
-          </Text>
-          <Text style={styles.signature}>
-            Aishwarya Manikarnike
-          </Text>
+          <Text style={styles.footer}>Looking forward to connecting,</Text>
+          <Text style={styles.signature}>Aishwarya Manikarnike</Text>
         </Container>
       </Body>
     </Html>

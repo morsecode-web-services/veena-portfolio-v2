@@ -18,36 +18,36 @@ const CONFIG_ID = '00000000-0000-0000-0000-000000000000';
  * Cached using Next.js unstable_cache.
  */
 export const getDbConfig = unstable_cache(
-    async (): Promise<SiteConfig | null> => {
-        try {
-            const { data, error } = await supabase
-                .from('site_config')
-                .select('data')
-                .eq('id', CONFIG_ID)
-                .single();
+  async (): Promise<SiteConfig | null> => {
+    try {
+      const { data, error } = await supabase
+        .from('site_config')
+        .select('data')
+        .eq('id', CONFIG_ID)
+        .single();
 
-            if (error || !data) {
-                console.error('[db-config] Error fetching configuration:', error);
-                return null;
-            }
+      if (error || !data) {
+        console.error('[db-config] Error fetching configuration:', error);
+        return null;
+      }
 
-            const validation = validateConfig(data.data);
-            if (!validation.success) {
-                console.error('[db-config] Configuration validation failed:', validation.error);
-                return null;
-            }
+      const validation = validateConfig(data.data);
+      if (!validation.success) {
+        console.error('[db-config] Configuration validation failed:', validation.error);
+        return null;
+      }
 
-            return validation.data;
-        } catch (err) {
-            console.error('[db-config] Unexpected error:', err);
-            return null;
-        }
-    },
-    ['site-config'],
-    {
-        revalidate: 3600, // Cache for 1 hour
-        tags: ['config']
+      return validation.data;
+    } catch (err) {
+      console.error('[db-config] Unexpected error:', err);
+      return null;
     }
+  },
+  ['site-config'],
+  {
+    revalidate: 3600, // Cache for 1 hour
+    tags: ['config'],
+  }
 );
 
 /**
@@ -55,27 +55,25 @@ export const getDbConfig = unstable_cache(
  * Requires an authenticated user with admin/editor role.
  */
 export async function saveDbConfig(config: SiteConfig, token: string): Promise<boolean> {
-    const adminSupabase = createClient(supabaseUrl, supabaseAnonKey, {
-        global: { headers: { Authorization: `Bearer ${token}` } }
+  const adminSupabase = createClient(supabaseUrl, supabaseAnonKey, {
+    global: { headers: { Authorization: `Bearer ${token}` } },
+  });
+
+  try {
+    const { error } = await adminSupabase.from('site_config').upsert({
+      id: CONFIG_ID,
+      data: config,
+      updated_at: new Date().toISOString(),
     });
 
-    try {
-        const { error } = await adminSupabase
-            .from('site_config')
-            .upsert({
-                id: CONFIG_ID,
-                data: config,
-                updated_at: new Date().toISOString()
-            });
-
-        if (error) {
-            console.error('[db-config] Error saving configuration:', error);
-            return false;
-        }
-
-        return true;
-    } catch (err) {
-        console.error('[db-config] Unexpected error:', err);
-        return false;
+    if (error) {
+      console.error('[db-config] Error saving configuration:', error);
+      return false;
     }
+
+    return true;
+  } catch (err) {
+    console.error('[db-config] Unexpected error:', err);
+    return false;
+  }
 }

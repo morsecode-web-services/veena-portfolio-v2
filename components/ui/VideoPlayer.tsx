@@ -3,5 +3,5 @@ export default function VideoPlayer() {
     <div>
       <p>Video Player Component</p>
     </div>
-  )
+  );
 }

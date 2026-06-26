@@ -55,19 +55,17 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         'bg-gold-500 text-navy-900 hover:bg-gold-600 active:bg-gold-700 shadow-premium hover:shadow-premium-lg focus:ring-gold-500',
       tertiary:
         'bg-cream-100 text-navy-900 hover:bg-cream-200 active:bg-cream-300 border border-cream-200 hover:border-cream-300 focus:ring-cream-500',
-      ghost:
-        'bg-transparent text-navy-900 hover:bg-navy-50 active:bg-navy-100 focus:ring-navy-500',
+      ghost: 'bg-transparent text-navy-900 hover:bg-navy-50 active:bg-navy-100 focus:ring-navy-500',
     };
 
     // Loading state overrides
-    const loadingStyles = isLoading
-      ? 'cursor-wait pointer-events-none opacity-75'
-      : '';
+    const loadingStyles = isLoading ? 'cursor-wait pointer-events-none opacity-75' : '';
 
     // Width styles
     const widthStyles = fullWidth ? 'w-full' : '';
 
-    const combinedStyles = `${baseStyles} ${sizeStyles[size]} ${variantStyles[variant]} ${loadingStyles} ${widthStyles} ${className}`.trim();
+    const combinedStyles =
+      `${baseStyles} ${sizeStyles[size]} ${variantStyles[variant]} ${loadingStyles} ${widthStyles} ${className}`.trim();
 
     const { onDrag, onDragStart, onDragEnd, ...buttonProps } = props as any;
 
@@ -76,14 +74,8 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         ref={ref}
         disabled={disabled || isLoading}
         className={combinedStyles}
-        whileHover={
-          !disabled && !isLoading && !shouldReduceMotion
-            ? { scale: 1.02, y: -2 }
-            : {}
-        }
-        whileTap={
-          !disabled && !isLoading && !shouldReduceMotion ? { scale: 0.98 } : {}
-        }
+        whileHover={!disabled && !isLoading && !shouldReduceMotion ? { scale: 1.02, y: -2 } : {}}
+        whileTap={!disabled && !isLoading && !shouldReduceMotion ? { scale: 0.98 } : {}}
         transition={{ type: 'spring', stiffness: 400, damping: 17 }}
         {...buttonProps}
       >

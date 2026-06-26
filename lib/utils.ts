@@ -1,6 +1,6 @@
 // General utility functions
 export function cn(...classes: string[]) {
-  return classes.filter(Boolean).join(' ')
+  return classes.filter(Boolean).join(' ');
 }
 
 /**
@@ -36,7 +36,8 @@ export function extractYoutubeId(url: string): string | null {
   if (!url) return null;
 
   // Pattern 1: Standard, Embed, Live, Shorts, V
-  const pattern1 = /(?:youtube\.com\/(?:embed\/|v\/|watch\?v=|live\/|shorts\/)|youtu\.be\/)([^?&/]+)/;
+  const pattern1 =
+    /(?:youtube\.com\/(?:embed\/|v\/|watch\?v=|live\/|shorts\/)|youtu\.be\/)([^?&/]+)/;
   const match1 = url.match(pattern1);
   if (match1 && match1[1]) return match1[1];
 

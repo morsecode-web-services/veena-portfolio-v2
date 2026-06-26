@@ -13,14 +13,16 @@ interface ConditionalLayoutProps {
   jsonLdData: any;
 }
 
-export default function ConditionalLayout({ children, config, jsonLdData }: ConditionalLayoutProps) {
+export default function ConditionalLayout({
+  children,
+  config,
+  jsonLdData,
+}: ConditionalLayoutProps) {
   const pathname = usePathname() || '';
-  
+
   const isComingSoon = pathname.startsWith('/coming-soon');
-  const isStandalonePage = 
-    isComingSoon || 
-    pathname.startsWith('/link') || 
-    pathname.startsWith('/admin');
+  const isStandalonePage =
+    isComingSoon || pathname.startsWith('/link') || pathname.startsWith('/admin');
 
   return (
     <>

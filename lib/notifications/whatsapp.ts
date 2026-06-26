@@ -41,7 +41,11 @@ export async function sendWhatsAppNotification(
   const templateName = process.env.META_WHATSAPP_TEMPLATE_NAME;
 
   if (!phoneNumberId || !accessToken) {
-    return { success: false, error: 'WhatsApp credentials not configured (META_WHATSAPP_PHONE_NUMBER_ID / META_WHATSAPP_ACCESS_TOKEN missing)' };
+    return {
+      success: false,
+      error:
+        'WhatsApp credentials not configured (META_WHATSAPP_PHONE_NUMBER_ID / META_WHATSAPP_ACCESS_TOKEN missing)',
+    };
   }
 
   if (!phone) {
@@ -51,34 +55,31 @@ export async function sendWhatsAppNotification(
   const formattedPhone = formatPhoneNumber(phone);
 
   try {
-    const response = await fetch(
-      `https://graph.facebook.com/v19.0/${phoneNumberId}/messages`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${accessToken}`,
+    const response = await fetch(`https://graph.facebook.com/v19.0/${phoneNumberId}/messages`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({
+        messaging_product: 'whatsapp',
+        to: formattedPhone,
+        type: 'template',
+        template: {
+          name: templateName,
+          language: { code: 'en' },
+          components: [
+            {
+              type: 'body',
+              parameters: [
+                { type: 'text', text: name || 'there' }, // {{1}}
+                { type: 'text', text: inviteLink }, // {{2}}
+              ],
+            },
+          ],
         },
-        body: JSON.stringify({
-          messaging_product: 'whatsapp',
-          to: formattedPhone,
-          type: 'template',
-          template: {
-            name: templateName,
-            language: { code: 'en' },
-            components: [
-              {
-                type: 'body',
-                parameters: [
-                  { type: 'text', text: name || 'there' },   // {{1}}
-                  { type: 'text', text: inviteLink },         // {{2}}
-                ],
-              },
-            ],
-          },
-        }),
-      }
-    );
+      }),
+    });
 
     const data = await response.json();
 

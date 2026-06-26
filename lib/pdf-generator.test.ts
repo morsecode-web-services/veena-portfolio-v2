@@ -67,13 +67,14 @@ describe('PDF Generator', () => {
       if (typeof url === 'string' && url.includes('/api/admin/config')) {
         return Promise.resolve({
           ok: true,
-          json: () => Promise.resolve({
-            artist: { name: 'Veena', email: 'veena@example.com' },
-            home: { featuredCarousel: { enabled: false } },
-            sections: { press: false },
-            pdf: { gradients: { enabled: true, opacity: 0.5 } },
-            gallery: { images: [] }
-          }),
+          json: () =>
+            Promise.resolve({
+              artist: { name: 'Veena', email: 'veena@example.com' },
+              home: { featuredCarousel: { enabled: false } },
+              sections: { press: false },
+              pdf: { gradients: { enabled: true, opacity: 0.5 } },
+              gallery: { images: [] },
+            }),
           blob: () => Promise.resolve(new Blob([''], { type: 'image/jpeg' })),
         } as unknown as Response);
       }
@@ -89,22 +90,25 @@ describe('PDF Generator', () => {
     URL.revokeObjectURL = vi.fn();
 
     // Mock global Image to fire onload immediately in JSDOM
-    vi.stubGlobal('Image', class {
-      width = 1200;
-      height = 800;
-      onload = null;
-      onerror = null;
-      _src = '';
-      set src(val) {
-        this._src = val;
-        setTimeout(() => {
-          if (this.onload) (this.onload as any)();
-        }, 10);
+    vi.stubGlobal(
+      'Image',
+      class {
+        width = 1200;
+        height = 800;
+        onload = null;
+        onerror = null;
+        _src = '';
+        set src(val) {
+          this._src = val;
+          setTimeout(() => {
+            if (this.onload) (this.onload as any)();
+          }, 10);
+        }
+        get src() {
+          return this._src;
+        }
       }
-      get src() {
-        return this._src;
-      }
-    });
+    );
 
     // Mock canvas methods to avoid jsdom errors
     HTMLCanvasElement.prototype.toDataURL = vi.fn().mockReturnValue('data:image/jpeg;base64,mock');
@@ -178,16 +182,16 @@ describe('PDF Generator', () => {
 
   it('should successfully generate PDF with all sections', async () => {
     const result = await generatePDF();
-    
+
     expect(result.success).toBe(true);
     expect(result.error).toBeUndefined();
   });
 
   it('should call progress callback during generation', async () => {
     const onProgress = vi.fn();
-    
+
     await generatePDF({ onProgress });
-    
+
     expect(onProgress).toHaveBeenCalled();
     expect(onProgress).toHaveBeenCalledWith(expect.any(Number));
   });
@@ -198,22 +202,22 @@ describe('PDF Generator', () => {
       ok: false,
       status: 500,
     } as unknown as Response);
-    
+
     const result = await generatePDF();
-    
+
     expect(result.success).toBe(false);
     expect(result.error).toContain('Failed to load site configuration');
   });
 
   it('should include links when includeLinks is true', async () => {
     const result = await generatePDF({ includeLinks: true });
-    
+
     expect(result.success).toBe(true);
   });
 
   it('should work without links when includeLinks is false', async () => {
     const result = await generatePDF({ includeLinks: false });
-    
+
     expect(result.success).toBe(true);
   });
 });

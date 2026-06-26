@@ -20,10 +20,7 @@ export default function About({ config }: AboutProps) {
 
   return (
     <SectionWrapper id="about" spacing="base">
-      <SectionTitle
-        title={`About ${config.artist.name.split(' ')[0]}`}
-        alignment="center"
-      />
+      <SectionTitle title={`About ${config.artist.name.split(' ')[0]}`} alignment="center" />
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
         {/* Portrait Image Column - Sticky on Desktop */}
@@ -34,7 +31,10 @@ export default function About({ config }: AboutProps) {
           transition={{ duration: shouldReduceMotion ? 0 : 0.8 }}
           className="lg:col-span-5 xl:col-span-4 lg:sticky lg:top-24"
         >
-          <div className="relative aspect-[4/5] sm:aspect-square lg:aspect-[3/4] rounded-2xl overflow-hidden shadow-premium-xl group" style={{ minHeight: '400px' }}>
+          <div
+            className="relative aspect-[4/5] sm:aspect-square lg:aspect-[3/4] rounded-2xl overflow-hidden shadow-premium-xl group"
+            style={{ minHeight: '400px' }}
+          >
             <div className="absolute inset-0 bg-navy-900/10 group-hover:bg-transparent transition-colors duration-500 z-10"></div>
             <Image
               src={getAssetPath(config.home.images.veena)}
@@ -56,13 +56,18 @@ export default function About({ config }: AboutProps) {
             </h3>
             <ul className="space-y-4">
               {[
-                { label: "Grade", value: "‘A’-Grade Veena Artist (AIR)" },
-                { label: "Rank", value: "3rd Rank State (Vidwat Antima)" },
-                { label: "Legacy", value: "3rd Generation Musician" },
-                { label: "Awards", value: "Spirit of Youth , The Music Academy (Best Instrumentalist)" }
+                { label: 'Grade', value: '‘A’-Grade Veena Artist (AIR)' },
+                { label: 'Rank', value: '3rd Rank State (Vidwat Antima)' },
+                { label: 'Legacy', value: '3rd Generation Musician' },
+                {
+                  label: 'Awards',
+                  value: 'Spirit of Youth , The Music Academy (Best Instrumentalist)',
+                },
               ].map((fact, i) => (
                 <li key={fact.label} className="flex flex-col">
-                  <span className="text-xs text-gold-600 font-bold uppercase tracking-tight">{fact.label}</span>
+                  <span className="text-xs text-gold-600 font-bold uppercase tracking-tight">
+                    {fact.label}
+                  </span>
                   <span className="text-xs xl:text-sm text-navy-800 font-medium">{fact.value}</span>
                 </li>
               ))}
@@ -74,11 +79,7 @@ export default function About({ config }: AboutProps) {
         <div className="lg:col-span-7 xl:col-span-8 space-y-6 sm:space-y-8 relative">
           <div className="space-y-5">
             {config.artist.fullBio.map((block, index) => (
-              <BiographySubsection
-                key={index}
-                block={block}
-                index={index}
-              />
+              <BiographySubsection key={index} block={block} index={index} />
             ))}
           </div>
         </div>
@@ -105,9 +106,7 @@ const BiographySubsection = ({ block, index }: BiographySubsectionProps) => {
   }, [isInView, hasAnimated]);
 
   // Normalize block to object format if it's a string
-  const contentBlock = typeof block === 'string'
-    ? { type: 'paragraph', content: block }
-    : block;
+  const contentBlock = typeof block === 'string' ? { type: 'paragraph', content: block } : block;
 
   const getDelay = () => Math.min(index * 0.1, 0.5); // Cap delay for long lists
 

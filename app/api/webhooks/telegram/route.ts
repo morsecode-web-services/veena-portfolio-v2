@@ -27,14 +27,14 @@ export async function POST(request: Request) {
     // Only process when a user joins the group (transitioning to member/administrator)
     const newStatus = chatMember.new_chat_member?.status;
     const oldStatus = chatMember.old_chat_member?.status;
-    
+
     if (newStatus !== 'member' && newStatus !== 'administrator') {
       return NextResponse.json({ status: 'ignored_not_joining', newStatus });
     }
 
     const inviteLink = inviteLinkObject.invite_link.trim();
     const newUser = chatMember.new_chat_member?.user;
-    
+
     let username = newUser?.username ? `@${newUser.username}` : '';
     const displayName = [newUser?.first_name, newUser?.last_name].filter(Boolean).join(' ');
     const telegramIdentifier = username || displayName || 'Telegram User';
@@ -48,7 +48,9 @@ export async function POST(request: Request) {
     // A. Query enrollments by inviteLink first (new schema source of truth)
     const { data: enrollData, error: enrollErr } = await supabaseAdmin
       .from('enrollments')
-      .select('id, student_id, cohort_id, telegram_joined, telegram_username, telegram_display_name, telegram_invite_link, students(name, email)')
+      .select(
+        'id, student_id, cohort_id, telegram_joined, telegram_username, telegram_display_name, telegram_invite_link, students(name, email)'
+      )
       .eq('telegram_invite_link', inviteLink)
       .maybeSingle();
 
@@ -64,7 +66,9 @@ export async function POST(request: Request) {
     if (!enrollment) {
       const { data: subData, error: subError } = await supabaseAdmin
         .from('form_submissions')
-        .select('id, user_name, user_email, cohort_id, telegram_joined, telegram_username, telegram_display_name, telegram_invite_link')
+        .select(
+          'id, user_name, user_email, cohort_id, telegram_joined, telegram_username, telegram_display_name, telegram_invite_link'
+        )
         .eq('telegram_invite_link', inviteLink)
         .maybeSingle();
 
@@ -95,7 +99,9 @@ export async function POST(request: Request) {
         if (logEntry.enrollment_id) {
           const { data: enrollData } = await supabaseAdmin
             .from('enrollments')
-            .select('id, student_id, cohort_id, telegram_joined, telegram_username, telegram_display_name, telegram_invite_link, students(name, email)')
+            .select(
+              'id, student_id, cohort_id, telegram_joined, telegram_username, telegram_display_name, telegram_invite_link, students(name, email)'
+            )
             .eq('id', logEntry.enrollment_id)
             .maybeSingle();
           if (enrollData) {
@@ -105,7 +111,9 @@ export async function POST(request: Request) {
         if (!enrollment && logEntry.submission_id) {
           const { data: subData } = await supabaseAdmin
             .from('form_submissions')
-            .select('id, user_name, user_email, cohort_id, telegram_joined, telegram_username, telegram_display_name, telegram_invite_link')
+            .select(
+              'id, user_name, user_email, cohort_id, telegram_joined, telegram_username, telegram_display_name, telegram_invite_link'
+            )
             .eq('id', logEntry.submission_id)
             .maybeSingle();
           if (subData) {
@@ -136,12 +144,15 @@ export async function POST(request: Request) {
           .maybeSingle();
 
         if (studentProfile) {
-          const cohortId = webhookLog.payload?.payload?.order?.entity?.notes?.cohortId || 
-                           webhookLog.payload?.payload?.payment_link?.entity?.notes?.cohortId;
+          const cohortId =
+            webhookLog.payload?.payload?.order?.entity?.notes?.cohortId ||
+            webhookLog.payload?.payload?.payment_link?.entity?.notes?.cohortId;
 
           let enrollQuery = supabaseAdmin
             .from('enrollments')
-            .select('id, student_id, cohort_id, telegram_joined, telegram_username, telegram_display_name, telegram_invite_link, students(name, email)')
+            .select(
+              'id, student_id, cohort_id, telegram_joined, telegram_username, telegram_display_name, telegram_invite_link, students(name, email)'
+            )
             .eq('student_id', studentProfile.id);
 
           if (cohortId) {
@@ -161,7 +172,9 @@ export async function POST(request: Request) {
         // Also resolve matching submission for log tracking
         const { data: matchingSubmission } = await supabaseAdmin
           .from('form_submissions')
-          .select('id, user_name, user_email, cohort_id, telegram_joined, telegram_username, telegram_display_name, telegram_invite_link')
+          .select(
+            'id, user_name, user_email, cohort_id, telegram_joined, telegram_username, telegram_display_name, telegram_invite_link'
+          )
           .ilike('user_email', webhookLog.student_email)
           .eq('payment_status', 'paid')
           .order('created_at', { ascending: false })
@@ -180,7 +193,9 @@ export async function POST(request: Request) {
       if (studentEmail) {
         const { data: subData } = await supabaseAdmin
           .from('form_submissions')
-          .select('id, user_name, user_email, cohort_id, telegram_joined, telegram_username, telegram_display_name, telegram_invite_link')
+          .select(
+            'id, user_name, user_email, cohort_id, telegram_joined, telegram_username, telegram_display_name, telegram_invite_link'
+          )
           .ilike('user_email', studentEmail)
           .eq('cohort_id', enrollment.cohort_id)
           .order('created_at', { ascending: false })
@@ -201,7 +216,9 @@ export async function POST(request: Request) {
         if (studentProfile) {
           const { data: enrollData } = await supabaseAdmin
             .from('enrollments')
-            .select('id, student_id, cohort_id, telegram_joined, telegram_username, telegram_display_name, telegram_invite_link, students(name, email)')
+            .select(
+              'id, student_id, cohort_id, telegram_joined, telegram_username, telegram_display_name, telegram_invite_link, students(name, email)'
+            )
             .eq('student_id', studentProfile.id)
             .eq('cohort_id', studentSubmission.cohort_id)
             .maybeSingle();
@@ -218,11 +235,19 @@ export async function POST(request: Request) {
       const studentEmail = enrollment?.students?.email || studentSubmission?.user_email || '';
 
       // Idempotency check: if already marked as joined with this username, skip
-      const alreadyJoined = (enrollment && enrollment.telegram_joined === true && enrollment.telegram_username === telegramIdentifier) ||
-                            (!enrollment && studentSubmission && studentSubmission.telegram_joined === true && studentSubmission.telegram_username === telegramIdentifier);
+      const alreadyJoined =
+        (enrollment &&
+          enrollment.telegram_joined === true &&
+          enrollment.telegram_username === telegramIdentifier) ||
+        (!enrollment &&
+          studentSubmission &&
+          studentSubmission.telegram_joined === true &&
+          studentSubmission.telegram_username === telegramIdentifier);
 
       if (alreadyJoined) {
-        console.log(`[Telegram Webhook] Student ${studentName} is already marked as joined with ${telegramIdentifier}. Skipping duplicate log.`);
+        console.log(
+          `[Telegram Webhook] Student ${studentName} is already marked as joined with ${telegramIdentifier}. Skipping duplicate log.`
+        );
         return NextResponse.json({ success: true, student: studentName, status: 'already_joined' });
       }
 
@@ -233,13 +258,16 @@ export async function POST(request: Request) {
           .update({
             telegram_joined: true,
             telegram_username: username || null,
-            telegram_display_name: displayName || null
+            telegram_display_name: displayName || null,
           })
           .eq('id', enrollment.id);
 
         if (updateEnrollError) {
           console.error('[Telegram Webhook] Failed to update enrollment:', updateEnrollError);
-          return NextResponse.json({ error: 'Failed to update enrollment record' }, { status: 500 });
+          return NextResponse.json(
+            { error: 'Failed to update enrollment record' },
+            { status: 500 }
+          );
         }
       }
 
@@ -250,7 +278,7 @@ export async function POST(request: Request) {
           .update({
             telegram_joined: true,
             telegram_username: username || null,
-            telegram_display_name: displayName || null
+            telegram_display_name: displayName || null,
           })
           .eq('id', studentSubmission.id);
 
@@ -275,35 +303,42 @@ export async function POST(request: Request) {
       const { data: existingJoinLog } = await logQuery.maybeSingle();
 
       if (!existingJoinLog) {
-        await supabaseAdmin.from('telegram_invite_logs').insert([{
-          submission_id: studentSubmission?.id || null,
-          enrollment_id: enrollment?.id || null,
-          action: 'joined',
-          invite_link: inviteLink,
-          telegram_username: telegramIdentifier,
-          created_by: 'telegram_webhook',
-          payload: { info: `User joined Telegram group via link: ${inviteLink}` }
-        }]);
+        await supabaseAdmin.from('telegram_invite_logs').insert([
+          {
+            submission_id: studentSubmission?.id || null,
+            enrollment_id: enrollment?.id || null,
+            action: 'joined',
+            invite_link: inviteLink,
+            telegram_username: telegramIdentifier,
+            created_by: 'telegram_webhook',
+            payload: { info: `User joined Telegram group via link: ${inviteLink}` },
+          },
+        ]);
 
         // Push the raw event payload to global webhook_logs table
-        await supabaseAdmin.from('webhook_logs').insert([{
-          event_id: update.update_id ? `tg_upd_${update.update_id}` : `tg_join_${Date.now()}`,
-          event_type: 'telegram.join',
-          student_name: studentName,
-          student_email: studentEmail,
-          status: 'success',
-          payload: update
-        }]);
+        await supabaseAdmin.from('webhook_logs').insert([
+          {
+            event_id: update.update_id ? `tg_upd_${update.update_id}` : `tg_join_${Date.now()}`,
+            event_type: 'telegram.join',
+            student_name: studentName,
+            student_email: studentEmail,
+            status: 'success',
+            payload: update,
+          },
+        ]);
       }
 
-      console.log(`[Telegram Webhook] Successfully marked student ${studentName} (${studentEmail}) as joined.`);
+      console.log(
+        `[Telegram Webhook] Successfully marked student ${studentName} (${studentEmail}) as joined.`
+      );
       return NextResponse.json({ success: true, student: studentName });
     }
 
     // Link not found in database (e.g. link created outside the app or manual sharing of bot-created link)
-    console.warn(`[Telegram Webhook] Received join for link ${inviteLink} but no matching student found.`);
+    console.warn(
+      `[Telegram Webhook] Received join for link ${inviteLink} but no matching student found.`
+    );
     return NextResponse.json({ status: 'link_not_found_in_database' });
-
   } catch (error: any) {
     console.error('[Telegram Webhook] Error handling update:', error);
     return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });

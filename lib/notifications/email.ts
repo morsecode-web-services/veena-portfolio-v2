@@ -27,7 +27,7 @@ export async function sendCohortWelcomeEmail(
   try {
     const html = await render(CohortWelcome({ name, inviteLink, isReminder }));
 
-    const subject = isReminder 
+    const subject = isReminder
       ? `⏳ Action Required: Join your Telegram group for ${cohortTitle}`
       : `🎉 Welcome to ${cohortTitle}! Your Access Link`;
 

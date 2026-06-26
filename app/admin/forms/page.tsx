@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import { useState, useEffect, useCallback } from "react";
-import { supabase } from "@/lib/supabase";
-import { useToast } from "@/context/ToastContext";
-import { Button } from "@/components/system/Button";
+import { useState, useEffect, useCallback } from 'react';
+import { supabase } from '@/lib/supabase';
+import { useToast } from '@/context/ToastContext';
+import { Button } from '@/components/system/Button';
 import {
   Plus,
   Trash2,
@@ -16,23 +16,23 @@ import {
   ChevronDown,
   ChevronUp,
   Eye,
-} from "lucide-react";
-import { m, AnimatePresence } from "framer-motion";
-import TipTapEditor from "@/components/admin/TipTapEditor";
+} from 'lucide-react';
+import { m, AnimatePresence } from 'framer-motion';
+import TipTapEditor from '@/components/admin/TipTapEditor';
 
 interface FormField {
   name: string;
   label: string;
   type:
-    | "text"
-    | "textarea"
-    | "email"
-    | "tel"
-    | "select"
-    | "date"
-    | "checkbox"
-    | "content"
-    | "image";
+    | 'text'
+    | 'textarea'
+    | 'email'
+    | 'tel'
+    | 'select'
+    | 'date'
+    | 'checkbox'
+    | 'content'
+    | 'image';
   required?: boolean;
   placeholder?: string;
   options?: string[];
@@ -51,7 +51,7 @@ interface FormConfig {
   auto_reply_message?: string;
   success_message?: string;
   requires_payment?: boolean;
-  payment_type?: "subscription" | "one_time";
+  payment_type?: 'subscription' | 'one_time';
   razorpay_plan_id?: string;
   razorpay_amount?: number;
   telegram_chat_id?: string;
@@ -66,9 +66,9 @@ export default function FormManagementPage() {
   const [isCreating, setIsCreating] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newFormDetails, setNewFormDetails] = useState({
-    title: "",
-    slug: "",
-    description: "",
+    title: '',
+    slug: '',
+    description: '',
   });
   const [isAutoReplyOpen, setIsAutoReplyOpen] = useState(false);
   const [isPaymentSettingsOpen, setIsPaymentSettingsOpen] = useState(false);
@@ -78,13 +78,13 @@ export default function FormManagementPage() {
     setIsLoading(true);
     try {
       const { data, error } = await supabase
-        .from("form_configs")
-        .select("*")
-        .order("created_at", { ascending: true });
+        .from('form_configs')
+        .select('*')
+        .order('created_at', { ascending: true });
       if (error) throw error;
       if (data) setConfigs(data);
     } catch (err: any) {
-      addToast(err.message || "Failed to fetch form configs", "error");
+      addToast(err.message || 'Failed to fetch form configs', 'error');
     } finally {
       setIsLoading(false);
     }
@@ -96,7 +96,10 @@ export default function FormManagementPage() {
 
   useEffect(() => {
     if (selectedConfig) {
-      localStorage.setItem(`form_preview_${selectedConfig.form_slug}`, JSON.stringify(selectedConfig));
+      localStorage.setItem(
+        `form_preview_${selectedConfig.form_slug}`,
+        JSON.stringify(selectedConfig)
+      );
     }
   }, [selectedConfig]);
 
@@ -104,8 +107,8 @@ export default function FormManagementPage() {
     if (!selectedConfig) return;
     const newField: FormField = {
       name: `field_${Date.now()}`,
-      label: "New Field",
-      type: "text",
+      label: 'New Field',
+      type: 'text',
       required: false,
     };
     setSelectedConfig({
@@ -128,35 +131,30 @@ export default function FormManagementPage() {
     setSelectedConfig({ ...selectedConfig, fields: newFields });
   };
 
-  const handleMoveField = (index: number, direction: "up" | "down") => {
+  const handleMoveField = (index: number, direction: 'up' | 'down') => {
     if (!selectedConfig) return;
     const newFields = [...selectedConfig.fields];
-    const targetIndex = direction === "up" ? index - 1 : index + 1;
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
     if (targetIndex < 0 || targetIndex >= newFields.length) return;
-    [newFields[index], newFields[targetIndex]] = [
-      newFields[targetIndex],
-      newFields[index],
-    ];
+    [newFields[index], newFields[targetIndex]] = [newFields[targetIndex], newFields[index]];
     setSelectedConfig({ ...selectedConfig, fields: newFields });
   };
 
   const handleCreateForm = async () => {
     if (!newFormDetails.title || !newFormDetails.slug) {
-      addToast("Title and Slug are required", "error");
+      addToast('Title and Slug are required', 'error');
       return;
     }
 
     setIsCreating(true);
     const { data, error } = await supabase
-      .from("form_configs")
+      .from('form_configs')
       .insert([
         {
           title: newFormDetails.title,
-          form_slug: newFormDetails.slug.toLowerCase().replace(/\s+/g, "_"),
+          form_slug: newFormDetails.slug.toLowerCase().replace(/\s+/g, '_'),
           description: newFormDetails.description,
-          fields: [
-            { name: "name", label: "Name", type: "text", required: true },
-          ],
+          fields: [{ name: 'name', label: 'Name', type: 'text', required: true }],
           is_active: true,
           email_notifications_enabled: true,
         },
@@ -164,11 +162,11 @@ export default function FormManagementPage() {
       .select();
 
     if (error) {
-      addToast(error.message, "error");
+      addToast(error.message, 'error');
     } else {
-      addToast("Form created successfully!", "success");
+      addToast('Form created successfully!', 'success');
       setShowCreateModal(false);
-      setNewFormDetails({ title: "", slug: "", description: "" });
+      setNewFormDetails({ title: '', slug: '', description: '' });
       fetchConfigs();
       if (data?.[0]) setSelectedConfig(data[0]);
     }
@@ -177,24 +175,21 @@ export default function FormManagementPage() {
 
   const handleDeleteForm = async (id: string) => {
     const confirmDelete = window.confirm(
-      `Are you sure you want to delete this form? \n\nExisting lead data will NOT be deleted.`,
+      `Are you sure you want to delete this form? \n\nExisting lead data will NOT be deleted.`
     );
 
     if (!confirmDelete) return;
 
     setIsSaving(true);
     try {
-      const { error } = await supabase
-        .from("form_configs")
-        .delete()
-        .eq("id", id);
+      const { error } = await supabase.from('form_configs').delete().eq('id', id);
 
       if (error) throw error;
-      addToast("Form deleted successfully", "success");
+      addToast('Form deleted successfully', 'success');
       if (selectedConfig?.id === id) setSelectedConfig(null);
       fetchConfigs();
     } catch (err: any) {
-      addToast(err.message || "Failed to delete form", "error");
+      addToast(err.message || 'Failed to delete form', 'error');
     } finally {
       setIsSaving(false);
     }
@@ -205,7 +200,7 @@ export default function FormManagementPage() {
     try {
       setIsSaving(true);
       const { error } = await supabase
-        .from("form_configs")
+        .from('form_configs')
         .update({
           title: selectedConfig.title,
           description: selectedConfig.description,
@@ -216,18 +211,18 @@ export default function FormManagementPage() {
           auto_reply_message: selectedConfig.auto_reply_message,
           success_message: selectedConfig.success_message,
           requires_payment: selectedConfig.requires_payment || false,
-          payment_type: selectedConfig.payment_type || "subscription",
+          payment_type: selectedConfig.payment_type || 'subscription',
           razorpay_plan_id: selectedConfig.razorpay_plan_id || null,
           razorpay_amount: selectedConfig.razorpay_amount || null,
           telegram_chat_id: selectedConfig.telegram_chat_id || null,
         })
-        .eq("id", selectedConfig.id);
+        .eq('id', selectedConfig.id);
 
       if (error) throw error;
-      addToast("Configuration saved successfully!", "success");
+      addToast('Configuration saved successfully!', 'success');
       fetchConfigs();
     } catch (err: any) {
-      addToast(err.message || "Failed to save configuration", "error");
+      addToast(err.message || 'Failed to save configuration', 'error');
     } finally {
       setIsSaving(false);
     }
@@ -244,7 +239,9 @@ export default function FormManagementPage() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-200 pb-4">
         <div>
           <h1 className="text-xl font-bold text-slate-900">Form Configuration</h1>
-          <p className="text-slate-500 text-xs mt-0.5">Customize fields for your website registration and contact forms.</p>
+          <p className="text-slate-500 text-xs mt-0.5">
+            Customize fields for your website registration and contact forms.
+          </p>
         </div>
       </div>
 
@@ -265,8 +262,8 @@ export default function FormManagementPage() {
                 onClick={() => setSelectedConfig(config)}
                 className={`w-full text-left p-3 rounded-lg border transition-all ${
                   selectedConfig?.id === config.id
-                    ? "bg-slate-900 text-white border-slate-900 shadow-sm"
-                    : "bg-white text-slate-800 border-slate-200 hover:bg-slate-50"
+                    ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
+                    : 'bg-white text-slate-800 border-slate-200 hover:bg-slate-50'
                 }`}
               >
                 <div className="font-bold flex items-center justify-between text-xs tracking-wide">
@@ -278,7 +275,7 @@ export default function FormManagementPage() {
                   )}
                 </div>
                 <div
-                  className={`text-[11px] mt-1 ${selectedConfig?.id === config.id ? "text-slate-300" : "text-slate-500"}`}
+                  className={`text-[11px] mt-1 ${selectedConfig?.id === config.id ? 'text-slate-300' : 'text-slate-500'}`}
                 >
                   {config.fields.length} Fields
                 </div>
@@ -329,7 +326,7 @@ export default function FormManagementPage() {
                       onClick={() => {
                         const url = `${window.location.origin}/forms/${selectedConfig.form_slug}`;
                         navigator.clipboard.writeText(url);
-                        addToast("Share link copied to clipboard!", "success");
+                        addToast('Share link copied to clipboard!', 'success');
                       }}
                       className="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded font-semibold text-xs py-1.5 px-3 transition-colors flex items-center gap-1.5"
                     >
@@ -416,8 +413,7 @@ export default function FormManagementPage() {
                         <div className="absolute left-1 top-1 w-3 h-3 bg-white rounded-full transition-transform peer-checked:translate-x-5 shadow-sm"></div>
                       </div>
                       <span className="text-xs font-bold text-slate-700 uppercase tracking-widest group-hover:text-slate-900 transition-colors">
-                        Status:{" "}
-                        {selectedConfig.is_active ? "Active" : "Inactive"}
+                        Status: {selectedConfig.is_active ? 'Active' : 'Inactive'}
                       </span>
                     </label>
 
@@ -440,10 +436,7 @@ export default function FormManagementPage() {
                         <div className="absolute left-1 top-1 w-3 h-3 bg-white rounded-full transition-transform peer-checked:translate-x-5 shadow-sm"></div>
                       </div>
                       <span className="text-xs font-bold text-slate-700 uppercase tracking-widest group-hover:text-slate-900 transition-colors">
-                        Email Alerts:{" "}
-                        {selectedConfig.email_notifications_enabled
-                          ? "ON"
-                          : "OFF"}
+                        Email Alerts: {selectedConfig.email_notifications_enabled ? 'ON' : 'OFF'}
                       </span>
                     </label>
 
@@ -455,7 +448,7 @@ export default function FormManagementPage() {
                       </label>
                       <input
                         className="text-xs text-slate-800 bg-white border border-slate-200 px-3 py-2 rounded w-full outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-900 transition-colors"
-                        value={selectedConfig.success_message || ""}
+                        value={selectedConfig.success_message || ''}
                         onChange={(e) =>
                           setSelectedConfig({
                             ...selectedConfig,
@@ -488,12 +481,11 @@ export default function FormManagementPage() {
                     </div>
                   </button>
 
-
                   <AnimatePresence>
                     {isAutoReplyOpen && (
                       <m.div
                         initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
+                        animate={{ opacity: 1, height: 'auto' }}
                         exit={{ opacity: 0, height: 0 }}
                         className="overflow-hidden"
                       >
@@ -504,7 +496,7 @@ export default function FormManagementPage() {
                             </label>
                             <input
                               className="text-xs text-slate-800 bg-slate-50 p-2.5 rounded border border-slate-200 w-full outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-900 transition-colors"
-                              value={selectedConfig.auto_reply_subject || ""}
+                              value={selectedConfig.auto_reply_subject || ''}
                               onChange={(e) =>
                                 setSelectedConfig({
                                   ...selectedConfig,
@@ -520,9 +512,7 @@ export default function FormManagementPage() {
                             </label>
                             <div className="mt-1 shadow-sm rounded border border-slate-200 overflow-hidden">
                               <TipTapEditor
-                                content={
-                                  selectedConfig.auto_reply_message || ""
-                                }
+                                content={selectedConfig.auto_reply_message || ''}
                                 onChange={(content) =>
                                   setSelectedConfig({
                                     ...selectedConfig,
@@ -538,9 +528,7 @@ export default function FormManagementPage() {
                   </AnimatePresence>
 
                   <button
-                    onClick={() =>
-                      setIsPaymentSettingsOpen(!isPaymentSettingsOpen)
-                    }
+                    onClick={() => setIsPaymentSettingsOpen(!isPaymentSettingsOpen)}
                     className="flex items-center justify-between w-full text-left focus:outline-none group p-4 border border-slate-200 rounded-lg hover:border-slate-400 transition-colors bg-white mt-4"
                   >
                     <div>
@@ -563,7 +551,7 @@ export default function FormManagementPage() {
                     {isPaymentSettingsOpen && (
                       <m.div
                         initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
+                        animate={{ opacity: 1, height: 'auto' }}
                         exit={{ opacity: 0, height: 0 }}
                         className="overflow-hidden"
                       >
@@ -573,9 +561,7 @@ export default function FormManagementPage() {
                               <input
                                 type="checkbox"
                                 className="sr-only peer"
-                                checked={
-                                  selectedConfig.requires_payment || false
-                                }
+                                checked={selectedConfig.requires_payment || false}
                                 onChange={(e) =>
                                   setSelectedConfig({
                                     ...selectedConfig,
@@ -587,8 +573,7 @@ export default function FormManagementPage() {
                               <div className="absolute left-1 top-1 w-3 h-3 bg-white rounded-full transition-transform peer-checked:translate-x-5 shadow-sm"></div>
                             </div>
                             <span className="text-xs font-bold text-slate-700 uppercase tracking-widest group-hover:text-slate-900 transition-colors">
-                              Require Payment:{" "}
-                              {selectedConfig.requires_payment ? "ON" : "OFF"}
+                              Require Payment: {selectedConfig.requires_payment ? 'ON' : 'OFF'}
                             </span>
                           </label>
 
@@ -603,10 +588,10 @@ export default function FormManagementPage() {
                                     onClick={() =>
                                       setSelectedConfig({
                                         ...selectedConfig,
-                                        payment_type: "subscription",
+                                        payment_type: 'subscription',
                                       })
                                     }
-                                    className={`px-4 py-1.5 rounded text-xs font-bold transition-all ${selectedConfig.payment_type === "subscription" || !selectedConfig.payment_type ? "bg-white text-slate-800 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
+                                    className={`px-4 py-1.5 rounded text-xs font-bold transition-all ${selectedConfig.payment_type === 'subscription' || !selectedConfig.payment_type ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
                                   >
                                     Subscription
                                   </button>
@@ -614,17 +599,17 @@ export default function FormManagementPage() {
                                     onClick={() =>
                                       setSelectedConfig({
                                         ...selectedConfig,
-                                        payment_type: "one_time",
+                                        payment_type: 'one_time',
                                       })
                                     }
-                                    className={`px-4 py-1.5 rounded text-xs font-bold transition-all ${selectedConfig.payment_type === "one_time" ? "bg-white text-slate-800 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
+                                    className={`px-4 py-1.5 rounded text-xs font-bold transition-all ${selectedConfig.payment_type === 'one_time' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
                                   >
                                     One-Time
                                   </button>
                                 </div>
                               </div>
 
-                              {selectedConfig.payment_type === "one_time" ? (
+                              {selectedConfig.payment_type === 'one_time' ? (
                                 <div>
                                   <label className="text-[10px] uppercase font-bold text-slate-400 block mb-1">
                                     Amount (INR)
@@ -636,7 +621,8 @@ export default function FormManagementPage() {
                                     onChange={(e) =>
                                       setSelectedConfig({
                                         ...selectedConfig,
-                                        razorpay_amount: Math.round(parseFloat(e.target.value) * 100) || 0,
+                                        razorpay_amount:
+                                          Math.round(parseFloat(e.target.value) * 100) || 0,
                                       })
                                     }
                                     placeholder="e.g. 500"
@@ -652,9 +638,7 @@ export default function FormManagementPage() {
                                   </label>
                                   <input
                                     className="text-xs text-slate-800 bg-slate-50 p-2.5 rounded border border-slate-200 w-full outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-900 transition-colors"
-                                    value={
-                                      selectedConfig.razorpay_plan_id || ""
-                                    }
+                                    value={selectedConfig.razorpay_plan_id || ''}
                                     onChange={(e) =>
                                       setSelectedConfig({
                                         ...selectedConfig,
@@ -664,7 +648,8 @@ export default function FormManagementPage() {
                                     placeholder="e.g. plan_yourplanid123"
                                   />
                                   <p className="text-[11px] text-slate-500 mt-2">
-                                    Find this in your Razorpay Dashboard under Subscriptions {"->"} Plans.
+                                    Find this in your Razorpay Dashboard under Subscriptions {'->'}{' '}
+                                    Plans.
                                   </p>
                                 </div>
                               )}
@@ -675,7 +660,7 @@ export default function FormManagementPage() {
                                 </label>
                                 <input
                                   className="text-xs text-slate-800 bg-slate-50 p-2.5 rounded border border-slate-200 w-full outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-900 transition-colors font-mono"
-                                  value={selectedConfig.telegram_chat_id || ""}
+                                  value={selectedConfig.telegram_chat_id || ''}
                                   onChange={(e) =>
                                     setSelectedConfig({
                                       ...selectedConfig,
@@ -685,7 +670,8 @@ export default function FormManagementPage() {
                                   placeholder="e.g. -100123456789"
                                 />
                                 <p className="text-[11px] text-slate-500 mt-2 italic">
-                                  This channel will receive the invite link request when a user pays. Must start with -100.
+                                  This channel will receive the invite link request when a user
+                                  pays. Must start with -100.
                                 </p>
                               </div>
                             </div>
@@ -722,13 +708,13 @@ export default function FormManagementPage() {
                       >
                         <div className="flex flex-col gap-1 mt-2">
                           <button
-                            onClick={() => handleMoveField(index, "up")}
+                            onClick={() => handleMoveField(index, 'up')}
                             className="p-1 hover:bg-slate-200 rounded text-slate-400"
                           >
                             <MoveUp className="w-3 h-3" />
                           </button>
                           <button
-                            onClick={() => handleMoveField(index, "down")}
+                            onClick={() => handleMoveField(index, 'down')}
                             className="p-1 hover:bg-slate-200 rounded text-slate-400"
                           >
                             <MoveDown className="w-3 h-3" />
@@ -770,9 +756,7 @@ export default function FormManagementPage() {
                               onChange={(e) =>
                                 handleUpdateField(index, {
                                   label: e.target.value,
-                                  name: e.target.value
-                                    .toLowerCase()
-                                    .replace(/\s+/g, "_"),
+                                  name: e.target.value.toLowerCase().replace(/\s+/g, '_'),
                                 })
                               }
                             />
@@ -781,12 +765,10 @@ export default function FormManagementPage() {
                             <label className="text-[10px] uppercase font-bold text-slate-400 block mb-1">
                               Placeholder
                             </label>
-                            {["text", "textarea", "email", "tel"].includes(
-                              field.type,
-                            ) ? (
+                            {['text', 'textarea', 'email', 'tel'].includes(field.type) ? (
                               <input
                                 className="w-full bg-white border border-slate-200 p-2 rounded text-xs outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-900 transition-colors"
-                                value={field.placeholder || ""}
+                                value={field.placeholder || ''}
                                 onChange={(e) =>
                                   handleUpdateField(index, {
                                     placeholder: e.target.value,
@@ -813,7 +795,7 @@ export default function FormManagementPage() {
                                   required: e.target.checked,
                                 })
                               }
-                              disabled={field.type === "content"}
+                              disabled={field.type === 'content'}
                             />
                           </div>
                           <div className="sm:col-span-2 flex items-end">
@@ -825,7 +807,7 @@ export default function FormManagementPage() {
                             </button>
                           </div>
 
-                          {field.type === "select" && (
+                          {field.type === 'select' && (
                             <div className="col-span-full border-t border-slate-200 pt-4 mt-1 space-y-3">
                               <div className="flex items-center justify-between">
                                 <label className="text-[10px] uppercase font-bold text-slate-400">
@@ -847,42 +829,35 @@ export default function FormManagementPage() {
                                 </button>
                               </div>
                               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                {(field.options || []).map(
-                                  (option, optIndex) => (
-                                    <div key={optIndex} className="flex gap-2">
-                                      <input
-                                        className="flex-1 bg-white border border-slate-200 p-2 rounded text-xs outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-900 transition-colors"
-                                        value={option}
-                                        onChange={(e) => {
-                                          const newOptions = [
-                                            ...(field.options || []),
-                                          ];
-                                          newOptions[optIndex] = e.target.value;
-                                          handleUpdateField(index, {
-                                            options: newOptions,
-                                          });
-                                        }}
-                                      />
-                                      <button
-                                        onClick={() => {
-                                          const newOptions = [
-                                            ...(field.options || []),
-                                          ];
-                                          newOptions.splice(optIndex, 1);
-                                          handleUpdateField(index, {
-                                            options: newOptions,
-                                          });
-                                        }}
-                                        className="text-gray-400 hover:text-red-500 p-1"
-                                      >
-                                        <X className="w-4 h-4" />
-                                      </button>
-                                    </div>
-                                  ),
-                                )}
+                                {(field.options || []).map((option, optIndex) => (
+                                  <div key={optIndex} className="flex gap-2">
+                                    <input
+                                      className="flex-1 bg-white border border-slate-200 p-2 rounded text-xs outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-900 transition-colors"
+                                      value={option}
+                                      onChange={(e) => {
+                                        const newOptions = [...(field.options || [])];
+                                        newOptions[optIndex] = e.target.value;
+                                        handleUpdateField(index, {
+                                          options: newOptions,
+                                        });
+                                      }}
+                                    />
+                                    <button
+                                      onClick={() => {
+                                        const newOptions = [...(field.options || [])];
+                                        newOptions.splice(optIndex, 1);
+                                        handleUpdateField(index, {
+                                          options: newOptions,
+                                        });
+                                      }}
+                                      className="text-gray-400 hover:text-red-500 p-1"
+                                    >
+                                      <X className="w-4 h-4" />
+                                    </button>
+                                  </div>
+                                ))}
                               </div>
-                              {(!field.options ||
-                                field.options.length === 0) && (
+                              {(!field.options || field.options.length === 0) && (
                                 <p className="text-xs text-gray-400 italic">
                                   No options added yet.
                                 </p>
@@ -890,17 +865,15 @@ export default function FormManagementPage() {
                             </div>
                           )}
 
-                          {field.type === "content" && (
+                          {field.type === 'content' && (
                             <div className="col-span-full border-t border-gray-200 pt-4 mt-1">
                               <label className="text-[10px] uppercase font-bold text-gray-400 block mb-2">
                                 Content Block Text
                               </label>
                               <div className="bg-white rounded border border-gray-200">
                                 <TipTapEditor
-                                  content={field.content || ""}
-                                  onChange={(c) =>
-                                    handleUpdateField(index, { content: c })
-                                  }
+                                  content={field.content || ''}
+                                  onChange={(c) => handleUpdateField(index, { content: c })}
                                 />
                               </div>
                             </div>
@@ -910,11 +883,7 @@ export default function FormManagementPage() {
                     ))}
                   </div>
                   <div className="pt-4 border-t border-gray-100 flex justify-center">
-                    <Button
-                      variant="secondary"
-                      className="gap-2"
-                      onClick={handleAddField}
-                    >
+                    <Button variant="secondary" className="gap-2" onClick={handleAddField}>
                       <Plus className="w-4 h-4" /> Add Another Field
                     </Button>
                   </div>
@@ -924,7 +893,7 @@ export default function FormManagementPage() {
           </AnimatePresence>
         </div>
       </div>
-      
+
       <AnimatePresence>
         {showCreateModal && (
           <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
@@ -965,7 +934,7 @@ export default function FormManagementPage() {
                     onChange={(e) =>
                       setNewFormDetails({
                         ...newFormDetails,
-                        slug: e.target.value.toLowerCase().replace(/\s+/g, "_"),
+                        slug: e.target.value.toLowerCase().replace(/\s+/g, '_'),
                       })
                     }
                   />
@@ -1046,9 +1015,9 @@ export default function FormManagementPage() {
 
               <div className="flex-1 w-full bg-slate-50 overflow-hidden relative">
                 <iframe
-                    src={`/forms/${selectedConfig.form_slug}?preview=true`}
-                    className="w-full h-full border-0 absolute inset-0 bg-white"
-                    title="Form Preview"
+                  src={`/forms/${selectedConfig.form_slug}?preview=true`}
+                  className="w-full h-full border-0 absolute inset-0 bg-white"
+                  title="Form Preview"
                 />
               </div>
             </m.div>

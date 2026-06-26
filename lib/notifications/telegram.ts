@@ -30,19 +30,16 @@ export async function generateTelegramInviteLink(
   try {
     const expireDate = Math.floor(Date.now() / 1000) + expireHours * 3600;
 
-    const response = await fetch(
-      `${TELEGRAM_API}/bot${botToken}/createChatInviteLink`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          chat_id: chatId,
-          member_limit: 1,       // Single-use — cannot be shared
-          expire_date: expireDate,
-          name: inviteName ? inviteName.substring(0, 32) : 'Cohort Access', // Label visible in Telegram admin panel
-        }),
-      }
-    );
+    const response = await fetch(`${TELEGRAM_API}/bot${botToken}/createChatInviteLink`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: chatId,
+        member_limit: 1, // Single-use — cannot be shared
+        expire_date: expireDate,
+        name: inviteName ? inviteName.substring(0, 32) : 'Cohort Access', // Label visible in Telegram admin panel
+      }),
+    });
 
     const data = await response.json();
 

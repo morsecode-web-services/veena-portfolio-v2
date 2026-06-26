@@ -49,32 +49,33 @@ export default function PressCard({ article }: PressCardProps) {
 
           {/* Card Content */}
           <div className="p-4 sm:p-5">
-          {/* Publication and Date */}
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-semibold text-gold-600 uppercase tracking-wide">
-              {article.publication}
-            </span>
-            <span className="text-xs text-slate-500">
-              {formatDate(article.date)}
-            </span>
+            {/* Publication and Date */}
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-semibold text-gold-600 uppercase tracking-wide">
+                {article.publication}
+              </span>
+              <span className="text-xs text-slate-500">{formatDate(article.date)}</span>
+            </div>
+
+            {/* Title */}
+            <h3 className="text-lg font-serif font-semibold text-navy-900 mb-2 group-hover:text-gold-600 transition-colors duration-300 line-clamp-2 leading-snug">
+              {article.title}
+            </h3>
+
+            {/* Excerpt */}
+            <p className="text-charcoal-700 text-xs sm:text-sm leading-relaxed mb-3 line-clamp-3">
+              {article.excerpt}
+            </p>
+
+            {/* Read More Link */}
+            <div className="flex items-center text-gold-600 text-sm font-medium group-hover:text-gold-700 transition-colors duration-300">
+              <span className="mr-1.5">Read Full Article</span>
+              <FiExternalLink
+                className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform duration-300"
+                aria-hidden="true"
+              />
+            </div>
           </div>
-
-          {/* Title */}
-          <h3 className="text-lg font-serif font-semibold text-navy-900 mb-2 group-hover:text-gold-600 transition-colors duration-300 line-clamp-2 leading-snug">
-            {article.title}
-          </h3>
-
-          {/* Excerpt */}
-          <p className="text-charcoal-700 text-xs sm:text-sm leading-relaxed mb-3 line-clamp-3">
-            {article.excerpt}
-          </p>
-
-          {/* Read More Link */}
-          <div className="flex items-center text-gold-600 text-sm font-medium group-hover:text-gold-700 transition-colors duration-300">
-            <span className="mr-1.5">Read Full Article</span>
-            <FiExternalLink className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform duration-300" aria-hidden="true" />
-          </div>
-        </div>
         </Card>
       </a>
     </article>

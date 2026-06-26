@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Image, { ImageProps } from 'next/image';
 import { CldImage } from 'next-cloudinary';
 import { m } from 'framer-motion';
-import { getBasePath, getAssetPath } from '@/lib/config';
+import { getAssetPath } from '@/lib/config';
 
 interface ImageWithFallbackProps extends Omit<ImageProps, 'onError'> {
   fallbackSrc?: string;
@@ -43,14 +43,17 @@ export default function ImageWithFallback({
     if (attempts < retryCount) {
       // Retry loading the current image
       setIsRetrying(true);
-      setAttempts(prev => prev + 1);
+      setAttempts((prev) => prev + 1);
 
       // Add a small delay before retrying
-      setTimeout(() => {
-        const retrySrc = `${triedFallback ? fallbackSrc : src}${(triedFallback ? fallbackSrc : src).toString().includes('?') ? '&' : '?'}retry=${attempts + 1}`;
-        setImgSrc(getAssetPath(retrySrc));
-        setIsRetrying(false);
-      }, 1000 * (attempts + 1)); // Exponential backoff
+      setTimeout(
+        () => {
+          const retrySrc = `${triedFallback ? fallbackSrc : src}${(triedFallback ? fallbackSrc : src).toString().includes('?') ? '&' : '?'}retry=${attempts + 1}`;
+          setImgSrc(getAssetPath(retrySrc));
+          setIsRetrying(false);
+        },
+        1000 * (attempts + 1)
+      ); // Exponential backoff
     } else if (!triedFallback) {
       // Try fallback image
       setImgSrc(getAssetPath(fallbackSrc));
@@ -87,9 +90,7 @@ export default function ImageWithFallback({
 
   if (hasError && !showErrorMessage) {
     // Silent failure - just show placeholder
-    return (
-      <div className="w-full h-full bg-gray-200 rounded-lg" aria-label={alt} />
-    );
+    return <div className="w-full h-full bg-gray-200 rounded-lg" aria-label={alt} />;
   }
 
   const isCloudinary = typeof imgSrc === 'string' && imgSrc.includes('cloudinary.com');
@@ -102,15 +103,10 @@ export default function ImageWithFallback({
           src={imgSrc as string}
           alt={alt}
           onError={handleError}
-          sizes={props.sizes || "(max-width: 768px) 100vw, 100vw"}
+          sizes={props.sizes || '(max-width: 768px) 100vw, 100vw'}
         />
       ) : (
-        <Image
-          {...props}
-          src={imgSrc}
-          alt={alt}
-          onError={handleError}
-        />
+        <Image {...props} src={imgSrc} alt={alt} onError={handleError} />
       )}
       {isRetrying && (
         <m.div

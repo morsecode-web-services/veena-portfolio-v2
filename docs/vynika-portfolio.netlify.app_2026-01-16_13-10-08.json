@@ -19,12 +19,7 @@
     "emulatedFormFactor": "desktop",
     "formFactor": "desktop",
     "locale": "en-GB",
-    "onlyCategories": [
-      "performance",
-      "accessibility",
-      "best-practices",
-      "seo"
-    ],
+    "onlyCategories": ["performance", "accessibility", "best-practices", "seo"],
     "channel": "lr"
   },
   "audits": {
@@ -179,9 +174,7 @@
           }
         ],
         "type": "table",
-        "sortedBy": [
-          "rtt"
-        ]
+        "sortedBy": ["rtt"]
       },
       "numericValue": 4.569404999999997,
       "numericUnit": "millisecond"
@@ -2657,12 +2650,8 @@
             "displayUnit": "kb"
           }
         ],
-        "sortedBy": [
-          "wastedBytes"
-        ],
-        "skipSumming": [
-          "cacheLifetimeMs"
-        ],
+        "sortedBy": ["wastedBytes"],
+        "skipSumming": ["cacheLifetimeMs"],
         "type": "table",
         "debugData": {
           "type": "debugdata",
@@ -2681,9 +2670,7 @@
         "FCP": 0
       },
       "details": {
-        "sortedBy": [
-          "wastedBytes"
-        ],
+        "sortedBy": ["wastedBytes"],
         "headings": [],
         "overallSavingsBytes": 0,
         "debugData": {
@@ -2821,9 +2808,7 @@
             "group": "garbageCollection"
           }
         ],
-        "sortedBy": [
-          "duration"
-        ],
+        "sortedBy": ["duration"],
         "type": "table",
         "headings": [
           {
@@ -2871,9 +2856,7 @@
         "TBT": 150
       },
       "details": {
-        "sortedBy": [
-          "total"
-        ],
+        "sortedBy": ["total"],
         "summary": {
           "wastedMs": 1144.5879999999859
         },
@@ -3387,9 +3370,7 @@
             "FCP": 0
           }
         },
-        "sortedBy": [
-          "wastedBytes"
-        ],
+        "sortedBy": ["wastedBytes"],
         "overallSavingsBytes": 140053,
         "items": [
           {
@@ -3524,9 +3505,7 @@
       "details": {
         "type": "table",
         "items": [],
-        "skipSumming": [
-          "wastedMs"
-        ],
+        "skipSumming": ["wastedMs"],
         "headings": [
           {
             "valueType": "url",
@@ -5695,11 +5674,7 @@
         "debugData": {
           "type": "debugdata",
           "impact": "serious",
-          "tags": [
-            "cat.sensory-and-visual-cues",
-            "wcag22aa",
-            "wcag258"
-          ]
+          "tags": ["cat.sensory-and-visual-cues", "wcag22aa", "wcag258"]
         }
       }
     },
@@ -6062,9 +6037,7 @@
             "url": "https://vynika-portfolio.netlify.app/_next/static/chunks/4bd1b696-f7922f59c862479b.js"
           }
         ],
-        "sortedBy": [
-          "totalBytes"
-        ]
+        "sortedBy": ["totalBytes"]
       },
       "numericValue": 1566233,
       "numericUnit": "byte"
@@ -6241,9 +6214,7 @@
         "TBT": 100
       },
       "details": {
-        "skipSumming": [
-          "startTime"
-        ],
+        "skipSumming": ["startTime"],
         "headings": [
           {
             "valueType": "url",
@@ -6322,9 +6293,7 @@
             }
           ]
         },
-        "sortedBy": [
-          "duration"
-        ]
+        "sortedBy": ["duration"]
       }
     },
     "image-alt": {
@@ -6402,9 +6371,7 @@
         "FCP": 0
       },
       "details": {
-        "sortedBy": [
-          "wastedBytes"
-        ],
+        "sortedBy": ["wastedBytes"],
         "items": [],
         "type": "opportunity",
         "overallSavingsBytes": 0,
@@ -6548,9 +6515,7 @@
         "FCP": 0
       },
       "details": {
-        "sortedBy": [
-          "wastedBytes"
-        ],
+        "sortedBy": ["wastedBytes"],
         "items": [],
         "overallSavingsBytes": 0,
         "debugData": {
@@ -6813,9 +6778,7 @@
             "origin": "https://img.youtube.com"
           }
         ],
-        "sortedBy": [
-          "serverResponseTime"
-        ],
+        "sortedBy": ["serverResponseTime"],
         "type": "table",
         "headings": [
           {
@@ -7763,39 +7726,28 @@
       "name": "netlify.app",
       "isFirstParty": true,
       "isUnrecognized": true,
-      "origins": [
-        "https://vynika-portfolio.netlify.app"
-      ]
+      "origins": ["https://vynika-portfolio.netlify.app"]
     },
     {
       "name": "unsplash.com",
       "isUnrecognized": true,
-      "origins": [
-        "https://images.unsplash.com"
-      ]
+      "origins": ["https://images.unsplash.com"]
     },
     {
       "name": "transparenttextures.com",
       "isUnrecognized": true,
-      "origins": [
-        "https://www.transparenttextures.com"
-      ]
+      "origins": ["https://www.transparenttextures.com"]
     },
     {
       "name": "youtu.be",
       "isUnrecognized": true,
-      "origins": [
-        "https://youtu.be"
-      ]
+      "origins": ["https://youtu.be"]
     },
     {
       "name": "YouTube",
       "homepage": "https://youtube.com",
       "category": "video",
-      "origins": [
-        "https://www.youtube.com",
-        "https://img.youtube.com"
-      ]
+      "origins": ["https://www.youtube.com", "https://img.youtube.com"]
     }
   ],
   "fullPageScreenshot": {

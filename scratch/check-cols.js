@@ -1,11 +1,14 @@
 const fs = require('fs');
 try {
   const envFile = fs.readFileSync('.env.local', 'utf8');
-  envFile.split(/\r?\n/).forEach(line => {
+  envFile.split(/\r?\n/).forEach((line) => {
     const idx = line.indexOf('=');
     if (idx > 0) {
       const k = line.substring(0, idx).trim();
-      const v = line.substring(idx + 1).trim().replace(/^['"]|['"]$/g, '');
+      const v = line
+        .substring(idx + 1)
+        .trim()
+        .replace(/^['"]|['"]$/g, '');
       process.env[k] = v;
     }
   });
@@ -21,11 +24,8 @@ const supabase = createClient(
 );
 
 async function run() {
-  const { data, error } = await supabase
-    .from('cohorts')
-    .select('id, title, pricing_type')
-    .limit(1);
-  
+  const { data, error } = await supabase.from('cohorts').select('id, title, pricing_type').limit(1);
+
   if (error) {
     console.error('Error fetching pricing_type:', error);
   } else {

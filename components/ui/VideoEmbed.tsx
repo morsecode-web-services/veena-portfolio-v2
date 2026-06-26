@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useId, useCallback } from 'react';
-import { m, AnimatePresence } from 'framer-motion';
+import { m } from 'framer-motion';
 import { useVideo } from '@/context/VideoContext';
 import Image from 'next/image';
 import { analytics } from '@/components/GoogleAnalytics';
@@ -37,13 +37,16 @@ export default function VideoEmbed({
 
   const isPlaying = activeVideoId === instanceId;
 
-  const setIsPlaying = useCallback((playing: boolean) => {
-    if (playing) {
-      setActiveVideo(instanceId);
-    } else if (activeVideoId === instanceId) {
-      setActiveVideo(null);
-    }
-  }, [instanceId, activeVideoId, setActiveVideo]);
+  const setIsPlaying = useCallback(
+    (playing: boolean) => {
+      if (playing) {
+        setActiveVideo(instanceId);
+      } else if (activeVideoId === instanceId) {
+        setActiveVideo(null);
+      }
+    },
+    [instanceId, activeVideoId, setActiveVideo]
+  );
 
   useEffect(() => {
     // Try to extract YouTube video ID and convert to embed URL
@@ -93,7 +96,7 @@ export default function VideoEmbed({
   const handleRetry = () => {
     if (attempts < retryCount) {
       setIsRetrying(true);
-      setAttempts(prev => prev + 1);
+      setAttempts((prev) => prev + 1);
 
       setTimeout(() => {
         setVideoSrc(`${src}${src.includes('?') ? '&' : '?'}retry=${attempts + 1}`);
@@ -107,8 +110,6 @@ export default function VideoEmbed({
     setHasError(true);
     setIsRetrying(false);
   };
-
-
 
   const getDirectVideoUrl = (): string => {
     if (videoId) {
@@ -168,7 +169,10 @@ export default function VideoEmbed({
   }
 
   return (
-    <div className={`relative w-full bg-gray-900 rounded-lg overflow-hidden group/video ${className}`} style={{ paddingBottom: '56.25%' }}>
+    <div
+      className={`relative w-full bg-gray-900 rounded-lg overflow-hidden group/video ${className}`}
+      style={{ paddingBottom: '56.25%' }}
+    >
       {thumbnailUrl ? (
         <button
           onClick={() => openVideo(videoSrc, title)}
@@ -191,7 +195,11 @@ export default function VideoEmbed({
               whileTap={{ scale: 0.95 }}
               className="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 backdrop-blur-md border border-white/30 rounded-full flex items-center justify-center shadow-2xl group-hover:!bg-gold-600 group-hover:border-gold-500 transition-all duration-300"
             >
-              <svg className="w-4 h-4 sm:w-6 sm:h-6 text-white drop-shadow-lg" fill="currentColor" viewBox="0 0 24 24">
+              <svg
+                className="w-4 h-4 sm:w-6 sm:h-6 text-white drop-shadow-lg"
+                fill="currentColor"
+                viewBox="0 0 24 24"
+              >
                 <path d="M8 5v14l11-7z" />
               </svg>
             </m.div>

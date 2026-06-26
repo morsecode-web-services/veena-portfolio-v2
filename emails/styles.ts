@@ -1,7 +1,8 @@
 // Shared email styles - elegant and professional
 export const main = {
   backgroundColor: '#f8f9fa',
-  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Ubuntu, sans-serif',
+  fontFamily:
+    '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Ubuntu, sans-serif',
 };
 
 export const container = {

@@ -35,15 +35,18 @@ const nextConfig = {
         hostname: '*.supabase.co',
         port: '',
         pathname: '/storage/v1/object/public/**',
-      }
+      },
     ],
   },
 
   // Enable compiler optimizations
   compiler: {
-    removeConsole: process.env.NODE_ENV === 'production' ? {
-      exclude: ['error', 'warn'],
-    } : false,
+    removeConsole:
+      process.env.NODE_ENV === 'production'
+        ? {
+            exclude: ['error', 'warn'],
+          }
+        : false,
   },
 
   // Enable React strict mode for better development experience
@@ -61,6 +64,6 @@ const nextConfig = {
       transform: 'react-icons/{{member}}',
     },
   },
-}
+};
 
-module.exports = nextConfig
+module.exports = nextConfig;

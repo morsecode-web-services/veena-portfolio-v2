@@ -32,9 +32,7 @@ export function measureRenderTime(componentName: string, callback: () => void) {
 
   if (process.env.NODE_ENV === 'development' && duration > 16) {
     // Warn if render takes longer than one frame (16ms at 60fps)
-    console.warn(
-      `[Performance] ${componentName} render took ${duration.toFixed(2)}ms (>16ms)`
-    );
+    console.warn(`[Performance] ${componentName} render took ${duration.toFixed(2)}ms (>16ms)`);
   }
 }
 

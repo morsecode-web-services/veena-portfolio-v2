@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 @config "../tailwind.config.ts";
 @plugin "@tailwindcss/typography";
 
@@ -82,7 +82,12 @@ h6 {
 /* Smooth transitions for interactive elements - using hardware-accelerated properties */
 a,
 button {
-  transition: transform 0.3s ease, opacity 0.3s ease, color 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease;
+  transition:
+    transform 0.3s ease,
+    opacity 0.3s ease,
+    color 0.3s ease,
+    background-color 0.3s ease,
+    box-shadow 0.3s ease;
 }
 
 /* Refined hover effects for links */
@@ -136,7 +141,6 @@ select:focus-visible {
 
 /* Touch-friendly interactive elements on mobile */
 @media (max-width: 768px) {
-
   button,
   a {
     min-height: 44px;
@@ -232,7 +236,6 @@ p {
   background: linear-gradient(135deg, #14213d 0%, #243b53 100%);
 }
 
-
 .bg-gradient-subtle {
   background: linear-gradient(180deg, #ffffff 0%, #fafafa 100%);
 }
@@ -253,7 +256,6 @@ p {
 
 /* Reduced motion support for accessibility */
 @media (prefers-reduced-motion: reduce) {
-
   *,
   *::before,
   *::after {
@@ -266,7 +268,6 @@ p {
 
 /* Viral / Cinematic Animations */
 @keyframes pulse-slow {
-
   0%,
   100% {
     opacity: 1;
@@ -277,13 +278,11 @@ p {
   }
 }
 
-
 /* Print Styles for PDF Generation */
 @media print {
-
   /* Hide only navigation elements, not content sections */
-  header[role="banner"],
-  footer[role="contentinfo"],
+  header[role='banner'],
+  footer[role='contentinfo'],
   nav,
   .no-print {
     display: none !important;
@@ -369,8 +368,8 @@ p {
   }
 
   /* Links - show URLs for external links */
-  a[href^="http"]::after {
-    content: " (" attr(href) ")";
+  a[href^='http']::after {
+    content: ' (' attr(href) ')';
     font-size: 9pt;
     color: #666;
     word-break: break-all;

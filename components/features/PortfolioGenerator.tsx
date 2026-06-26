@@ -46,9 +46,10 @@ export default function PortfolioGenerator() {
           flex items-center gap-2 sm:gap-3 px-5 sm:px-6 py-2.5 sm:py-3 rounded-lg font-medium
           transition-all duration-300 shadow-md hover:shadow-lg text-sm sm:text-base
           touch-manipulation
-          ${isGenerating
-            ? 'bg-gray-400 cursor-not-allowed'
-            : 'bg-gold-600 hover:bg-gold-700 active:bg-gold-800 text-white'
+          ${
+            isGenerating
+              ? 'bg-gray-400 cursor-not-allowed'
+              : 'bg-gold-600 hover:bg-gold-700 active:bg-gold-800 text-white'
           }
         `}
         aria-label="Download portfolio as PDF"
@@ -117,7 +118,6 @@ export default function PortfolioGenerator() {
           </m.div>
         )}
       </AnimatePresence>
-
     </div>
   );
 }

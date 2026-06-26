@@ -28,32 +28,89 @@ export default function Contact({ config }: ContactProps) {
   const contactImage = config?.contact?.imageUrl || '/images/contact/contact-image.jpg';
   const contactImageAlt = config?.contact?.imageAlt || 'Contact';
 
-  const defaultConfigs: Record<string, FormConfig> = useMemo(() => ({
-    classes: {
-      form_slug: 'classes',
-      title: 'Join a Class',
-      description: 'Interested in learning Veena? Fill out the details below.',
-      fields: [
-        { name: 'name', label: 'Full Name', type: 'text', required: true, placeholder: 'Your name' },
-        { name: 'email', label: 'Email', type: 'email', required: true, placeholder: 'your@email.com' },
-        { name: 'phone', label: 'Phone Number', type: 'text', required: true, placeholder: '+91 ...' },
-        { name: 'experience', label: 'Prior Experience', type: 'select', required: true, options: ['Beginner', 'Intermediate', 'Advanced'] },
-        { name: 'message', label: 'Additional Notes', type: 'textarea', required: false, placeholder: 'Tell me about your musical journey...' }
-      ]
-    },
-    performance: {
-      form_slug: 'performance',
-      title: 'Performance Inquiry',
-      description: 'Book a performance or discuss collaboration opportunities.',
-      fields: [
-        { name: 'name', label: 'Full Name / Organization', type: 'text', required: true, placeholder: 'Your name or group' },
-        { name: 'email', label: 'Email', type: 'email', required: true, placeholder: 'your@email.com' },
-        { name: 'phone', label: 'Phone Number', type: 'text', required: true, placeholder: '+91 ...' },
-        { name: 'date', label: 'Event Date', type: 'date', required: false },
-        { name: 'message', label: 'Details', type: 'textarea', required: true, placeholder: 'Tell me about the event or collaboration...' }
-      ]
-    }
-  }), []);
+  const defaultConfigs: Record<string, FormConfig> = useMemo(
+    () => ({
+      classes: {
+        form_slug: 'classes',
+        title: 'Join a Class',
+        description: 'Interested in learning Veena? Fill out the details below.',
+        fields: [
+          {
+            name: 'name',
+            label: 'Full Name',
+            type: 'text',
+            required: true,
+            placeholder: 'Your name',
+          },
+          {
+            name: 'email',
+            label: 'Email',
+            type: 'email',
+            required: true,
+            placeholder: 'your@email.com',
+          },
+          {
+            name: 'phone',
+            label: 'Phone Number',
+            type: 'text',
+            required: true,
+            placeholder: '+91 ...',
+          },
+          {
+            name: 'experience',
+            label: 'Prior Experience',
+            type: 'select',
+            required: true,
+            options: ['Beginner', 'Intermediate', 'Advanced'],
+          },
+          {
+            name: 'message',
+            label: 'Additional Notes',
+            type: 'textarea',
+            required: false,
+            placeholder: 'Tell me about your musical journey...',
+          },
+        ],
+      },
+      performance: {
+        form_slug: 'performance',
+        title: 'Performance Inquiry',
+        description: 'Book a performance or discuss collaboration opportunities.',
+        fields: [
+          {
+            name: 'name',
+            label: 'Full Name / Organization',
+            type: 'text',
+            required: true,
+            placeholder: 'Your name or group',
+          },
+          {
+            name: 'email',
+            label: 'Email',
+            type: 'email',
+            required: true,
+            placeholder: 'your@email.com',
+          },
+          {
+            name: 'phone',
+            label: 'Phone Number',
+            type: 'text',
+            required: true,
+            placeholder: '+91 ...',
+          },
+          { name: 'date', label: 'Event Date', type: 'date', required: false },
+          {
+            name: 'message',
+            label: 'Details',
+            type: 'textarea',
+            required: true,
+            placeholder: 'Tell me about the event or collaboration...',
+          },
+        ],
+      },
+    }),
+    []
+  );
 
   useEffect(() => {
     async function fetchConfigs() {
@@ -77,12 +134,15 @@ export default function Contact({ config }: ContactProps) {
 
         const allowedSlugs = config?.contact?.formSlugs || ['classes', 'performance'];
 
-        const configMap = data.reduce((acc, config) => {
-          if (allowedSlugs.includes(config.form_slug)) {
-            acc[config.form_slug] = config;
-          }
-          return acc;
-        }, {} as Record<string, FormConfig>);
+        const configMap = data.reduce(
+          (acc, config) => {
+            if (allowedSlugs.includes(config.form_slug)) {
+              acc[config.form_slug] = config;
+            }
+            return acc;
+          },
+          {} as Record<string, FormConfig>
+        );
 
         setConfigs(configMap);
       } catch (err) {
@@ -97,10 +157,10 @@ export default function Contact({ config }: ContactProps) {
   }, [defaultConfigs, config?.contact?.formSlugs]);
 
   // Generate tabs dynamically from loaded configs
-  const tabs = Object.values(configs).map(config => ({
+  const tabs = Object.values(configs).map((config) => ({
     id: config.form_slug,
     label: config.title, // Use full title
-    fullTitle: config.title
+    fullTitle: config.title,
   }));
 
   // Handle deep linking from query parameters
@@ -148,26 +208,33 @@ export default function Contact({ config }: ContactProps) {
             <div className="absolute inset-0 bg-gradient-to-t from-navy-900/60 to-transparent"></div>
             <div className="absolute bottom-6 left-6 right-6 text-white">
               <p className="text-sm font-light opacity-90 leading-relaxed italic">
-                &quot;Music should strike fire from the heart of man, and bring tears from the eyes of woman.&quot;
+                &quot;Music should strike fire from the heart of man, and bring tears from the eyes
+                of woman.&quot;
               </p>
             </div>
           </div>
 
           <div className="flex flex-col sm:flex-row justify-center gap-6 sm:gap-8 py-4 sm:py-2 border-y border-slate-50">
             <div className="flex flex-col items-center text-center">
-              <span className="text-[10px] font-black text-navy-400 uppercase tracking-widest mb-0.5">Location</span>
+              <span className="text-[10px] font-black text-navy-400 uppercase tracking-widest mb-0.5">
+                Location
+              </span>
               <span className="text-xs font-semibold text-navy-900">Bangalore, India</span>
             </div>
             <div className="hidden sm:block w-px h-8 bg-slate-100 self-center" />
             <div className="flex flex-col items-center text-center">
-              <span className="text-[10px] font-black text-navy-400 uppercase tracking-widest mb-0.5">Response</span>
+              <span className="text-[10px] font-black text-navy-400 uppercase tracking-widest mb-0.5">
+                Response
+              </span>
               <span className="text-xs font-semibold text-navy-900">24-48 Hours</span>
             </div>
             {config?.artist?.email && (
               <>
                 <div className="hidden sm:block w-px h-8 bg-slate-100 self-center" />
                 <div className="flex flex-col items-center text-center px-2">
-                  <span className="text-[10px] font-black text-navy-400 uppercase tracking-widest mb-0.5">Direct Email</span>
+                  <span className="text-[10px] font-black text-navy-400 uppercase tracking-widest mb-0.5">
+                    Direct Email
+                  </span>
                   <a
                     href={`mailto:${config.artist.email}`}
                     className="text-xs font-semibold text-navy-900 hover:text-gold-600 transition-colors duration-200 break-all"
@@ -194,10 +261,11 @@ export default function Contact({ config }: ContactProps) {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as any)}
-                  className={`flex-1 min-w-[140px] py-3 px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-300 flex items-center justify-center gap-2 text-center leading-tight ${activeTab === tab.id
-                    ? 'bg-white text-navy-900 shadow-premium scale-[1.02]'
-                    : 'text-navy-400 hover:text-navy-600'
-                    }`}
+                  className={`flex-1 min-w-[140px] py-3 px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-300 flex items-center justify-center gap-2 text-center leading-tight ${
+                    activeTab === tab.id
+                      ? 'bg-white text-navy-900 shadow-premium scale-[1.02]'
+                      : 'text-navy-400 hover:text-navy-600'
+                  }`}
                 >
                   {tab.label}
                 </button>
@@ -237,7 +305,9 @@ export default function Contact({ config }: ContactProps) {
                 key="error"
                 className="p-8 text-center bg-white rounded-2xl shadow-premium border border-slate-100"
               >
-                <p className="text-navy-400">Unable to load the inquiry form. Please try again later.</p>
+                <p className="text-navy-400">
+                  Unable to load the inquiry form. Please try again later.
+                </p>
               </m.div>
             )}
           </AnimatePresence>

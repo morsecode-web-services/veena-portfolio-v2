@@ -5,20 +5,28 @@ import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { Providers } from '@/components/Providers';
 import GoogleAnalytics from '@/components/GoogleAnalytics';
 import MicrosoftClarity from '@/components/MicrosoftClarity';
-import { validateConfig, loadConfig } from '@/lib/config';
+import { loadConfig } from '@/lib/config';
 import ConditionalLayout from '@/components/layout/ConditionalLayout';
 
 export async function generateMetadata(): Promise<Metadata> {
   const config = await loadConfig();
-  
+
   return {
     metadataBase: new URL('https://www.aishwaryamanikarnike.com'),
     title: {
       default: `${config.artist.name} - ${config.artist.tagline}`,
-      template: `%s | ${config.artist.name}`
+      template: `%s | ${config.artist.name}`,
     },
     description: config.artist.briefBio,
-    keywords: ['Veena', 'Indian classical music', 'Carnatic music', config.artist.name, 'musician', 'veena player', 'vocalist'],
+    keywords: [
+      'Veena',
+      'Indian classical music',
+      'Carnatic music',
+      config.artist.name,
+      'musician',
+      'veena player',
+      'vocalist',
+    ],
     authors: [{ name: config.artist.name }],
     creator: config.artist.name,
     openGraph: {
@@ -30,7 +38,9 @@ export async function generateMetadata(): Promise<Metadata> {
       type: 'website',
       images: [
         {
-          url: config.home.heroBackground || 'https://placehold.co/1200x630/14213d/d4af37?text=Veena+Performance',
+          url:
+            config.home.heroBackground ||
+            'https://placehold.co/1200x630/14213d/d4af37?text=Veena+Performance',
           width: 1200,
           height: 630,
           alt: `${config.artist.name} playing Veena`,
@@ -41,7 +51,10 @@ export async function generateMetadata(): Promise<Metadata> {
       card: 'summary_large_image',
       title: `${config.artist.name} Musician`,
       description: config.artist.briefBio,
-      images: [config.home.heroBackground || 'https://placehold.co/1200x630/14213d/d4af37?text=Veena+Performance'],
+      images: [
+        config.home.heroBackground ||
+          'https://placehold.co/1200x630/14213d/d4af37?text=Veena+Performance',
+      ],
       creator: '@aishwaryaveena',
     },
     verification: {
@@ -91,7 +104,7 @@ const generateJsonLd = (config: any) => {
       config.socialMedia.youtube,
       config.socialMedia.instagram,
       config.socialMedia.linkedin,
-    ].filter(Boolean)
+    ].filter(Boolean),
   };
 
   // 2. MusicGroup Schema
@@ -101,21 +114,27 @@ const generateJsonLd = (config: any) => {
     '@id': `${siteUrl}/#musicgroup`,
     name: config.artist.name,
     url: siteUrl,
-    image: config.home.heroBackground || 'https://placehold.co/1200x630/14213d/d4af37?text=Veena+Performance',
+    image:
+      config.home.heroBackground ||
+      'https://placehold.co/1200x630/14213d/d4af37?text=Veena+Performance',
     description: personSchema.description,
-    member: [{
-      '@type': 'OrganizationRole',
-      member: { '@id': `${siteUrl}/#person` },
-      roleName: 'Lead Musician'
-    }],
-    sameAs: personSchema.sameAs
+    member: [
+      {
+        '@type': 'OrganizationRole',
+        member: { '@id': `${siteUrl}/#person` },
+        roleName: 'Lead Musician',
+      },
+    ],
+    sameAs: personSchema.sameAs,
   };
 
   // 3. VideoObject Schemas
   const videoSchemas: any[] = [];
 
   const addVideoSchema = (title: string, url: string) => {
-    const videoId = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&?]{11})/)?.[1];
+    const videoId = url.match(
+      /(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&?]{11})/
+    )?.[1];
     if (videoId) {
       videoSchemas.push({
         '@context': 'https://schema.org',
@@ -124,12 +143,12 @@ const generateJsonLd = (config: any) => {
         description: `${title} - Performance by Aishwarya Manikarnike`,
         thumbnailUrl: [
           `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,
-          `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`
+          `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`,
         ],
         uploadDate: '2024-01-01T08:00:00+08:00',
         contentUrl: url,
         embedUrl: `https://www.youtube.com/embed/${videoId}`,
-        author: { '@id': `${siteUrl}/#person` }
+        author: { '@id': `${siteUrl}/#person` },
       });
     }
   };
@@ -151,11 +170,7 @@ const generateJsonLd = (config: any) => {
   return [personSchema, musicGroupSchema, ...videoSchemas];
 };
 
-export default async function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const config = await loadConfig();
   const jsonLdData = generateJsonLd(config);
 

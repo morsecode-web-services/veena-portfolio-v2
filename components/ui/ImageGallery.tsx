@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import ImageWithFallback from '@/components/ui/ImageWithFallback';
 import { m, AnimatePresence } from 'framer-motion';
-import { getAssetPath } from '@/lib/config';
 import type { GalleryImage } from '@/types';
 
 const GALLERY_CONFIG = {
@@ -32,9 +31,7 @@ export default function ImageGallery({ images }: ImageGalleryProps) {
   const remainingImages = images.length - visibleCount;
 
   const handleLoadMore = () => {
-    setVisibleCount(prev =>
-      Math.min(prev + GALLERY_CONFIG.LOAD_MORE_INCREMENT, images.length)
-    );
+    setVisibleCount((prev) => Math.min(prev + GALLERY_CONFIG.LOAD_MORE_INCREMENT, images.length));
   };
 
   const navigateNext = useCallback(() => {
@@ -179,8 +176,9 @@ export default function ImageGallery({ images }: ImageGalleryProps) {
               whileHover={{ scale: 1.02 }}
               transition={{
                 duration: 0.2,
-                delay: isNewlyRevealed ?
-                  (index - (visibleCount - GALLERY_CONFIG.LOAD_MORE_INCREMENT)) * 0.1 : 0
+                delay: isNewlyRevealed
+                  ? (index - (visibleCount - GALLERY_CONFIG.LOAD_MORE_INCREMENT)) * 0.1
+                  : 0,
               }}
               className="group relative aspect-[3/2] cursor-pointer overflow-hidden rounded-lg shadow-md hover:shadow-premium-lg"
               onClick={() => openLightbox(image, index)}
@@ -204,9 +202,7 @@ export default function ImageGallery({ images }: ImageGalleryProps) {
                 quality={85}
               />
               {/* Caption Overlay - Always visible */}
-              <div
-                className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent transition-opacity duration-300 pointer-events-none opacity-100"
-              >
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent transition-opacity duration-300 pointer-events-none opacity-100">
                 <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4">
                   {image.caption && (
                     <p className="text-white text-xs sm:text-sm font-medium leading-tight">
@@ -243,7 +239,12 @@ export default function ImageGallery({ images }: ImageGalleryProps) {
               stroke="currentColor"
               viewBox="0 0 24 24"
             >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 9l-7 7-7-7" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.5}
+                d="M19 9l-7 7-7-7"
+              />
             </svg>
           </button>
         </m.div>
@@ -349,12 +350,7 @@ export default function ImageGallery({ images }: ImageGalleryProps) {
               aria-labelledby="image-title"
             >
               {/* Screen reader announcement */}
-              <div
-                role="status"
-                aria-live="polite"
-                aria-atomic="true"
-                className="sr-only"
-              >
+              <div role="status" aria-live="polite" aria-atomic="true" className="sr-only">
                 Viewing image {currentIndex + 1} of {images.length}: {selectedImage.alt}
               </div>
               <h2 id="image-title" className="sr-only">
@@ -387,7 +383,9 @@ export default function ImageGallery({ images }: ImageGalleryProps) {
 
             {/* Instructions */}
             <div className="absolute bottom-2 sm:bottom-4 left-1/2 transform -translate-x-1/2 text-slate-400 text-xs sm:text-sm px-4 text-center">
-              <p className="hidden md:block">Use arrow keys or click arrows to navigate • Press ESC to close</p>
+              <p className="hidden md:block">
+                Use arrow keys or click arrows to navigate • Press ESC to close
+              </p>
               <p className="md:hidden">Swipe to navigate • Tap outside to close</p>
             </div>
           </m.div>

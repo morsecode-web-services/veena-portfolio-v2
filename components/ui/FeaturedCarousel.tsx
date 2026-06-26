@@ -143,7 +143,11 @@ export function FeaturedCarousel({ items, autoScrollInterval = 5000 }: FeaturedC
                     viewBox="0 0 24 24"
                     strokeWidth={2.5}
                   >
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M7 16l-4-4m0 0l4-4m-4 4h18" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M7 16l-4-4m0 0l4-4m-4 4h18"
+                    />
                   </svg>
                 </m.a>
               )}
@@ -151,38 +155,41 @@ export function FeaturedCarousel({ items, autoScrollInterval = 5000 }: FeaturedC
 
             {/* Image Thumbnail - Render all items, show only current */}
             <div className="relative w-full h-32 sm:w-40 sm:h-40 md:w-44 md:h-44 rounded-md overflow-hidden border border-white/15 shadow-2xl flex-shrink-0 group/img">
-              {items.map((item, index) => (
-                item.image && (
-                  <div
-                    key={item.id}
-                    className={`absolute inset-0 transition-opacity duration-500 ${index === currentIndex ? 'opacity-100' : 'opacity-0 pointer-events-none'
+              {items.map(
+                (item, index) =>
+                  item.image && (
+                    <div
+                      key={item.id}
+                      className={`absolute inset-0 transition-opacity duration-500 ${
+                        index === currentIndex ? 'opacity-100' : 'opacity-0 pointer-events-none'
                       }`}
-                  >
-                    {/* Mobile image */}
-                    <ImageWithFallback
-                      src={item.image}
-                      alt={item.title}
-                      fill
-                      className="sm:hidden object-cover transition-transform duration-700 group-hover/img:scale-105"
-                      style={{
-                        objectPosition: item.imagePositionMobile || item.imagePosition || 'center'
-                      }}
-                      sizes="100vw"
-                    />
-                    {/* Desktop image */}
-                    <ImageWithFallback
-                      src={item.image}
-                      alt={item.title}
-                      fill
-                      className="hidden sm:block object-cover transition-transform duration-700 group-hover/img:scale-105"
-                      style={{
-                        objectPosition: item.imagePosition || 'center'
-                      }}
-                      sizes="176px"
-                    />
-                  </div>
-                )
-              ))}
+                    >
+                      {/* Mobile image */}
+                      <ImageWithFallback
+                        src={item.image}
+                        alt={item.title}
+                        fill
+                        className="sm:hidden object-cover transition-transform duration-700 group-hover/img:scale-105"
+                        style={{
+                          objectPosition:
+                            item.imagePositionMobile || item.imagePosition || 'center',
+                        }}
+                        sizes="100vw"
+                      />
+                      {/* Desktop image */}
+                      <ImageWithFallback
+                        src={item.image}
+                        alt={item.title}
+                        fill
+                        className="hidden sm:block object-cover transition-transform duration-700 group-hover/img:scale-105"
+                        style={{
+                          objectPosition: item.imagePosition || 'center',
+                        }}
+                        sizes="176px"
+                      />
+                    </div>
+                  )
+              )}
               <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover/img:opacity-100 transition-opacity duration-500"></div>
             </div>
           </m.div>
@@ -191,21 +198,27 @@ export function FeaturedCarousel({ items, autoScrollInterval = 5000 }: FeaturedC
 
       {/* Navigation Controls - Dot Indicators Only */}
       {items.length > 1 && (
-        <div className="hidden sm:flex items-center justify-center gap-2 mt-4 sm:mt-8" role="tablist" aria-label="Carousel navigation">
+        <div
+          className="hidden sm:flex items-center justify-center gap-2 mt-4 sm:mt-8"
+          role="tablist"
+          aria-label="Carousel navigation"
+        >
           {items.map((item, index) => (
             <button
               key={item.id}
               onClick={() => goToSlide(index)}
-              className={`group p-3 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-white/40 rounded-full min-w-[44px] min-h-[44px] flex items-center justify-center ${index === currentIndex ? 'opacity-100' : 'opacity-40 hover:opacity-70'
-                }`}
+              className={`group p-3 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-white/40 rounded-full min-w-[44px] min-h-[44px] flex items-center justify-center ${
+                index === currentIndex ? 'opacity-100' : 'opacity-40 hover:opacity-70'
+              }`}
               aria-label={`View slide ${index + 1} of ${items.length}: ${item.title}`}
               aria-selected={index === currentIndex}
               aria-current={index === currentIndex ? 'true' : 'false'}
               role="tab"
             >
               <div
-                className={`rounded-full bg-white transition-all duration-500 ease-out ${index === currentIndex ? 'w-10 h-2' : 'w-2 h-2'
-                  }`}
+                className={`rounded-full bg-white transition-all duration-500 ease-out ${
+                  index === currentIndex ? 'w-10 h-2' : 'w-2 h-2'
+                }`}
               />
             </button>
           ))}

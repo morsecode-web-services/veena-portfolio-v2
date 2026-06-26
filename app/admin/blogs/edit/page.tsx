@@ -11,92 +11,87 @@ import { getErrorMessage } from '@/utils/error-handling';
 import { ToastContainer, useToast } from '@/components/ui/Toast';
 
 function EditBlogContent() {
-    const router = useRouter();
-    const searchParams = useSearchParams();
-    const id = searchParams?.get('id');
-    const [blog, setBlog] = useState<Blog | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [saving, setSaving] = useState(false);
-    const { toasts, addToast, removeToast } = useToast();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const id = searchParams?.get('id');
+  const [blog, setBlog] = useState<Blog | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const { toasts, addToast, removeToast } = useToast();
 
-    useEffect(() => {
-        async function fetchBlog() {
-            try {
-                setLoading(true);
-                const { data, error } = await supabase
-                    .from('blogs')
-                    .select('*')
-                    .eq('id', id)
-                    .single();
+  useEffect(() => {
+    async function fetchBlog() {
+      try {
+        setLoading(true);
+        const { data, error } = await supabase.from('blogs').select('*').eq('id', id).single();
 
-                if (error) throw error;
-                setBlog(data);
-            } catch (error) {
-                console.error('Error fetching blog:', error);
-                // We typically don't show toast here as we redirect, but we could if we stay
-                router.push('/admin/blogs');
-            } finally {
-                setLoading(false);
-            }
-        }
-
-        if (id) fetchBlog();
-    }, [id, router]);
-
-    const handleSubmit = async (data: NewBlog) => {
-        try {
-            setSaving(true);
-            const { error } = await supabase
-                .from('blogs')
-                .update(data)
-                .eq('id', id);
-
-            if (error) throw error;
-
-            addToast('Blog post updated successfully!', 'success');
-            // Small delay
-            setTimeout(() => {
-                router.push('/admin/blogs');
-            }, 1000);
-        } catch (error) {
-            console.error('Error updating blog:', error);
-            const message = getErrorMessage(error);
-            addToast(message, 'error');
-        } finally {
-            setSaving(false);
-        }
-    };
-
-    if (loading) {
-        return (
-            <div className="flex flex-col items-center justify-center min-h-[400px] gap-2">
-                <Loader2 className="h-6 w-6 text-slate-800 animate-spin" />
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Loading Post...</p>
-            </div>
-        );
+        if (error) throw error;
+        setBlog(data);
+      } catch (error) {
+        console.error('Error fetching blog:', error);
+        // We typically don't show toast here as we redirect, but we could if we stay
+        router.push('/admin/blogs');
+      } finally {
+        setLoading(false);
+      }
     }
 
-    if (!blog) return null;
+    if (id) fetchBlog();
+  }, [id, router]);
 
+  const handleSubmit = async (data: NewBlog) => {
+    try {
+      setSaving(true);
+      const { error } = await supabase.from('blogs').update(data).eq('id', id);
+
+      if (error) throw error;
+
+      addToast('Blog post updated successfully!', 'success');
+      // Small delay
+      setTimeout(() => {
+        router.push('/admin/blogs');
+      }, 1000);
+    } catch (error) {
+      console.error('Error updating blog:', error);
+      const message = getErrorMessage(error);
+      addToast(message, 'error');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
     return (
-        <div className="space-y-6">
-            <ToastContainer toasts={toasts} removeToast={removeToast} />
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-200 pb-4">
-                <div>
-                    <h1 className="text-xl font-bold text-slate-900">Edit Post</h1>
-                    <p className="text-slate-500 text-xs mt-0.5">Refining: {blog.title}</p>
-                </div>
-            </div>
-
-            <BlogForm initialData={blog} onSubmit={handleSubmit} loading={saving} />
-        </div>
+      <div className="flex flex-col items-center justify-center min-h-[400px] gap-2">
+        <Loader2 className="h-6 w-6 text-slate-800 animate-spin" />
+        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+          Loading Post...
+        </p>
+      </div>
     );
+  }
+
+  if (!blog) return null;
+
+  return (
+    <div className="space-y-6">
+      <ToastContainer toasts={toasts} removeToast={removeToast} />
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-200 pb-4">
+        <div>
+          <h1 className="text-xl font-bold text-slate-900">Edit Post</h1>
+          <p className="text-slate-500 text-xs mt-0.5">Refining: {blog.title}</p>
+        </div>
+      </div>
+
+      <BlogForm initialData={blog} onSubmit={handleSubmit} loading={saving} />
+    </div>
+  );
 }
 
 export default function EditBlogPage() {
-    return (
-        <Suspense fallback={<div>Loading...</div>}>
-            <EditBlogContent />
-        </Suspense>
-    );
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <EditBlogContent />
+    </Suspense>
+  );
 }

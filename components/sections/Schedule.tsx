@@ -1,232 +1,239 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { m, AnimatePresence } from 'framer-motion';
+import { m } from 'framer-motion';
 import { useEvents } from '@/hooks/useEvents';
 import { EventCard } from './EventCard';
-import { Music, Calendar, History, Loader2, Sparkles } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
 import { SectionWrapper } from '@/components/system/SectionWrapper';
 import { SectionTitle } from '@/components/system/SectionTitle';
 
 const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-        opacity: 1,
-        transition: {
-            staggerChildren: 0.1,
-            delayChildren: 0.2
-        }
-    }
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+      delayChildren: 0.2,
+    },
+  },
 };
 
 export default function Schedule() {
-    const { events, loading, error } = useEvents();
-    const [activeTab, setActiveTab] = useState<'upcoming' | 'past'>('upcoming');
+  const { events, loading, error } = useEvents();
+  const [activeTab, setActiveTab] = useState<'upcoming' | 'past'>('upcoming');
 
-    const { upcomingEvents, pastEventsByYear } = useMemo(() => {
-        const now = new Date();
-        now.setHours(0, 0, 0, 0);
+  const { upcomingEvents, pastEventsByYear } = useMemo(() => {
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
 
-        const upcoming = events.filter(e => new Date(e.date) >= now)
-            .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    const upcoming = events
+      .filter((e) => new Date(e.date) >= now)
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
-        const past = events.filter(e => new Date(e.date) < now)
-            .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    const past = events
+      .filter((e) => new Date(e.date) < now)
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-        // Group past events by year
-        const groupedPast: Record<string, typeof events> = {};
-        past.forEach(event => {
-            const year = new Date(event.date).getFullYear().toString();
-            if (!groupedPast[year]) {
-                groupedPast[year] = [];
-            }
-            groupedPast[year].push(event);
-        });
+    // Group past events by year
+    const groupedPast: Record<string, typeof events> = {};
+    past.forEach((event) => {
+      const year = new Date(event.date).getFullYear().toString();
+      if (!groupedPast[year]) {
+        groupedPast[year] = [];
+      }
+      groupedPast[year].push(event);
+    });
 
-        // Sort years descending
-        const sortedYears = Object.keys(groupedPast).sort((a, b) => b.localeCompare(a));
-        const pastByYear = sortedYears.map(year => ({
-            year,
-            events: groupedPast[year].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-        }));
+    // Sort years descending
+    const sortedYears = Object.keys(groupedPast).sort((a, b) => b.localeCompare(a));
+    const pastByYear = sortedYears.map((year) => ({
+      year,
+      events: groupedPast[year].sort(
+        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+      ),
+    }));
 
-        return { upcomingEvents: upcoming, pastEventsByYear: pastByYear };
-    }, [events]);
+    return { upcomingEvents: upcoming, pastEventsByYear: pastByYear };
+  }, [events]);
 
-    const totalPastEvents = useMemo(() => {
-        return pastEventsByYear.reduce((acc, yearGroup) => acc + yearGroup.events.length, 0);
-    }, [pastEventsByYear]);
+  const totalPastEvents = useMemo(() => {
+    return pastEventsByYear.reduce((acc, yearGroup) => acc + yearGroup.events.length, 0);
+  }, [pastEventsByYear]);
 
-    const jsonLd = useMemo(() => {
-        if (upcomingEvents.length === 0) return null;
+  const jsonLd = useMemo(() => {
+    if (upcomingEvents.length === 0) return null;
 
-        return {
-            '@context': 'https://schema.org',
-            '@type': 'ItemList',
-            'itemListElement': upcomingEvents.map((event, index) => ({
-                '@type': 'ListItem',
-                'position': index + 1,
-                'item': {
-                    '@type': 'MusicEvent',
-                    'name': event.title,
-                    'startDate': event.date + (event.time ? `T${event.time}:00` : 'T19:00:00'),
-                    'image': event.image_url || 'https://www.aishwaryamanikarnike.com/images/events/default.jpg',
-                    'eventStatus': 'https://schema.org/EventScheduled',
-                    'eventAttendanceMode': 'https://schema.org/OfflineEventAttendanceMode',
-                    'location': {
-                        '@type': 'Place',
-                        'name': event.venue,
-                        'address': {
-                            '@type': 'PostalAddress',
-                            'addressLocality': event.city,
-                        }
-                    },
-                    'description': event.description || `${event.title} - Performance at ${event.venue}`,
-                    'performer': {
-                        '@type': 'Person',
-                        'name': 'Aishwarya Manikarnike',
-                        '@id': 'https://www.aishwaryamanikarnike.com/#person',
-                    },
-                    'url': event.booking_url,
-                    ...(event.booking_url && {
-                        'offers': {
-                            '@type': 'Offer',
-                            'url': event.booking_url,
-                            'availability': 'https://schema.org/InStock',
-                        }
-                    }),
-                }
-            }))
-        };
-    }, [upcomingEvents]);
+    return {
+      '@context': 'https://schema.org',
+      '@type': 'ItemList',
+      itemListElement: upcomingEvents.map((event, index) => ({
+        '@type': 'ListItem',
+        position: index + 1,
+        item: {
+          '@type': 'MusicEvent',
+          name: event.title,
+          startDate: event.date + (event.time ? `T${event.time}:00` : 'T19:00:00'),
+          image:
+            event.image_url || 'https://www.aishwaryamanikarnike.com/images/events/default.jpg',
+          eventStatus: 'https://schema.org/EventScheduled',
+          eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
+          location: {
+            '@type': 'Place',
+            name: event.venue,
+            address: {
+              '@type': 'PostalAddress',
+              addressLocality: event.city,
+            },
+          },
+          description: event.description || `${event.title} - Performance at ${event.venue}`,
+          performer: {
+            '@type': 'Person',
+            name: 'Aishwarya Manikarnike',
+            '@id': 'https://www.aishwaryamanikarnike.com/#person',
+          },
+          url: event.booking_url,
+          ...(event.booking_url && {
+            offers: {
+              '@type': 'Offer',
+              url: event.booking_url,
+              availability: 'https://schema.org/InStock',
+            },
+          }),
+        },
+      })),
+    };
+  }, [upcomingEvents]);
 
-    return (
-        <SectionWrapper id="events" background="cream" spacing="base" className="relative overflow-hidden">
-            {/* Minimal Background */}
-            <div className="absolute -top-24 -left-24 w-64 h-64 bg-gold-100/10 rounded-full blur-[80px] pointer-events-none" />
+  return (
+    <SectionWrapper
+      id="events"
+      background="cream"
+      spacing="base"
+      className="relative overflow-hidden"
+    >
+      {/* Minimal Background */}
+      <div className="absolute -top-24 -left-24 w-64 h-64 bg-gold-100/10 rounded-full blur-[80px] pointer-events-none" />
 
-            {jsonLd && (
-                <script
-                    type="application/ld+json"
-                    dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      {jsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      )}
+
+      <div className="relative z-10">
+        <SectionTitle
+          title={activeTab === 'upcoming' ? 'Upcoming Events' : 'Past Performances'}
+          alignment="center"
+        />
+
+        {/* Minimal Tab Switcher - Centered */}
+        <div className="flex justify-center mb-12">
+          <div className="flex gap-8">
+            <button
+              onClick={() => setActiveTab('upcoming')}
+              className={`relative pb-4 text-sm font-bold transition-colors duration-300 ${
+                activeTab === 'upcoming' ? 'text-navy-950' : 'text-navy-400 hover:text-navy-600'
+              }`}
+            >
+              UPCOMING
+              {activeTab === 'upcoming' && (
+                <m.div
+                  layoutId="minimalTabUnderline"
+                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-navy-950"
+                  transition={{ type: 'spring', stiffness: 500, damping: 35 }}
                 />
-            )}
-
-            <div className="relative z-10">
-                <SectionTitle
-                    title={activeTab === 'upcoming' ? 'Upcoming Events' : 'Past Performances'}
-                    alignment="center"
+              )}
+            </button>
+            <button
+              onClick={() => setActiveTab('past')}
+              className={`relative pb-4 text-sm font-bold transition-colors duration-300 ${
+                activeTab === 'past' ? 'text-navy-950' : 'text-navy-400 hover:text-navy-600'
+              }`}
+            >
+              ARCHIVE
+              {activeTab === 'past' && (
+                <m.div
+                  layoutId="minimalTabUnderline"
+                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-navy-950"
+                  transition={{ type: 'spring', stiffness: 500, damping: 35 }}
                 />
+              )}
+            </button>
+          </div>
+        </div>
 
-                {/* Minimal Tab Switcher - Centered */}
-                <div className="flex justify-center mb-12">
-                    <div className="flex gap-8">
-                        <button
-                            onClick={() => setActiveTab('upcoming')}
-                            className={`relative pb-4 text-sm font-bold transition-colors duration-300 ${activeTab === 'upcoming'
-                                ? 'text-navy-950'
-                                : 'text-navy-400 hover:text-navy-600'
-                                }`}
-                        >
-                            UPCOMING
-                            {activeTab === 'upcoming' && (
-                                <m.div
-                                    layoutId="minimalTabUnderline"
-                                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-navy-950"
-                                    transition={{ type: "spring", stiffness: 500, damping: 35 }}
-                                />
-                            )}
-                        </button>
-                        <button
-                            onClick={() => setActiveTab('past')}
-                            className={`relative pb-4 text-sm font-bold transition-colors duration-300 ${activeTab === 'past'
-                                ? 'text-navy-950'
-                                : 'text-navy-400 hover:text-navy-600'
-                                }`}
-                        >
-                            ARCHIVE
-                            {activeTab === 'past' && (
-                                <m.div
-                                    layoutId="minimalTabUnderline"
-                                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-navy-950"
-                                    transition={{ type: "spring", stiffness: 500, damping: 35 }}
-                                />
-                            )}
-                        </button>
-                    </div>
-                </div>
-
-                <div className="relative">
-                    {loading ? (
-                        <div className="py-20 flex justify-center">
-                            <Loader2 className="h-8 w-8 text-navy-200 animate-spin" />
-                        </div>
-                    ) : error ? (
-                        <div className="py-20 text-center text-navy-400">
-                            <p>Unable to load performance data at this time.</p>
-                        </div>
-                    ) : (
-                        <div className="relative">
-                            {/* Upcoming Content - Kept in DOM */}
-                            <div className={`${activeTab === 'upcoming' ? 'block' : 'hidden'} transition-opacity duration-300`}>
-                                <m.div
-                                    variants={containerVariants}
-                                    initial="hidden"
-                                    animate={activeTab === 'upcoming' ? "visible" : "hidden"}
-                                    className="flex flex-wrap justify-center gap-8 w-full"
-                                >
-                                    {upcomingEvents.length > 0 ? (
-                                        upcomingEvents.map((event) => (
-                                            <EventCard key={event.id} event={event} />
-                                        ))
-                                    ) : (
-                                        <div className="col-span-full py-20 flex flex-col items-center justify-center text-center text-navy-400">
-                                            <p className="font-serif italic text-lg text-center">New dates will be announced soon.</p>
-                                        </div>
-                                    )}
-                                </m.div>
-                            </div>
-
-                            {/* Archive Content - Kept in DOM */}
-                            <div className={`${activeTab === 'past' ? 'block' : 'hidden'} transition-opacity duration-300`}>
-                                <m.div
-                                    variants={containerVariants}
-                                    initial="hidden"
-                                    animate={activeTab === 'past' ? "visible" : "hidden"}
-                                    className="max-w-3xl mx-auto"
-                                >
-                                    {pastEventsByYear.length > 0 ? (
-                                        <div className="space-y-12">
-                                            {pastEventsByYear.map((yearGroup) => (
-                                                <div key={yearGroup.year}>
-                                                    <h3 className="text-sm font-black text-navy-950/20 mb-6 tracking-widest uppercase pb-2">
-                                                        {yearGroup.year}
-                                                    </h3>
-                                                    <div className="space-y-2">
-                                                        {yearGroup.events.map((event) => (
-                                                            <EventCard
-                                                                key={event.id}
-                                                                event={event}
-                                                                isPast
-                                                                viewMode="timeline"
-                                                            />
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    ) : (
-                                        <div className="py-20 text-center text-navy-400">
-                                            <p>No past performance records available.</p>
-                                        </div>
-                                    )}
-                                </m.div>
-                            </div>
-                        </div>
-                    )}
-                </div>
+        <div className="relative">
+          {loading ? (
+            <div className="py-20 flex justify-center">
+              <Loader2 className="h-8 w-8 text-navy-200 animate-spin" />
             </div>
-        </SectionWrapper>
-    );
+          ) : error ? (
+            <div className="py-20 text-center text-navy-400">
+              <p>Unable to load performance data at this time.</p>
+            </div>
+          ) : (
+            <div className="relative">
+              {/* Upcoming Content - Kept in DOM */}
+              <div
+                className={`${activeTab === 'upcoming' ? 'block' : 'hidden'} transition-opacity duration-300`}
+              >
+                <m.div
+                  variants={containerVariants}
+                  initial="hidden"
+                  animate={activeTab === 'upcoming' ? 'visible' : 'hidden'}
+                  className="flex flex-wrap justify-center gap-8 w-full"
+                >
+                  {upcomingEvents.length > 0 ? (
+                    upcomingEvents.map((event) => <EventCard key={event.id} event={event} />)
+                  ) : (
+                    <div className="col-span-full py-20 flex flex-col items-center justify-center text-center text-navy-400">
+                      <p className="font-serif italic text-lg text-center">
+                        New dates will be announced soon.
+                      </p>
+                    </div>
+                  )}
+                </m.div>
+              </div>
+
+              {/* Archive Content - Kept in DOM */}
+              <div
+                className={`${activeTab === 'past' ? 'block' : 'hidden'} transition-opacity duration-300`}
+              >
+                <m.div
+                  variants={containerVariants}
+                  initial="hidden"
+                  animate={activeTab === 'past' ? 'visible' : 'hidden'}
+                  className="max-w-3xl mx-auto"
+                >
+                  {pastEventsByYear.length > 0 ? (
+                    <div className="space-y-12">
+                      {pastEventsByYear.map((yearGroup) => (
+                        <div key={yearGroup.year}>
+                          <h3 className="text-sm font-black text-navy-950/20 mb-6 tracking-widest uppercase pb-2">
+                            {yearGroup.year}
+                          </h3>
+                          <div className="space-y-2">
+                            {yearGroup.events.map((event) => (
+                              <EventCard key={event.id} event={event} isPast viewMode="timeline" />
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="py-20 text-center text-navy-400">
+                      <p>No past performance records available.</p>
+                    </div>
+                  )}
+                </m.div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </SectionWrapper>
+  );
 }

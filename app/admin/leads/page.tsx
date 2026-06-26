@@ -43,34 +43,37 @@ export default function LeadsPage() {
   const [lastViewedAt, setLastViewedAt] = useState<string | null>(null);
 
   // Helper for semantic discovery - shared across functions
-  const getField = useCallback((lead: Lead, type: string, keywords: string[]) => {
-    // 1. Try legacy columns
-    if (type === 'text' && lead.name && lead.name !== 'Anonymous') return lead.name;
-    if (type === 'email' && lead.email) return lead.email;
-    if (type === 'tel' && lead.phone) return lead.phone;
+  const getField = useCallback(
+    (lead: Lead, type: string, keywords: string[]) => {
+      // 1. Try legacy columns
+      if (type === 'text' && lead.name && lead.name !== 'Anonymous') return lead.name;
+      if (type === 'email' && lead.email) return lead.email;
+      if (type === 'tel' && lead.phone) return lead.phone;
 
-    const config = lead.form_slug ? configs[lead.form_slug] : null;
-    if (!config) return null;
+      const config = lead.form_slug ? configs[lead.form_slug] : null;
+      if (!config) return null;
 
-    // 2. Try by type
-    const byType = config.fields.find(f => f.type === type);
-    if (byType && lead.form_data?.[byType.name]) return lead.form_data[byType.name];
+      // 2. Try by type
+      const byType = config.fields.find((f) => f.type === type);
+      if (byType && lead.form_data?.[byType.name]) return lead.form_data[byType.name];
 
-    // 3. Try by keywords
-    const byName = config.fields.find(f =>
-      keywords.some(kw =>
-        f.name.toLowerCase().includes(kw) ||
-        f.label.toLowerCase().includes(kw)
-      )
-    );
-    if (byName && lead.form_data?.[byName.name]) return lead.form_data[byName.name];
+      // 3. Try by keywords
+      const byName = config.fields.find((f) =>
+        keywords.some(
+          (kw) => f.name.toLowerCase().includes(kw) || f.label.toLowerCase().includes(kw)
+        )
+      );
+      if (byName && lead.form_data?.[byName.name]) return lead.form_data[byName.name];
 
-    return null;
-  }, [configs]);
-
+      return null;
+    },
+    [configs]
+  );
 
   const fetchLastViewed = useCallback(async () => {
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
     if (session?.user) {
       const { data: profile } = await supabase
         .from('profiles')
@@ -85,7 +88,9 @@ export default function LeadsPage() {
   }, []);
 
   const updateLastViewed = useCallback(async () => {
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
     if (session?.user) {
       await supabase
         .from('profiles')
@@ -112,10 +117,13 @@ export default function LeadsPage() {
   const fetchConfigs = useCallback(async () => {
     const { data } = await supabase.from('form_configs').select('form_slug, fields');
     if (data) {
-      const configMap = data.reduce((acc, config) => {
-        acc[config.form_slug] = config;
-        return acc;
-      }, {} as Record<string, FormConfig>);
+      const configMap = data.reduce(
+        (acc, config) => {
+          acc[config.form_slug] = config;
+          return acc;
+        },
+        {} as Record<string, FormConfig>
+      );
       setConfigs(configMap);
     }
   }, []);
@@ -125,32 +133,34 @@ export default function LeadsPage() {
 
     // Filter by form slug (dashboard and all show everything)
     if (slugFilter !== 'all' && slugFilter !== 'dashboard') {
-      filtered = filtered.filter(lead => lead.form_slug === slugFilter);
+      filtered = filtered.filter((lead) => lead.form_slug === slugFilter);
     }
 
     // Filter by status
     if (statusFilter !== 'all') {
-      filtered = filtered.filter(lead => lead.status === statusFilter);
+      filtered = filtered.filter((lead) => lead.status === statusFilter);
     }
 
     // Search filter
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(
-        lead => {
-          const leadName = (getField(lead, 'text', ['name', 'full name']) || 'Anonymous').toLowerCase();
-          const leadEmail = (getField(lead, 'email', ['email', 'email address']) || '').toLowerCase();
-          const leadPhone = (getField(lead, 'tel', ['phone', 'contact', 'mobile', 'whatsapp']) || '');
-          const leadMessage = (lead.message || lead.form_data?.message || '').toLowerCase();
-          const jsonData = JSON.stringify(lead.form_data).toLowerCase();
+      filtered = filtered.filter((lead) => {
+        const leadName = (
+          getField(lead, 'text', ['name', 'full name']) || 'Anonymous'
+        ).toLowerCase();
+        const leadEmail = (getField(lead, 'email', ['email', 'email address']) || '').toLowerCase();
+        const leadPhone = getField(lead, 'tel', ['phone', 'contact', 'mobile', 'whatsapp']) || '';
+        const leadMessage = (lead.message || lead.form_data?.message || '').toLowerCase();
+        const jsonData = JSON.stringify(lead.form_data).toLowerCase();
 
-          return leadName.includes(query) ||
-            leadEmail.includes(query) ||
-            leadPhone.includes(query) ||
-            leadMessage.includes(query) ||
-            jsonData.includes(query);
-        }
-      );
+        return (
+          leadName.includes(query) ||
+          leadEmail.includes(query) ||
+          leadPhone.includes(query) ||
+          leadMessage.includes(query) ||
+          jsonData.includes(query)
+        );
+      });
     }
 
     setFilteredLeads(filtered);
@@ -170,10 +180,7 @@ export default function LeadsPage() {
   }, [filterLeads]);
 
   const updateLeadStatus = async (leadId: string, newStatus: Lead['status']) => {
-    const { error } = await supabase
-      .from('leads')
-      .update({ status: newStatus })
-      .eq('id', leadId);
+    const { error } = await supabase.from('leads').update({ status: newStatus }).eq('id', leadId);
 
     if (error) {
       console.error('Error updating lead status:', error);
@@ -181,36 +188,42 @@ export default function LeadsPage() {
     } else {
       addToast('Status updated successfully', 'success');
       // Update local state
-      setLeads(leads.map(lead =>
-        lead.id === leadId ? { ...lead, status: newStatus } : lead
-      ));
+      setLeads(leads.map((lead) => (lead.id === leadId ? { ...lead, status: newStatus } : lead)));
     }
   };
 
   const exportToCSV = () => {
     // Collect all unique dynamic field names across filtered leads
     const dynamicKeys = new Set<string>();
-    filteredLeads.forEach(lead => {
-      Object.keys(lead.form_data).forEach(key => dynamicKeys.add(key));
+    filteredLeads.forEach((lead) => {
+      Object.keys(lead.form_data).forEach((key) => dynamicKeys.add(key));
     });
     const dynamicHeaders = Array.from(dynamicKeys);
 
-    const headers = ['Date', 'Display Name', 'Email', 'Phone', 'Form', 'Status', ...dynamicHeaders, 'Legacy Message'];
-    const rows = filteredLeads.map(lead => [
+    const headers = [
+      'Date',
+      'Display Name',
+      'Email',
+      'Phone',
+      'Form',
+      'Status',
+      ...dynamicHeaders,
+      'Legacy Message',
+    ];
+    const rows = filteredLeads.map((lead) => [
       new Date(lead.created_at).toLocaleDateString(),
       getField(lead, 'text', ['name', 'full name']) || 'Anonymous',
       getField(lead, 'email', ['email', 'email address']) || '',
       getField(lead, 'tel', ['phone', 'contact', 'mobile', 'whatsapp']) || '',
       lead.form_slug || lead.inquiry_type,
       lead.status,
-      ...dynamicHeaders.map(key => `"${(lead.form_data[key] || '').toString().replace(/"/g, '""')}"`),
+      ...dynamicHeaders.map(
+        (key) => `"${(lead.form_data[key] || '').toString().replace(/"/g, '""')}"`
+      ),
       `"${(lead.message || '').replace(/"/g, '""')}"`,
     ]);
 
-    const csv = [
-      headers.join(','),
-      ...rows.map(row => row.join(','))
-    ].join('\n');
+    const csv = [headers.join(','), ...rows.map((row) => row.join(','))].join('\n');
 
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
@@ -246,10 +259,16 @@ export default function LeadsPage() {
           {(() => {
             // Calculate new leads per form type
             const newClassesCount = lastViewedAt
-              ? leads.filter(l => l.form_slug === 'classes' && new Date(l.created_at) > new Date(lastViewedAt)).length
+              ? leads.filter(
+                  (l) =>
+                    l.form_slug === 'classes' && new Date(l.created_at) > new Date(lastViewedAt)
+                ).length
               : 0;
             const newPerformanceCount = lastViewedAt
-              ? leads.filter(l => l.form_slug === 'performance' && new Date(l.created_at) > new Date(lastViewedAt)).length
+              ? leads.filter(
+                  (l) =>
+                    l.form_slug === 'performance' && new Date(l.created_at) > new Date(lastViewedAt)
+                ).length
               : 0;
 
             const tabs = [
@@ -288,31 +307,41 @@ export default function LeadsPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Total Leads */}
             <div className="bg-white border border-slate-200 rounded-lg p-4">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Total Leads</span>
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                Total Leads
+              </span>
               <span className="text-xl font-bold text-slate-800 block mt-1">{leads.length}</span>
             </div>
 
             {/* New Leads */}
             <div className="bg-white border border-slate-200 rounded-lg p-4">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">New Leads</span>
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                New Leads
+              </span>
               <span className="text-xl font-bold text-slate-800 block mt-1">
-                {lastViewedAt ? leads.filter(l => new Date(l.created_at) > new Date(lastViewedAt)).length : 0}
+                {lastViewedAt
+                  ? leads.filter((l) => new Date(l.created_at) > new Date(lastViewedAt)).length
+                  : 0}
               </span>
             </div>
 
             {/* Classes Leads */}
             <div className="bg-white border border-slate-200 rounded-lg p-4">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Classes</span>
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                Classes
+              </span>
               <span className="text-xl font-bold text-slate-800 block mt-1">
-                {leads.filter(l => l.form_slug === 'classes').length}
+                {leads.filter((l) => l.form_slug === 'classes').length}
               </span>
             </div>
 
             {/* Performance Leads */}
             <div className="bg-white border border-slate-200 rounded-lg p-4">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Performance</span>
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                Performance
+              </span>
               <span className="text-xl font-bold text-slate-800 block mt-1">
-                {leads.filter(l => l.form_slug === 'performance').length}
+                {leads.filter((l) => l.form_slug === 'performance').length}
               </span>
             </div>
           </div>
@@ -321,22 +350,26 @@ export default function LeadsPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {/* Status Breakdown */}
             <div className="bg-white border border-slate-200 rounded-lg p-5">
-              <h3 className="text-xs font-bold text-slate-850 uppercase tracking-wider border-b border-slate-100 pb-2.5 mb-4">Lead Status Distribution</h3>
+              <h3 className="text-xs font-bold text-slate-850 uppercase tracking-wider border-b border-slate-100 pb-2.5 mb-4">
+                Lead Status Distribution
+              </h3>
               <div className="space-y-4">
                 {['new', 'contacted', 'converted', 'archived'].map((status) => {
-                  const count = leads.filter(l => l.status === status).length;
+                  const count = leads.filter((l) => l.status === status).length;
                   const percentage = leads.length > 0 ? (count / leads.length) * 100 : 0;
                   const colors = {
                     new: 'bg-amber-500',
                     contacted: 'bg-blue-500',
                     converted: 'bg-emerald-500',
-                    archived: 'bg-slate-400'
+                    archived: 'bg-slate-400',
                   };
                   return (
                     <div key={status}>
                       <div className="flex justify-between text-xs mb-1">
                         <span className="font-semibold text-slate-700 capitalize">{status}</span>
-                        <span className="text-slate-500 font-medium">{count} ({percentage.toFixed(0)}%)</span>
+                        <span className="text-slate-500 font-medium">
+                          {count} ({percentage.toFixed(0)}%)
+                        </span>
                       </div>
                       <div className="w-full bg-slate-100 rounded-full h-1.5">
                         <div
@@ -352,24 +385,35 @@ export default function LeadsPage() {
 
             {/* Recent Leads */}
             <div className="bg-white border border-slate-200 rounded-lg p-5">
-              <h3 className="text-xs font-bold text-slate-850 uppercase tracking-wider border-b border-slate-100 pb-2.5 mb-4">Recent Activity</h3>
+              <h3 className="text-xs font-bold text-slate-850 uppercase tracking-wider border-b border-slate-100 pb-2.5 mb-4">
+                Recent Activity
+              </h3>
               <div className="space-y-3.5 text-xs">
                 {leads.slice(0, 5).map((lead) => (
-                  <div key={lead.id} className="flex items-center justify-between py-1.5 border-b border-slate-100 last:border-0">
+                  <div
+                    key={lead.id}
+                    className="flex items-center justify-between py-1.5 border-b border-slate-100 last:border-0"
+                  >
                     <div className="flex-1">
                       <p className="font-bold text-slate-800">
                         {getField(lead, 'text', ['name', 'full name']) || 'Anonymous'}
                       </p>
                       <p className="text-[10px] text-slate-400 mt-0.5">
-                        {lead.form_slug || lead.inquiry_type} • {new Date(lead.created_at).toLocaleDateString()}
+                        {lead.form_slug || lead.inquiry_type} •{' '}
+                        {new Date(lead.created_at).toLocaleDateString()}
                       </p>
                     </div>
-                    <span className={`px-1.5 py-0.5 text-[9px] font-bold rounded uppercase border ${
-                      lead.status === 'new' ? 'bg-amber-50 text-amber-700 border-amber-100' :
-                      lead.status === 'contacted' ? 'bg-blue-50 text-blue-700 border-blue-100' :
-                      lead.status === 'converted' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' :
-                      'bg-slate-100 text-slate-500 border-slate-200'
-                    }`}>
+                    <span
+                      className={`px-1.5 py-0.5 text-[9px] font-bold rounded uppercase border ${
+                        lead.status === 'new'
+                          ? 'bg-amber-50 text-amber-700 border-amber-100'
+                          : lead.status === 'contacted'
+                            ? 'bg-blue-50 text-blue-700 border-blue-100'
+                            : lead.status === 'converted'
+                              ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
+                              : 'bg-slate-100 text-slate-500 border-slate-200'
+                      }`}
+                    >
                       {lead.status}
                     </span>
                   </div>
@@ -443,7 +487,9 @@ export default function LeadsPage() {
           ) : filteredLeads.length === 0 ? (
             <div className="p-12 text-center text-slate-400 bg-slate-50/50 border border-slate-200 rounded-lg">
               <p className="text-xs font-semibold text-slate-850">No matching leads found</p>
-              <p className="text-[10px] text-slate-400 mt-0.5">Try adjusting your filters or search query.</p>
+              <p className="text-[10px] text-slate-400 mt-0.5">
+                Try adjusting your filters or search query.
+              </p>
             </div>
           ) : (
             <div className="bg-white border border-slate-200 rounded-lg overflow-hidden">
@@ -462,18 +508,20 @@ export default function LeadsPage() {
                         }
 
                         // For specific tabs, show only fields from that form type
-                        const relevantLeads = filteredLeads.filter(l =>
+                        const relevantLeads = filteredLeads.filter((l) =>
                           slugFilter === 'general'
                             ? !l.form_slug || l.form_slug === 'general'
                             : l.form_slug === slugFilter
                         );
 
                         const dynamicKeys = Array.from(
-                          new Set(relevantLeads.flatMap(l => Object.keys(l.form_data)))
+                          new Set(relevantLeads.flatMap((l) => Object.keys(l.form_data)))
                         );
 
-                        return dynamicKeys.map(key => {
-                          const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                        return dynamicKeys.map((key) => {
+                          const label = key
+                            .replace(/_/g, ' ')
+                            .replace(/\b\w/g, (l) => l.toUpperCase());
                           return (
                             <th key={key} className="px-5 py-3.5">
                               {label}
@@ -491,19 +539,25 @@ export default function LeadsPage() {
                       // Calculate dynamic keys based on current tab
                       let dynamicKeys: string[] = [];
                       if (slugFilter !== 'all') {
-                        const relevantLeads = filteredLeads.filter(l =>
+                        const relevantLeads = filteredLeads.filter((l) =>
                           slugFilter === 'general'
                             ? !l.form_slug || l.form_slug === 'general'
                             : l.form_slug === slugFilter
                         );
-                        dynamicKeys = Array.from(new Set(relevantLeads.flatMap(l => Object.keys(l.form_data))));
+                        dynamicKeys = Array.from(
+                          new Set(relevantLeads.flatMap((l) => Object.keys(l.form_data)))
+                        );
                       }
 
                       // Check if lead is new (created after last viewed)
-                      const isNew = lastViewedAt && new Date(lead.created_at) > new Date(lastViewedAt);
+                      const isNew =
+                        lastViewedAt && new Date(lead.created_at) > new Date(lastViewedAt);
 
                       return (
-                        <tr key={lead.id} className={`hover:bg-slate-50/50 transition-colors ${isNew ? 'bg-blue-50/10' : ''}`}>
+                        <tr
+                          key={lead.id}
+                          className={`hover:bg-slate-50/50 transition-colors ${isNew ? 'bg-blue-50/10' : ''}`}
+                        >
                           <td className="px-5 py-3 whitespace-nowrap">
                             <div className="flex items-center gap-1.5">
                               <div>
@@ -533,38 +587,62 @@ export default function LeadsPage() {
                               {getField(lead, 'text', ['name', 'full name']) || 'Anonymous'}
                             </div>
                             <div className="text-[10px] text-slate-400 font-medium space-y-0.5">
-                              <div>{getField(lead, 'email', ['email', 'email address']) || 'No email'}</div>
-                              {getField(lead, 'tel', ['phone', 'contact', 'mobile', 'whatsapp']) && (
-                                <div>{getField(lead, 'tel', ['phone', 'contact', 'mobile', 'whatsapp'])}</div>
+                              <div>
+                                {getField(lead, 'email', ['email', 'email address']) || 'No email'}
+                              </div>
+                              {getField(lead, 'tel', [
+                                'phone',
+                                'contact',
+                                'mobile',
+                                'whatsapp',
+                              ]) && (
+                                <div>
+                                  {getField(lead, 'tel', [
+                                    'phone',
+                                    'contact',
+                                    'mobile',
+                                    'whatsapp',
+                                  ])}
+                                </div>
                               )}
                             </div>
                           </td>
                           <td className="px-5 py-3 whitespace-nowrap">
                             <span
                               className={`px-1.5 py-0.5 text-[9px] font-bold rounded uppercase border ${
-                                lead.form_slug === 'classes' ? 'bg-blue-50 text-blue-750 border-blue-100' :
-                                lead.form_slug === 'performance' ? 'bg-purple-50 text-purple-750 border-purple-100' :
-                                'bg-slate-100 text-slate-500 border-slate-205'
+                                lead.form_slug === 'classes'
+                                  ? 'bg-blue-50 text-blue-750 border-blue-100'
+                                  : lead.form_slug === 'performance'
+                                    ? 'bg-purple-50 text-purple-750 border-purple-100'
+                                    : 'bg-slate-100 text-slate-500 border-slate-205'
                               }`}
                             >
                               {lead.form_slug || lead.inquiry_type}
                             </span>
                           </td>
                           {/* Dynamic Columns Data - Only show for specific tabs */}
-                          {dynamicKeys.map(key => (
-                            <td key={key} className="px-5 py-3 text-slate-600 whitespace-nowrap max-w-[150px] truncate">
+                          {dynamicKeys.map((key) => (
+                            <td
+                              key={key}
+                              className="px-5 py-3 text-slate-600 whitespace-nowrap max-w-[150px] truncate"
+                            >
                               {lead.form_data[key] || '-'}
                             </td>
                           ))}
                           <td className="px-5 py-3 text-right sticky right-0 bg-white border-l border-slate-200">
                             <select
                               value={lead.status}
-                              onChange={(e) => updateLeadStatus(lead.id, e.target.value as Lead['status'])}
+                              onChange={(e) =>
+                                updateLeadStatus(lead.id, e.target.value as Lead['status'])
+                              }
                               className={`text-[10px] font-bold rounded border px-2 py-1.5 cursor-pointer outline-none focus:ring-1 focus:ring-slate-900 transition-colors ${
-                                lead.status === 'new' ? 'bg-amber-50 text-amber-700 border-amber-100' :
-                                lead.status === 'contacted' ? 'bg-blue-50 text-blue-700 border-blue-100' :
-                                lead.status === 'converted' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' :
-                                'bg-slate-50 text-slate-600 border-slate-200'
+                                lead.status === 'new'
+                                  ? 'bg-amber-50 text-amber-700 border-amber-100'
+                                  : lead.status === 'contacted'
+                                    ? 'bg-blue-50 text-blue-700 border-blue-100'
+                                    : lead.status === 'converted'
+                                      ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
+                                      : 'bg-slate-50 text-slate-600 border-slate-200'
                               }`}
                             >
                               <option value="new">New</option>

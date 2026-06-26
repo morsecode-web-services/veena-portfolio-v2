@@ -10,7 +10,10 @@ export async function GET(request: Request) {
     }
 
     const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
+    const {
+      data: { user },
+      error: authError,
+    } = await supabaseAdmin.auth.getUser(token);
     if (authError || !user) {
       return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
     }
@@ -46,9 +49,8 @@ export async function GET(request: Request) {
 
     return NextResponse.json({
       success: true,
-      logs: logs || []
+      logs: logs || [],
     });
-
   } catch (error: any) {
     console.error('[Get Telegram Invite Logs API] Error:', error);
     return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
