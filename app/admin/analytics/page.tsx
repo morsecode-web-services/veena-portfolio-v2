@@ -115,7 +115,8 @@ export default function AnalyticsPage() {
         totalRevenue: 0,
         totalPaidStudents: 0,
         overallAverage: 0,
-        totalLeads: 0
+        totalLeads: 0,
+        uniqueStudents: 0
     });
     const [selectedCohortId, setSelectedCohortId] = useState<string>('all');
     const [cohortsList, setCohortsList] = useState<any[]>([]);
@@ -154,7 +155,7 @@ export default function AnalyticsPage() {
         // Fetch only paid payments (instead of form_submissions and webhook_logs)
         const { data: payments } = await supabase
             .from('payments')
-            .select('id, amount, razorpay_payment_id, enrollment_id, enrollments(cohort_id)')
+            .select('id, amount, razorpay_payment_id, enrollment_id, student_id, enrollments(cohort_id)')
             .eq('status', 'paid');
             
         // Fetch leads for total interest metrics
@@ -176,7 +177,8 @@ export default function AnalyticsPage() {
                     id: p.id,
                     cohort_id: cohortId,
                     razorpay_payment_id: p.razorpay_payment_id,
-                    amount: p.amount // in paise
+                    amount: p.amount, // in paise
+                    student_id: p.student_id
                 };
             }).filter(p => p.cohort_id !== null);
 
@@ -220,11 +222,14 @@ export default function AnalyticsPage() {
                 overallLeads += s.lead_count;
             });
 
+            const uniqueStudentIds = new Set(formattedPayments.map(p => p.student_id).filter(Boolean));
+
             setOverallStats({
                 totalRevenue: overallRevenue,
                 totalPaidStudents: overallPaidStudents,
                 overallAverage: overallPaidStudents > 0 ? (overallRevenue / overallPaidStudents) : 0,
-                totalLeads: overallLeads
+                totalLeads: overallLeads,
+                uniqueStudents: uniqueStudentIds.size
             });
 
             setCohortsList(cohorts || []);
@@ -430,16 +435,20 @@ export default function AnalyticsPage() {
                     <div className="lg:col-span-1">
                         <Section title="Cohort Revenue & Enrollment" icon={<TrendingUp className="w-4 h-4 text-emerald-500" />}>
                             <div className="space-y-4 pt-1">
-                                <div className="grid grid-cols-3 gap-2">
-                                    <div className="bg-emerald-50/50 border border-emerald-200 rounded p-2 text-center">
+                                <div className="grid grid-cols-4 gap-2">
+                                    <div className="bg-emerald-50/50 border border-emerald-200 rounded p-2 text-center flex flex-col justify-center">
                                         <span className="text-[8px] font-bold text-emerald-600 block uppercase tracking-wider">Revenue</span>
                                         <span className="text-xs font-black text-emerald-800">₹{overallStats.totalRevenue.toLocaleString()}</span>
                                     </div>
-                                    <div className="bg-blue-50/50 border border-blue-200 rounded p-2 text-center">
+                                    <div className="bg-blue-50/50 border border-blue-200 rounded p-2 text-center flex flex-col justify-center">
                                         <span className="text-[8px] font-bold text-blue-600 block uppercase tracking-wider">Students</span>
                                         <span className="text-xs font-black text-blue-800">{overallStats.totalPaidStudents}</span>
                                     </div>
-                                    <div className="bg-purple-50/50 border border-purple-200 rounded p-2 text-center">
+                                    <div className="bg-cyan-50/50 border border-cyan-200 rounded p-2 text-center flex flex-col justify-center">
+                                        <span className="text-[8px] font-bold text-cyan-600 block uppercase tracking-wider">Unique</span>
+                                        <span className="text-xs font-black text-cyan-800">{overallStats.uniqueStudents}</span>
+                                    </div>
+                                    <div className="bg-purple-50/50 border border-purple-200 rounded p-2 text-center flex flex-col justify-center">
                                         <span className="text-[8px] font-bold text-purple-600 block uppercase tracking-wider">Average</span>
                                         <span className="text-xs font-black text-purple-800">₹{Math.round(overallStats.overallAverage).toLocaleString()}</span>
                                     </div>

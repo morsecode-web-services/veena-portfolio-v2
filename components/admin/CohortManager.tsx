@@ -164,7 +164,7 @@ export function CohortManager() {
     });
 
     useEffect(() => {
-        if (!reenrollSourceId) {
+        if (!reenrollSourceId || !reenrollTargetId) {
             setSourceStudents([]);
             setSelectedStudentEmails(new Set());
             return;
@@ -173,19 +173,43 @@ export function CohortManager() {
         const fetchSourceStudents = async () => {
             setSourceStudentsLoading(true);
             try {
+                // 1. Fetch source enrollments
                 const { data: enrollments, error } = await supabase
                     .from('enrollments')
-                    .select('id, telegram_username, students(name, email, phone)')
+                    .select('id, telegram_username, students(id, name, email, phone)')
                     .eq('cohort_id', reenrollSourceId)
                     .eq('status', 'active');
 
                 if (error) throw error;
 
-                // De-duplicate by Email
+                // 2. Fetch existing enrollments in the target cohort to exclude them
+                const { data: targetEnrollments, error: targetError } = await supabase
+                    .from('enrollments')
+                    .select('student_id')
+                    .eq('cohort_id', reenrollTargetId)
+                    .eq('status', 'active');
+                
+                if (targetError) throw targetError;
+
+                // 3. Fetch existing sent/paid invitations for the target cohort to exclude them
+                const { data: targetInvitations, error: inviteError } = await supabase
+                    .from('reenrollment_invitations')
+                    .select('student_id')
+                    .eq('target_cohort_id', reenrollTargetId)
+                    .in('status', ['sent', 'paid']);
+
+                if (inviteError) throw inviteError;
+
+                const excludedStudentIds = new Set([
+                    ...(targetEnrollments || []).map(e => e.student_id),
+                    ...(targetInvitations || []).map(i => i.student_id)
+                ]);
+
+                // De-duplicate by Email and filter out already enrolled/invited students
                 const uniqueStudentsMap = new Map();
                 enrollments?.forEach(e => {
                     const s = e.students as any;
-                    if (s?.email) {
+                    if (s?.email && !excludedStudentIds.has(s.id)) {
                         uniqueStudentsMap.set(s.email.toLowerCase(), {
                             name: s.name || 'Student',
                             email: s.email,
@@ -206,7 +230,7 @@ export function CohortManager() {
         };
 
         fetchSourceStudents();
-    }, [reenrollSourceId, addToast]);
+    }, [reenrollSourceId, reenrollTargetId, addToast]);
 
     const [isViewingLogs, setIsViewingLogs] = useState(false);
     const [viewingLogsCohortId, setViewingLogsCohortId] = useState<string | null>(null);
@@ -320,6 +344,7 @@ export function CohortManager() {
                     },
                     body: JSON.stringify({
                         targetCohortId: reenrollTargetId,
+                        sourceCohortId: reenrollSourceId,
                         students: batch
                     })
                 });
@@ -1088,6 +1113,11 @@ export function CohortManager() {
                             )}
                         </div>
 
+                        <div className="px-5 py-3 bg-green-50/50 border-t border-slate-200 text-center">
+                            <span className="text-[11px] text-green-700 font-medium">
+                                ✨ Invitations will always be sent via WhatsApp
+                            </span>
+                        </div>
                         <div className="px-5 py-4 bg-slate-50 border-t border-slate-200 flex gap-3">
                             <button 
                                 onClick={closeReenrollModal}
