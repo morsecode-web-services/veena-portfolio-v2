@@ -8,13 +8,16 @@
     "export": "next build",
     "start": "next start",
     "lint": "next lint",
+    "lint:fix": "next lint --fix",
+    "format": "prettier --write .",
     "test": "vitest --run",
     "test:watch": "vitest",
     "test:coverage": "vitest --run --coverage",
     "type-check": "tsc --noEmit",
     "analyze": "ANALYZE=true next build",
     "optimize-gallery": "node scripts/optimize-gallery.js",
-    "optimize-images": "node scripts/optimize-images.js"
+    "optimize-images": "node scripts/optimize-images.js",
+    "prepare": "husky"
   },
   "dependencies": {
     "@google-analytics/data": "^5.2.2",
@@ -80,11 +83,26 @@
     "critters": "^0.0.23",
     "eslint": "^8.57.1",
     "eslint-config-next": "^14.2.33",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.6",
+    "eslint-plugin-unused-imports": "^4.4.1",
     "fast-check": "^4.3.0",
+    "husky": "^9.1.7",
     "jsdom": "^26.1.0",
+    "lint-staged": "^17.0.8",
     "postcss": "^8.5.6",
+    "prettier": "^3.8.5",
     "tailwindcss": "^4.1.17",
     "typescript": "^5.6.3",
     "vitest": "^3.2.4"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,css,md}": [
+      "prettier --write"
+    ]
   }
 }

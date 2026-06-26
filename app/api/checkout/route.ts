@@ -11,7 +11,16 @@ const supabase = createClient(
 
 export async function POST(request: Request) {
   try {
-    const { formSlug, phone, email, name, paymentType: clientPaymentType, cohortId, amount: clientAmount, turnstileToken } = await request.json();
+    const {
+      formSlug,
+      phone,
+      email,
+      name,
+      paymentType: clientPaymentType,
+      cohortId,
+      amount: clientAmount,
+      turnstileToken,
+    } = await request.json();
 
     if (!formSlug && !cohortId) {
       return NextResponse.json({ error: 'Form slug or Cohort ID is required' }, { status: 400 });
@@ -34,15 +43,15 @@ export async function POST(request: Request) {
 
       const verifyData = await verifyRes.json();
       if (!verifyData.success) {
-        return NextResponse.json({ error: 'Security validation failed. Please try again.' }, { status: 400 });
+        return NextResponse.json(
+          { error: 'Security validation failed. Please try again.' },
+          { status: 400 }
+        );
       }
     }
 
     if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
-      return NextResponse.json(
-        { error: 'Razorpay keys are not configured' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: 'Razorpay keys are not configured' }, { status: 500 });
     }
 
     let paymentType = 'subscription';
@@ -63,19 +72,58 @@ export async function POST(request: Request) {
       }
 
       if (cohort.status !== 'active') {
-        return NextResponse.json({ error: 'This cohort is not accepting enrollments' }, { status: 403 });
+        return NextResponse.json(
+          { error: 'This cohort is not accepting enrollments' },
+          { status: 403 }
+        );
+      }
+
+      if (email && email.trim()) {
+        const cleanEmail = email.trim();
+        // Escape SQL wildcards (_ and %) to prevent false positives (e.g., 'john_doe@a.com' matching 'johnydoe@a.com')
+        const safeEmailPattern = cleanEmail.replace(/[%_]/g, '\\$&');
+
+        // Run checks in parallel for maximum speed
+        const [submissionRes, studentRes] = await Promise.all([
+          supabase
+            .from('form_submissions')
+            .select('id')
+            .ilike('user_email', safeEmailPattern)
+            .eq('cohort_id', cohortId)
+            .eq('payment_status', 'paid')
+            .limit(1)
+            .maybeSingle(),
+          supabase
+            .from('students')
+            .select('id, enrollments!inner(id)')
+            .ilike('email', safeEmailPattern)
+            .eq('enrollments.cohort_id', cohortId)
+            .eq('enrollments.status', 'active')
+            .limit(1)
+            .maybeSingle(),
+        ]);
+
+        if (submissionRes.data || studentRes.data) {
+          return NextResponse.json(
+            { error: 'You are already enrolled in this cohort using this email address.' },
+            { status: 400 }
+          );
+        }
       }
 
       telegramChatId = cohort.telegram_chat_id;
 
       if (cohort.pricing_type === 'pay_as_you_wish') {
         paymentType = 'one_time';
-        
+
         const rawAmount = parseFloat(String(clientAmount || '0'));
         if (isNaN(rawAmount) || rawAmount < 1) {
-          return NextResponse.json({ error: 'Please enter a valid amount (minimum ₹1)' }, { status: 400 });
+          return NextResponse.json(
+            { error: 'Please enter a valid amount (minimum ₹1)' },
+            { status: 400 }
+          );
         }
-        
+
         razorpayAmount = Math.round(rawAmount * 100); // convert Rupees to paise
         razorpayPlanId = '';
       } else {
@@ -89,7 +137,9 @@ export async function POST(request: Request) {
       // Do not trust the amount or plan_id sent from the client!
       const { data: config, error: configError } = await supabase
         .from('form_configs')
-        .select('payment_type, razorpay_amount, razorpay_plan_id, is_active, requires_payment, telegram_chat_id')
+        .select(
+          'payment_type, razorpay_amount, razorpay_plan_id, is_active, requires_payment, telegram_chat_id'
+        )
         .eq('form_slug', formSlug)
         .single();
 
@@ -118,17 +168,17 @@ export async function POST(request: Request) {
       phone: phone || '',
       email: email || '',
       name: name || 'Anonymous User',
-      telegram_chat_id: telegramChatId || '' // Pass the dynamic chat ID
+      telegram_chat_id: telegramChatId || '', // Pass the dynamic chat ID
     };
 
     // Handle both subscriptions and one-time orders
     if (paymentType === 'one_time') {
       if (!razorpayAmount) throw new Error('Amount is not configured');
-      
+
       const order = await razorpay.orders.create({
         amount: Math.round(razorpayAmount), // Cohort price is already in paise if we follow the schema
         currency: 'INR',
-        notes: notes
+        notes: notes,
       });
 
       return NextResponse.json({
@@ -136,9 +186,8 @@ export async function POST(request: Request) {
         order_id: order.id,
         key_id: process.env.RAZORPAY_KEY_ID,
         amount: razorpayAmount,
-        telegram_chat_id: telegramChatId
+        telegram_chat_id: telegramChatId,
       });
-
     } else {
       // Create a Razorpay subscription (Recurring)
       if (!razorpayPlanId) throw new Error('Plan ID is not configured');
@@ -147,7 +196,7 @@ export async function POST(request: Request) {
         plan_id: razorpayPlanId,
         customer_notify: 1,
         total_count: 120, // Default 10 years (120 months) limit for recurring
-        notes: notes
+        notes: notes,
       });
 
       return NextResponse.json({
@@ -155,7 +204,7 @@ export async function POST(request: Request) {
         subscription_id: subscription.id,
         key_id: process.env.RAZORPAY_KEY_ID,
         amount: razorpayAmount,
-        telegram_chat_id: telegramChatId
+        telegram_chat_id: telegramChatId,
       });
     }
   } catch (error: any) {
