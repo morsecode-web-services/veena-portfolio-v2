@@ -2,7 +2,17 @@
 
 import { useState, useEffect, Suspense, useCallback, Fragment } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, Clock, Calendar, ArrowLeft, ArrowRight, X, Mail } from 'lucide-react';
+import {
+  Check,
+  Clock,
+  Calendar,
+  ArrowLeft,
+  ArrowRight,
+  X,
+  Mail,
+  Globe,
+  AlertCircle,
+} from 'lucide-react';
 import { Button } from '@/components/system/Button';
 import type { FormField } from '@/components/features/DynamicForm';
 import Image from 'next/image';
@@ -66,9 +76,78 @@ function CohortContent({ initialCohorts, config }: CohortClientProps) {
     phone?: string;
   } | null>(null);
   const [mobileStep, setMobileStep] = useState<'details' | 'form'>('details');
+  const [exchangeRate, setExchangeRate] = useState<number | null>(null);
+  const [currencyCode, setCurrencyCode] = useState<string>('INR');
+  const [currencySymbol, setCurrencySymbol] = useState<string>('₹');
 
   const searchParams = useSearchParams();
   const router = useRouter();
+
+  useEffect(() => {
+    // 1. Check for manual override via query parameters (e.g. ?currency=USD)
+    const queryCurrency = searchParams?.get('currency')?.toUpperCase();
+
+    if (queryCurrency) {
+      if (queryCurrency === 'INR') {
+        setExchangeRate(null);
+        setCurrencyCode('INR');
+        setCurrencySymbol('₹');
+        try {
+          sessionStorage.setItem(
+            'veena_portfolio_fx',
+            JSON.stringify({ rate: 1, currency: 'INR', symbol: '₹', country: 'IN' })
+          );
+        } catch (e) {}
+      } else {
+        fetch(`/api/fx?currency=${queryCurrency}`)
+          .then((r) => r.json())
+          .then((data) => {
+            if (data?.rate && typeof data.rate === 'number') {
+              setExchangeRate(data.rate);
+              setCurrencyCode(data.currency || 'USD');
+              setCurrencySymbol(data.symbol || '$');
+              try {
+                sessionStorage.setItem('veena_portfolio_fx', JSON.stringify(data));
+              } catch (e) {}
+            }
+          })
+          .catch((err) => console.error('Failed to load query currency:', err));
+      }
+      return;
+    }
+
+    // 2. Try to load from sessionStorage cache
+    try {
+      const cachedFx = sessionStorage.getItem('veena_portfolio_fx');
+      if (cachedFx) {
+        const data = JSON.parse(cachedFx);
+        if (data?.rate && typeof data.rate === 'number' && data.currency !== 'INR') {
+          setExchangeRate(data.rate);
+          setCurrencyCode(data.currency || 'USD');
+          setCurrencySymbol(data.symbol || '$');
+          return;
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to parse FX cache:', e);
+    }
+
+    // 3. Fetch from API if cache is empty or INR
+    fetch('/api/fx')
+      .then((r) => r.json())
+      .then((data) => {
+        try {
+          sessionStorage.setItem('veena_portfolio_fx', JSON.stringify(data));
+        } catch (e) {}
+
+        if (data?.rate && typeof data.rate === 'number' && data.currency !== 'INR') {
+          setExchangeRate(data.rate);
+          setCurrencyCode(data.currency || 'USD');
+          setCurrencySymbol(data.symbol || '$');
+        }
+      })
+      .catch(() => {});
+  }, [searchParams]);
 
   const closeCelebration = useCallback(() => {
     setShowCelebration(false);
@@ -81,6 +160,35 @@ function CohortContent({ initialCohorts, config }: CohortClientProps) {
     const query = params.toString();
     router.replace(`/cohorts${query ? `?${query}` : ''}`, { scroll: false });
   }, [searchParams, router]);
+
+  const handleCurrencyChange = async (newCurrency: string) => {
+    if (newCurrency === 'INR') {
+      setExchangeRate(null);
+      setCurrencyCode('INR');
+      setCurrencySymbol('₹');
+      try {
+        sessionStorage.setItem(
+          'veena_portfolio_fx',
+          JSON.stringify({ rate: 1, currency: 'INR', symbol: '₹' })
+        );
+      } catch (e) {}
+    } else {
+      try {
+        const r = await fetch(`/api/fx?currency=${newCurrency}`);
+        const data = await r.json();
+        if (data?.rate && typeof data.rate === 'number') {
+          setExchangeRate(data.rate);
+          setCurrencyCode(data.currency || 'USD');
+          setCurrencySymbol(data.symbol || '$');
+          try {
+            sessionStorage.setItem('veena_portfolio_fx', JSON.stringify(data));
+          } catch (e) {}
+        }
+      } catch (err) {
+        console.error('Failed to change currency:', err);
+      }
+    }
+  };
 
   useEffect(() => {
     if (searchParams?.get('success') === 'true') {
@@ -186,13 +294,20 @@ function CohortContent({ initialCohorts, config }: CohortClientProps) {
           ...baseFields,
           {
             name: 'custom_amount',
-            label: 'Your Contribution / Pay as you wish (₹)',
+            label:
+              currencyCode !== 'INR'
+                ? `Your Contribution / Pay as you wish (${currencySymbol} ${currencyCode})`
+                : 'Your Contribution / Pay as you wish (₹)',
             type: 'text',
             required: true,
             placeholder:
               selectedCohort.price > 0
-                ? `Suggested: ₹${(selectedCohort.price / 100).toFixed(0)}`
-                : 'Enter contribution amount',
+                ? exchangeRate !== null
+                  ? `Suggested: ${currencySymbol}${(selectedCohort.price / 100 / exchangeRate).toFixed(0)}`
+                  : `Suggested: ₹${(selectedCohort.price / 100).toFixed(0)}`
+                : currencyCode !== 'INR'
+                  ? `Enter contribution in ${currencyCode}`
+                  : 'Enter contribution amount',
           },
         ]
       : baseFields;
@@ -229,6 +344,12 @@ function CohortContent({ initialCohorts, config }: CohortClientProps) {
   };
 
   const formatCurrency = (amount: number) => {
+    if (exchangeRate !== null) {
+      return new Intl.NumberFormat(currencyCode === 'EUR' ? 'de-DE' : 'en-US', {
+        style: 'currency',
+        currency: currencyCode,
+      }).format(amount / 100 / exchangeRate);
+    }
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
       currency: 'INR',
@@ -240,6 +361,16 @@ function CohortContent({ initialCohorts, config }: CohortClientProps) {
     const order = { active: 1, coming_soon: 2, completed: 3 };
     return (order[a.status] || 99) - (order[b.status] || 99);
   });
+
+  // Currency switcher is disabled for now (logic kept intact below for reference/future use)
+  const showCurrencySwitcher = false;
+  /*
+  const showCurrencySwitcher =
+    !config?.cohorts?.registrationsPaused &&
+    sortedCohorts.some(
+      (c) => c.status === 'active' && (c.price > 0 || c.pricing_type === 'pay_as_you_wish')
+    );
+  */
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-0 pb-12">
@@ -516,7 +647,7 @@ function CohortContent({ initialCohorts, config }: CohortClientProps) {
                     {selectedCohort.pricing_type === 'pay_as_you_wish' ? (
                       <>
                         {selectedCohort.price > 0 && (
-                          <div className="flex items-center gap-4 mb-2">
+                          <div className="flex items-baseline gap-4 mb-2 flex-wrap">
                             <span className="text-sm md:text-lg font-bold text-slate-500">
                               Suggested:
                             </span>
@@ -526,12 +657,15 @@ function CohortContent({ initialCohorts, config }: CohortClientProps) {
                           </div>
                         )}
                         <p className="text-[11px] md:text-xs text-slate-500 italic">
-                          Voluntary Contribution / Pay as you wish (min ₹1)
+                          Voluntary Contribution / Pay as you wish{' '}
+                          {exchangeRate !== null
+                            ? `(min ${currencySymbol}0.50 ${currencyCode})`
+                            : '(min ₹1)'}
                         </p>
                       </>
                     ) : (
                       <>
-                        <div className="flex items-center gap-4 mb-2">
+                        <div className="flex items-baseline gap-4 mb-2 flex-wrap">
                           <span className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">
                             {formatCurrency(selectedCohort.price)}
                           </span>
@@ -560,23 +694,67 @@ function CohortContent({ initialCohorts, config }: CohortClientProps) {
                         )}
                       </p>
                     </div>
+
+                    {showCurrencySwitcher && currencyCode !== 'INR' && (
+                      <div className="mt-2.5 px-3 py-2 bg-slate-50 border border-slate-200/65 rounded-xl flex items-center justify-between gap-2">
+                        <span className="text-[10.5px] font-semibold text-slate-600 flex items-center gap-1.5">
+                          <Globe size={13} className="text-slate-400" /> Prices localized to{' '}
+                          {currencyCode}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleCurrencyChange('INR')}
+                          className="text-[10px] font-bold text-navy-600 hover:text-navy-950 underline transition-colors"
+                        >
+                          Show INR (₹)
+                        </button>
+                      </div>
+                    )}
                   </div>
 
-                  <DynamicForm
-                    key={selectedCohort.id}
-                    formSlug="cohort_enrollment"
-                    title={selectedCohort.title}
-                    fields={enrollmentFields}
-                    requiresPayment={true}
-                    paymentType={selectedCohort.razorpay_plan_id ? 'subscription' : 'one_time'}
-                    cohortId={selectedCohort.id}
-                    submitLabel="Complete Checkout"
-                    successMessage={
-                      selectedCohort.success_message ||
-                      'Welcome aboard! Your payment was successful.'
-                    }
-                    prefillData={prefillData}
-                  />
+                  {selectedCohort.razorpay_plan_id && currencyCode !== 'INR' ? (
+                    <div className="p-6 bg-amber-50/60 border border-amber-200/80 rounded-2xl flex flex-col items-center text-center gap-4 my-4 shadow-sm">
+                      <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center">
+                        <AlertCircle className="w-5 h-5 text-amber-700" />
+                      </div>
+                      <div className="space-y-1.5">
+                        <h4 className="text-sm font-bold text-amber-900 uppercase tracking-wider">
+                          Currency Switch Required
+                        </h4>
+                        <p className="text-xs text-amber-800 max-w-sm leading-relaxed">
+                          This cohort is a recurring subscription plan. Payment networks only
+                          support recurring card authentication in <strong>INR (₹)</strong>.
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleCurrencyChange('INR')}
+                        className="px-4 py-2 bg-navy-900 text-white font-semibold text-xs rounded-xl shadow hover:bg-navy-800 transition-all duration-150 cursor-pointer focus-visible:ring-2 focus-visible:ring-navy-500"
+                      >
+                        Switch to INR (₹)
+                      </button>
+                    </div>
+                  ) : (
+                    <DynamicForm
+                      key={`${selectedCohort.id}-${currencyCode}`}
+                      formSlug="cohort_enrollment"
+                      title={selectedCohort.title}
+                      fields={enrollmentFields}
+                      requiresPayment={true}
+                      paymentType={selectedCohort.razorpay_plan_id ? 'subscription' : 'one_time'}
+                      cohortId={selectedCohort.id}
+                      submitLabel="Complete Checkout"
+                      successMessage={
+                        selectedCohort.success_message ||
+                        'Welcome aboard! Your payment was successful.'
+                      }
+                      prefillData={prefillData}
+                      fxRate={exchangeRate}
+                      currencyCode={currencyCode}
+                      currencySymbol={currencySymbol}
+                      onCurrencyChange={handleCurrencyChange}
+                    />
+                  )}
                 </div>
               </div>
             </motion.div>

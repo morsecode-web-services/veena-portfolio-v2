@@ -59,6 +59,54 @@ function fdate(d: string) {
   return `${d.substring(4, 6)}/${d.substring(6, 8)}`;
 }
 
+function isPaymentInRange(
+  createdAt: string,
+  dateRange: string,
+  customStart: string,
+  customEnd: string
+) {
+  if (!createdAt) return false;
+  const pDate = new Date(createdAt);
+  const now = new Date();
+
+  if (dateRange === 'today') {
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    return pDate >= todayStart;
+  }
+  if (dateRange === 'this_week') {
+    const day = now.getDay();
+    const diff = now.getDate() - day;
+    const weekStart = new Date(now.getFullYear(), now.getMonth(), diff);
+    return pDate >= weekStart;
+  }
+  if (dateRange === '7') {
+    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    return pDate >= sevenDaysAgo;
+  }
+  if (dateRange === '30') {
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    return pDate >= thirtyDaysAgo;
+  }
+  if (dateRange === '90') {
+    const ninetyDaysAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+    return pDate >= ninetyDaysAgo;
+  }
+  if (dateRange === 'custom') {
+    if (customStart) {
+      const startDate = new Date(customStart);
+      startDate.setHours(0, 0, 0, 0);
+      if (pDate < startDate) return false;
+    }
+    if (customEnd) {
+      const endDate = new Date(customEnd);
+      endDate.setHours(23, 59, 59, 999);
+      if (pDate > endDate) return false;
+    }
+    return true;
+  }
+  return true;
+}
+
 const Tip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null;
   return (
@@ -218,10 +266,12 @@ export default function AnalyticsPage() {
       .from('cohorts')
       .select('id, title, price, pricing_type');
 
-    // Fetch only paid payments (instead of form_submissions and webhook_logs)
+    // Fetch only paid payments (instead of form_submissions and webhook_logs) - till date / all-time
     const { data: payments } = await supabase
       .from('payments')
-      .select('id, amount, razorpay_payment_id, enrollment_id, student_id, enrollments(cohort_id)')
+      .select(
+        'id, amount, razorpay_payment_id, enrollment_id, student_id, created_at, enrollments(cohort_id)'
+      )
       .eq('status', 'paid');
 
     // Fetch leads for total interest metrics
@@ -250,6 +300,7 @@ export default function AnalyticsPage() {
             razorpay_payment_id: p.razorpay_payment_id,
             amount: p.amount, // in paise
             student_id: p.student_id,
+            created_at: p.created_at,
           };
         })
         .filter((p) => p.cohort_id !== null);
@@ -313,11 +364,15 @@ export default function AnalyticsPage() {
   const paymentDist = React.useMemo(() => {
     const distMap = new Map();
 
+    const timeFiltered = paidSubmissions.filter((s) =>
+      isPaymentInRange(s.created_at, dateRange, customStart, customEnd)
+    );
+
     // Filter submissions by selected cohort
     const filteredSubs =
       selectedCohortId === 'all'
-        ? paidSubmissions
-        : paidSubmissions.filter((s) => s.cohort_id === selectedCohortId);
+        ? timeFiltered
+        : timeFiltered.filter((s) => s.cohort_id === selectedCohortId);
 
     filteredSubs.forEach((s) => {
       const amount = (s.amount || 0) / 100;
@@ -333,7 +388,68 @@ export default function AnalyticsPage() {
         students: count,
       }))
       .sort((a, b) => a.amount - b.amount);
-  }, [paidSubmissions, selectedCohortId]);
+  }, [paidSubmissions, selectedCohortId, dateRange, customStart, customEnd]);
+
+  const dailyCohortRevenue = React.useMemo(() => {
+    const now = new Date();
+    let startDate = new Date();
+    let endDate = new Date();
+
+    if (dateRange === 'today') {
+      startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    } else if (dateRange === 'this_week') {
+      const day = now.getDay();
+      const diff = now.getDate() - day;
+      startDate = new Date(now.getFullYear(), now.getMonth(), diff);
+    } else if (dateRange === '7') {
+      startDate = new Date(now.getTime() - 6 * 24 * 60 * 60 * 1000);
+    } else if (dateRange === '30') {
+      startDate = new Date(now.getTime() - 29 * 24 * 60 * 60 * 1000);
+    } else if (dateRange === '90') {
+      startDate = new Date(now.getTime() - 89 * 24 * 60 * 60 * 1000);
+    } else if (dateRange === 'custom') {
+      startDate = customStart
+        ? new Date(customStart)
+        : new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      endDate = customEnd ? new Date(customEnd) : new Date();
+    }
+
+    startDate.setHours(0, 0, 0, 0);
+    endDate.setHours(0, 0, 0, 0);
+
+    const dailyDataMap = new Map<string, number>();
+    const iterDate = new Date(startDate);
+    while (iterDate <= endDate) {
+      const dateStr = iterDate.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit' });
+      dailyDataMap.set(dateStr, 0);
+      iterDate.setDate(iterDate.getDate() + 1);
+    }
+
+    const timeFiltered = paidSubmissions.filter((s) =>
+      isPaymentInRange(s.created_at, dateRange, customStart, customEnd)
+    );
+
+    const filteredSubs =
+      selectedCohortId === 'all'
+        ? timeFiltered
+        : timeFiltered.filter((s) => s.cohort_id === selectedCohortId);
+
+    filteredSubs.forEach((p) => {
+      if (!p.created_at) return;
+      const pDate = new Date(p.created_at);
+      const dateStr = pDate.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit' });
+
+      if (dailyDataMap.has(dateStr)) {
+        const currentAmount = dailyDataMap.get(dateStr) || 0;
+        dailyDataMap.set(dateStr, currentAmount + (p.amount || 0) / 100);
+      }
+    });
+
+    return Array.from(dailyDataMap.entries()).map(([date, revenue]) => ({
+      dateLabel: date,
+      Revenue: revenue,
+    }));
+  }, [paidSubmissions, selectedCohortId, dateRange, customStart, customEnd]);
 
   useEffect(() => {
     fetch_();
@@ -731,12 +847,15 @@ export default function AnalyticsPage() {
             </Section>
           </div>
         </div>
-
-        {/* Cohort Payment Distribution Chart */}
-        <Section
-          title="Cohort Payment Distribution"
-          icon={<BarChart3 className="w-4 h-4 text-purple-500" />}
-          action={
+        {/* Cohort Financial Insights Card (Daywise Revenue + Amount Distribution) */}
+        <div className="bg-white rounded border border-slate-200 p-5">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-100">
+            <div className="flex items-center gap-2">
+              <BarChart3 className="w-4 h-4 text-slate-800" />
+              <h2 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+                Cohort Financial Insights
+              </h2>
+            </div>
             <div className="flex items-center gap-2">
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                 Cohort:
@@ -754,42 +873,111 @@ export default function AnalyticsPage() {
                 ))}
               </select>
             </div>
-          }
-        >
-          <div className="h-64 pt-4">
-            {paymentDist.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={paymentDist} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
-                  <XAxis
-                    dataKey="amountLabel"
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: '#94A3B8', fontSize: 10, fontWeight: 'bold' }}
-                  />
-                  <YAxis
-                    allowDecimals={false}
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: '#94A3B8', fontSize: 10 }}
-                  />
-                  <Tooltip content={<Tip />} />
-                  <Bar
-                    dataKey="students"
-                    fill={C.purple}
-                    radius={[4, 4, 0, 0]}
-                    maxBarSize={50}
-                    name="Students"
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <p className="text-xs text-slate-400 py-20 text-center">
-                No payment distribution data available for this cohort.
-              </p>
-            )}
           </div>
-        </Section>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Daily Cohort Revenue */}
+            <div>
+              <div className="flex items-center gap-2 mb-4">
+                <TrendingUp className="w-4 h-4 text-emerald-500" />
+                <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                  Daily Cohort Revenue
+                </h3>
+              </div>
+              <div className="h-64">
+                {dailyCohortRevenue.length > 0 ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart
+                      data={dailyCohortRevenue}
+                      margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                    >
+                      <defs>
+                        <linearGradient id="cr" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor={C.green} stopOpacity={0.12} />
+                          <stop offset="95%" stopColor={C.green} stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
+                      <XAxis
+                        dataKey="dateLabel"
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fill: '#94A3B8', fontSize: 10, fontWeight: 'bold' }}
+                      />
+                      <YAxis
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fill: '#94A3B8', fontSize: 10 }}
+                        tickFormatter={(v) => `₹${v}`}
+                      />
+                      <Tooltip content={<Tip />} />
+                      <Area
+                        type="monotone"
+                        name="Revenue"
+                        dataKey="Revenue"
+                        stroke={C.green}
+                        strokeWidth={2.5}
+                        fill="url(#cr)"
+                        dot={false}
+                        activeDot={{ r: 4 }}
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <p className="text-xs text-slate-400 py-20 text-center">
+                    No cohort payment data available for this range.
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Cohort Payment Distribution */}
+            <div>
+              <div className="flex items-center gap-2 mb-4">
+                <BarChart3 className="w-4 h-4 text-purple-500" />
+                <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                  Cohort Payment Distribution
+                </h3>
+              </div>
+              <div className="h-64">
+                {paymentDist.length > 0 ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={paymentDist}
+                      margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
+                      <XAxis
+                        dataKey="amountLabel"
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fill: '#94A3B8', fontSize: 10, fontWeight: 'bold' }}
+                      />
+                      <YAxis
+                        allowDecimals={false}
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fill: '#94A3B8', fontSize: 10 }}
+                      />
+                      <Tooltip content={<Tip />} />
+                      <Bar
+                        dataKey="students"
+                        fill={C.purple}
+                        radius={[4, 4, 0, 0]}
+                        maxBarSize={50}
+                        name="Students"
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <p className="text-xs text-slate-400 py-20 text-center">
+                    No payment distribution data available for this cohort.
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
 
         {/* Row 1: Pages + Sources */}
 

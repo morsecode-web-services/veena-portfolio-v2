@@ -1,7 +1,7 @@
 import { Metadata } from 'next';
 import CohortClient from './CohortClient';
 import CohortFAQ from '@/components/sections/CohortFAQ';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabase';
 import { loadConfig } from '@/lib/config';
 
 export const metadata: Metadata = {
@@ -29,10 +29,6 @@ export const revalidate = 60;
 
 export default async function CohortsPage() {
   const config = await loadConfig();
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
 
   const { data: cohorts } = await supabase
     .from('cohorts')
