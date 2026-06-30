@@ -9,7 +9,7 @@ import { z } from 'zod';
 import { m, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/system/Button';
 import { analytics } from '@/components/GoogleAnalytics';
-import { CheckCircle2, AlertCircle, Loader2, UploadCloud, X, Globe } from 'lucide-react';
+import { CheckCircle2, AlertCircle, Loader2, UploadCloud, X } from 'lucide-react';
 import { getCountryCallingCode, getCountries, parsePhoneNumber } from 'react-phone-number-input';
 import en from 'react-phone-number-input/locale/en';
 import Input from 'react-phone-number-input/input';
@@ -51,6 +51,7 @@ interface DynamicFormProps {
   fxRate?: number | null;
   currencyCode?: string;
   currencySymbol?: string;
+  onCurrencyChange?: (currency: string) => void;
 }
 
 const CustomPhoneInput = ({
@@ -58,15 +59,11 @@ const CustomPhoneInput = ({
   placeholder,
   control,
   error,
-  showInternationalPaymentHint,
-  currencyCode = 'USD',
 }: {
   name: string;
   placeholder?: string;
   control: any;
   error?: any;
-  showInternationalPaymentHint?: boolean;
-  currencyCode?: string;
 }) => {
   const [country, setCountry] = useState<any>('IN');
 
@@ -74,6 +71,29 @@ const CustomPhoneInput = ({
     control,
     name,
   });
+
+  // Auto-detect country on mount
+  useEffect(() => {
+    try {
+      const cachedFx = sessionStorage.getItem('veena_portfolio_fx');
+      if (cachedFx) {
+        const data = JSON.parse(cachedFx);
+        if (data?.country) {
+          setCountry(data.country);
+          return;
+        }
+      }
+    } catch (e) {}
+
+    fetch('/api/fx')
+      .then((r) => r.json())
+      .then((data) => {
+        if (data?.country) {
+          setCountry(data.country);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (value) {
@@ -142,50 +162,6 @@ const CustomPhoneInput = ({
         )}
       />
 
-      <AnimatePresence>
-        {showInternationalPaymentHint && country !== 'IN' && (
-          <m.div
-            initial={{ opacity: 0, height: 0, marginTop: 0 }}
-            animate={{ opacity: 1, height: 'auto', marginTop: 10 }}
-            exit={{ opacity: 0, height: 0, marginTop: 0 }}
-            className="overflow-hidden"
-          >
-            <div className="p-3 bg-indigo-50/80 border border-indigo-200 rounded-xl space-y-2">
-              {/* Header */}
-              <div className="flex items-center gap-1.5">
-                <Globe className="w-3.5 h-3.5 text-indigo-600 flex-shrink-0" />
-                <p className="text-[11px] font-bold text-indigo-900 uppercase tracking-wide">
-                  International Payment Detected
-                </p>
-              </div>
-              {/* Info rows */}
-              <div className="space-y-1">
-                <div className="flex items-start gap-1.5">
-                  <span className="text-[11px] text-indigo-700 font-semibold mt-px">💵</span>
-                  <p className="text-[11px] text-indigo-800 leading-snug">
-                    You will be charged in <strong>{currencyCode}</strong> at the live exchange
-                    rate.
-                  </p>
-                </div>
-                <div className="flex items-start gap-1.5">
-                  <span className="text-[11px] text-indigo-700 font-semibold mt-px">💳</span>
-                  <p className="text-[11px] text-indigo-800 leading-snug">
-                    <strong>PayPal</strong> and international cards (Visa, Mastercard, Amex) are
-                    accepted.
-                  </p>
-                </div>
-                <div className="flex items-start gap-1.5">
-                  <span className="text-[11px] text-indigo-700 font-semibold mt-px">✅</span>
-                  <p className="text-[11px] text-indigo-800 leading-snug">
-                    No Indian OTP or UPI required.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </m.div>
-        )}
-      </AnimatePresence>
-
       <style jsx global>{`
         .phone-input-wrapper .PhoneInputInput {
           width: 100%;
@@ -212,6 +188,7 @@ export default function DynamicForm({
   fxRate,
   currencyCode,
   currencySymbol,
+  onCurrencyChange,
 }: DynamicFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
@@ -680,8 +657,6 @@ export default function DynamicForm({
                     placeholder={field.placeholder}
                     control={control}
                     error={errors[field.name]}
-                    showInternationalPaymentHint={requiresPayment}
-                    currencyCode={currencyCode}
                   />
                 ) : (
                   <input
@@ -711,6 +686,19 @@ export default function DynamicForm({
             )}
           </div>
         ))}
+
+        {requiresPayment && currencyCode && currencyCode !== 'INR' && onCurrencyChange && (
+          <div className="mt-2.5 pl-1 flex items-center gap-1.5 text-[11.5px] text-slate-500">
+            <span>Want to pay via UPI?</span>
+            <button
+              type="button"
+              onClick={() => onCurrencyChange('INR')}
+              className="text-navy-600 hover:text-navy-900 underline font-bold transition-colors cursor-pointer"
+            >
+              Switch to INR
+            </button>
+          </div>
+        )}
 
         {requiresPayment && (
           <div className="flex justify-center w-full mt-6 mb-2">

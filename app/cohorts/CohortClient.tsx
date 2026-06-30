@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Suspense, useCallback, Fragment, useRef } from 'react';
+import { useState, useEffect, Suspense, useCallback, Fragment } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Check,
@@ -84,7 +84,39 @@ function CohortContent({ initialCohorts, config }: CohortClientProps) {
   const router = useRouter();
 
   useEffect(() => {
-    // 1. Try to load from sessionStorage cache
+    // 1. Check for manual override via query parameters (e.g. ?currency=USD)
+    const queryCurrency = searchParams?.get('currency')?.toUpperCase();
+
+    if (queryCurrency) {
+      if (queryCurrency === 'INR') {
+        setExchangeRate(null);
+        setCurrencyCode('INR');
+        setCurrencySymbol('₹');
+        try {
+          sessionStorage.setItem(
+            'veena_portfolio_fx',
+            JSON.stringify({ rate: 1, currency: 'INR', symbol: '₹', country: 'IN' })
+          );
+        } catch (e) {}
+      } else {
+        fetch(`/api/fx?currency=${queryCurrency}`)
+          .then((r) => r.json())
+          .then((data) => {
+            if (data?.rate && typeof data.rate === 'number') {
+              setExchangeRate(data.rate);
+              setCurrencyCode(data.currency || 'USD');
+              setCurrencySymbol(data.symbol || '$');
+              try {
+                sessionStorage.setItem('veena_portfolio_fx', JSON.stringify(data));
+              } catch (e) {}
+            }
+          })
+          .catch((err) => console.error('Failed to load query currency:', err));
+      }
+      return;
+    }
+
+    // 2. Try to load from sessionStorage cache
     try {
       const cachedFx = sessionStorage.getItem('veena_portfolio_fx');
       if (cachedFx) {
@@ -100,7 +132,7 @@ function CohortContent({ initialCohorts, config }: CohortClientProps) {
       console.warn('Failed to parse FX cache:', e);
     }
 
-    // 2. Fetch from API if cache is empty or INR
+    // 3. Fetch from API if cache is empty or INR
     fetch('/api/fx')
       .then((r) => r.json())
       .then((data) => {
@@ -115,7 +147,7 @@ function CohortContent({ initialCohorts, config }: CohortClientProps) {
         }
       })
       .catch(() => {});
-  }, []);
+  }, [searchParams]);
 
   const closeCelebration = useCallback(() => {
     setShowCelebration(false);
@@ -129,28 +161,11 @@ function CohortContent({ initialCohorts, config }: CohortClientProps) {
     router.replace(`/cohorts${query ? `?${query}` : ''}`, { scroll: false });
   }, [searchParams, router]);
 
-  const [isUpdatingFx, setIsUpdatingFx] = useState(false);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!isDropdownOpen) return;
-    const handleClickOutside = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setIsDropdownOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isDropdownOpen]);
-
   const handleCurrencyChange = async (newCurrency: string) => {
-    setIsUpdatingFx(true);
     if (newCurrency === 'INR') {
       setExchangeRate(null);
       setCurrencyCode('INR');
       setCurrencySymbol('₹');
-      setIsUpdatingFx(false);
       try {
         sessionStorage.setItem(
           'veena_portfolio_fx',
@@ -171,8 +186,6 @@ function CohortContent({ initialCohorts, config }: CohortClientProps) {
         }
       } catch (err) {
         console.error('Failed to change currency:', err);
-      } finally {
-        setIsUpdatingFx(false);
       }
     }
   };
@@ -349,11 +362,15 @@ function CohortContent({ initialCohorts, config }: CohortClientProps) {
     return (order[a.status] || 99) - (order[b.status] || 99);
   });
 
+  // Currency switcher is disabled for now (logic kept intact below for reference/future use)
+  const showCurrencySwitcher = false;
+  /*
   const showCurrencySwitcher =
     !config?.cohorts?.registrationsPaused &&
     sortedCohorts.some(
       (c) => c.status === 'active' && (c.price > 0 || c.pricing_type === 'pay_as_you_wish')
     );
+  */
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-0 pb-12">
@@ -366,106 +383,6 @@ function CohortContent({ initialCohorts, config }: CohortClientProps) {
               {config.cohorts.registrationsPausedMessage ||
                 'We are currently not accepting new registrations. Please check back later.'}
             </p>
-          </div>
-        </div>
-      )}
-
-      {/* Currency Switcher Toolbar */}
-      {showCurrencySwitcher && (
-        <div className="flex justify-end items-center mb-6">
-          <div ref={dropdownRef} className="relative">
-            <button
-              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              disabled={isUpdatingFx}
-              aria-haspopup="listbox"
-              aria-expanded={isDropdownOpen}
-              aria-label={`Select payment currency. Current: ${currencyCode}`}
-              className="flex items-center gap-1 md:gap-2 bg-white px-2.5 py-1 md:px-3 md:py-1.5 border border-slate-200/85 rounded-xl shadow-sm transition-all hover:border-slate-300 focus-visible:ring-2 focus-visible:ring-indigo-500/35 focus-visible:border-indigo-400 outline-none text-left"
-            >
-              <Globe className="w-3 h-3 md:w-3.5 md:h-3.5 text-slate-400" aria-hidden="true" />
-              <span className="text-[9px] md:text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                Currency:
-              </span>
-              <span className="text-[11px] md:text-xs font-bold text-slate-800 flex items-center gap-1">
-                {currencyCode} ({currencySymbol})
-              </span>
-              <svg
-                className={`w-3 h-3 md:w-3.5 md:h-3.5 text-slate-400 transition-transform duration-300 ${isDropdownOpen ? 'rotate-180' : ''}`}
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                aria-hidden="true"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2.5}
-                  d="M19 9l-7 7-7-7"
-                />
-              </svg>
-              {isUpdatingFx && (
-                <div
-                  className="w-3 h-3 md:w-3.5 md:h-3.5 border-2 border-slate-200 border-t-navy-900 rounded-full animate-spin"
-                  aria-live="polite"
-                  aria-label="Loading exchange rates…"
-                ></div>
-              )}
-            </button>
-
-            <AnimatePresence>
-              {isDropdownOpen && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                  transition={{ duration: 0.15, ease: 'easeOut' }}
-                  className="absolute right-0 mt-1.5 w-52 bg-white/95 backdrop-blur-md border border-slate-200/60 rounded-2xl shadow-premium-xl z-50 p-1.5 max-h-72 overflow-y-auto"
-                  role="listbox"
-                  aria-label="Payment currencies"
-                >
-                  {[
-                    { code: 'INR', label: 'Indian Rupee', symbol: '₹' },
-                    { code: 'USD', label: 'US Dollar', symbol: '$' },
-                    { code: 'EUR', label: 'Euro', symbol: '€' },
-                    { code: 'GBP', label: 'British Pound', symbol: '£' },
-                    { code: 'AUD', label: 'Australian Dollar', symbol: 'A$' },
-                    { code: 'CAD', label: 'Canadian Dollar', symbol: 'C$' },
-                    { code: 'SGD', label: 'Singapore Dollar', symbol: 'S$' },
-                    { code: 'CHF', label: 'Swiss Franc', symbol: 'CHF' },
-                    { code: 'MYR', label: 'Malaysian Ringgit', symbol: 'RM' },
-                  ].map((c) => (
-                    <button
-                      key={c.code}
-                      role="option"
-                      aria-selected={currencyCode === c.code}
-                      onClick={() => {
-                        handleCurrencyChange(c.code);
-                        setIsDropdownOpen(false);
-                      }}
-                      className={`flex items-center justify-between w-full text-left px-3 py-2 text-xs font-semibold rounded-xl transition-all duration-150 outline-none ${
-                        currencyCode === c.code
-                          ? 'bg-navy-900 text-white shadow-premium-sm font-bold'
-                          : 'text-slate-700 hover:text-navy-900 hover:bg-slate-50 focus-visible:bg-slate-50'
-                      }`}
-                    >
-                      <div>
-                        <span className="block text-xs">{c.code}</span>
-                        <span
-                          className={`text-[10px] font-normal block ${currencyCode === c.code ? 'text-white/70' : 'text-slate-400'}`}
-                        >
-                          {c.label}
-                        </span>
-                      </div>
-                      <span
-                        className={`text-xs px-2 py-0.5 rounded-md font-mono ${currencyCode === c.code ? 'bg-white/15 text-white' : 'bg-slate-100 text-slate-500'}`}
-                      >
-                        {c.symbol}
-                      </span>
-                    </button>
-                  ))}
-                </motion.div>
-              )}
-            </AnimatePresence>
           </div>
         </div>
       )}
@@ -835,6 +752,7 @@ function CohortContent({ initialCohorts, config }: CohortClientProps) {
                       fxRate={exchangeRate}
                       currencyCode={currencyCode}
                       currencySymbol={currencySymbol}
+                      onCurrencyChange={handleCurrencyChange}
                     />
                   )}
                 </div>
