@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import Script from 'next/script';
 import { useForm, Controller, useWatch } from 'react-hook-form';
@@ -272,13 +272,19 @@ export default function DynamicForm({
     resolver: zodResolver(dynamicSchema),
   });
 
+  const hasPrefilled = useRef(false);
+
   useEffect(() => {
+    if (hasPrefilled.current) return;
+
+    let prefilled = false;
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       fields.forEach((field) => {
         const val = params.get(field.name);
         if (val) {
           setValue(field.name, decodeURIComponent(val));
+          prefilled = true;
         }
       });
     }
@@ -288,8 +294,13 @@ export default function DynamicForm({
         const val = prefillData[field.name];
         if (val) {
           setValue(field.name, val);
+          prefilled = true;
         }
       });
+    }
+
+    if (prefilled || (fields.length > 0 && prefillData)) {
+      hasPrefilled.current = true;
     }
   }, [fields, setValue, prefillData]);
 

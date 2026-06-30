@@ -736,7 +736,7 @@ function CohortContent({ initialCohorts, config }: CohortClientProps) {
                     </div>
                   ) : (
                     <DynamicForm
-                      key={`${selectedCohort.id}-${currencyCode}`}
+                      key={selectedCohort.id}
                       formSlug="cohort_enrollment"
                       title={selectedCohort.title}
                       fields={enrollmentFields}
