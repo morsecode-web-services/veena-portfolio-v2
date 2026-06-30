@@ -9,7 +9,7 @@ import { z } from 'zod';
 import { m, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/system/Button';
 import { analytics } from '@/components/GoogleAnalytics';
-import { CheckCircle2, AlertCircle, Loader2, UploadCloud, X, CreditCard } from 'lucide-react';
+import { CheckCircle2, AlertCircle, Loader2, UploadCloud, X, Globe } from 'lucide-react';
 import { getCountryCallingCode, getCountries, parsePhoneNumber } from 'react-phone-number-input';
 import en from 'react-phone-number-input/locale/en';
 import Input from 'react-phone-number-input/input';
@@ -48,6 +48,9 @@ interface DynamicFormProps {
   cohortId?: string;
   submitLabel?: string;
   prefillData?: { name?: string; email?: string; phone?: string; [key: string]: any } | null;
+  fxRate?: number | null;
+  currencyCode?: string;
+  currencySymbol?: string;
 }
 
 const CustomPhoneInput = ({
@@ -56,12 +59,14 @@ const CustomPhoneInput = ({
   control,
   error,
   showInternationalPaymentHint,
+  currencyCode = 'USD',
 }: {
   name: string;
   placeholder?: string;
   control: any;
   error?: any;
   showInternationalPaymentHint?: boolean;
+  currencyCode?: string;
 }) => {
   const [country, setCountry] = useState<any>('IN');
 
@@ -145,12 +150,37 @@ const CustomPhoneInput = ({
             exit={{ opacity: 0, height: 0, marginTop: 0 }}
             className="overflow-hidden"
           >
-            <div className="flex items-start gap-2 p-2.5 bg-indigo-50/80 border border-indigo-100 rounded-lg">
-              <CreditCard className="w-4 h-4 text-indigo-500 mt-0.5 flex-shrink-0" />
-              <p className="text-[11px] text-indigo-800 font-medium leading-snug">
-                International learners, please select <strong>&quot;Cards&quot;</strong> on the next
-                screen to pay.
-              </p>
+            <div className="p-3 bg-indigo-50/80 border border-indigo-200 rounded-xl space-y-2">
+              {/* Header */}
+              <div className="flex items-center gap-1.5">
+                <Globe className="w-3.5 h-3.5 text-indigo-600 flex-shrink-0" />
+                <p className="text-[11px] font-bold text-indigo-900 uppercase tracking-wide">
+                  International Payment Detected
+                </p>
+              </div>
+              {/* Info rows */}
+              <div className="space-y-1">
+                <div className="flex items-start gap-1.5">
+                  <span className="text-[11px] text-indigo-700 font-semibold mt-px">💵</span>
+                  <p className="text-[11px] text-indigo-800 leading-snug">
+                    You will be charged in <strong>{currencyCode}</strong> at the live exchange
+                    rate.
+                  </p>
+                </div>
+                <div className="flex items-start gap-1.5">
+                  <span className="text-[11px] text-indigo-700 font-semibold mt-px">💳</span>
+                  <p className="text-[11px] text-indigo-800 leading-snug">
+                    <strong>PayPal</strong> and international cards (Visa, Mastercard, Amex) are
+                    accepted.
+                  </p>
+                </div>
+                <div className="flex items-start gap-1.5">
+                  <span className="text-[11px] text-indigo-700 font-semibold mt-px">✅</span>
+                  <p className="text-[11px] text-indigo-800 leading-snug">
+                    No Indian OTP or UPI required.
+                  </p>
+                </div>
+              </div>
             </div>
           </m.div>
         )}
@@ -179,6 +209,9 @@ export default function DynamicForm({
   cohortId,
   submitLabel = 'Submit Inquiry',
   prefillData,
+  fxRate,
+  currencyCode,
+  currencySymbol,
 }: DynamicFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
@@ -208,13 +241,32 @@ export default function DynamicForm({
     } else if (field.type === 'image') {
       validator = z.string().url('Invalid image URL');
     } else if (field.name === 'custom_amount') {
+      const minAmounts: Record<string, { val: number; label: string }> = {
+        INR: { val: 1, label: '₹1' },
+        USD: { val: 0.5, label: '$0.50' },
+        EUR: { val: 0.5, label: '€0.50' },
+        GBP: { val: 0.5, label: '£0.50' },
+        AUD: { val: 0.75, label: 'A$0.75' },
+        CAD: { val: 0.75, label: 'C$0.75' },
+        SGD: { val: 0.75, label: 'S$0.75' },
+        CHF: { val: 0.5, label: 'CHF 0.50' },
+        MYR: { val: 2.0, label: 'RM 2.00' },
+      };
+      const activeLimit = minAmounts[currencyCode || 'INR'] || {
+        val: 0.5,
+        label: `${currencySymbol || '$'}0.50`,
+      };
+
       validator = z
         .string()
         .min(1, 'Contribution is required')
-        .refine((val) => {
-          const num = parseFloat(val.replace(/[^\d.-]/g, ''));
-          return !isNaN(num) && num >= 1;
-        }, 'Please enter a valid contribution (minimum ₹1)');
+        .refine(
+          (val) => {
+            const num = parseFloat(val.replace(/[^\d.-]/g, ''));
+            return !isNaN(num) && num >= activeLimit.val;
+          },
+          `Please enter a valid contribution (minimum ${activeLimit.label} ${currencyCode || 'USD'})`
+        );
     }
 
     if (field.required) {
@@ -294,9 +346,14 @@ export default function DynamicForm({
       // 1. Payment Flow
       if (requiresPayment && (razorpayPlanId || razorpayAmount || cohortId)) {
         const customAmountStr = (data as any).custom_amount;
-        const clientAmountToSend = customAmountStr
+        let clientAmountToSend = customAmountStr
           ? parseFloat(customAmountStr.replace(/[^\d.-]/g, ''))
-          : razorpayAmount;
+          : razorpayAmount || 0;
+
+        if (customAmountStr && fxRate) {
+          // Input was in foreign currency. Backend expects INR Rupees, so convert to INR Rupees.
+          clientAmountToSend = clientAmountToSend * fxRate;
+        }
 
         const checkoutRes = await fetch('/api/checkout', {
           method: 'POST',
@@ -311,6 +368,7 @@ export default function DynamicForm({
             name: data.name,
             cohortId: cohortId,
             turnstileToken: turnstileToken,
+            currency: currencyCode,
           }),
         });
 
@@ -322,6 +380,7 @@ export default function DynamicForm({
           subscription_id:
             checkoutData.type === 'subscription' ? checkoutData.subscription_id : undefined,
           order_id: checkoutData.type === 'order' ? checkoutData.order_id : undefined,
+          currency: checkoutData.currency || 'INR',
           name: 'Aishwarya Manikarnike',
           description: title,
           handler: async function (response: any) {
@@ -334,7 +393,8 @@ export default function DynamicForm({
                 razorpay_payment_id: response.razorpay_payment_id || null,
               });
               if (cohortId && checkoutData.amount) {
-                analytics.purchase(checkoutData.amount / 100, 'INR', [
+                const currencyToReport = checkoutData.currency || 'INR';
+                analytics.purchase(checkoutData.amount / 100, currencyToReport, [
                   {
                     id: cohortId,
                     name: title,
@@ -621,6 +681,7 @@ export default function DynamicForm({
                     control={control}
                     error={errors[field.name]}
                     showInternationalPaymentHint={requiresPayment}
+                    currencyCode={currencyCode}
                   />
                 ) : (
                   <input

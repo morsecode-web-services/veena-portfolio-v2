@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 export const dynamic = 'force-dynamic';
 import Razorpay from 'razorpay';
 import { createClient } from '@supabase/supabase-js';
+import { paiseToTargetCents, countryCurrencyMap } from '@/lib/fx';
 
 // Use service role for internal config lookup
 const supabase = createClient(
@@ -20,6 +21,7 @@ export async function POST(request: Request) {
       cohortId,
       amount: clientAmount,
       turnstileToken,
+      currency: clientCurrency,
     } = await request.json();
 
     if (!formSlug && !cohortId) {
@@ -119,7 +121,7 @@ export async function POST(request: Request) {
         const rawAmount = parseFloat(String(clientAmount || '0'));
         if (isNaN(rawAmount) || rawAmount < 1) {
           return NextResponse.json(
-            { error: 'Please enter a valid amount (minimum ₹1)' },
+            { error: 'Please enter a valid contribution amount.' },
             { status: 400 }
           );
         }
@@ -171,13 +173,51 @@ export async function POST(request: Request) {
       telegram_chat_id: telegramChatId || '', // Pass the dynamic chat ID
     };
 
+    // Detect the user's country from IP headers.
+    // Cloudflare injects cf-ipcountry; Vercel natively injects x-vercel-ip-country.
+    // Both are more reliable than a phone number (someone in the US could have an Indian SIM).
+    // Default to 'IN' so that missing headers never accidentally trigger USD conversion.
+    const ipCountry =
+      request.headers.get('cf-ipcountry') || request.headers.get('x-vercel-ip-country') || 'IN';
+
+    // 'XX' is Cloudflare's sentinel value for an unresolvable country — treat as domestic.
+    const isInternational = ipCountry !== 'IN' && ipCountry !== 'XX';
+
+    let currency = 'INR';
+    let finalAmount = razorpayAmount;
+
+    // Use clientCurrency if explicitly requested, otherwise fallback to geolocation-based detection.
+    if (clientCurrency && clientCurrency !== 'INR') {
+      if (paymentType === 'subscription') {
+        return NextResponse.json(
+          { error: 'International recurring subscriptions are not currently supported.' },
+          { status: 400 }
+        );
+      }
+      currency = clientCurrency;
+      finalAmount = await paiseToTargetCents(razorpayAmount, currency);
+    } else if (!clientCurrency && isInternational) {
+      if (paymentType === 'subscription') {
+        return NextResponse.json(
+          { error: 'International recurring subscriptions are not currently supported.' },
+          { status: 400 }
+        );
+      }
+      // Get the localized currency code for the detected country, fallback to USD for other international countries.
+      const currencyConfig = countryCurrencyMap[ipCountry] || countryCurrencyMap['US'];
+      currency = currencyConfig.code;
+
+      // Convert paise (INR) to the localized currency cents (e.g. EUR cents, GBP cents, USD cents)
+      finalAmount = await paiseToTargetCents(razorpayAmount, currency);
+    }
+
     // Handle both subscriptions and one-time orders
     if (paymentType === 'one_time') {
-      if (!razorpayAmount) throw new Error('Amount is not configured');
+      if (!finalAmount) throw new Error('Amount is not configured');
 
       const order = await razorpay.orders.create({
-        amount: Math.round(razorpayAmount), // Cohort price is already in paise if we follow the schema
-        currency: 'INR',
+        amount: Math.round(finalAmount), // Amount is already in the smallest unit (paise/cents)
+        currency: currency,
         notes: notes,
       });
 
@@ -185,7 +225,8 @@ export async function POST(request: Request) {
         type: 'order',
         order_id: order.id,
         key_id: process.env.RAZORPAY_KEY_ID,
-        amount: razorpayAmount,
+        amount: finalAmount,
+        currency: currency,
         telegram_chat_id: telegramChatId,
       });
     } else {
@@ -203,7 +244,8 @@ export async function POST(request: Request) {
         type: 'subscription',
         subscription_id: subscription.id,
         key_id: process.env.RAZORPAY_KEY_ID,
-        amount: razorpayAmount,
+        amount: finalAmount,
+        currency: currency,
         telegram_chat_id: telegramChatId,
       });
     }
