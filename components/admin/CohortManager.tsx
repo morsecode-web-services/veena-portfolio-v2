@@ -25,6 +25,7 @@ import {
   TrendingUp,
   Image as ImageIcon,
   Award,
+  RotateCcw,
 } from 'lucide-react';
 import { useToast } from '@/context/ToastContext';
 import { CloudinaryUpload } from './CloudinaryUpload';
@@ -268,6 +269,7 @@ export function CohortManager() {
   const [logsLoading, setLogsLoading] = useState(false);
   const [logSearchQuery, setLogSearchQuery] = useState('');
   const [logStatusFilter, setLogStatusFilter] = useState('all');
+  const [resendingInviteId, setResendingInviteId] = useState<string | null>(null);
 
   const filteredLogs = invitationLogs.filter((log) => {
     const query = logSearchQuery.toLowerCase();
@@ -282,7 +284,7 @@ export function CohortManager() {
   const logStats = {
     total: invitationLogs.length,
     paid: invitationLogs.filter((l) => l.status === 'paid').length,
-    failed: invitationLogs.filter((l) => l.status === 'failed').length,
+    failed: invitationLogs.filter((l) => l.status === 'failed' || l.status === 'wa_failed').length,
     sent: invitationLogs.filter((l) => l.status === 'sent').length,
   };
 
@@ -482,6 +484,7 @@ export function CohortManager() {
         payment_link_url: item.payment_link_url,
         status: item.status,
         error_message: item.error_message,
+        wa_delivery_status: item.wa_delivery_status,
         created_at: item.created_at,
         updated_at: item.updated_at,
       }));
@@ -491,6 +494,60 @@ export function CohortManager() {
       addToast('Failed to fetch invitation logs', 'error');
     } finally {
       setLogsLoading(false);
+    }
+  };
+
+  /**
+   * Resend a WA invite for a specific student whose delivery failed (wa_failed status).
+   * Bypasses the normal skip check by calling the reenroll API with forceResend=true.
+   */
+  const handleResendInvite = async (log: any) => {
+    if (resendingInviteId) return;
+
+    // Enforce the 24h wait — don't let admin retry too soon
+    const updatedAt = new Date(log.updated_at).getTime();
+    const hoursSinceFailed = (Date.now() - updatedAt) / (1000 * 60 * 60);
+    if (hoursSinceFailed < 24) {
+      const hoursLeft = Math.ceil(24 - hoursSinceFailed);
+      addToast(
+        `Please wait ~${hoursLeft}h before retrying. Meta's frequency cap resets after 24 hours.`,
+        'error'
+      );
+      return;
+    }
+
+    setResendingInviteId(log.id);
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      const response = await fetch('/api/admin/cohorts/reenroll/resend', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session?.access_token}`,
+        },
+        body: JSON.stringify({
+          invitationId: log.id,
+          studentId: log.student_id,
+          targetCohortId: log.target_cohort_id,
+          sourceCohortId: log.source_cohort_id,
+        }),
+      });
+
+      const result = await response.json();
+      if (response.ok && result.success) {
+        addToast(`Invite resent to ${log.student_name}!`, 'success');
+        // Refresh the logs
+        if (viewingLogsCohortId) fetchInvitationLogs(viewingLogsCohortId);
+      } else {
+        addToast(result.error || 'Failed to resend invite', 'error');
+      }
+    } catch (err: any) {
+      addToast(err.message || 'Resend failed', 'error');
+    } finally {
+      setResendingInviteId(null);
     }
   };
 
@@ -1640,6 +1697,7 @@ export function CohortManager() {
                     <option value="sent">Sent</option>
                     <option value="paid">Paid</option>
                     <option value="failed">Failed</option>
+                    <option value="wa_failed">WA Failed (retryable)</option>
                   </select>
                 </div>
               </div>
@@ -1684,29 +1742,84 @@ export function CohortManager() {
                           </div>
                         </td>
                         <td className="px-5 py-2.5">
-                          <span
-                            className={`px-2 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider flex items-center gap-1 w-fit border ${
-                              log.status === 'sent'
-                                ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
-                                : log.status === 'paid'
-                                  ? 'bg-amber-50 text-amber-700 border-amber-100'
-                                  : 'bg-red-50 text-red-500 border-red-100'
-                            }`}
-                          >
-                            {log.status === 'failed' && <AlertCircle size={8} />}
-                            {log.status}
-                          </span>
-                          {log.status === 'failed' && (
-                            <p
-                              className="text-[8px] text-red-400 mt-0.5 max-w-[120px] line-clamp-1 italic"
-                              title={log.error_message}
+                          <div className="flex flex-col gap-0.5">
+                            <span
+                              className={`px-2 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider flex items-center gap-1 w-fit border ${
+                                log.status === 'sent'
+                                  ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
+                                  : log.status === 'paid'
+                                    ? 'bg-amber-50 text-amber-700 border-amber-100'
+                                    : log.status === 'wa_failed'
+                                      ? 'bg-orange-50 text-orange-600 border-orange-200'
+                                      : 'bg-red-50 text-red-500 border-red-100'
+                              }`}
                             >
-                              {log.error_message}
-                            </p>
-                          )}
+                              {(log.status === 'failed' || log.status === 'wa_failed') && (
+                                <AlertCircle size={8} />
+                              )}
+                              {log.status === 'wa_failed' ? 'WA Failed' : log.status}
+                            </span>
+                            {/* WA delivery status sub-badge */}
+                            {log.wa_delivery_status && (
+                              <span
+                                className={`text-[8px] font-bold flex items-center gap-0.5 ${
+                                  log.wa_delivery_status === 'delivered'
+                                    ? 'text-emerald-500'
+                                    : log.wa_delivery_status === 'undelivered'
+                                      ? 'text-orange-500'
+                                      : 'text-slate-400'
+                                }`}
+                              >
+                                {log.wa_delivery_status === 'delivered' && '✓ WA Delivered'}
+                                {log.wa_delivery_status === 'undelivered' && '⚠ WA Undelivered'}
+                                {log.wa_delivery_status === 'pending' && '⏳ WA Pending'}
+                              </span>
+                            )}
+                            {(log.status === 'failed' || log.status === 'wa_failed') &&
+                              log.error_message && (
+                                <p
+                                  className="text-[8px] text-red-400 mt-0.5 max-w-[140px] line-clamp-1 italic"
+                                  title={log.error_message}
+                                >
+                                  {log.error_message}
+                                </p>
+                              )}
+                          </div>
                         </td>
                         <td className="px-5 py-2.5 text-right">
                           <div className="flex items-center justify-end gap-1.5">
+                            {/* Resend button — only for wa_failed students */}
+                            {log.status === 'wa_failed' &&
+                              (() => {
+                                const hoursSinceFailed =
+                                  (Date.now() - new Date(log.updated_at).getTime()) /
+                                  (1000 * 60 * 60);
+                                const canResend = hoursSinceFailed >= 24;
+                                const hoursLeft = Math.ceil(24 - hoursSinceFailed);
+                                return (
+                                  <button
+                                    onClick={() => handleResendInvite(log)}
+                                    disabled={!canResend || resendingInviteId === log.id}
+                                    title={
+                                      canResend
+                                        ? `Resend WA invite to ${log.student_name}`
+                                        : `Wait ~${hoursLeft}h more before retrying`
+                                    }
+                                    className={`flex items-center gap-1 px-2 py-1 rounded text-[9px] font-bold uppercase tracking-wider border transition-all ${
+                                      canResend
+                                        ? 'bg-orange-50 text-orange-600 border-orange-200 hover:bg-orange-100 cursor-pointer'
+                                        : 'bg-slate-50 text-slate-300 border-slate-200 cursor-not-allowed'
+                                    }`}
+                                  >
+                                    {resendingInviteId === log.id ? (
+                                      <RefreshCw size={9} className="animate-spin" />
+                                    ) : (
+                                      <RotateCcw size={9} />
+                                    )}
+                                    {canResend ? 'Resend' : `${hoursLeft}h`}
+                                  </button>
+                                );
+                              })()}
                             {log.payment_link_url && (
                               <>
                                 <button

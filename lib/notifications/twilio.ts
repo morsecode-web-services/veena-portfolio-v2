@@ -26,12 +26,14 @@ function formatE164(phone: string): string {
  * @param body - Message body (used for sandbox or session messages)
  * @param contentSid - (Optional) Twilio Content SID for pre-approved templates
  * @param contentVariables - (Optional) JSON string of variables for the template
+ * @param statusCallbackUrl - (Optional) URL for Twilio to POST delivery status updates to
  */
 export async function sendTwilioWhatsApp(
   to: string,
   body: string,
   contentSid?: string,
-  contentVariables?: string
+  contentVariables?: string,
+  statusCallbackUrl?: string
 ): Promise<TwilioResult> {
   const accountSid = process.env.TWILIO_ACCOUNT_SID;
   const authToken = process.env.TWILIO_AUTH_TOKEN;
@@ -60,6 +62,11 @@ export async function sendTwilioWhatsApp(
       }
     } else {
       params.Body = body;
+    }
+
+    // Include StatusCallback if provided so Twilio POSTs delivery updates to our webhook
+    if (statusCallbackUrl) {
+      params.StatusCallback = statusCallbackUrl;
     }
 
     const response = await fetch(

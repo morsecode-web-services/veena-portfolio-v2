@@ -12,10 +12,12 @@ interface LogStatusParams {
   studentId: string;
   sourceCohortId?: string | null;
   targetCohortId: string;
-  status: 'sent' | 'failed' | 'paid';
+  status: 'sent' | 'failed' | 'paid' | 'wa_failed';
   paymentLinkId?: string | null;
   paymentLinkUrl?: string | null;
   errorMessage?: string | null;
+  waMessageSid?: string | null | undefined;
+  waDeliveryStatus?: 'pending' | 'delivered' | 'undelivered' | null | undefined;
 }
 
 async function logReenrollmentStatus({
@@ -26,6 +28,8 @@ async function logReenrollmentStatus({
   paymentLinkId = null,
   paymentLinkUrl = null,
   errorMessage = null,
+  waMessageSid = undefined,
+  waDeliveryStatus = undefined,
 }: LogStatusParams) {
   // 1. Query if a log already exists in reenrollment_invitations
   const { data: existingLog } = await supabaseAdmin
@@ -35,7 +39,7 @@ async function logReenrollmentStatus({
     .eq('student_id', studentId)
     .maybeSingle();
 
-  const payload = {
+  const payload: any = {
     student_id: studentId,
     source_cohort_id: sourceCohortId,
     target_cohort_id: targetCohortId,
@@ -45,6 +49,11 @@ async function logReenrollmentStatus({
     error_message: errorMessage,
     updated_at: new Date().toISOString(),
   };
+
+  // Only set WA tracking fields when explicitly passed by the caller
+  // (default is undefined = "not provided"; null would be an explicit clear)
+  if (waMessageSid !== undefined) payload.wa_message_sid = waMessageSid;
+  if (waDeliveryStatus !== undefined) payload.wa_delivery_status = waDeliveryStatus;
 
   if (existingLog) {
     const { error } = await supabaseAdmin
@@ -275,6 +284,7 @@ export async function POST(request: Request) {
         // Send WhatsApp (Twilio Content API Card template) - ALWAYS ENABLED
         let waSent = false;
         let waError = '';
+        let waMessageSid: string | null = null;
         if (phone) {
           const contentSid = process.env.TWILIO_WHATSAPP_REENROLL_CONTENT_SID;
           if (!contentSid) {
@@ -294,9 +304,21 @@ export async function POST(request: Request) {
               });
               const fallbackBody = `Hi ${name}! Registration for ${targetCohort.title} is now open. Secure your spot here: https://aishwaryamanikarnike.com/cohorts?${querySuffix}`;
 
-              const waRes = await sendTwilioWhatsApp(phone, fallbackBody, contentSid, variables);
+              // Build the StatusCallback URL so Twilio POSTs delivery updates back to us
+              const siteUrl =
+                process.env.NEXT_PUBLIC_SITE_URL || 'https://aishwaryamanikarnike.com';
+              const statusCallbackUrl = `${siteUrl}/api/webhooks/twilio-whatsapp-status`;
+
+              const waRes = await sendTwilioWhatsApp(
+                phone,
+                fallbackBody,
+                contentSid,
+                variables,
+                statusCallbackUrl
+              );
               if (waRes.success) {
                 waSent = true;
+                waMessageSid = waRes.messageSid || null;
               } else {
                 waError = waRes.error || 'Twilio send failed';
               }
@@ -323,6 +345,10 @@ export async function POST(request: Request) {
             paymentLinkId,
             paymentLinkUrl: inviteLinkUrl,
             errorMessage: logMsg || null,
+            // Store the Twilio message SID so the delivery webhook can look up this record
+            waMessageSid: waMessageSid,
+            // Mark as pending — the StatusCallback webhook will update this to 'delivered' or 'undelivered'
+            waDeliveryStatus: waSent ? 'pending' : null,
           });
         } else {
           results.failed++;
