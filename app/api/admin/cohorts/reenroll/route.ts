@@ -315,15 +315,15 @@ export async function POST(request: Request) {
             );
           } else {
             try {
-              // As per template configuration: https://aishwaryamanikarnike.com/cohorts?{{3}}
-              // So we only pass the query parameter suffix as variable 3
-              const querySuffix = `enroll=${targetCohortId}&name=${encodeURIComponent(name)}&email=${encodeURIComponent(email)}&phone=${encodeURIComponent(phone)}`;
+              // As per template configuration: https://aishwaryamanikarnike.com/cohorts{{3}}
+              // So we pass the query parameter suffix starting with ? as variable 3
+              const querySuffix = `?enroll=${targetCohortId}&name=${encodeURIComponent(name)}&email=${encodeURIComponent(email)}&phone=${encodeURIComponent(phone)}`;
               const variables = JSON.stringify({
                 '1': name,
                 '2': targetCohort.title,
                 '3': querySuffix,
               });
-              const fallbackBody = `Hi ${name}! Registration for ${targetCohort.title} is now open. Secure your spot here: https://aishwaryamanikarnike.com/cohorts?${querySuffix}`;
+              const fallbackBody = `Hi ${name}! Registration for ${targetCohort.title} is now open. Secure your spot here: https://aishwaryamanikarnike.com/cohorts${querySuffix}`;
 
               // Build the StatusCallback URL so Twilio POSTs delivery updates back to us
               const siteUrl =

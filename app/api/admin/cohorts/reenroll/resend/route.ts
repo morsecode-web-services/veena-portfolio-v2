@@ -163,13 +163,13 @@ export async function POST(request: Request) {
         );
       }
 
-      const querySuffix = `enroll=${targetCohortId}&name=${encodeURIComponent(name)}&email=${encodeURIComponent(email)}&phone=${encodeURIComponent(phone)}`;
+      const querySuffix = `?enroll=${targetCohortId}&name=${encodeURIComponent(name)}&email=${encodeURIComponent(email)}&phone=${encodeURIComponent(phone)}`;
       const variables = JSON.stringify({
         '1': name,
         '2': targetCohort.title,
         '3': querySuffix,
       });
-      const fallbackBody = `Hi ${name}! Registration for ${targetCohort.title} is now open. Secure your spot here: https://aishwaryamanikarnike.com/cohorts?${querySuffix}`;
+      const fallbackBody = `Hi ${name}! Registration for ${targetCohort.title} is now open. Secure your spot here: https://aishwaryamanikarnike.com/cohorts${querySuffix}`;
 
       const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://aishwaryamanikarnike.com';
       const statusCallbackUrl = `${siteUrl}/api/webhooks/twilio-whatsapp-status`;
