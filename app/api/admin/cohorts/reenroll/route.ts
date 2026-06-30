@@ -12,12 +12,14 @@ interface LogStatusParams {
   studentId: string;
   sourceCohortId?: string | null;
   targetCohortId: string;
-  status: 'sent' | 'failed' | 'paid' | 'wa_failed';
+  status: 'sent' | 'failed' | 'paid' | 'wa_failed' | 'email_failed';
   paymentLinkId?: string | null;
   paymentLinkUrl?: string | null;
   errorMessage?: string | null;
   waMessageSid?: string | null | undefined;
   waDeliveryStatus?: 'pending' | 'delivered' | 'undelivered' | null | undefined;
+  emailMessageId?: string | null | undefined;
+  emailDeliveryStatus?: 'pending' | 'delivered' | 'bounced' | 'complained' | null | undefined;
 }
 
 async function logReenrollmentStatus({
@@ -30,6 +32,8 @@ async function logReenrollmentStatus({
   errorMessage = null,
   waMessageSid = undefined,
   waDeliveryStatus = undefined,
+  emailMessageId = undefined,
+  emailDeliveryStatus = undefined,
 }: LogStatusParams) {
   // 1. Query if a log already exists in reenrollment_invitations
   const { data: existingLog } = await supabaseAdmin
@@ -54,6 +58,8 @@ async function logReenrollmentStatus({
   // (default is undefined = "not provided"; null would be an explicit clear)
   if (waMessageSid !== undefined) payload.wa_message_sid = waMessageSid;
   if (waDeliveryStatus !== undefined) payload.wa_delivery_status = waDeliveryStatus;
+  if (emailMessageId !== undefined) payload.email_message_id = emailMessageId;
+  if (emailDeliveryStatus !== undefined) payload.email_delivery_status = emailDeliveryStatus;
 
   if (existingLog) {
     const { error } = await supabaseAdmin
@@ -98,7 +104,13 @@ export async function POST(request: Request) {
     }
 
     // 2. Parse Input
-    const { targetCohortId, sourceCohortId, students } = await request.json();
+    const {
+      targetCohortId,
+      sourceCohortId,
+      students,
+      sendEmail = true,
+      sendWhatsApp = true,
+    } = await request.json();
 
     if (!targetCohortId || !students || !Array.isArray(students)) {
       console.error('[Re-enroll API] Missing target cohort ID or student list:', {
@@ -107,6 +119,13 @@ export async function POST(request: Request) {
       });
       return NextResponse.json(
         { error: 'Missing target cohort ID or student list' },
+        { status: 400 }
+      );
+    }
+
+    if (!sendEmail && !sendWhatsApp) {
+      return NextResponse.json(
+        { error: 'Please select at least one delivery channel (Email or WhatsApp)' },
         { status: 400 }
       );
     }
@@ -123,7 +142,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Target cohort not found' }, { status: 404 });
     }
 
-    // ── Fetch Global Automation Settings ──────────────────────────────
+    // ── Global site config log (no longer blocks processing since modal config overrides it) ──────────────────────────────
     const { data: configData } = await supabaseAdmin
       .from('site_config')
       .select('data')
@@ -131,13 +150,6 @@ export async function POST(request: Request) {
       .single();
 
     const automation = configData?.data?.automation || { email_enabled: true };
-
-    if (!automation.email_enabled && !automation.twilio_whatsapp_enabled) {
-      console.error(
-        '[Re-enroll API] Both Email and WhatsApp notifications are disabled in site config'
-      );
-      return NextResponse.json({ error: 'Notifications are currently disabled.' }, { status: 400 });
-    }
 
     // 4. Process Invitations
     const results = {
@@ -255,7 +267,8 @@ export async function POST(request: Request) {
         // Send Email
         let emailSent = false;
         let emailError = '';
-        if (automation.email_enabled) {
+        let emailMessageId: string | null = null;
+        if (sendEmail) {
           try {
             const html = await render(
               ReenrollInvite({
@@ -266,26 +279,34 @@ export async function POST(request: Request) {
               })
             );
 
-            await resend.emails.send({
+            const emailRes = await resend.emails.send({
               from: 'Aishwarya Manikarnike <official@email.aishwaryamanikarnike.com>',
               to: email,
               subject: `✨ Your invitation for ${targetCohort.title}`,
               html,
               replyTo: 'official@aishwaryamanikarnike.com',
             });
-            emailSent = true;
+
+            if (emailRes.data && emailRes.data.id) {
+              emailSent = true;
+              emailMessageId = emailRes.data.id;
+            } else if (emailRes.error) {
+              emailError = emailRes.error.message || 'Resend error';
+            } else {
+              emailError = 'Unknown resend failure';
+            }
           } catch (emailErr: any) {
             emailError = emailErr.message || 'Unknown email error';
           }
         } else {
-          emailError = 'Email disabled';
+          emailError = 'Email not selected';
         }
 
-        // Send WhatsApp (Twilio Content API Card template) - ALWAYS ENABLED
+        // Send WhatsApp (Twilio Content API Card template)
         let waSent = false;
         let waError = '';
         let waMessageSid: string | null = null;
-        if (phone) {
+        if (sendWhatsApp && phone) {
           const contentSid = process.env.TWILIO_WHATSAPP_REENROLL_CONTENT_SID;
           if (!contentSid) {
             waError = 'Missing TWILIO_WHATSAPP_REENROLL_CONTENT_SID env variable';
@@ -326,15 +347,17 @@ export async function POST(request: Request) {
               waError = waErr.message || 'Twilio send exception';
             }
           }
-        } else {
+        } else if (!phone && sendWhatsApp) {
           waError = 'No phone number';
+        } else {
+          waError = 'WhatsApp not selected';
         }
 
         // Track Overall Result
-        if ((automation.email_enabled && emailSent) || waSent) {
+        if ((sendEmail && emailSent) || waSent) {
           results.sent++;
           let logMsg = '';
-          if (automation.email_enabled && !emailSent) logMsg += `Email failed: ${emailError}. `;
+          if (sendEmail && !emailSent) logMsg += `Email failed: ${emailError}. `;
           if (!waSent) logMsg += `WhatsApp failed: ${waError}.`;
 
           await logReenrollmentStatus({
@@ -349,6 +372,10 @@ export async function POST(request: Request) {
             waMessageSid: waMessageSid,
             // Mark as pending — the StatusCallback webhook will update this to 'delivered' or 'undelivered'
             waDeliveryStatus: waSent ? 'pending' : null,
+            // Store Resend email message ID
+            emailMessageId: emailMessageId,
+            // Mark as pending
+            emailDeliveryStatus: emailSent ? 'pending' : null,
           });
         } else {
           results.failed++;

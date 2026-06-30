@@ -44,7 +44,7 @@ export async function POST(request: Request) {
     // Look up the reenrollment invitation by the stored message SID
     const { data: invitation, error: lookupError } = await supabaseAdmin
       .from('reenrollment_invitations')
-      .select('id, status')
+      .select('id, status, email_delivery_status')
       .eq('wa_message_sid', messageSid)
       .maybeSingle();
 
@@ -70,14 +70,19 @@ export async function POST(request: Request) {
     };
 
     if (isUndelivered) {
-      // Mark as 'wa_failed' so this student is NOT in the 'sent'/'paid' skip set
-      // and can be retried via the Resend button in the admin Invitation Logs panel.
-      updatePayload.status = 'wa_failed';
-      updatePayload.error_message = `WA undelivered${errorCode ? ` (Error ${errorCode})` : ''}`;
-
-      console.log(
-        `[Twilio WA Webhook] Message ${messageSid} undelivered (ErrorCode: ${errorCode ?? 'N/A'}). Marking invitation ${invitation.id} as wa_failed.`
-      );
+      // ONLY set status to 'wa_failed' if the email was not successfully delivered
+      if (invitation.email_delivery_status !== 'delivered') {
+        updatePayload.status = 'wa_failed';
+        updatePayload.error_message = `WA undelivered${errorCode ? ` (Error ${errorCode})` : ''}`;
+        console.log(
+          `[Twilio WA Webhook] Message ${messageSid} undelivered. Marking invitation ${invitation.id} as wa_failed.`
+        );
+      } else {
+        updatePayload.error_message = `WA undelivered${errorCode ? ` (Error ${errorCode})` : ''} (Email delivered)`;
+        console.log(
+          `[Twilio WA Webhook] Message ${messageSid} undelivered, but Email was already delivered. Keeping invitation ${invitation.id} in sent status.`
+        );
+      }
     } else {
       console.log(
         `[Twilio WA Webhook] Message ${messageSid} delivered. Updating invitation ${invitation.id} wa_delivery_status=delivered.`

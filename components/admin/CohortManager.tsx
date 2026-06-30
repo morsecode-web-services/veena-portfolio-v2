@@ -87,6 +87,8 @@ export function CohortManager() {
     failed: 0,
     skipped: 0,
   });
+  const [sendEmailOption, setSendEmailOption] = useState(true);
+  const [sendWhatsAppOption, setSendWhatsAppOption] = useState(true);
 
   const [sourceStudents, setSourceStudents] = useState<any[]>([]);
   const [sourceStudentsLoading, setSourceStudentsLoading] = useState(false);
@@ -284,7 +286,9 @@ export function CohortManager() {
   const logStats = {
     total: invitationLogs.length,
     paid: invitationLogs.filter((l) => l.status === 'paid').length,
-    failed: invitationLogs.filter((l) => l.status === 'failed' || l.status === 'wa_failed').length,
+    failed: invitationLogs.filter(
+      (l) => l.status === 'failed' || l.status === 'wa_failed' || l.status === 'email_failed'
+    ).length,
     sent: invitationLogs.filter((l) => l.status === 'sent').length,
   };
 
@@ -383,6 +387,8 @@ export function CohortManager() {
             targetCohortId: reenrollTargetId,
             sourceCohortId: reenrollSourceId,
             students: batch,
+            sendEmail: sendEmailOption,
+            sendWhatsApp: sendWhatsAppOption,
           }),
         });
 
@@ -456,6 +462,8 @@ export function CohortManager() {
     setSourceStudents([]);
     setSelectedStudentEmails(new Set());
     setStudentSearchQuery('');
+    setSendEmailOption(true);
+    setSendWhatsAppOption(true);
   };
 
   const fetchInvitationLogs = async (cohortId: string) => {
@@ -485,6 +493,7 @@ export function CohortManager() {
         status: item.status,
         error_message: item.error_message,
         wa_delivery_status: item.wa_delivery_status,
+        email_delivery_status: item.email_delivery_status,
         created_at: item.created_at,
         updated_at: item.updated_at,
       }));
@@ -504,16 +513,18 @@ export function CohortManager() {
   const handleResendInvite = async (log: any) => {
     if (resendingInviteId) return;
 
-    // Enforce the 24h wait — don't let admin retry too soon
-    const updatedAt = new Date(log.updated_at).getTime();
-    const hoursSinceFailed = (Date.now() - updatedAt) / (1000 * 60 * 60);
-    if (hoursSinceFailed < 24) {
-      const hoursLeft = Math.ceil(24 - hoursSinceFailed);
-      addToast(
-        `Please wait ~${hoursLeft}h before retrying. Meta's frequency cap resets after 24 hours.`,
-        'error'
-      );
-      return;
+    // Enforce the 24h wait ONLY for WhatsApp (wa_failed). Email retries can be immediate.
+    if (log.status === 'wa_failed') {
+      const updatedAt = new Date(log.updated_at).getTime();
+      const hoursSinceFailed = (Date.now() - updatedAt) / (1000 * 60 * 60);
+      if (hoursSinceFailed < 24) {
+        const hoursLeft = Math.ceil(24 - hoursSinceFailed);
+        addToast(
+          `Please wait ~${hoursLeft}h before retrying. Meta's frequency cap resets after 24 hours.`,
+          'error'
+        );
+        return;
+      }
     }
 
     setResendingInviteId(log.id);
@@ -1337,10 +1348,43 @@ export function CohortManager() {
                 </div>
               )}
 
+              {/* Delivery Channels Option Selection */}
+              {reenrollSourceId && (
+                <div className="pt-3 border-t border-slate-200 space-y-2.5">
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                    Delivery Channels
+                  </label>
+                  <div className="flex gap-4">
+                    <label className="flex items-center gap-2 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={sendEmailOption}
+                        onChange={(e) => setSendEmailOption(e.target.checked)}
+                        className="h-3.5 w-3.5 rounded border-slate-300 text-slate-900 focus:ring-slate-900 cursor-pointer"
+                      />
+                      <span className="text-xs font-semibold text-slate-700">
+                        Send Email (Resend)
+                      </span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={sendWhatsAppOption}
+                        onChange={(e) => setSendWhatsAppOption(e.target.checked)}
+                        className="h-3.5 w-3.5 rounded border-slate-300 text-slate-900 focus:ring-slate-900 cursor-pointer"
+                      />
+                      <span className="text-xs font-semibold text-slate-700">
+                        Send WhatsApp (Twilio)
+                      </span>
+                    </label>
+                  </div>
+                </div>
+              )}
+
               <div className="bg-slate-50 border border-slate-200 rounded p-3 flex items-start gap-2">
                 <Info size={14} className="text-slate-400 mt-0.5 flex-shrink-0" />
                 <p className="text-[10px] text-slate-600 leading-normal">
-                  Students will receive an email with their{' '}
+                  Students will receive invites with their{' '}
                   <strong>pre-filled 1-click payment link</strong>. No fresh form filling required.
                 </p>
               </div>
@@ -1378,11 +1422,6 @@ export function CohortManager() {
               )}
             </div>
 
-            <div className="px-5 py-3 bg-green-50/50 border-t border-slate-200 text-center">
-              <span className="text-[11px] text-green-700 font-medium">
-                ✨ Invitations will always be sent via WhatsApp
-              </span>
-            </div>
             <div className="px-5 py-4 bg-slate-50 border-t border-slate-200 flex gap-3">
               <button
                 onClick={closeReenrollModal}
@@ -1392,7 +1431,12 @@ export function CohortManager() {
               </button>
               <button
                 onClick={handleReenrollBatch}
-                disabled={reenrollLoading || !reenrollSourceId || selectedStudentEmails.size === 0}
+                disabled={
+                  reenrollLoading ||
+                  !reenrollSourceId ||
+                  selectedStudentEmails.size === 0 ||
+                  (!sendEmailOption && !sendWhatsAppOption)
+                }
                 className="flex-1 px-4 py-2 rounded text-xs font-semibold bg-slate-900 text-white hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5 transition-all"
               >
                 {reenrollLoading ? (
@@ -1698,6 +1742,7 @@ export function CohortManager() {
                     <option value="paid">Paid</option>
                     <option value="failed">Failed</option>
                     <option value="wa_failed">WA Failed (retryable)</option>
+                    <option value="email_failed">Email Failed (retryable)</option>
                   </select>
                 </div>
               </div>
@@ -1751,13 +1796,19 @@ export function CohortManager() {
                                     ? 'bg-amber-50 text-amber-700 border-amber-100'
                                     : log.status === 'wa_failed'
                                       ? 'bg-orange-50 text-orange-600 border-orange-200'
-                                      : 'bg-red-50 text-red-500 border-red-100'
+                                      : log.status === 'email_failed'
+                                        ? 'bg-red-50 text-red-650 border-red-200'
+                                        : 'bg-red-50 text-red-500 border-red-100'
                               }`}
                             >
-                              {(log.status === 'failed' || log.status === 'wa_failed') && (
-                                <AlertCircle size={8} />
-                              )}
-                              {log.status === 'wa_failed' ? 'WA Failed' : log.status}
+                              {(log.status === 'failed' ||
+                                log.status === 'wa_failed' ||
+                                log.status === 'email_failed') && <AlertCircle size={8} />}
+                              {log.status === 'wa_failed'
+                                ? 'WA Failed'
+                                : log.status === 'email_failed'
+                                  ? 'Email Failed'
+                                  : log.status}
                             </span>
                             {/* WA delivery status sub-badge */}
                             {log.wa_delivery_status && (
@@ -1775,7 +1826,28 @@ export function CohortManager() {
                                 {log.wa_delivery_status === 'pending' && '⏳ WA Pending'}
                               </span>
                             )}
-                            {(log.status === 'failed' || log.status === 'wa_failed') &&
+                            {/* Email delivery status sub-badge */}
+                            {log.email_delivery_status && (
+                              <span
+                                className={`text-[8px] font-bold flex items-center gap-0.5 ${
+                                  log.email_delivery_status === 'delivered'
+                                    ? 'text-emerald-500'
+                                    : log.email_delivery_status === 'bounced' ||
+                                        log.email_delivery_status === 'complained'
+                                      ? 'text-red-500'
+                                      : 'text-slate-400'
+                                }`}
+                              >
+                                {log.email_delivery_status === 'delivered' && '✓ Email Delivered'}
+                                {log.email_delivery_status === 'bounced' && '⚠ Email Bounced'}
+                                {log.email_delivery_status === 'complained' && '⚠ Spam Complaint'}
+                                {log.email_delivery_status === 'pending' &&
+                                  '⏳ Email Sent (Pending)'}
+                              </span>
+                            )}
+                            {(log.status === 'failed' ||
+                              log.status === 'wa_failed' ||
+                              log.status === 'email_failed') &&
                               log.error_message && (
                                 <p
                                   className="text-[8px] text-red-400 mt-0.5 max-w-[140px] line-clamp-1 italic"
@@ -1788,13 +1860,14 @@ export function CohortManager() {
                         </td>
                         <td className="px-5 py-2.5 text-right">
                           <div className="flex items-center justify-end gap-1.5">
-                            {/* Resend button — only for wa_failed students */}
-                            {log.status === 'wa_failed' &&
+                            {/* Resend button — for wa_failed (with 24h wait) or email_failed (immediate) */}
+                            {(log.status === 'wa_failed' || log.status === 'email_failed') &&
                               (() => {
+                                const isWA = log.status === 'wa_failed';
                                 const hoursSinceFailed =
                                   (Date.now() - new Date(log.updated_at).getTime()) /
                                   (1000 * 60 * 60);
-                                const canResend = hoursSinceFailed >= 24;
+                                const canResend = !isWA || hoursSinceFailed >= 24;
                                 const hoursLeft = Math.ceil(24 - hoursSinceFailed);
                                 return (
                                   <button
@@ -1802,7 +1875,7 @@ export function CohortManager() {
                                     disabled={!canResend || resendingInviteId === log.id}
                                     title={
                                       canResend
-                                        ? `Resend WA invite to ${log.student_name}`
+                                        ? `Resend ${isWA ? 'WA' : 'Email'} invite to ${log.student_name}`
                                         : `Wait ~${hoursLeft}h more before retrying`
                                     }
                                     className={`flex items-center gap-1 px-2 py-1 rounded text-[9px] font-bold uppercase tracking-wider border transition-all ${
