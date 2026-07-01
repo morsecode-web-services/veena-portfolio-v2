@@ -1,12 +1,10 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { createPersonalizedPaymentLink } from '@/lib/razorpay';
-import { Resend } from 'resend';
 import { render } from '@react-email/render';
 import ReenrollInvite from '@/emails/ReenrollInvite';
 import { sendTwilioWhatsApp } from '@/lib/notifications/twilio';
-
-const resend = new Resend(process.env.RESEND_API_KEY);
+import { sendEmailWithRetry } from '@/lib/notifications/email';
 
 interface LogStatusParams {
   studentId: string;
@@ -279,7 +277,7 @@ export async function POST(request: Request) {
               })
             );
 
-            const emailRes = await resend.emails.send({
+            const emailRes = await sendEmailWithRetry({
               from: 'Aishwarya Manikarnike <official@email.aishwaryamanikarnike.com>',
               to: email,
               subject: `✨ Your invitation for ${targetCohort.title}`,

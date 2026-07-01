@@ -1,11 +1,9 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { sendTwilioWhatsApp } from '@/lib/notifications/twilio';
-import { Resend } from 'resend';
 import { render } from '@react-email/render';
 import ReenrollInvite from '@/emails/ReenrollInvite';
-
-const resend = new Resend(process.env.RESEND_API_KEY);
+import { sendEmailWithRetry } from '@/lib/notifications/email';
 
 export const dynamic = 'force-dynamic';
 
@@ -218,7 +216,7 @@ export async function POST(request: Request) {
           })
         );
 
-        const emailRes = await resend.emails.send({
+        const emailRes = await sendEmailWithRetry({
           from: 'Aishwarya Manikarnike <official@email.aishwaryamanikarnike.com>',
           to: email,
           subject: `✨ Your invitation for ${targetCohort.title}`,
