@@ -5,6 +5,48 @@ import { generateTelegramInviteLink } from '@/lib/notifications/telegram';
 import { sendWhatsAppNotification } from '@/lib/notifications/whatsapp';
 import { sendTwilioWhatsApp } from '@/lib/notifications/twilio';
 import { sendCohortWelcomeEmail } from '@/lib/notifications/email';
+import { getTargetToINRRate } from '@/lib/fx';
+
+// ─────────────────────────────────────────────
+// Currency Formatting & Conversion Helper
+// ─────────────────────────────────────────────
+
+async function getFormattedAmount(
+  amount: number,
+  currency: string
+): Promise<{ inrPaise: number; display: string }> {
+  if (!amount) {
+    return { inrPaise: 0, display: 'N/A' };
+  }
+  const cleanCurrency = (currency || 'INR').toUpperCase();
+  if (cleanCurrency === 'INR') {
+    return {
+      inrPaise: amount,
+      display: `₹${(amount / 100).toLocaleString('en-IN')}`,
+    };
+  }
+
+  try {
+    const rate = await getTargetToINRRate(cleanCurrency);
+    const inrPaise = Math.round(amount * rate);
+    const formattedForeign = new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: cleanCurrency,
+    }).format(amount / 100);
+    const formattedInr = `₹${(inrPaise / 100).toLocaleString('en-IN')}`;
+
+    return {
+      inrPaise,
+      display: `${formattedInr} (${formattedForeign} equivalent)`,
+    };
+  } catch (err) {
+    console.error(`[Webhook] Error converting currency ${cleanCurrency}:`, err);
+    return {
+      inrPaise: amount,
+      display: `₹${(amount / 100).toLocaleString('en-IN')} (Conversion failed)`,
+    };
+  }
+}
 
 // ─────────────────────────────────────────────
 // Admin Telegram Alert (fire-and-forget)
@@ -113,9 +155,8 @@ export async function POST(req: Request) {
           const errorSource = paymentEntity?.error_source || '';
           const method = paymentEntity?.method || 'unknown';
           const amountPaise = paymentEntity?.amount || 0;
-          const amountFormatted = amountPaise
-            ? `₹${(amountPaise / 100).toLocaleString('en-IN')}`
-            : 'N/A';
+          const currency = paymentEntity?.currency || 'INR';
+          const { display: amountFormatted } = await getFormattedAmount(amountPaise, currency);
           const notes = paymentEntity?.notes || {};
           const studentName = notes.studentName || notes.name || paymentEntity?.email || 'Unknown';
           const studentEmail = notes.studentEmail || notes.email || paymentEntity?.email || 'N/A';
@@ -174,6 +215,13 @@ export async function POST(req: Request) {
           if (!mainEntity || !paymentEntity) {
             throw new Error(`Missing entity in ${event.event} payload`);
           }
+
+          const amountPaise = paymentEntity.amount || 0;
+          const currency = paymentEntity.currency || 'INR';
+          const { inrPaise, display: amountFormatted } = await getFormattedAmount(
+            amountPaise,
+            currency
+          );
 
           // 3. Extract Metadata (Notes)
           // For Payment Links, notes are on the payment_link entity
@@ -310,7 +358,7 @@ export async function POST(req: Request) {
                     razorpay_customer_id: customerId,
                     cohort_id: finalCohortId,
                     is_verified: true,
-                    razorpay_amount: paymentEntity?.amount || null,
+                    razorpay_amount: inrPaise || null,
                   },
                 ])
                 .select('id')
@@ -324,7 +372,7 @@ export async function POST(req: Request) {
                 payment_status: 'paid',
                 is_verified: true,
                 razorpay_payment_id: paymentId,
-                razorpay_amount: paymentEntity?.amount || null,
+                razorpay_amount: inrPaise || null,
               };
 
               const updateQuery = supabaseAdmin.from('form_submissions').update(updateData);
@@ -394,7 +442,7 @@ export async function POST(req: Request) {
                     ? null
                     : event.payload.subscription?.entity?.id || null,
                   razorpay_customer_id: customerId,
-                  amount: paymentEntity?.amount || null,
+                  amount: inrPaise || null,
                   status: 'paid',
                 },
                 { onConflict: 'razorpay_payment_id' }
@@ -582,10 +630,6 @@ export async function POST(req: Request) {
               // ── Admin Group Alert ───────────────────────────────────────────
               const tgIcon = isTelegramOk ? '✅' : '❌';
               const emailIcon = isEmailOk ? '✅' : '❌';
-              const amountPaise = paymentEntity?.amount || 0;
-              const amountFormatted = amountPaise
-                ? `₹${(amountPaise / 100).toLocaleString('en-IN')}`
-                : 'N/A';
               const now = new Date().toLocaleString('en-IN', {
                 timeZone: 'Asia/Kolkata',
                 hour12: true,
