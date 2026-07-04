@@ -53,7 +53,8 @@ export async function GET(request: Request) {
             phone
           ),
           cohorts (
-            title
+            title,
+            month_name
           )
         `
         )
@@ -69,7 +70,11 @@ export async function GET(request: Request) {
         name: e.students?.name || 'Unknown',
         email: e.students?.email || 'Unknown',
         phone: e.students?.phone || '',
-        cohort_title: e.cohorts?.title || 'Unknown',
+        cohort_title: e.cohorts
+          ? e.cohorts.month_name
+            ? `${e.cohorts.title} (${e.cohorts.month_name})`
+            : e.cohorts.title
+          : 'Unknown',
         type: 'enrollment',
         status: 'paid',
         created_at: e.created_at,
@@ -114,7 +119,8 @@ export async function GET(request: Request) {
             telegram_invite_link,
             status,
             cohorts (
-              title
+              title,
+              month_name
             ),
             payments (
               amount,
@@ -127,7 +133,8 @@ export async function GET(request: Request) {
             payment_link_url,
             status,
             cohorts:target_cohort_id (
-              title
+              title,
+              month_name
             )
           )
         `
@@ -149,7 +156,11 @@ export async function GET(request: Request) {
               name: student.name,
               email: student.email,
               phone: student.phone || '',
-              cohort_title: e.cohorts?.title || 'Unknown',
+              cohort_title: e.cohorts
+                ? e.cohorts.month_name
+                  ? `${e.cohorts.title} (${e.cohorts.month_name})`
+                  : e.cohorts.title
+                : 'Unknown',
               type: 'enrollment',
               status: e.status === 'active' ? 'paid' : e.status,
               created_at: e.created_at,
@@ -171,7 +182,11 @@ export async function GET(request: Request) {
               name: student.name,
               email: student.email,
               phone: student.phone || '',
-              cohort_title: ri.cohorts?.title || 'Unknown',
+              cohort_title: ri.cohorts
+                ? ri.cohorts.month_name
+                  ? `${ri.cohorts.title} (${ri.cohorts.month_name})`
+                  : ri.cohorts.title
+                : 'Unknown',
               type: 'invitation',
               status: ri.status,
               created_at: ri.created_at,

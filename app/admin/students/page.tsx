@@ -104,7 +104,7 @@ export default function StudentSearchPage() {
       try {
         const { data, error } = await supabase
           .from('cohorts')
-          .select('id, title, telegram_chat_id')
+          .select('id, title, month_name, telegram_chat_id')
           .order('created_at', { ascending: false });
         if (error) throw error;
         setCohorts(data || []);
@@ -944,6 +944,7 @@ export default function StudentSearchPage() {
                       {cohorts.map((c) => (
                         <option key={c.id} value={c.id}>
                           {c.title}
+                          {c.month_name ? ` (${c.month_name})` : ''}
                         </option>
                       ))}
                       <option value="custom">Custom Standalone Chat ID...</option>
