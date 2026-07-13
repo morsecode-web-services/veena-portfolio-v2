@@ -10,6 +10,8 @@ import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { Button } from '@/components/system/Button';
 import { useToast } from '@/context/ToastContext';
 
+import { validateEmailTypo } from '@/lib/utils';
+
 // Zod validation schema
 const contactFormSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters').max(100, 'Name is too long'),
@@ -20,7 +22,15 @@ const contactFormSchema = z.object({
       /^[+]?[(]?[0-9]{1,4}[)]?[-\s.]?[(]?[0-9]{1,4}[)]?[-\s.]?[0-9]{1,9}$/,
       'Please enter a valid phone number'
     ),
-  email: z.string().email('Please enter a valid email address'),
+  email: z
+    .string()
+    .email('Please enter a valid email address')
+    .refine(
+      (val) => validateEmailTypo(val).isValid,
+      (val) => ({
+        message: validateEmailTypo(val).error || 'Please double-check your email domain',
+      })
+    ),
   inquiryType: z.enum(['performance', 'classes', 'collaboration', 'general'], {
     required_error: 'Please select an inquiry type',
   }),
@@ -44,10 +54,15 @@ export default function ContactForm() {
     handleSubmit,
     formState: { errors },
     reset,
+    setValue,
+    watch,
   } = useForm<ContactFormData>({
     resolver: zodResolver(contactFormSchema),
     mode: 'onBlur',
   });
+
+  const emailSuggestionMatch = errors.email?.message?.match(/^Did you mean ([^?]+)\?$/);
+  const emailSuggestion = emailSuggestionMatch ? emailSuggestionMatch[1] : null;
 
   // Focus management for validation errors
   useEffect(() => {
@@ -214,15 +229,32 @@ export default function ContactForm() {
             aria-describedby={errors.email ? 'email-error' : undefined}
           />
           {errors.email && (
-            <m.p
+            <m.div
               id="email-error"
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="mt-2 text-sm text-red-600"
+              className="mt-2 text-sm text-red-600 leading-normal"
               role="alert"
             >
-              {errors.email.message}
-            </m.p>
+              <span>{errors.email.message}</span>
+              {emailSuggestion && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const currentVal = watch('email') || '';
+                    const localPart = currentVal.split('@')[0];
+                    if (localPart) {
+                      setValue('email', `${localPart}@${emailSuggestion}`, {
+                        shouldValidate: true,
+                      });
+                    }
+                  }}
+                  className="text-xs text-blue-600 hover:text-blue-800 font-bold underline cursor-pointer focus:outline-none transition-colors ml-1.5 inline-block"
+                >
+                  update
+                </button>
+              )}
+            </m.div>
           )}
         </div>
 

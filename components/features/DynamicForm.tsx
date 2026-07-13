@@ -15,6 +15,7 @@ import en from 'react-phone-number-input/locale/en';
 import Input from 'react-phone-number-input/input';
 import 'react-phone-number-input/style.css';
 import { Turnstile } from '@marsidev/react-turnstile';
+import { validateEmailTypo } from '@/lib/utils';
 
 export interface FormField {
   name: string;
@@ -206,7 +207,15 @@ export default function DynamicForm({
     let validator: z.ZodTypeAny = z.string();
 
     if (field.type === 'email') {
-      validator = z.string().email('Invalid email address');
+      validator = z
+        .string()
+        .email('Invalid email address')
+        .refine(
+          (val) => validateEmailTypo(val).isValid,
+          (val) => ({
+            message: validateEmailTypo(val).error || 'Please double-check your email domain',
+          })
+        );
     } else if (field.type === 'tel') {
       validator = z
         .string()
@@ -270,6 +279,7 @@ export default function DynamicForm({
     control,
   } = useForm<FormData>({
     resolver: zodResolver(dynamicSchema),
+    mode: 'onBlur',
   });
 
   const hasPrefilled = useRef(false);
@@ -684,15 +694,39 @@ export default function DynamicForm({
                   />
                 )}
 
-                {errors[field.name] && (
-                  <m.p
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    className="mt-1.5 text-xs text-red-600 font-medium"
-                  >
-                    {errors[field.name]?.message as string}
-                  </m.p>
-                )}
+                {errors[field.name] &&
+                  (() => {
+                    const errMsg = errors[field.name]?.message;
+                    const match =
+                      typeof errMsg === 'string' ? errMsg.match(/^Did you mean ([^?]+)\?$/) : null;
+                    const suggestedDomain = match ? match[1] : null;
+                    return (
+                      <m.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        className="mt-1.5 text-xs text-red-600 font-medium leading-normal"
+                      >
+                        <span>{errors[field.name]?.message as string}</span>
+                        {suggestedDomain && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const currentVal = watch(field.name) || '';
+                              const localPart = currentVal.split('@')[0];
+                              if (localPart) {
+                                setValue(field.name, `${localPart}@${suggestedDomain}`, {
+                                  shouldValidate: true,
+                                });
+                              }
+                            }}
+                            className="text-[11px] text-blue-600 hover:text-blue-800 font-bold underline cursor-pointer focus:outline-none transition-colors ml-1.5 inline-block"
+                          >
+                            update
+                          </button>
+                        )}
+                      </m.div>
+                    );
+                  })()}
               </>
             )}
           </div>
