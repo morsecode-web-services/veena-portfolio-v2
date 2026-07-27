@@ -454,7 +454,7 @@ function CohortContent({ initialCohorts, config }: CohortClientProps) {
                               <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
                             </span>
                             <span className="text-[11px] font-bold text-emerald-600 leading-tight">
-                              {cohort.month_name} Batch — Registration Open
+                              Registrations Open
                             </span>
                           </div>
                         )}
