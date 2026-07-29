@@ -214,6 +214,9 @@ export default function AnalyticsPage() {
   const [cohortStats, setCohortStats] = useState<any[]>([]);
   const [overallStats, setOverallStats] = useState({
     totalRevenue: 0,
+    totalFees: 0,
+    totalTax: 0,
+    totalNet: 0,
     totalPaidStudents: 0,
     overallAverage: 0,
     totalLeads: 0,
