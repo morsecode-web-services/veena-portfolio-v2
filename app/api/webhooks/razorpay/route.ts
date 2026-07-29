@@ -443,6 +443,8 @@ export async function POST(req: Request) {
                     : event.payload.subscription?.entity?.id || null,
                   razorpay_customer_id: customerId,
                   amount: inrPaise || null,
+                  fee: paymentEntity.fee || null,
+                  tax: paymentEntity.tax || null,
                   status: 'paid',
                 },
                 { onConflict: 'razorpay_payment_id' }

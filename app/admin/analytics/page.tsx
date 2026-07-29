@@ -270,7 +270,7 @@ export default function AnalyticsPage() {
     const { data: payments } = await supabase
       .from('payments')
       .select(
-        'id, amount, razorpay_payment_id, enrollment_id, student_id, created_at, enrollments(cohort_id)'
+        'id, amount, fee, tax, razorpay_payment_id, enrollment_id, student_id, created_at, enrollments(cohort_id)'
       )
       .eq('status', 'paid');
 
@@ -299,6 +299,8 @@ export default function AnalyticsPage() {
             cohort_id: cohortId,
             razorpay_payment_id: p.razorpay_payment_id,
             amount: p.amount, // in paise
+            fee: p.fee || 0,
+            tax: p.tax || 0,
             student_id: p.student_id,
             created_at: p.created_at,
           };
@@ -310,8 +312,12 @@ export default function AnalyticsPage() {
 
         // Sum actual payments
         let totalRevenue = 0;
+        let totalFees = 0;
+        let totalTax = 0;
         cohortPayments.forEach((p) => {
           totalRevenue += (p.amount || 0) / 100;
+          totalFees += (p.fee || 0) / 100;
+          totalTax += (p.tax || 0) / 100;
         });
 
         // Lead/Interest count
@@ -327,6 +333,9 @@ export default function AnalyticsPage() {
           student_count: cohortPayments.length,
           lead_count: leadCount,
           revenue: totalRevenue,
+          fees: totalFees,
+          tax: totalTax,
+          net: totalRevenue - totalFees,
           average: cohortPayments.length > 0 ? totalRevenue / cohortPayments.length : 0,
         };
       });
@@ -337,11 +346,17 @@ export default function AnalyticsPage() {
 
       // Calculate overall aggregates
       let overallRevenue = 0;
+      let overallFees = 0;
+      let overallTax = 0;
+      let overallNet = 0;
       let overallPaidStudents = 0;
       let overallLeads = 0;
 
       stats.forEach((s) => {
         overallRevenue += s.revenue;
+        overallFees += s.fees;
+        overallTax += s.tax;
+        overallNet += s.net;
         overallPaidStudents += s.student_count;
         overallLeads += s.lead_count;
       });
@@ -350,6 +365,9 @@ export default function AnalyticsPage() {
 
       setOverallStats({
         totalRevenue: overallRevenue,
+        totalFees: overallFees,
+        totalTax: overallTax,
+        totalNet: overallNet,
         totalPaidStudents: overallPaidStudents,
         overallAverage: overallPaidStudents > 0 ? overallRevenue / overallPaidStudents : 0,
         totalLeads: overallLeads,
@@ -763,13 +781,38 @@ export default function AnalyticsPage() {
               icon={<TrendingUp className="w-4 h-4 text-emerald-500" />}
             >
               <div className="space-y-4 pt-1">
-                <div className="grid grid-cols-4 gap-2">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                   <div className="bg-emerald-50/50 border border-emerald-200 rounded p-2 text-center flex flex-col justify-center">
                     <span className="text-[8px] font-bold text-emerald-600 block uppercase tracking-wider">
-                      Revenue
+                      Gross Revenue
                     </span>
                     <span className="text-xs font-black text-emerald-800">
-                      ₹{overallStats.totalRevenue.toLocaleString()}
+                      ₹
+                      {overallStats.totalRevenue.toLocaleString(undefined, {
+                        maximumFractionDigits: 0,
+                      })}
+                    </span>
+                  </div>
+                  <div className="bg-red-50/50 border border-red-200 rounded p-2 text-center flex flex-col justify-center">
+                    <span className="text-[8px] font-bold text-red-600 block uppercase tracking-wider">
+                      Fees & Tax
+                    </span>
+                    <span className="text-xs font-black text-red-800">
+                      ₹
+                      {overallStats.totalFees.toLocaleString(undefined, {
+                        maximumFractionDigits: 0,
+                      })}
+                    </span>
+                  </div>
+                  <div className="bg-green-50 border border-green-200 rounded p-2 text-center flex flex-col justify-center">
+                    <span className="text-[8px] font-bold text-green-700 block uppercase tracking-wider">
+                      Net Revenue
+                    </span>
+                    <span className="text-xs font-black text-green-900">
+                      ₹
+                      {overallStats.totalNet.toLocaleString(undefined, {
+                        maximumFractionDigits: 0,
+                      })}
                     </span>
                   </div>
                   <div className="bg-blue-50/50 border border-blue-200 rounded p-2 text-center flex flex-col justify-center">
@@ -778,22 +821,6 @@ export default function AnalyticsPage() {
                     </span>
                     <span className="text-xs font-black text-blue-800">
                       {overallStats.totalPaidStudents}
-                    </span>
-                  </div>
-                  <div className="bg-cyan-50/50 border border-cyan-200 rounded p-2 text-center flex flex-col justify-center">
-                    <span className="text-[8px] font-bold text-cyan-600 block uppercase tracking-wider">
-                      Unique
-                    </span>
-                    <span className="text-xs font-black text-cyan-800">
-                      {overallStats.uniqueStudents}
-                    </span>
-                  </div>
-                  <div className="bg-purple-50/50 border border-purple-200 rounded p-2 text-center flex flex-col justify-center">
-                    <span className="text-[8px] font-bold text-purple-600 block uppercase tracking-wider">
-                      Average
-                    </span>
-                    <span className="text-xs font-black text-purple-800">
-                      ₹{Math.round(overallStats.overallAverage).toLocaleString()}
                     </span>
                   </div>
                 </div>
@@ -834,8 +861,8 @@ export default function AnalyticsPage() {
                           </span>
                         </div>
                         <div className="flex items-center justify-between text-[9px] text-slate-400 mt-0.5">
-                          <span>Suggested: ₹{c.cohort_price}</span>
-                          <span>Avg: ₹{Math.round(c.average).toLocaleString()}</span>
+                          <span>Net: ₹{Math.round(c.net).toLocaleString()}</span>
+                          <span>Fees: ₹{Math.round(c.fees).toLocaleString()}</span>
                         </div>
                       </div>
                     ))
