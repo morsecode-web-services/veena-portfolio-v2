@@ -273,7 +273,7 @@ export default function AnalyticsPage() {
     const { data: payments } = await supabase
       .from('payments')
       .select(
-        'id, amount, fee, tax, razorpay_payment_id, enrollment_id, student_id, created_at, enrollments(cohort_id)'
+        'id, amount, fee, tax, razorpay_payment_id, enrollment_id, student_id, created_at, students(email), enrollments(cohort_id, student_id, students(email))'
       )
       .eq('status', 'paid');
 
@@ -292,11 +292,22 @@ export default function AnalyticsPage() {
 
     if (cohorts) {
       const formattedPayments = (payments || [])
-        .map((p) => {
-          const cohortId =
-            p.enrollments && !Array.isArray(p.enrollments)
-              ? (p.enrollments as any).cohort_id
+        .map((p: any) => {
+          const enrollmentObj =
+            p.enrollments && !Array.isArray(p.enrollments) ? (p.enrollments as any) : null;
+          const studentObj = p.students && !Array.isArray(p.students) ? (p.students as any) : null;
+          const enrollmentStudentObj =
+            enrollmentObj?.students && !Array.isArray(enrollmentObj.students)
+              ? (enrollmentObj.students as any)
               : null;
+
+          const cohortId = enrollmentObj?.cohort_id || null;
+          const studentId =
+            p.student_id ||
+            enrollmentObj?.student_id ||
+            studentObj?.email?.toLowerCase() ||
+            enrollmentStudentObj?.email?.toLowerCase() ||
+            null;
           return {
             id: p.id,
             cohort_id: cohortId,
@@ -304,7 +315,7 @@ export default function AnalyticsPage() {
             amount: p.amount, // in paise
             fee: p.fee || 0,
             tax: p.tax || 0,
-            student_id: p.student_id,
+            student_id: studentId,
             created_at: p.created_at,
           };
         })
@@ -784,7 +795,7 @@ export default function AnalyticsPage() {
               icon={<TrendingUp className="w-4 h-4 text-emerald-500" />}
             >
               <div className="space-y-4 pt-1">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
                   <div className="bg-emerald-50/50 border border-emerald-200 rounded p-2 text-center flex flex-col justify-center">
                     <span className="text-[8px] font-bold text-emerald-600 block uppercase tracking-wider">
                       Gross Revenue
@@ -820,10 +831,18 @@ export default function AnalyticsPage() {
                   </div>
                   <div className="bg-blue-50/50 border border-blue-200 rounded p-2 text-center flex flex-col justify-center">
                     <span className="text-[8px] font-bold text-blue-600 block uppercase tracking-wider">
-                      Students
+                      Total Sales
                     </span>
                     <span className="text-xs font-black text-blue-800">
                       {overallStats.totalPaidStudents}
+                    </span>
+                  </div>
+                  <div className="bg-purple-50/50 border border-purple-200 rounded p-2 text-center flex flex-col justify-center">
+                    <span className="text-[8px] font-bold text-purple-600 block uppercase tracking-wider">
+                      Unique Students
+                    </span>
+                    <span className="text-xs font-black text-purple-800">
+                      {overallStats.uniqueStudents}
                     </span>
                   </div>
                 </div>
