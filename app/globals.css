@@ -28,6 +28,21 @@ html {
   scroll-behavior: smooth;
 }
 
+/* ── Global focus reset ─────────────────────────────────────────────────
+   Remove the browser's default blue outline on ALL interactive elements.
+   Keyboard users still get a gold ring via :focus-visible below.
+   This prevents the blue flash on mobile auto-focus at page load.
+──────────────────────────────────────────────────────────────────────── */
+*:focus {
+  outline: none;
+}
+
+*:focus-visible {
+  outline: 2px solid rgb(var(--color-gold));
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
 /* Hardware acceleration for complex animations if explicitly needed */
 @media (prefers-reduced-motion: no-preference) {
   .hardware-accelerated {

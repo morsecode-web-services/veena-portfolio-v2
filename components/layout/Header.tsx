@@ -98,7 +98,7 @@ export default function Header({ config }: HeaderProps) {
           >
             <a
               href="/"
-              className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-500 rounded flex items-center gap-2 md:gap-3 group"
+              className="outline-none focus-visible:ring-2 focus-visible:ring-gold-500 rounded flex items-center gap-2 md:gap-3 group"
             >
               {logo && (
                 <div
