@@ -116,7 +116,8 @@ export const INITIAL_HALL_OF_FAMERS: HallOfFamer[] = [
 ];
 
 /**
- * Fetches all Hall of Famers from Supabase DB or returns initial fallback
+ * Fetches all Hall of Famers from Supabase DB, merged with any fallback entries
+ * not yet saved to the database (identified by student name deduplication).
  */
 export async function getHallOfFamers(): Promise<HallOfFamer[]> {
   try {
@@ -126,8 +127,8 @@ export async function getHallOfFamers(): Promise<HallOfFamer[]> {
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (!error && data && data.length > 0) {
-        return data.map((item) => ({
+      if (!error && data) {
+        const dbRows: HallOfFamer[] = data.map((item) => ({
           id: item.id,
           studentName: item.student_name,
           cohort: item.cohort || 'Vande Mataram',
@@ -146,6 +147,14 @@ export async function getHallOfFamers(): Promise<HallOfFamer[]> {
           dateFeatured: item.date_featured || '2026',
           isFeatured: item.is_featured ?? false,
         }));
+
+        // Include fallback entries whose student names aren't already in Supabase
+        const dbNames = new Set(dbRows.map((r) => r.studentName.trim().toLowerCase()));
+        const unseenFallbacks = INITIAL_HALL_OF_FAMERS.filter(
+          (f) => !dbNames.has(f.studentName.trim().toLowerCase())
+        );
+
+        return [...dbRows, ...unseenFallbacks];
       }
     }
   } catch (err) {

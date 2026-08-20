@@ -5,7 +5,13 @@ import Image from 'next/image';
 import { m, AnimatePresence } from 'framer-motion';
 import { X, Share2, Check, Download, MessageCircle, Sparkles, MapPin, Loader2 } from 'lucide-react';
 import { HallOfFamer } from '@/types/hall-of-fame';
-import { extractGoogleDriveId, getGoogleDriveThumbnailUrl, extractYoutubeId } from '@/lib/utils';
+import {
+  generateHofStoryFile,
+  getHofShareUrl,
+  getHofShareText,
+  getHofThumbnail,
+} from '@/lib/hof-share';
+import { extractGoogleDriveId, extractYoutubeId } from '@/lib/utils';
 
 interface StoryShareModalProps {
   performer: HallOfFamer | null;
@@ -35,16 +41,9 @@ export default function StoryShareModal({ performer, onClose }: StoryShareModalP
 
   const driveId = extractGoogleDriveId(performer.videoUrl);
   const youtubeId = extractYoutubeId(performer.videoUrl);
-  const thumbnailUrl =
-    performer.customThumbnailUrl ||
-    (driveId ? getGoogleDriveThumbnailUrl(performer.videoUrl) : null) ||
-    (youtubeId ? `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg` : null) ||
-    'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=800&q=80';
-
-  const shareUrl =
-    typeof window !== 'undefined'
-      ? `${window.location.origin}/hall-of-fame?entry=${performer.id}`
-      : `https://veenamanikarnike.com/hall-of-fame?entry=${performer.id}`;
+  const thumbnailUrl = getHofThumbnail(performer);
+  const shareUrl = getHofShareUrl(performer);
+  const shareText = getHofShareText(performer);
 
   const mentorCommentText =
     performer.mentorComment?.commentText ||
@@ -55,171 +54,10 @@ export default function StoryShareModal({ performer, onClose }: StoryShareModalP
     performer.mentorComment?.authorAvatar ||
     'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=300&q=80';
 
-  const shareText = `Aishwarya Manikarnike Veena Academy
-Cohort: ${performer.cohort || 'Vande Mataram'} — Hall of Fame
-
-Celebrating ${performer.studentName}'s exceptional performance and musical dedication!
-
-Instructor Feedback (Aishwarya Manikarnike):
-"${mentorCommentText}"
-
-Watch performance here:
-${shareUrl}`;
-
   const whatsappShareUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`;
 
-  const generateStoryFile = async (): Promise<File | null> => {
-    return new Promise((resolve) => {
-      try {
-        const canvas = document.createElement('canvas');
-        canvas.width = 1080;
-        canvas.height = 1920;
-        const ctx = canvas.getContext('2d');
-
-        if (!ctx) return resolve(null);
-
-        // 1. Warm Ivory Background Gradient
-        const gradient = ctx.createLinearGradient(0, 0, 1080, 1920);
-        gradient.addColorStop(0, '#fdfbf7');
-        gradient.addColorStop(0.5, '#f8f5ee');
-        gradient.addColorStop(1, '#f1ede4');
-        ctx.fillStyle = gradient;
-        ctx.fillRect(0, 0, 1080, 1920);
-
-        // Decorative Background Glow Circles
-        ctx.fillStyle = 'rgba(217, 119, 6, 0.05)';
-        ctx.beginPath();
-        ctx.arc(900, 200, 450, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.fillStyle = 'rgba(225, 29, 72, 0.03)';
-        ctx.beginPath();
-        ctx.arc(100, 1600, 500, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Outer Luxury Frame Border
-        ctx.strokeStyle = '#e2e8f0';
-        ctx.lineWidth = 14;
-        ctx.strokeRect(40, 40, 1000, 1840);
-
-        // Gold Accent Inner Ring Line
-        ctx.strokeStyle = '#b8860b';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(56, 56, 968, 1808);
-
-        // 2. Header Tagline & Cohort Pill
-        ctx.fillStyle = '#1e293b';
-        ctx.font = 'bold 28px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText('AISHWARIYA MANIKARNIKE VEENA ACADEMY', 540, 150);
-
-        ctx.fillStyle = '#0f172a';
-        ctx.font = 'bold 26px sans-serif';
-        ctx.fillText(`COHORT: ${(performer.cohort || 'VANDE MATARAM').toUpperCase()}`, 540, 200);
-
-        // 3. Student Name Title
-        ctx.fillStyle = '#0f172a';
-        ctx.font = 'bold 64px Georgia, serif';
-        ctx.fillText(performer.studentName, 540, 310);
-
-        if (performer.location) {
-          ctx.fillStyle = '#64748b';
-          ctx.font = '32px sans-serif';
-          ctx.fillText(performer.location, 540, 365);
-        }
-
-        // 4. White Center Card Container
-        ctx.fillStyle = '#ffffff';
-        ctx.shadowColor = 'rgba(15, 23, 42, 0.08)';
-        ctx.shadowBlur = 40;
-        ctx.shadowOffsetY = 20;
-        if (ctx.roundRect) {
-          ctx.roundRect(100, 430, 880, 1280, 40);
-        } else {
-          ctx.fillRect(100, 430, 880, 1280);
-        }
-        ctx.fill();
-        ctx.shadowBlur = 0;
-
-        // Card Border
-        ctx.strokeStyle = '#cbd5e1';
-        ctx.lineWidth = 3;
-        ctx.stroke();
-
-        // Student Tagline Box inside White Card
-        if (performer.studentDescription) {
-          ctx.fillStyle = '#f8fafc';
-          if (ctx.roundRect) {
-            ctx.roundRect(140, 480, 800, 200, 24);
-          } else {
-            ctx.fillRect(140, 480, 800, 200);
-          }
-          ctx.fill();
-
-          ctx.fillStyle = '#334155';
-          ctx.font = '34px sans-serif';
-          ctx.textAlign = 'center';
-
-          const words = performer.studentDescription.split(' ');
-          let line = '';
-          let y = 545;
-          for (let n = 0; n < words.length; n++) {
-            const testLine = line + words[n] + ' ';
-            const metrics = ctx.measureText(testLine);
-            if (metrics.width > 720 && n > 0) {
-              ctx.fillText(line, 540, y);
-              line = words[n] + ' ';
-              y += 48;
-            } else {
-              line = testLine;
-            }
-          }
-          ctx.fillText(line, 540, y);
-        }
-
-        // 5. Instructor Comment Header & Text
-        ctx.fillStyle = '#0f172a';
-        ctx.font = 'bold 36px sans-serif';
-        ctx.textAlign = 'left';
-        ctx.fillText(`${mentorAuthorName}  ✓ Instructor`, 150, 780);
-
-        ctx.fillStyle = '#1e293b';
-        ctx.font = 'italic 36px Georgia, serif';
-
-        const commentWords = `"${mentorCommentText}"`.split(' ');
-        let commentLine = '';
-        let commentY = 850;
-        for (let n = 0; n < commentWords.length; n++) {
-          const testLine = commentLine + commentWords[n] + ' ';
-          const metrics = ctx.measureText(testLine);
-          if (metrics.width > 760 && n > 0) {
-            ctx.fillText(commentLine, 150, commentY);
-            commentLine = commentWords[n] + ' ';
-            commentY += 52;
-          } else {
-            commentLine = testLine;
-          }
-        }
-        ctx.fillText(commentLine, 150, commentY);
-
-        // 6. Footer Branding
-        ctx.fillStyle = '#475569';
-        ctx.font = 'bold 28px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText('veenamanikarnike.com/hall-of-fame', 540, 1800);
-
-        canvas.toBlob((blob) => {
-          if (!blob) return resolve(null);
-          const fileName = `${performer.studentName.replace(/\s+/g, '_')}_StoryCard.png`;
-          const file = new File([blob], fileName, { type: 'image/png' });
-          resolve(file);
-        }, 'image/png');
-      } catch (err) {
-        console.error('Error rendering story card canvas:', err);
-        resolve(null);
-      }
-    });
-  };
+  // Delegate to shared utility — no duplication
+  const generateStoryFile = () => generateHofStoryFile(performer);
 
   const handleCopyLink = async () => {
     try {
