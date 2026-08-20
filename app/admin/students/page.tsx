@@ -483,7 +483,7 @@ export default function StudentSearchPage() {
               </div>
               <input
                 type="text"
-                placeholder="Search student registry by name or email..."
+                placeholder="Search student registry by name, email, or phone..."
                 className="w-full bg-white border border-slate-200 rounded-lg py-2.5 pl-10 pr-4 text-xs focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none transition-all placeholder:text-slate-400"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}

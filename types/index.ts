@@ -98,6 +98,12 @@ export interface SiteConfig {
       opacity?: number; // Override default opacity (0-1, default: 0.3)
     };
   };
+  hallOfFame?: {
+    title?: string;
+    subtitle?: string;
+    description?: string;
+    enabled?: boolean;
+  };
   contact?: {
     imageUrl?: string;
     imageAlt?: string;

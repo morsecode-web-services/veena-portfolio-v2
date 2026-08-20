@@ -17,6 +17,7 @@ import {
   Link as LinkIcon,
   BarChart3,
   Search,
+  Award,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { motion as m } from 'framer-motion';
@@ -149,6 +150,7 @@ export default function AdminLayoutClient({ children }: AdminLayoutClientProps) 
   const navItems = [
     { name: 'Cohorts', href: '/admin/cohorts', icon: Users },
     { name: 'Students', href: '/admin/students', icon: Search },
+    { name: 'Hall of Fame', href: '/admin/hall-of-fame', icon: Award },
     { name: 'Events', href: '/admin/events', icon: Calendar },
     { name: 'Blog', href: '/admin/blogs', icon: FileText },
     { name: 'Videos', href: '/admin/videos', icon: LayoutDashboard },

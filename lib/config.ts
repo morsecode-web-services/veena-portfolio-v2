@@ -159,6 +159,14 @@ const SiteConfigSchema = z.object({
       items: z.array(FAQItemSchema),
     })
     .optional(),
+  hallOfFame: z
+    .object({
+      title: z.string().optional(),
+      subtitle: z.string().optional(),
+      description: z.string().optional(),
+      enabled: z.boolean().optional(),
+    })
+    .optional(),
   cohorts: z
     .object({
       registrationsPaused: z.boolean().optional(),

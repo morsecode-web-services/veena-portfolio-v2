@@ -121,3 +121,42 @@ export function validateEmailTypo(email: string): {
 
   return { isValid: true };
 }
+
+/**
+ * Extracts Google Drive File ID from various sharing URL formats
+ */
+export function extractGoogleDriveId(url: string): string | null {
+  if (!url) return null;
+
+  // Pattern 1: /file/d/{id}/view, /file/d/{id}/preview, /file/d/{id}
+  const match1 = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+  if (match1 && match1[1]) return match1[1];
+
+  // Pattern 2: ?id={id} or &id={id}
+  const match2 = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+  if (match2 && match2[1]) return match2[1];
+
+  // Pattern 3: /d/{id}
+  const match3 = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+  if (match3 && match3[1]) return match3[1];
+
+  return null;
+}
+
+/**
+ * Returns Google Drive Preview iframe URL for embed
+ */
+export function getGoogleDriveEmbedUrl(url: string): string | null {
+  const driveId = extractGoogleDriveId(url);
+  if (!driveId) return null;
+  return `https://drive.google.com/file/d/${driveId}/preview`;
+}
+
+/**
+ * Returns Google Drive high-resolution thumbnail URL
+ */
+export function getGoogleDriveThumbnailUrl(url: string): string | null {
+  const driveId = extractGoogleDriveId(url);
+  if (!driveId) return null;
+  return `https://drive.google.com/thumbnail?id=${driveId}&sz=w800`;
+}

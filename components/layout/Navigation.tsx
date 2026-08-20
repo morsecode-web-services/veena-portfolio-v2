@@ -29,6 +29,7 @@ export default function Navigation({ config, isScrolled = false }: NavigationPro
       { id: 'gallery', label: 'Gallery' },
       { id: 'music', label: 'Music' },
       { id: 'events', label: 'Events' },
+      { id: 'hall-of-fame', label: 'Hall of Fame', isPageLink: true, path: '/hall-of-fame' },
       { id: 'press', label: 'Press' },
       { id: 'faq', label: 'FAQ' },
       { id: 'contact', label: 'Contact' },
@@ -36,12 +37,18 @@ export default function Navigation({ config, isScrolled = false }: NavigationPro
 
     if (!config?.layoutOrder) return defaultItems;
 
-    return config.layoutOrder
+    const configItems = config.layoutOrder
       .filter((section) => !config.sections || config.sections[section] !== false)
       .map((section) => ({
         id: section.toLowerCase(),
         label: section,
       }));
+
+    // Inject Hall of Fame into config navigation if not present
+    return [
+      ...configItems,
+      { id: 'hall-of-fame', label: 'Hall of Fame', isPageLink: true, path: '/hall-of-fame' },
+    ];
   }, [config]);
 
   // Body scroll lock when mobile menu is open
@@ -74,6 +81,11 @@ export default function Navigation({ config, isScrolled = false }: NavigationPro
   useEffect(() => {
     setMounted(true);
 
+    if (pathname === '/hall-of-fame') {
+      setActiveSection('hall-of-fame');
+      return;
+    }
+
     const handleScroll = () => {
       requestAnimationFrame(() => {
         const sections = navItems.map((item) => item.id);
@@ -96,7 +108,18 @@ export default function Navigation({ config, isScrolled = false }: NavigationPro
     return () => window.removeEventListener('scroll', handleScroll);
   }, [pathname, navItems]);
 
-  const handleNavClick = (item: { id: string; label: string }) => {
+  const handleNavClick = (item: {
+    id: string;
+    label: string;
+    isPageLink?: boolean;
+    path?: string;
+  }) => {
+    if (item.isPageLink && item.path) {
+      router.push(item.path);
+      setIsMenuOpen(false);
+      return;
+    }
+
     if (pathname !== '/') {
       router.push(`/#${item.id}`);
       setIsMenuOpen(false);
