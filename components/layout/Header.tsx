@@ -68,6 +68,13 @@ export default function Header({ config }: HeaderProps) {
   const logo = config?.artist.logo;
   const artistName = config?.artist.name || 'Aishwarya Manikarnike';
 
+  const isStandaloneNavPage =
+    pathname === '/cohorts' ||
+    pathname?.startsWith('/cohorts') ||
+    pathname === '/hall-of-fame' ||
+    pathname?.startsWith('/hall-of-fame') ||
+    (process.env.NEXT_PUBLIC_SITE_LIVE === 'false' && pathname?.startsWith('/forms/'));
+
   return (
     <m.header
       ref={headerRef}
@@ -119,20 +126,19 @@ export default function Header({ config }: HeaderProps) {
           </m.div>
 
           <div className="flex items-center gap-4">
-            {!(process.env.NEXT_PUBLIC_SITE_LIVE === 'false' && pathname?.startsWith('/forms/')) &&
-              pathname !== '/cohorts' && (
-                <>
-                  <Navigation config={config} isScrolled={showSolidHeader} />
-                  <m.div
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.6, delay: 0.4 }}
-                    className="hidden sm:block"
-                  >
-                    <HeaderPDFButton isScrolled={showSolidHeader} />
-                  </m.div>
-                </>
-              )}
+            {!isStandaloneNavPage && (
+              <>
+                <Navigation config={config} isScrolled={showSolidHeader} />
+                <m.div
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.6, delay: 0.4 }}
+                  className="hidden sm:block"
+                >
+                  <HeaderPDFButton isScrolled={showSolidHeader} />
+                </m.div>
+              </>
+            )}
           </div>
         </div>
       </div>

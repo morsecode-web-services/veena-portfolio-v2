@@ -236,21 +236,26 @@ ${shareUrl}`;
     try {
       const file = await generateStoryFile();
       if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({
-          files: [file],
-          title: `${performer.studentName} — Hall of Fame`,
-          text: shareText,
-        });
-      } else {
-        // Fallback: download image and open WhatsApp link
-        if (file) {
-          const link = document.createElement('a');
-          link.download = file.name;
-          link.href = URL.createObjectURL(file);
-          link.click();
+        try {
+          await navigator.share({
+            files: [file],
+            title: `${performer.studentName} — Hall of Fame`,
+            text: `Celebrating ${performer.studentName}'s performance! ${shareUrl}`,
+          });
+          return;
+        } catch (shareErr: any) {
+          if (shareErr.name === 'AbortError') return;
         }
-        window.open(whatsappShareUrl, '_blank');
       }
+
+      // Fallback: download story image to gallery/downloads and open WhatsApp
+      if (file) {
+        const link = document.createElement('a');
+        link.download = file.name;
+        link.href = URL.createObjectURL(file);
+        link.click();
+      }
+      window.open(whatsappShareUrl, '_blank');
     } catch (err: any) {
       if (err.name !== 'AbortError') {
         window.open(whatsappShareUrl, '_blank');
@@ -268,7 +273,7 @@ ${shareUrl}`;
         await navigator.share({
           files: [file],
           title: `${performer.studentName} — Hall of Fame`,
-          text: shareText,
+          text: `Celebrating ${performer.studentName}'s performance! ${shareUrl}`,
         });
       } else if (navigator.share) {
         await navigator.share({

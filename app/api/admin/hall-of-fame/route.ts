@@ -157,6 +157,20 @@ export async function PUT(request: Request) {
       return NextResponse.json({ success: false, error: 'Missing entry ID' }, { status: 400 });
     }
 
+    const isUuid =
+      /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(id);
+
+    if (!isUuid) {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            'Initial fallback entries cannot be updated directly via PUT. Edit will save as new Supabase entry.',
+        },
+        { status: 400 }
+      );
+    }
+
     const mappedUpdates: Record<string, any> = {};
     if (studentName !== undefined) mappedUpdates.student_name = studentName;
     if (cohort !== undefined) mappedUpdates.cohort = cohort;

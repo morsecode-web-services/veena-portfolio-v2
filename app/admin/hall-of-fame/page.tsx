@@ -175,6 +175,16 @@ export default function AdminHallOfFamePage() {
       return;
     }
 
+    const isRealUuid =
+      id &&
+      /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(id);
+
+    if (!isRealUuid) {
+      setEntries((prev) => prev.filter((e) => e.id !== id));
+      addToast('Performance entry removed from view', 'info');
+      return;
+    }
+
     try {
       const headers = await getAuthHeaders();
       const res = await fetch(`/api/admin/hall-of-fame?id=${id}`, {
@@ -212,8 +222,14 @@ export default function AdminHallOfFamePage() {
       isVerified: true,
     };
 
+    const isRealUuid =
+      editingId &&
+      /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(
+        editingId
+      );
+
     const payload = {
-      id: editingId || undefined,
+      id: isRealUuid ? editingId : undefined,
       studentName: formData.studentName,
       cohort: formData.cohort || 'Vande Mataram',
       location: formData.location,
@@ -226,7 +242,7 @@ export default function AdminHallOfFamePage() {
 
     try {
       const headers = await getAuthHeaders();
-      const method = editingId ? 'PUT' : 'POST';
+      const method = isRealUuid ? 'PUT' : 'POST';
       const res = await fetch('/api/admin/hall-of-fame', {
         method,
         headers,
@@ -238,7 +254,7 @@ export default function AdminHallOfFamePage() {
       if (json.success && json.data) {
         await fetchEntries();
         addToast(
-          editingId
+          isRealUuid
             ? 'Entry updated successfully in Supabase database'
             : 'New entry saved successfully to Supabase database',
           'success'
