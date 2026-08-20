@@ -21,6 +21,13 @@ export default function Navigation({ config, isScrolled = false }: NavigationPro
   const hamburgerButtonRef = useRef<HTMLButtonElement>(null);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
 
+  // Pages that show no nav links and no hamburger
+  const isStandalonePage =
+    pathname === '/hall-of-fame' ||
+    pathname?.startsWith('/hall-of-fame') ||
+    pathname === '/cohorts' ||
+    pathname?.startsWith('/cohorts');
+
   const navItems = useMemo(() => {
     // Default fallback if no config
     const defaultItems = [
@@ -63,20 +70,20 @@ export default function Navigation({ config, isScrolled = false }: NavigationPro
     };
   }, [isMenuOpen]);
 
-  // Return focus to hamburger button when menu closes
+  // Return focus to hamburger button when menu closes (skip standalone pages)
   useEffect(() => {
     if (
+      !isStandalonePage &&
       !isMenuOpen &&
       hamburgerButtonRef.current &&
       document.activeElement !== hamburgerButtonRef.current
     ) {
-      // Only return focus if user closed the menu (not if they navigated)
       const wasMenuClosed = !isMenuOpen;
       if (wasMenuClosed && mounted) {
         hamburgerButtonRef.current.focus();
       }
     }
-  }, [isMenuOpen, mounted]);
+  }, [isMenuOpen, mounted, isStandalonePage]);
 
   useEffect(() => {
     setMounted(true);
@@ -187,22 +194,24 @@ export default function Navigation({ config, isScrolled = false }: NavigationPro
         </ul>
       </m.nav>
 
-      <button
-        ref={hamburgerButtonRef}
-        onClick={() => setIsMenuOpen(!isMenuOpen)}
-        className={`md:hidden transition-colors z-[10012] relative flex items-center justify-center ${
-          isMenuOpen
-            ? 'text-gold-600'
-            : isScrolled
-              ? 'text-charcoal-700 hover:text-gold-600'
-              : 'text-white hover:text-gold-300'
-        }`}
-        aria-label={isMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
-        aria-expanded={isMenuOpen}
-        aria-controls="mobile-menu"
-      >
-        {isMenuOpen ? <FaTimes size={20} /> : <FaBars size={20} />}
-      </button>
+      {!isStandalonePage && (
+        <button
+          ref={hamburgerButtonRef}
+          onClick={() => setIsMenuOpen(!isMenuOpen)}
+          className={`md:hidden transition-colors z-[10012] relative flex items-center justify-center ${
+            isMenuOpen
+              ? 'text-gold-600'
+              : isScrolled
+                ? 'text-charcoal-700 hover:text-gold-600'
+                : 'text-white hover:text-gold-300'
+          }`}
+          aria-label={isMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
+          aria-expanded={isMenuOpen}
+          aria-controls="mobile-menu"
+        >
+          {isMenuOpen ? <FaTimes size={20} /> : <FaBars size={20} />}
+        </button>
+      )}
 
       {/* Mobile Navigation Portal */}
       {mounted &&
