@@ -17,6 +17,7 @@ const WHITELISTED_PREFIXES = [
   '/forms/', // Standalone registration forms
   '/api/', // API routes for forms to function
   '/cohorts', // Cohort landing page
+  '/hall-of-fame', // Hall of Fame showcase page
   '/coming-soon', // The page itself (avoid infinite redirect loop)
   '/_next/', // Next.js internals
   '/favicon',

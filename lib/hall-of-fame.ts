@@ -177,9 +177,13 @@ export async function toggleHallOfFameLike(
   visitorId?: string
 ): Promise<{ success: boolean; liked: boolean; likesCount: number }> {
   const vid = visitorId || getVisitorId();
+  const isUuid =
+    /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(
+      performerId
+    );
 
   try {
-    if (supabase) {
+    if (supabase && isUuid) {
       const { data, error } = await supabase.rpc('toggle_hall_of_fame_like', {
         p_performer_id: performerId,
         p_visitor_id: vid,

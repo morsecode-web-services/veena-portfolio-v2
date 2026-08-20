@@ -17,12 +17,14 @@ import {
   Heart,
   Users,
   Award,
+  MessageSquare,
 } from 'lucide-react';
 import { HallOfFamer } from '@/types/hall-of-fame';
 import { getHallOfFamers } from '@/lib/hall-of-fame';
 import { extractGoogleDriveId } from '@/lib/utils';
 import { useToast } from '@/context/ToastContext';
 import { ImageUpload } from '@/components/admin/ImageUpload';
+import { supabase } from '@/lib/supabase';
 
 export default function AdminHallOfFamePage() {
   const { addToast } = useToast();
@@ -58,48 +60,66 @@ export default function AdminHallOfFamePage() {
 
   const [urlPreviewId, setUrlPreviewId] = useState<string | null>(null);
 
+  const getAuthHeaders = async () => {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`;
+      }
+    } catch (err) {
+      console.warn('Could not retrieve auth session token:', err);
+    }
+    return headers;
+  };
+
   const fetchEntries = async () => {
     setLoading(true);
     try {
       const res = await fetch('/api/admin/hall-of-fame');
       const json = await res.json();
-      if (json.success && json.data && json.data.length > 0) {
-        setEntries(
-          json.data.map((item: any) => ({
-            id: item.id,
-            studentName: item.student_name,
-            studentAvatar: item.student_avatar,
-            cohort: item.cohort || 'Vande Mataram',
-            location: item.location,
-            studentDescription: item.student_description || item.piece_title,
-            challengeId: item.challenge_id || 'c-general',
-            challengeTitle: item.challenge_title,
-            pieceTitle: item.piece_title || item.student_name,
-            ragaName: item.raga_name,
-            videoUrl: item.video_url,
-            videoType: item.video_type || 'gdrive',
-            customThumbnailUrl: item.thumbnail_url,
-            mentorPraise: item.mentor_praise,
-            mentorComment: item.mentor_comment || {
-              authorName: 'Aishwarya Manikarnike',
-              authorAvatar: '/images/contact/contact-image.jpg',
-              commentText:
-                item.mentor_praise || `${item.student_name} has shown wonderful proficiency!`,
-              timestamp: 'Recently',
-              likesCount: item.likes_count || 15,
-              isVerified: true,
-            },
-            dateFeatured: item.date_featured || '2026',
-            badges: [],
-            isFeatured: item.is_featured ?? false,
-          }))
-        );
+      if (json.success && Array.isArray(json.data)) {
+        if (json.data.length > 0) {
+          setEntries(
+            json.data.map((item: any) => ({
+              id: item.id,
+              studentName: item.student_name,
+              cohort: item.cohort || 'Vande Mataram',
+              location: item.location,
+              studentDescription: item.student_description,
+              videoUrl: item.video_url,
+              videoType: item.video_type || 'gdrive',
+              customThumbnailUrl: item.thumbnail_url,
+              mentorPraise: item.mentor_praise,
+              mentorComment: item.mentor_comment || {
+                authorName: 'Aishwarya Manikarnike',
+                authorAvatar: '/images/contact/contact-image.jpg',
+                commentText:
+                  item.mentor_praise || `${item.student_name} has shown wonderful proficiency!`,
+                timestamp: 'Recently',
+                likesCount: item.likes_count || 18,
+                isVerified: true,
+              },
+              dateFeatured: '2026',
+              badges: [],
+              isFeatured: true,
+            }))
+          );
+        } else {
+          // If Supabase table is currently empty, load defaults
+          const fallback = await getHallOfFamers();
+          setEntries(fallback);
+        }
       } else {
         const fallback = await getHallOfFamers();
         setEntries(fallback);
       }
     } catch (err) {
-      console.warn('API error, using client fallback:', err);
+      console.warn('API error fetching hall of fame entries:', err);
       const fallback = await getHallOfFamers();
       setEntries(fallback);
     } finally {
@@ -141,7 +161,7 @@ export default function AdminHallOfFamePage() {
       cohort: entry.cohort || 'Vande Mataram',
       location: entry.location || '',
       studentDescription: entry.studentDescription || '',
-      videoUrl: entry.videoUrl,
+      videoUrl: entry.videoUrl || '',
       customThumbnailUrl: entry.customThumbnailUrl || '',
       mentorCommentText: entry.mentorComment?.commentText || entry.mentorPraise || '',
     });
@@ -156,18 +176,20 @@ export default function AdminHallOfFamePage() {
     }
 
     try {
-      const res = await fetch(`/api/admin/hall-of-fame?id=${id}`, { method: 'DELETE' });
+      const headers = await getAuthHeaders();
+      const res = await fetch(`/api/admin/hall-of-fame?id=${id}`, {
+        method: 'DELETE',
+        headers,
+      });
       const json = await res.json();
       if (json.success) {
-        setEntries(entries.filter((e) => e.id !== id));
+        setEntries((prev) => prev.filter((e) => e.id !== id));
         addToast('Performance entry deleted from database', 'success');
       } else {
-        setEntries(entries.filter((e) => e.id !== id));
-        addToast('Entry removed from view', 'info');
+        addToast(`Failed to delete: ${json.error || 'Unknown error'}`, 'error');
       }
-    } catch {
-      setEntries(entries.filter((e) => e.id !== id));
-      addToast('Entry removed from view', 'info');
+    } catch (err: any) {
+      addToast(`Error deleting entry: ${err.message || 'Server error'}`, 'error');
     }
   };
 
@@ -193,25 +215,21 @@ export default function AdminHallOfFamePage() {
     const payload = {
       id: editingId || undefined,
       studentName: formData.studentName,
-      studentAvatar: '',
       cohort: formData.cohort || 'Vande Mataram',
       location: formData.location,
       studentDescription: formData.studentDescription,
-      challengeTitle: 'Vande Mataram Showcase',
-      pieceTitle: formData.studentName,
       videoUrl: formData.videoUrl,
       thumbnailUrl: formData.customThumbnailUrl,
       mentorPraise: formData.mentorCommentText,
       mentorComment: mentorCommentObj,
-      badges: [],
-      isFeatured: true,
     };
 
     try {
+      const headers = await getAuthHeaders();
       const method = editingId ? 'PUT' : 'POST';
       const res = await fetch('/api/admin/hall-of-fame', {
         method,
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify(payload),
       });
 
@@ -220,41 +238,21 @@ export default function AdminHallOfFamePage() {
       if (json.success && json.data) {
         await fetchEntries();
         addToast(
-          editingId ? 'Entry updated in database' : 'New entry saved to database',
+          editingId
+            ? 'Entry updated successfully in Supabase database'
+            : 'New entry saved successfully to Supabase database',
           'success'
         );
+        setIsModalOpen(false);
       } else {
-        const entryId = editingId || `hof-${Date.now()}`;
-        const fallbackItem: HallOfFamer = {
-          id: entryId,
-          studentName: formData.studentName,
-          cohort: formData.cohort,
-          location: formData.location,
-          studentDescription: formData.studentDescription,
-          challengeId: 'c-general',
-          challengeTitle: 'Vande Mataram Showcase',
-          pieceTitle: formData.studentName,
-          videoUrl: formData.videoUrl,
-          customThumbnailUrl: formData.customThumbnailUrl,
-          mentorComment: mentorCommentObj,
-          dateFeatured: 'August 2026',
-          badges: [],
-          isFeatured: true,
-        };
-
-        if (editingId) {
-          setEntries(entries.map((e) => (e.id === editingId ? fallbackItem : e)));
-        } else {
-          setEntries([fallbackItem, ...entries]);
-        }
-        addToast('Entry saved successfully', 'success');
+        console.error('Failed to save to Supabase:', json);
+        addToast(`Failed to save to database: ${json.error || 'Server error'}`, 'error');
       }
-    } catch (err) {
-      console.error('Error saving to API:', err);
-      addToast('Saved locally', 'info');
+    } catch (err: any) {
+      console.error('Error saving entry:', err);
+      addToast(`Network or server error: ${err.message || 'Failed to save'}`, 'error');
     } finally {
       setSavingEntry(false);
-      setIsModalOpen(false);
     }
   };
 
@@ -412,6 +410,8 @@ export default function AdminHallOfFamePage() {
                   <tbody className="divide-y divide-slate-200 text-xs">
                     {filteredEntries.map((entry) => {
                       const driveId = extractGoogleDriveId(entry.videoUrl);
+                      const commentText =
+                        entry.mentorComment?.commentText || entry.mentorPraise || '-';
                       return (
                         <tr key={entry.id} className="hover:bg-slate-50/50 transition-colors">
                           <td className="px-4 py-3 font-semibold text-slate-800">
@@ -433,16 +433,18 @@ export default function AdminHallOfFamePage() {
                               <ExternalLink className="w-3 h-3 text-slate-400 shrink-0" />
                             </a>
                           </td>
-                          <td className="px-4 py-3 max-w-xs text-slate-600 italic truncate">
-                            &ldquo;{entry.mentorComment?.commentText || entry.mentorPraise || '-'}
-                            &rdquo;
+                          <td
+                            className="px-4 py-3 max-w-xs text-slate-600 italic truncate"
+                            title={commentText}
+                          >
+                            &ldquo;{commentText}&rdquo;
                           </td>
                           <td className="px-4 py-3 text-right">
                             <div className="flex items-center justify-end gap-1">
                               <button
                                 onClick={() => handleEdit(entry)}
                                 className="p-1.5 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors"
-                                title="Edit entry"
+                                title="Edit entry & comment"
                               >
                                 <Edit2 className="w-4 h-4" />
                               </button>
@@ -561,6 +563,26 @@ export default function AdminHallOfFamePage() {
                   onChange={(e) => setFormData({ ...formData, studentDescription: e.target.value })}
                   className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:ring-1 focus:ring-slate-900"
                   placeholder="e.g. Deepa performed Shankarabharanam Geetham with remarkable tonal clarity and smooth finger movement."
+                />
+              </div>
+
+              {/* INSTRUCTOR COMMENT FIELD */}
+              <div className="bg-amber-50/60 border border-amber-200/80 rounded-xl p-3.5 space-y-1.5">
+                <label className="block font-bold text-amber-950 flex items-center justify-between">
+                  <span className="flex items-center gap-1.5">
+                    <MessageSquare className="w-3.5 h-3.5 text-amber-700" />
+                    Instructor Comment (Aishwarya&apos;s Feedback)
+                  </span>
+                  <span className="text-[10px] font-normal text-amber-700 font-mono">
+                    Shown on card & modal
+                  </span>
+                </label>
+                <textarea
+                  rows={3}
+                  value={formData.mentorCommentText}
+                  onChange={(e) => setFormData({ ...formData, mentorCommentText: e.target.value })}
+                  className="w-full px-3 py-2 bg-white border border-amber-200 rounded-lg text-slate-800 focus:outline-none focus:ring-1 focus:ring-amber-500 font-sans"
+                  placeholder="e.g. Deepa has shown wonderful proficiency in a short time. Her finger placement and meetu precision are remarkable!"
                 />
               </div>
 
