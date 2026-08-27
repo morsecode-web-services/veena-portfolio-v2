@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { createClient } from '@/lib/supabase-server';
+import { uploadGoogleDriveVideoToCloudinary } from '@/lib/cloudinary';
 
 async function checkAdminAuth(request: Request): Promise<boolean> {
   const authHeader = request.headers.get('Authorization');
@@ -98,13 +99,32 @@ export async function POST(request: Request) {
       isVerified: true,
     };
 
+    let finalVideoUrl = videoUrl;
+    let finalVideoType = videoType || 'gdrive';
+
+    // Auto-transcode Google Drive to Cloudinary
+    if (
+      videoUrl &&
+      (videoUrl.includes('drive.google.com') || videoUrl.includes('drive.usercontent.google.com'))
+    ) {
+      try {
+        const cloudinaryRes = await uploadGoogleDriveVideoToCloudinary(videoUrl);
+        if (cloudinaryRes?.secure_url) {
+          finalVideoUrl = cloudinaryRes.secure_url;
+          finalVideoType = 'cloudinary';
+        }
+      } catch (uploadErr) {
+        console.warn('Background Cloudinary sync failed, keeping original URL:', uploadErr);
+      }
+    }
+
     const newRecord = {
       student_name: studentName,
       cohort: cohort || 'Vande Mataram',
       location: location || null,
       student_description: studentDescription || null,
-      video_url: videoUrl,
-      video_type: videoType || 'gdrive',
+      video_url: finalVideoUrl,
+      video_type: finalVideoType,
       thumbnail_url: thumbnailUrl || null,
       mentor_praise: commentText,
       mentor_comment: mentorCommentObj,
@@ -171,13 +191,31 @@ export async function PUT(request: Request) {
       );
     }
 
+    let finalVideoUrl = videoUrl;
+    let finalVideoType = videoType;
+
+    if (
+      videoUrl &&
+      (videoUrl.includes('drive.google.com') || videoUrl.includes('drive.usercontent.google.com'))
+    ) {
+      try {
+        const cloudinaryRes = await uploadGoogleDriveVideoToCloudinary(videoUrl);
+        if (cloudinaryRes?.secure_url) {
+          finalVideoUrl = cloudinaryRes.secure_url;
+          finalVideoType = 'cloudinary';
+        }
+      } catch (uploadErr) {
+        console.warn('Background Cloudinary sync failed, keeping original URL:', uploadErr);
+      }
+    }
+
     const mappedUpdates: Record<string, any> = {};
     if (studentName !== undefined) mappedUpdates.student_name = studentName;
     if (cohort !== undefined) mappedUpdates.cohort = cohort;
     if (location !== undefined) mappedUpdates.location = location;
     if (studentDescription !== undefined) mappedUpdates.student_description = studentDescription;
-    if (videoUrl !== undefined) mappedUpdates.video_url = videoUrl;
-    if (videoType !== undefined) mappedUpdates.video_type = videoType;
+    if (finalVideoUrl !== undefined) mappedUpdates.video_url = finalVideoUrl;
+    if (finalVideoType !== undefined) mappedUpdates.video_type = finalVideoType;
     if (thumbnailUrl !== undefined) mappedUpdates.thumbnail_url = thumbnailUrl;
 
     const commentText = mentorComment?.commentText || mentorPraise;

@@ -26,8 +26,14 @@ export default function GoogleDriveVideoEmbed({
   const driveId = extractGoogleDriveId(videoUrl);
   const youtubeId = extractYoutubeId(videoUrl);
 
+  const isCloudinary = videoUrl.includes('cloudinary.com');
+  const cloudinaryThumbnail = isCloudinary
+    ? videoUrl.replace(/\.[^/.]+$/, '.jpg').replace('/video/upload/', '/video/upload/so_0/')
+    : null;
+
   const thumbnail =
     propThumbnailUrl ||
+    cloudinaryThumbnail ||
     (driveId ? getGoogleDriveThumbnailUrl(videoUrl) : null) ||
     (youtubeId ? `https://img.youtube.com/vi/${youtubeId}/maxresdefault.jpg` : null);
 

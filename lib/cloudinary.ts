@@ -57,7 +57,7 @@ export async function deleteFromCloudinary(publicId: string): Promise<boolean> {
   try {
     const timestamp = Math.round(new Date().getTime() / 1000);
 
-    // Use crypto-js if available, or just use the built-in crypto module in Node
+    // Use built-in crypto module in Node
     const { createHash } = await import('crypto');
 
     // Generate signature: serialize all parameters + api_secret, then SHA-1
@@ -87,5 +87,80 @@ export async function deleteFromCloudinary(publicId: string): Promise<boolean> {
   } catch (error) {
     console.error(`[Cloudinary] Error deleting ${publicId}:`, error);
     return false;
+  }
+}
+
+/**
+ * Uploads a Google Drive video to Cloudinary in the background.
+ * Returns the optimized CDN URL and playback URL.
+ */
+export async function uploadGoogleDriveVideoToCloudinary(
+  videoUrl: string,
+  folder = 'hall_of_fame'
+): Promise<{
+  secure_url: string;
+  playback_url?: string;
+  duration?: number;
+  public_id: string;
+} | null> {
+  const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+  const apiKey = process.env.CLOUDINARY_API_KEY;
+  const apiSecret = process.env.CLOUDINARY_API_SECRET;
+
+  if (!cloudName || !apiKey || !apiSecret) {
+    console.error('[Cloudinary] Missing credentials for video upload');
+    return null;
+  }
+
+  // Extract Drive ID
+  const match =
+    videoUrl.match(/\/file\/d\/([a-zA-Z0-9_-]+)/) ||
+    videoUrl.match(/id=([a-zA-Z0-9_-]+)/) ||
+    videoUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
+  const driveId = match ? match[1] : null;
+
+  if (!driveId) {
+    console.warn('[Cloudinary] Could not extract Google Drive ID from URL:', videoUrl);
+    return null;
+  }
+
+  const downloadUrl = `https://drive.usercontent.google.com/download?id=${driveId}&export=download`;
+
+  try {
+    const timestamp = Math.round(new Date().getTime() / 1000);
+    const { createHash } = await import('crypto');
+
+    const signatureStr = `folder=${folder}&timestamp=${timestamp}${apiSecret}`;
+    const signature = createHash('sha1').update(signatureStr).digest('hex');
+
+    const formData = new FormData();
+    formData.append('file', downloadUrl);
+    formData.append('folder', folder);
+    formData.append('timestamp', timestamp.toString());
+    formData.append('api_key', apiKey);
+    formData.append('signature', signature);
+
+    const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/video/upload`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    const result = await response.json();
+
+    if (result.secure_url) {
+      console.log(`[Cloudinary] Video successfully uploaded: ${result.secure_url}`);
+      return {
+        secure_url: result.secure_url,
+        playback_url: result.playback_url,
+        duration: result.duration,
+        public_id: result.public_id,
+      };
+    } else {
+      console.warn(`[Cloudinary] Video upload failed:`, result);
+      return null;
+    }
+  } catch (error) {
+    console.error(`[Cloudinary] Error uploading Google Drive video:`, error);
+    return null;
   }
 }
