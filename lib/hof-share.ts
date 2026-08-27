@@ -17,11 +17,11 @@ export function getHofShareText(performer: HallOfFamer): string {
   const shareUrl = getHofShareUrl(performer);
   const cohort = performer.cohort || 'Vande Mataram';
   return [
-    `*${performer.studentName}* — Cohort: ${cohort}`,
+    `Honored and excited to be featured in Aishwarya Manikarnike's Hall of Fame! 🌟`,
     '',
     `"${mentorCommentText}"`,
     '',
-    `Watch the full performance: ${shareUrl}`,
+    `Watch my performance of ${cohort} here: ${shareUrl}`,
   ].join('\n');
 }
 

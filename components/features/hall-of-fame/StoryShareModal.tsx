@@ -55,8 +55,8 @@ export default function StoryShareModal({ performer, onClose }: StoryShareModalP
         try {
           await navigator.share({
             files: [file],
-            title: `${performer.studentName} � Hall of Fame`,
-            text: `Celebrating ${performer.studentName}'s performance! ${shareUrl}`,
+            title: `${performer.studentName} — Hall of Fame`,
+            text: `Honored and excited to be featured in Aishwarya Manikarnike's Hall of Fame! 🌟 Watch my performance of ${performer.cohort || 'Vande Mataram'} here: ${shareUrl}`,
           });
           return;
         } catch (shareErr: any) {
@@ -84,12 +84,12 @@ export default function StoryShareModal({ performer, onClose }: StoryShareModalP
       if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
         await navigator.share({
           files: [file],
-          title: `${performer.studentName} � Hall of Fame`,
-          text: `Celebrating ${performer.studentName}'s performance! ${shareUrl}`,
+          title: `${performer.studentName} — Hall of Fame`,
+          text: `Honored and excited to be featured in Aishwarya Manikarnike's Hall of Fame! 🌟 Watch my performance of ${performer.cohort || 'Vande Mataram'} here: ${shareUrl}`,
         });
       } else if (navigator.share) {
         await navigator.share({
-          title: `${performer.studentName} � Hall of Fame`,
+          title: `${performer.studentName} — Hall of Fame`,
           text: shareText,
           url: shareUrl,
         });
