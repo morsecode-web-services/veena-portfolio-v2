@@ -16,6 +16,7 @@ interface GoogleDriveVideoEmbedProps {
   thumbnailUrl?: string;
   autoplay?: boolean;
   className?: string;
+  cohort?: string;
 }
 
 export default function GoogleDriveVideoEmbed({
@@ -24,6 +25,7 @@ export default function GoogleDriveVideoEmbed({
   thumbnailUrl: propThumbnailUrl,
   autoplay = false,
   className = '',
+  cohort,
 }: GoogleDriveVideoEmbedProps) {
   const [isPlaying, setIsPlaying] = useState(autoplay);
   const [iframeReady, setIframeReady] = useState(false);
@@ -87,7 +89,7 @@ export default function GoogleDriveVideoEmbed({
     setIframeReady(true);
   };
 
-  // Fullscreen on the outer container div � works on both desktop and mobile
+  // Fullscreen on the outer container div — works on both desktop and mobile
   const handleFullscreen = (e: React.MouseEvent) => {
     e.stopPropagation();
     const el = containerRef.current as any;
@@ -102,7 +104,7 @@ export default function GoogleDriveVideoEmbed({
 
   return (
     /*
-     * Single stable container � always 16:9.
+     * Single stable container — always 16:9.
      * Both thumbnail and iframe live inside this same box;
      * we fade between them without any DOM size change.
      */
@@ -118,6 +120,15 @@ export default function GoogleDriveVideoEmbed({
           isPlaying && iframeReady ? 'opacity-0 pointer-events-none' : 'opacity-100'
         }`}
       >
+        {/* Cohort Pill overlay (fades out automatically when playing) */}
+        {cohort && (
+          <div className="absolute top-3 left-3 z-10">
+            <span className="bg-navy-950/90 text-slate-100 text-[10px] font-bold px-3 py-1 rounded-full shadow-md uppercase tracking-wider border border-navy-800 backdrop-blur-sm">
+              Cohort: {cohort}
+            </span>
+          </div>
+        )}
+
         {/* Thumbnail */}
         {thumbnail ? (
           <Image
@@ -196,9 +207,9 @@ export default function GoogleDriveVideoEmbed({
             </div>
           )}
 
-          {/* -- Controls � auto-hide after 3s, tap/click anywhere to show again -- */}
+          {/* -- Controls — auto-hide after 3s, tap/click anywhere to show again -- */}
           <div
-            className={`absolute top-0 left-0 right-0 z-20 flex items-center justify-end gap-1.5 px-2 pt-2 transition-opacity duration-300 ${
+            className={`absolute bottom-3 right-3 z-20 flex items-center gap-1.5 transition-opacity duration-300 ${
               controlsVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'
             }`}
           >

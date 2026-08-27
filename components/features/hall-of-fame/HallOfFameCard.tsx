@@ -137,13 +137,6 @@ export default function HallOfFameCard({
           : 'border-slate-100'
       }`}
     >
-      {/* Cohort Pill */}
-      <div className="absolute top-3 left-3 z-10">
-        <span className="bg-navy-950/90 text-slate-100 text-[10px] font-bold px-3 py-1 rounded-full shadow-md uppercase tracking-wider border border-navy-800 backdrop-blur-sm">
-          Cohort: {performer.cohort || 'Vande Mataram'}
-        </span>
-      </div>
-
       {/* Video Player — fixed 16:9 container prevents layout shift on play */}
       <div className="relative shrink-0 w-full" style={{ aspectRatio: '16/9' }}>
         <GoogleDriveVideoEmbed
@@ -151,6 +144,7 @@ export default function HallOfFameCard({
           title={performer.studentName}
           thumbnailUrl={performer.customThumbnailUrl}
           autoplay={false}
+          cohort={performer.cohort || 'Vande Mataram'}
         />
       </div>
 
