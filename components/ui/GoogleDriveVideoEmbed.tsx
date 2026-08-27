@@ -27,8 +27,10 @@ export default function GoogleDriveVideoEmbed({
 }: GoogleDriveVideoEmbedProps) {
   const [isPlaying, setIsPlaying] = useState(autoplay);
   const [iframeReady, setIframeReady] = useState(false);
-  const [isTouchDevice, setIsTouchDevice] = useState(false);
+  const [controlsVisible, setControlsVisible] = useState(true);
+  const containerRef = useRef<HTMLDivElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const hideControlsTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const driveId = extractGoogleDriveId(videoUrl);
   const youtubeId = extractYoutubeId(videoUrl);
@@ -44,24 +46,32 @@ export default function GoogleDriveVideoEmbed({
     (driveId ? getGoogleDriveThumbnailUrl(videoUrl) : null) ||
     (youtubeId ? `https://img.youtube.com/vi/${youtubeId}/maxresdefault.jpg` : null);
 
-  // Detect touch device on mount � used to decide inline vs external play
-  useEffect(() => {
-    setIsTouchDevice(
-      typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0)
-    );
-  }, []);
-
   useEffect(() => {
     setIsPlaying(autoplay);
     setIframeReady(false);
   }, [autoplay, videoUrl]);
 
-  // On mobile/touch: open Drive directly instead of a broken iframe
-  const handlePlayClick = () => {
-    if (isTouchDevice && driveId) {
-      window.open(videoUrl, '_blank', 'noopener,noreferrer');
-      return;
+  // Auto-hide controls after 3s of no interaction (mobile-friendly)
+  const resetControlsTimer = () => {
+    setControlsVisible(true);
+    if (hideControlsTimer.current) clearTimeout(hideControlsTimer.current);
+    hideControlsTimer.current = setTimeout(() => setControlsVisible(false), 3000);
+  };
+
+  useEffect(() => {
+    if (isPlaying && iframeReady) {
+      resetControlsTimer();
+    } else {
+      setControlsVisible(true);
+      if (hideControlsTimer.current) clearTimeout(hideControlsTimer.current);
     }
+    return () => {
+      if (hideControlsTimer.current) clearTimeout(hideControlsTimer.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isPlaying, iframeReady]);
+
+  const handlePlayClick = () => {
     setIsPlaying(true);
     setIframeReady(false);
   };
@@ -70,16 +80,17 @@ export default function GoogleDriveVideoEmbed({
     e.stopPropagation();
     setIsPlaying(false);
     setIframeReady(false);
+    setControlsVisible(true);
   };
 
   const handleIframeLoad = () => {
     setIframeReady(true);
   };
 
-  // Request native fullscreen on the iframe element
+  // Fullscreen on the outer container div � works on both desktop and mobile
   const handleFullscreen = (e: React.MouseEvent) => {
     e.stopPropagation();
-    const el = iframeRef.current as any;
+    const el = containerRef.current as any;
     if (!el) return;
     const req =
       el.requestFullscreen ||
@@ -87,7 +98,6 @@ export default function GoogleDriveVideoEmbed({
       el.mozRequestFullScreen ||
       el.msRequestFullscreen;
     if (req) req.call(el);
-    else window.open(videoUrl, '_blank', 'noopener,noreferrer');
   };
 
   return (
@@ -97,8 +107,10 @@ export default function GoogleDriveVideoEmbed({
      * we fade between them without any DOM size change.
      */
     <div
+      ref={containerRef}
       className={`relative w-full overflow-hidden bg-navy-950 ${className}`}
       style={{ paddingTop: '56.25%' /* 16:9 */ }}
+      onClick={isPlaying && iframeReady ? resetControlsTimer : undefined}
     >
       {/* -- Thumbnail / Play State -- */}
       <div
@@ -138,12 +150,6 @@ export default function GoogleDriveVideoEmbed({
             <span className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-navy-950/70 border border-white/25 backdrop-blur-sm shadow-2xl flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:bg-white group-hover:border-white/60 active:scale-95">
               <Play className="w-6 h-6 sm:w-7 sm:h-7 fill-white text-white group-hover:text-navy-950 group-hover:fill-navy-950 ml-0.5 transition-colors" />
             </span>
-            {/* Mobile hint badge */}
-            {isTouchDevice && driveId && (
-              <span className="absolute bottom-3 left-1/2 -translate-x-1/2 bg-black/60 text-white text-[10px] font-medium px-2.5 py-1 rounded-full backdrop-blur-sm flex items-center gap-1 pointer-events-none">
-                <ExternalLink className="w-3 h-3" /> Opens in Drive
-              </span>
-            )}
           </button>
         )}
 
@@ -158,7 +164,7 @@ export default function GoogleDriveVideoEmbed({
         )}
       </div>
 
-      {/* -- Iframe / Playing State (desktop only) -- */}
+      {/* -- Iframe / Playing State -- */}
       {isPlaying && (
         <div
           className={`absolute inset-0 bg-black transition-opacity duration-300 ${
@@ -190,37 +196,42 @@ export default function GoogleDriveVideoEmbed({
             </div>
           )}
 
-          {/* -- Persistent controls � always visible, not hover-only -- */}
-          {iframeReady && (
-            <div className="absolute top-2 right-2 flex items-center gap-1.5 z-20">
-              {/* Fullscreen */}
-              <button
-                onClick={handleFullscreen}
-                aria-label="Fullscreen"
-                className="w-8 h-8 rounded-lg bg-black/60 backdrop-blur-sm border border-white/10 flex items-center justify-center text-white/80 hover:text-white hover:bg-black/80 transition-all active:scale-95"
-              >
-                <Maximize2 className="w-3.5 h-3.5" />
-              </button>
-              {/* Open externally */}
-              <a
-                href={videoUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Open in Drive"
-                className="w-8 h-8 rounded-lg bg-black/60 backdrop-blur-sm border border-white/10 flex items-center justify-center text-white/80 hover:text-white hover:bg-black/80 transition-all active:scale-95"
-              >
-                <ExternalLink className="w-3.5 h-3.5" />
-              </a>
-              {/* Close */}
-              <button
-                onClick={handleStop}
-                aria-label="Close video"
-                className="w-8 h-8 rounded-lg bg-black/60 backdrop-blur-sm border border-white/10 flex items-center justify-center text-white/80 hover:text-white hover:bg-black/80 transition-all active:scale-95"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          )}
+          {/* -- Controls � auto-hide after 3s, tap/click anywhere to show again -- */}
+          <div
+            className={`absolute top-0 left-0 right-0 z-20 flex items-center justify-end gap-1.5 px-2 pt-2 transition-opacity duration-300 ${
+              controlsVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'
+            }`}
+          >
+            {/* Fullscreen */}
+            <button
+              onClick={handleFullscreen}
+              aria-label="Fullscreen"
+              className="w-9 h-9 rounded-xl bg-black/60 backdrop-blur-sm border border-white/10 flex items-center justify-center text-white hover:bg-black/80 transition-all active:scale-95 touch-manipulation"
+            >
+              <Maximize2 className="w-4 h-4" />
+            </button>
+
+            {/* Open in Drive */}
+            <a
+              href={videoUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Open in Drive"
+              onClick={(e) => e.stopPropagation()}
+              className="w-9 h-9 rounded-xl bg-black/60 backdrop-blur-sm border border-white/10 flex items-center justify-center text-white hover:bg-black/80 transition-all active:scale-95 touch-manipulation"
+            >
+              <ExternalLink className="w-4 h-4" />
+            </a>
+
+            {/* Close */}
+            <button
+              onClick={handleStop}
+              aria-label="Close video"
+              className="w-9 h-9 rounded-xl bg-black/60 backdrop-blur-sm border border-white/10 flex items-center justify-center text-white hover:bg-black/80 transition-all active:scale-95 touch-manipulation"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       )}
     </div>

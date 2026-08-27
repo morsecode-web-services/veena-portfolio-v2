@@ -16,13 +16,13 @@ export function getHofShareText(performer: HallOfFamer): string {
     `${performer.studentName} has shown wonderful proficiency!`;
   const shareUrl = getHofShareUrl(performer);
   const cohort = performer.cohort || 'Vande Mataram';
-
-  return `🏆 *${performer.studentName}* has been featured in the *Veena Academy Hall of Fame* — Cohort: ${cohort}!
-
-_"${mentorCommentText}"_
-
-So proud of ${performer.studentName.split(' ')[0]} 🙏 Watch the full performance 👇
-${shareUrl}`;
+  return [
+    `*${performer.studentName}* — Cohort: ${cohort}`,
+    '',
+    `"${mentorCommentText}"`,
+    '',
+    `Watch the full performance: ${shareUrl}`,
+  ].join('\n');
 }
 
 export function getHofThumbnail(performer: HallOfFamer): string {
@@ -36,38 +36,16 @@ export function getHofThumbnail(performer: HallOfFamer): string {
   );
 }
 
-// ─── Canvas helpers ─────────────────────────────────────────────────────────
+// ─── Helpers ─────────────────────────────────────────────────────────────────
 
-function resetShadow(ctx: CanvasRenderingContext2D) {
-  ctx.shadowColor = 'transparent';
-  ctx.shadowBlur = 0;
-  ctx.shadowOffsetX = 0;
-  ctx.shadowOffsetY = 0;
-}
-
-function roundRect(
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  w: number,
-  h: number,
-  r: number
-) {
-  if (ctx.roundRect) {
-    ctx.roundRect(x, y, w, h, r);
-  } else {
-    ctx.beginPath();
-    ctx.moveTo(x + r, y);
-    ctx.lineTo(x + w - r, y);
-    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
-    ctx.lineTo(x + w, y + h - r);
-    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-    ctx.lineTo(x + r, y + h);
-    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
-    ctx.lineTo(x, y + r);
-    ctx.quadraticCurveTo(x, y, x + r, y);
-    ctx.closePath();
-  }
+function loadImage(src: string): Promise<HTMLImageElement | null> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => resolve(img);
+    img.onerror = () => resolve(null);
+    img.src = src;
+  });
 }
 
 function wrapText(
@@ -76,296 +54,160 @@ function wrapText(
   x: number,
   y: number,
   maxWidth: number,
-  lineHeight: number,
-  align: CanvasTextAlign = 'left'
+  lineHeight: number
 ): number {
-  ctx.textAlign = align;
   const words = text.split(' ');
   let line = '';
   let curY = y;
-  for (let n = 0; n < words.length; n++) {
-    const test = line + words[n] + ' ';
-    if (ctx.measureText(test).width > maxWidth && n > 0) {
+  for (let i = 0; i < words.length; i++) {
+    const test = line + words[i] + ' ';
+    if (ctx.measureText(test).width > maxWidth && i > 0) {
       ctx.fillText(line.trim(), x, curY);
-      line = words[n] + ' ';
+      line = words[i] + ' ';
       curY += lineHeight;
     } else {
       line = test;
     }
   }
-  ctx.fillText(line.trim(), x, curY);
-  return curY + lineHeight;
+  if (line.trim()) {
+    ctx.fillText(line.trim(), x, curY);
+    curY += lineHeight;
+  }
+  return curY;
 }
 
 /**
- * Generates a premium 1080×1920 PNG Hall of Fame story card.
- * Dark navy background with gold accents — award ceremony aesthetic.
+ * Generates a minimal, professional 1080x1350 (4:5) share image.
+ * White background — video thumbnail, student name, instructor quote, branding.
  */
 export async function generateHofStoryFile(performer: HallOfFamer): Promise<File | null> {
-  return new Promise((resolve) => {
+  return new Promise(async (resolve) => {
     try {
+      // 4:5 — works great on Instagram, WhatsApp, and as a story preview
       const W = 1080;
-      const H = 1920;
+      const H = 1350;
+      const PAD = 72;
+
       const canvas = document.createElement('canvas');
       canvas.width = W;
       canvas.height = H;
       const ctx = canvas.getContext('2d');
       if (!ctx) return resolve(null);
 
-      const mentorCommentText =
+      const mentorComment =
         performer.mentorComment?.commentText ||
         performer.mentorPraise ||
         `${performer.studentName} has shown wonderful proficiency!`;
-      const mentorAuthorName = performer.mentorComment?.authorName || 'Aishwarya Manikarnike';
+      const mentorName = performer.mentorComment?.authorName || 'Aishwarya Manikarnike';
       const cohort = performer.cohort || 'Vande Mataram';
+      const thumbnailSrc = getHofThumbnail(performer);
 
-      // ── 1. Rich dark background gradient ──────────────────────────────
-      const bg = ctx.createLinearGradient(0, 0, W, H);
-      bg.addColorStop(0, '#0b1120');
-      bg.addColorStop(0.45, '#0f1a2e');
-      bg.addColorStop(1, '#080d1a');
-      ctx.fillStyle = bg;
+      // ── 1. White background ──────────────────────────────────────────────
+      ctx.fillStyle = '#ffffff';
       ctx.fillRect(0, 0, W, H);
 
-      // ── 2. Subtle radial gold glow top-right ─────────────────────────
-      const glowTR = ctx.createRadialGradient(W, 0, 80, W * 0.7, 0, 600);
-      glowTR.addColorStop(0, 'rgba(184,134,11,0.22)');
-      glowTR.addColorStop(1, 'rgba(184,134,11,0)');
-      ctx.fillStyle = glowTR;
-      ctx.fillRect(0, 0, W, H);
+      // ── 2. Video thumbnail — full width, 16:9 ───────────────────────────
+      const THUMB_H = Math.round(W * (9 / 16)); // 607px
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(0, 0, W, THUMB_H);
 
-      // Radial glow bottom-left
-      const glowBL = ctx.createRadialGradient(0, H, 60, 200, H - 300, 500);
-      glowBL.addColorStop(0, 'rgba(139,92,246,0.12)');
-      glowBL.addColorStop(1, 'rgba(139,92,246,0)');
-      ctx.fillStyle = glowBL;
-      ctx.fillRect(0, 0, W, H);
+      const thumb = await loadImage(thumbnailSrc);
+      if (thumb) {
+        const ta = thumb.naturalWidth / thumb.naturalHeight;
+        const ca = W / THUMB_H;
+        let sx = 0,
+          sy = 0,
+          sw = thumb.naturalWidth,
+          sh = thumb.naturalHeight;
+        if (ta > ca) {
+          sw = sh * ca;
+          sx = (thumb.naturalWidth - sw) / 2;
+        } else {
+          sh = sw / ca;
+          sy = (thumb.naturalHeight - sh) / 2;
+        }
+        ctx.drawImage(thumb, sx, sy, sw, sh, 0, 0, W, THUMB_H);
+      }
 
-      // ── 3. Outer gold double border ───────────────────────────────────
-      // Outer thin border
-      ctx.strokeStyle = 'rgba(184,134,11,0.35)';
-      ctx.lineWidth = 2;
-      roundRect(ctx, 28, 28, W - 56, H - 56, 24);
-      ctx.stroke();
-      // Inner gold border
-      ctx.strokeStyle = 'rgba(184,134,11,0.6)';
-      ctx.lineWidth = 1;
-      roundRect(ctx, 44, 44, W - 88, H - 88, 18);
-      ctx.stroke();
+      // Subtle dark scrim on thumbnail
+      const scrim = ctx.createLinearGradient(0, 0, 0, THUMB_H);
+      scrim.addColorStop(0, 'rgba(0,0,0,0.08)');
+      scrim.addColorStop(1, 'rgba(0,0,0,0.42)');
+      ctx.fillStyle = scrim;
+      ctx.fillRect(0, 0, W, THUMB_H);
 
-      // ── 4. Top badge: "HALL OF FAME" ──────────────────────────────────
-      resetShadow(ctx);
-      const badgeY = 140;
-      const badgeW = 480;
-      const badgeH = 68;
-      const badgeX = (W - badgeW) / 2;
-
-      // Badge background
-      const badgeBg = ctx.createLinearGradient(badgeX, badgeY, badgeX + badgeW, badgeY + badgeH);
-      badgeBg.addColorStop(0, '#b8860b');
-      badgeBg.addColorStop(0.5, '#d4a017');
-      badgeBg.addColorStop(1, '#b8860b');
-      ctx.fillStyle = badgeBg;
-      roundRect(ctx, badgeX, badgeY, badgeW, badgeH, 34);
-      ctx.fill();
-
-      ctx.fillStyle = '#0b1120';
-      ctx.font = 'bold 28px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.letterSpacing = '3px';
-      ctx.fillText('✦  HALL OF FAME  ✦', W / 2, badgeY + 43);
-      ctx.letterSpacing = '0px';
-
-      // ── 5. Academy name ────────────────────────────────────────────────
-      resetShadow(ctx);
-      ctx.fillStyle = 'rgba(212,160,23,0.8)';
-      ctx.font = '22px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText('AISHWARYA MANIKARNIKE VEENA ACADEMY', W / 2, 264);
-
-      ctx.fillStyle = 'rgba(148,163,184,0.6)';
-      ctx.font = '20px sans-serif';
-      ctx.fillText(`Cohort: ${cohort.toUpperCase()}`, W / 2, 300);
-
-      // ── 6. Gold divider line ───────────────────────────────────────────
-      const divGrad = ctx.createLinearGradient(200, 0, 880, 0);
-      divGrad.addColorStop(0, 'transparent');
-      divGrad.addColorStop(0.3, 'rgba(184,134,11,0.7)');
-      divGrad.addColorStop(0.7, 'rgba(184,134,11,0.7)');
-      divGrad.addColorStop(1, 'transparent');
-      ctx.strokeStyle = divGrad;
-      ctx.lineWidth = 1;
+      // Cohort label — bottom-left of thumbnail
+      ctx.font = 'bold 24px system-ui, -apple-system, sans-serif';
+      const cohortLabel = `COHORT: ${cohort.toUpperCase()}`;
+      const labelW = ctx.measureText(cohortLabel).width + 40;
+      ctx.fillStyle = 'rgba(0,0,0,0.55)';
       ctx.beginPath();
-      ctx.moveTo(200, 328);
-      ctx.lineTo(880, 328);
-      ctx.stroke();
-
-      // ── 7. Student name (large, hero) ─────────────────────────────────
-      resetShadow(ctx);
-      ctx.shadowColor = 'rgba(212,160,23,0.4)';
-      ctx.shadowBlur = 30;
+      ctx.roundRect(PAD, THUMB_H - 72, labelW, 44, 22);
+      ctx.fill();
       ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 88px Georgia, serif';
-      ctx.textAlign = 'center';
-
-      // If name is long, split into two lines
-      const nameParts = performer.studentName.split(' ');
-      if (nameParts.length >= 2 && ctx.measureText(performer.studentName).width > 860) {
-        const mid = Math.ceil(nameParts.length / 2);
-        ctx.fillText(nameParts.slice(0, mid).join(' '), W / 2, 430);
-        ctx.fillText(nameParts.slice(mid).join(' '), W / 2, 530);
-      } else {
-        ctx.fillText(performer.studentName, W / 2, 470);
-      }
-      resetShadow(ctx);
-
-      // Location tag
-      if (performer.location) {
-        ctx.fillStyle = 'rgba(148,163,184,0.9)';
-        ctx.font = '30px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText(`📍 ${performer.location}`, W / 2, 550);
-      }
-
-      // ── 8. Gold star row ───────────────────────────────────────────────
-      const stars = '★  ★  ★  ★  ★';
-      ctx.fillStyle = '#d4a017';
-      ctx.font = '36px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText(stars, W / 2, 622);
-
-      // ── 9. Instructor quote card ──────────────────────────────────────
-      const cardX = 72;
-      const cardY = 680;
-      const cardW = W - 144;
-      const cardH = 680;
-
-      // Card shadow
-      ctx.shadowColor = 'rgba(0,0,0,0.6)';
-      ctx.shadowBlur = 60;
-      ctx.shadowOffsetY = 20;
-      ctx.fillStyle = '#111827';
-      roundRect(ctx, cardX, cardY, cardW, cardH, 32);
-      ctx.fill();
-      resetShadow(ctx);
-
-      // Card border with gold top accent
-      ctx.strokeStyle = 'rgba(184,134,11,0.4)';
-      ctx.lineWidth = 1;
-      roundRect(ctx, cardX, cardY, cardW, cardH, 32);
-      ctx.stroke();
-
-      // Gold left accent bar
-      const accentGrad = ctx.createLinearGradient(cardX, cardY, cardX, cardY + cardH);
-      accentGrad.addColorStop(0, '#d4a017');
-      accentGrad.addColorStop(0.5, '#b8860b');
-      accentGrad.addColorStop(1, 'rgba(184,134,11,0)');
-      ctx.fillStyle = accentGrad;
-      roundRect(ctx, cardX, cardY, 6, cardH, 3);
-      ctx.fill();
-
-      // Big decorative quote mark
-      ctx.fillStyle = 'rgba(212,160,23,0.12)';
-      ctx.font = 'bold 280px Georgia, serif';
       ctx.textAlign = 'left';
-      ctx.fillText('\u201C', cardX + 28, cardY + 220);
-      resetShadow(ctx);
+      ctx.fillText(cohortLabel, PAD + 20, THUMB_H - 43);
 
-      // Instructor label
-      ctx.fillStyle = '#d4a017';
-      ctx.font = 'bold 24px sans-serif';
+      // ── 3. Body — white ──────────────────────────────────────────────────
+      let y = THUMB_H + 64;
+
+      // Student name
+      ctx.fillStyle = '#0f172a';
+      ctx.font = 'bold 74px Georgia, "Times New Roman", serif';
       ctx.textAlign = 'left';
-      ctx.fillText('INSTRUCTOR RECOGNITION', cardX + 48, cardY + 68);
+      ctx.fillText(performer.studentName, PAD, y);
+      y += 12;
 
-      // Divider under label
-      ctx.strokeStyle = 'rgba(184,134,11,0.3)';
-      ctx.lineWidth = 1;
+      // Location + cohort meta row
+      y += 36;
+      ctx.fillStyle = '#64748b';
+      ctx.font = '30px system-ui, -apple-system, sans-serif';
+      const meta = [performer.location, performer.studentDescription].filter(Boolean).join('  ·  ');
+      if (meta) {
+        ctx.fillText(meta, PAD, y);
+        y += 44;
+      }
+
+      // Thin divider
+      y += 32;
+      ctx.strokeStyle = '#e2e8f0';
+      ctx.lineWidth = 1.5;
       ctx.beginPath();
-      ctx.moveTo(cardX + 48, cardY + 84);
-      ctx.lineTo(cardX + cardW - 48, cardY + 84);
+      ctx.moveTo(PAD, y);
+      ctx.lineTo(W - PAD, y);
       ctx.stroke();
+      y += 52;
 
-      // Instructor name + verified badge
-      ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 32px sans-serif';
-      ctx.fillText(`${mentorAuthorName}`, cardX + 48, cardY + 136);
-      ctx.fillStyle = '#d4a017';
-      ctx.font = '26px sans-serif';
-      ctx.fillText('✓  Verified Instructor', cardX + 48, cardY + 178);
+      // Instructor quote
+      ctx.fillStyle = '#1e293b';
+      ctx.font = 'italic 36px Georgia, "Times New Roman", serif';
+      ctx.textAlign = 'left';
+      y = wrapText(ctx, `"${mentorComment}"`, PAD, y, W - PAD * 2, 56);
+      y += 32;
 
-      // Comment text (wrap nicely)
-      ctx.fillStyle = 'rgba(226,232,240,0.95)';
-      ctx.font = 'italic 34px Georgia, serif';
-      const commentY = wrapText(
-        ctx,
-        `"${mentorCommentText}"`,
-        cardX + 48,
-        cardY + 250,
-        cardW - 96,
-        52,
-        'left'
-      );
-      void commentY;
+      // Instructor attribution
+      ctx.fillStyle = '#475569';
+      ctx.font = '28px system-ui, -apple-system, sans-serif';
+      ctx.fillText(`— ${mentorName}`, PAD, y);
+      y += 28;
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '24px system-ui, -apple-system, sans-serif';
+      ctx.fillText('Instructor, Aishwarya Manikarnike Veena Academy', PAD, y);
 
-      // ── 10. Description / achievement strip ───────────────────────────
-      if (performer.studentDescription) {
-        const stripY = cardY + cardH + 40;
-        ctx.fillStyle = 'rgba(212,160,23,0.08)';
-        roundRect(ctx, cardX, stripY, cardW, 160, 20);
-        ctx.fill();
-        ctx.strokeStyle = 'rgba(184,134,11,0.2)';
-        ctx.lineWidth = 1;
-        roundRect(ctx, cardX, stripY, cardW, 160, 20);
-        ctx.stroke();
-
-        ctx.fillStyle = 'rgba(148,163,184,0.8)';
-        ctx.font = '22px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText('ABOUT THIS PERFORMANCE', W / 2, stripY + 44);
-
-        ctx.fillStyle = 'rgba(226,232,240,0.9)';
-        ctx.font = '28px sans-serif';
-        wrapText(ctx, performer.studentDescription, W / 2, stripY + 90, cardW - 80, 42, 'center');
-      }
-
-      // ── 11. Bottom CTA strip ──────────────────────────────────────────
-      const ctaY = H - 200;
-      const ctaGrad = ctx.createLinearGradient(0, ctaY, 0, H);
-      ctaGrad.addColorStop(0, 'rgba(11,17,32,0)');
-      ctaGrad.addColorStop(0.3, 'rgba(11,17,32,0.95)');
-      ctaGrad.addColorStop(1, '#080d1a');
-      ctx.fillStyle = ctaGrad;
-      ctx.fillRect(0, ctaY, W, H - ctaY);
-
-      resetShadow(ctx);
-      ctx.fillStyle = 'rgba(212,160,23,0.9)';
-      ctx.font = 'bold 26px sans-serif';
+      // ── 4. Bottom branding ────────────────────────────────────────────────
+      const BRAND_Y = H - 56;
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '24px system-ui, -apple-system, sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText('WATCH THE FULL PERFORMANCE AT', W / 2, H - 110);
-
-      ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 30px sans-serif';
-      ctx.fillText('aishwaryamanikarnike.com/hall-of-fame', W / 2, H - 64);
-
-      // ── 12. Corner diamond ornaments ──────────────────────────────────
-      const diamond = (x: number, y: number) => {
-        ctx.fillStyle = 'rgba(184,134,11,0.5)';
-        ctx.font = '28px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText('◆', x, y);
-      };
-      diamond(80, 80);
-      diamond(W - 80, 80);
-      diamond(80, H - 50);
-      diamond(W - 80, H - 50);
+      ctx.fillText('aishwaryamanikarnike.com/hall-of-fame', W / 2, BRAND_Y);
 
       canvas.toBlob((blob) => {
         if (!blob) return resolve(null);
-        const fileName = `${performer.studentName.replace(/\s+/g, '_')}_HallOfFame.png`;
-        resolve(new File([blob], fileName, { type: 'image/png' }));
+        const name = `${performer.studentName.replace(/\s+/g, '_')}_HallOfFame.png`;
+        resolve(new File([blob], name, { type: 'image/png' }));
       }, 'image/png');
     } catch (err) {
-      console.error('Error rendering story card canvas:', err);
+      console.error('Error rendering story card:', err);
       resolve(null);
     }
   });
