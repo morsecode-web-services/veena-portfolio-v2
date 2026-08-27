@@ -76,6 +76,37 @@ function wrapText(
   return curY;
 }
 
+function drawStar(
+  ctx: CanvasRenderingContext2D,
+  cx: number,
+  cy: number,
+  spikes: number,
+  outerRadius: number,
+  innerRadius: number
+) {
+  let rot = (Math.PI / 2) * 3;
+  let x = cx;
+  let y = cy;
+  const step = Math.PI / spikes;
+
+  ctx.beginPath();
+  ctx.moveTo(cx, cy - outerRadius);
+  for (let i = 0; i < spikes; i++) {
+    x = cx + Math.cos(rot) * outerRadius;
+    y = cy + Math.sin(rot) * outerRadius;
+    ctx.lineTo(x, y);
+    rot += step;
+
+    x = cx + Math.cos(rot) * innerRadius;
+    y = cy + Math.sin(rot) * innerRadius;
+    ctx.lineTo(x, y);
+    rot += step;
+  }
+  ctx.lineTo(cx, cy - outerRadius);
+  ctx.closePath();
+  ctx.fill();
+}
+
 /**
  * Generates a minimal, professional 1080x1080 (1:1) share image.
  * White background — video thumbnail, student name, instructor quote, branding.
@@ -134,6 +165,18 @@ export async function generateHofStoryFile(performer: HallOfFamer): Promise<File
       bgGrad.addColorStop(1, '#FAF9F6');
       ctx.fillStyle = bgGrad;
       ctx.fillRect(0, 0, W, H);
+
+      // ── Inset Gold Border Frame ──────────────────────────────────────────
+      const borderInset = 24;
+      ctx.strokeStyle = 'rgba(202, 138, 4, 0.15)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      if (ctx.roundRect) {
+        ctx.roundRect(borderInset, borderInset, W - borderInset * 2, H - borderInset * 2, 16);
+      } else {
+        ctx.rect(borderInset, borderInset, W - borderInset * 2, H - borderInset * 2);
+      }
+      ctx.stroke();
 
       // ── 2. Video thumbnail area with fallback pattern ──────────────────
       const thumbGrad = ctx.createLinearGradient(0, 0, W, THUMB_H);
@@ -194,6 +237,11 @@ export async function generateHofStoryFile(performer: HallOfFamer): Promise<File
         ctx.rect(PAD, labelY, labelW, labelH);
       }
       ctx.fill();
+
+      // Thin gold cohort pill outline
+      ctx.strokeStyle = 'rgba(202, 138, 4, 0.3)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
       ctx.fillStyle = '#f8fafc';
       ctx.textAlign = 'left';
       // Adjust text baseline to middle for perfect vertical alignment
@@ -204,26 +252,38 @@ export async function generateHofStoryFile(performer: HallOfFamer): Promise<File
       // ── 3. Body ──────────────────────────────────────────────────────────
       let y = THUMB_H + 78;
 
-      // Student name (using Playfair Display / Georgia)
+      // Student name (centered with stars on both sides)
       ctx.fillStyle = '#0f172a';
-      ctx.font = 'bold 68px "Playfair Display", Georgia, serif';
-      ctx.textAlign = 'left';
-      ctx.fillText(performer.studentName, PAD, y);
+      ctx.font = 'bold 64px "Playfair Display", Georgia, serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(performer.studentName, W / 2, y);
 
-      // Location + cohort meta row
+      // Draw elegant small gold stars on left and right of the name
+      const studentNameW = ctx.measureText(performer.studentName).width;
+      ctx.fillStyle = '#ca8a04'; // Warm Gold
+      drawStar(ctx, W / 2 - studentNameW / 2 - 28, y - 20, 5, 8, 3.5);
+      drawStar(ctx, W / 2 + studentNameW / 2 + 28, y - 20, 5, 8, 3.5);
+
+      // Location + cohort meta row (centered)
       y += 42;
       ctx.fillStyle = '#64748b';
       ctx.font = '500 26px system-ui, -apple-system, sans-serif';
+      ctx.textAlign = 'center';
       const meta = [performer.location, performer.studentDescription].filter(Boolean).join('  ·  ');
       if (meta) {
-        ctx.fillText(meta, PAD, y);
+        ctx.fillText(meta, W / 2, y);
         y += 28;
       }
 
-      // Thin divider
+      // Gold gradient divider fading out at the edges
       y += 24;
-      ctx.strokeStyle = '#e2e8f0';
-      ctx.lineWidth = 1.5;
+      const dividerGrad = ctx.createLinearGradient(PAD, 0, W - PAD, 0);
+      dividerGrad.addColorStop(0, 'rgba(202, 138, 4, 0)');
+      dividerGrad.addColorStop(0.5, 'rgba(202, 138, 4, 0.65)');
+      dividerGrad.addColorStop(1, 'rgba(202, 138, 4, 0)');
+
+      ctx.strokeStyle = dividerGrad;
+      ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.moveTo(PAD, y);
       ctx.lineTo(W - PAD, y);
@@ -270,7 +330,7 @@ export async function generateHofStoryFile(performer: HallOfFamer): Promise<File
       const badgeX = PAD + nameW + 16;
       const badgeY = y - 9;
       const badgeR = 11;
-      ctx.fillStyle = '#2563eb';
+      ctx.fillStyle = '#ca8a04'; // Warm Gold verified badge
       ctx.beginPath();
       ctx.arc(badgeX, badgeY, badgeR, 0, Math.PI * 2);
       ctx.fill();
@@ -286,8 +346,15 @@ export async function generateHofStoryFile(performer: HallOfFamer): Promise<File
       ctx.font = '24px system-ui, -apple-system, sans-serif';
       ctx.fillText('Instructor', PAD, y);
 
-      // ── 4. Bottom branding ────────────────────────────────────────────────
+      // ── 4. Elegant Star Divider ───────────────────────────────────────────
       const BRAND_Y = H - 64; // Raised slightly from H - 44
+      const starY = y + (BRAND_Y - y) / 2 - 8;
+      ctx.fillStyle = '#ca8a04'; // Warm Gold
+      drawStar(ctx, W / 2, starY, 5, 12, 5.5); // Center Star
+      drawStar(ctx, W / 2 - 36, starY, 5, 8, 3.5); // Left Star
+      drawStar(ctx, W / 2 + 36, starY, 5, 8, 3.5); // Right Star
+
+      // ── 5. Bottom branding ────────────────────────────────────────────────
       ctx.fillStyle = '#64748b'; // Darker for better contrast
       ctx.font = '24px system-ui, -apple-system, sans-serif';
       ctx.textAlign = 'center';
