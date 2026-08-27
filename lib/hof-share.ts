@@ -181,67 +181,89 @@ export async function generateHofStoryFile(performer: HallOfFamer): Promise<File
       ctx.font = 'bold 22px system-ui, -apple-system, sans-serif';
       const cohortLabel = `COHORT: ${cohort.toUpperCase()}`;
       const labelW = ctx.measureText(cohortLabel).width + 36;
+      const labelH = 44;
+      const labelY = THUMB_H - 72;
       ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
       ctx.beginPath();
       if (ctx.roundRect) {
-        ctx.roundRect(PAD, THUMB_H - 64, labelW, 40, 20);
+        ctx.roundRect(PAD, labelY, labelW, labelH, 22);
       } else {
-        ctx.rect(PAD, THUMB_H - 64, labelW, 40);
+        ctx.rect(PAD, labelY, labelW, labelH);
       }
       ctx.fill();
       ctx.fillStyle = '#f8fafc';
       ctx.textAlign = 'left';
-      ctx.fillText(cohortLabel, PAD + 18, THUMB_H - 37);
+      // Adjust text baseline to middle for perfect vertical alignment
+      ctx.textBaseline = 'middle';
+      ctx.fillText(cohortLabel, PAD + 18, labelY + labelH / 2);
+      ctx.textBaseline = 'alphabetic'; // Reset baseline
 
       // ── 3. Body — white ──────────────────────────────────────────────────
-      let y = THUMB_H + 54;
+      let y = THUMB_H + 78;
 
       // Student name (using Playfair Display / Georgia)
       ctx.fillStyle = '#0f172a';
-      ctx.font = 'bold 64px "Playfair Display", Georgia, serif';
+      ctx.font = 'bold 68px "Playfair Display", Georgia, serif';
       ctx.textAlign = 'left';
       ctx.fillText(performer.studentName, PAD, y);
 
       // Location + cohort meta row
-      y += 36;
+      y += 42;
       ctx.fillStyle = '#64748b';
       ctx.font = '500 26px system-ui, -apple-system, sans-serif';
       const meta = [performer.location, performer.studentDescription].filter(Boolean).join('  ·  ');
       if (meta) {
         ctx.fillText(meta, PAD, y);
-        y += 24;
+        y += 28;
       }
 
       // Thin divider
-      y += 16;
+      y += 24;
       ctx.strokeStyle = '#e2e8f0';
       ctx.lineWidth = 1.5;
       ctx.beginPath();
       ctx.moveTo(PAD, y);
       ctx.lineTo(W - PAD, y);
       ctx.stroke();
-      y += 52;
+      y += 56;
 
       // Instructor quote (with curly quotes)
       ctx.fillStyle = '#1e293b';
-      ctx.font = 'italic 30px "Playfair Display", Georgia, serif';
+      ctx.font = 'italic 32px "Playfair Display", Georgia, serif';
       ctx.textAlign = 'left';
-      y = wrapText(ctx, `\u201C${mentorComment.trim()}\u201D`, PAD, y, W - PAD * 2, 46);
-      y += 24;
+      y = wrapText(ctx, `\u201C${mentorComment.trim()}\u201D`, PAD, y, W - PAD * 2, 48);
+      y += 40;
 
       // Instructor attribution
-      ctx.fillStyle = '#475569';
-      ctx.font = 'bold 26px system-ui, -apple-system, sans-serif';
+      ctx.fillStyle = '#334155';
+      ctx.font = 'bold 28px system-ui, -apple-system, sans-serif';
       ctx.fillText(`— ${mentorName}`, PAD, y);
-      y += 34;
-      ctx.fillStyle = '#94a3b8';
-      ctx.font = '22px system-ui, -apple-system, sans-serif';
-      ctx.fillText('Instructor, Aishwarya Manikarnike Veena Academy', PAD, y);
+
+      // Verified badge next to instructor name
+      const nameW = ctx.measureText(`— ${mentorName}`).width;
+      const badgeX = PAD + nameW + 16;
+      const badgeY = y - 9;
+      const badgeR = 11;
+      ctx.fillStyle = '#2563eb';
+      ctx.beginPath();
+      ctx.arc(badgeX, badgeY, badgeR, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 15px system-ui, -apple-system, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('✓', badgeX, badgeY + 5);
+
+      // Subtitle
+      ctx.textAlign = 'left';
+      y += 38;
+      ctx.fillStyle = '#64748b';
+      ctx.font = '24px system-ui, -apple-system, sans-serif';
+      ctx.fillText('Instructor', PAD, y);
 
       // ── 4. Bottom branding ────────────────────────────────────────────────
-      const BRAND_Y = H - 44;
-      ctx.fillStyle = '#94a3b8';
-      ctx.font = '22px system-ui, -apple-system, sans-serif';
+      const BRAND_Y = H - 64; // Raised slightly from H - 44
+      ctx.fillStyle = '#64748b'; // Darker for better contrast
+      ctx.font = '24px system-ui, -apple-system, sans-serif';
       ctx.textAlign = 'center';
       ctx.fillText('aishwaryamanikarnike.com/hall-of-fame', W / 2, BRAND_Y);
 
