@@ -191,7 +191,7 @@ export default function HallOfFameCard({
             </p>
           </div>
 
-          {/* ── Bottom Actions ── */}
+          {/* ── Actions Row ── */}
           <div className="mt-3 flex items-center justify-between gap-2">
             {/* Like */}
             <button
@@ -205,15 +205,15 @@ export default function HallOfFameCard({
               <span>{likesCount}</span>
             </button>
 
-            {/* ── MOBILE: icon-only quick-action strip ── */}
-            <div className="flex sm:hidden items-center gap-1">
+            {/* Unified Action Buttons */}
+            <div className="flex items-center gap-1.5">
               {/* Save Story Image */}
               <button
                 onClick={handleSaveImage}
                 disabled={isSavingImage}
                 aria-label="Save story image"
                 title="Save story card"
-                className="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-600 hover:text-navy-900 transition-all active:scale-95 disabled:opacity-50"
+                className="w-8.5 h-8.5 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-600 hover:text-navy-900 transition-all active:scale-95 disabled:opacity-50"
               >
                 {isSavingImage ? (
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -227,39 +227,45 @@ export default function HallOfFameCard({
                 onClick={handleCopyLink}
                 aria-label="Copy showcase link"
                 title="Copy link"
-                className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all active:scale-95 ${
+                className={`w-8.5 h-8.5 rounded-xl flex items-center justify-center transition-all active:scale-95 ${
                   linkCopied
                     ? 'bg-emerald-100 text-emerald-700'
                     : 'bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-navy-900'
                 }`}
               >
-                <Link className="w-3.5 h-3.5" />
+                {linkCopied ? (
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                ) : (
+                  <Link className="w-3.5 h-3.5" />
+                )}
               </button>
 
-              {/* Native Share (WhatsApp + image) */}
+              {/* Share Story Button */}
               <button
-                onClick={handleMobileShare}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const isMobileDevice =
+                    typeof window !== 'undefined' &&
+                    ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+                  if (isMobileDevice) {
+                    handleMobileShare(e);
+                  } else {
+                    handleDesktopShare(e);
+                  }
+                }}
                 disabled={isSharingMobile}
-                aria-label="Share to WhatsApp or other apps"
-                title="Share"
-                className="flex items-center gap-1.5 px-3 h-9 rounded-xl bg-navy-900 hover:bg-gold-400 text-white hover:text-navy-950 text-xs font-bold transition-all shadow-xs active:scale-95 disabled:opacity-50"
+                aria-label="Share Story"
+                title="Share Story"
+                className="flex items-center gap-1 px-3 h-8.5 rounded-xl bg-navy-900 hover:bg-gold-400 text-white hover:text-navy-950 text-xs font-bold transition-all shadow-xs active:scale-95 disabled:opacity-50"
               >
                 {isSharingMobile ? (
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
                 ) : (
-                  <Share2 className="w-3.5 h-3.5" />
+                  <Share2 className="w-3 h-3" />
                 )}
                 <span>Share</span>
               </button>
             </div>
-
-            {/* ── DESKTOP: full "Share Story" modal trigger ── */}
-            <button
-              onClick={handleDesktopShare}
-              className="hidden sm:flex px-3 py-1 rounded-xl bg-navy-900 hover:bg-gold-400 text-white hover:text-navy-950 text-xs font-bold items-center gap-1.5 transition-all shadow-xs"
-            >
-              <Share2 className="w-3 h-3" /> Share Story
-            </button>
           </div>
         </div>
       </div>
