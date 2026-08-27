@@ -12,9 +12,15 @@ interface HallOfFameCardProps {
   performer: HallOfFamer;
   onSelect: (performer: HallOfFamer) => void;
   onShareStory?: (performer: HallOfFamer) => void;
+  isHighlighted?: boolean;
 }
 
-export default function HallOfFameCard({ performer, onSelect, onShareStory }: HallOfFameCardProps) {
+export default function HallOfFameCard({
+  performer,
+  onSelect,
+  onShareStory,
+  isHighlighted = false,
+}: HallOfFameCardProps) {
   const [liked, setLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(
     performer.mentorComment?.likesCount || Math.floor(Math.random() * 20) + 18
@@ -124,7 +130,13 @@ export default function HallOfFameCard({ performer, onSelect, onShareStory }: Ha
   };
 
   return (
-    <article className="group relative bg-white rounded-2xl border border-slate-100 overflow-hidden transition-all duration-500 hover:shadow-premium-xl hover:-translate-y-2 text-left w-full flex flex-col h-full">
+    <article
+      className={`group relative bg-white rounded-2xl border overflow-hidden transition-all duration-500 hover:shadow-premium-xl hover:-translate-y-2 text-left w-full flex flex-col h-full ${
+        isHighlighted
+          ? 'border-gold-500 ring-2 ring-gold-500/80 shadow-[0_0_25px_rgba(212,160,23,0.35)] scale-102 z-10'
+          : 'border-slate-100'
+      }`}
+    >
       {/* Cohort Pill */}
       <div className="absolute top-3 left-3 z-10">
         <span className="bg-navy-950/90 text-slate-100 text-[10px] font-bold px-3 py-1 rounded-full shadow-md uppercase tracking-wider border border-navy-800 backdrop-blur-sm">

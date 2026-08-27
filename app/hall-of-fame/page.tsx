@@ -26,12 +26,14 @@ function HallOfFameContent() {
       setPerformers(data);
       setLoading(false);
 
-      // Auto-open story share modal if entry query param matches
+      // Auto-scroll to the target card if entry query param matches
       if (entryIdFromUrl) {
-        const found = data.find((item) => item.id === entryIdFromUrl);
-        if (found) {
-          setSelectedSharePerformer(found);
-        }
+        setTimeout(() => {
+          const el = document.getElementById(`performer-${entryIdFromUrl}`);
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }, 300);
       }
     }
     loadData();
@@ -114,12 +116,14 @@ function HallOfFameContent() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
               {filteredPerformers.map((performer) => (
-                <HallOfFameCard
-                  key={performer.id}
-                  performer={performer}
-                  onSelect={(item) => setSelectedSharePerformer(item)}
-                  onShareStory={(item) => setSelectedSharePerformer(item)}
-                />
+                <div key={performer.id} id={`performer-${performer.id}`} className="scroll-mt-32">
+                  <HallOfFameCard
+                    performer={performer}
+                    onSelect={(item) => setSelectedSharePerformer(item)}
+                    onShareStory={(item) => setSelectedSharePerformer(item)}
+                    isHighlighted={performer.id === entryIdFromUrl}
+                  />
+                </div>
               ))}
             </div>
           )}
