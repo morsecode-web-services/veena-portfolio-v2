@@ -4,7 +4,7 @@ import React from 'react';
 import Image from 'next/image';
 import { Play } from 'lucide-react';
 import { useVideo } from '@/context/VideoContext';
-import { extractGoogleDriveId, getGoogleDriveThumbnailUrl, extractYoutubeId } from '@/lib/utils';
+import { extractGoogleDriveId, extractYoutubeId } from '@/lib/utils';
 
 interface GoogleDriveVideoEmbedProps {
   videoUrl: string;
@@ -31,10 +31,13 @@ export default function GoogleDriveVideoEmbed({
     ? videoUrl.replace(/\.[^/.]+$/, '.jpg').replace('/video/upload/', '/video/upload/so_0/')
     : null;
 
+  const isR2 = videoUrl.includes('r2.dev') || videoUrl.includes('r2.cloudflarestorage.com');
+  const isDirectMp4 = videoUrl.endsWith('.mp4');
+
   const thumbnail =
     propThumbnailUrl ||
     cloudinaryThumbnail ||
-    (driveId ? getGoogleDriveThumbnailUrl(videoUrl) : null) ||
+    (driveId ? `https://drive.google.com/thumbnail?id=${driveId}&sz=w800` : null) ||
     (youtubeId ? `https://img.youtube.com/vi/${youtubeId}/maxresdefault.jpg` : null);
 
   const handlePlayClick = () => {
@@ -46,7 +49,7 @@ export default function GoogleDriveVideoEmbed({
       className={`relative w-full overflow-hidden bg-navy-950 group/video ${className}`}
       style={{ paddingTop: '56.25%' }} /* 16:9 Aspect Ratio */
     >
-      {/* Cohort Pill overlay (pointer-events-none so click passes through to video button) */}
+      {/* Cohort Pill overlay */}
       {cohort && (
         <div className="absolute top-3 left-3 z-20 pointer-events-none">
           <span className="bg-navy-950/90 text-slate-100 text-[10px] font-bold px-3 py-1 rounded-full shadow-md uppercase tracking-wider border border-navy-800 backdrop-blur-sm">
@@ -65,9 +68,18 @@ export default function GoogleDriveVideoEmbed({
             src={thumbnail}
             alt={title}
             fill
+            unoptimized
             className="object-cover group-hover/video:scale-105 transition-transform duration-700 opacity-90 group-hover/video:opacity-100"
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             priority={false}
+          />
+        ) : isR2 || isDirectMp4 ? (
+          <video
+            src={`${videoUrl}#t=0.001`}
+            preload="metadata"
+            muted
+            playsInline
+            className="absolute inset-0 w-full h-full object-cover opacity-90 group-hover/video:opacity-100 transition-opacity"
           />
         ) : (
           <div className="absolute inset-0 bg-gradient-to-br from-navy-950 via-navy-900 to-slate-900 flex flex-col items-center justify-center">

@@ -140,6 +140,10 @@ export function extractGoogleDriveId(url: string): string | null {
   const match3 = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
   if (match3 && match3[1]) return match3[1];
 
+  // Pattern 4: R2 / S3 filename {id}.mp4
+  const match4 = url.match(/\/([a-zA-Z0-9_-]{20,})\.(?:mp4|webm|mov)$/i);
+  if (match4 && match4[1]) return match4[1];
+
   return null;
 }
 
