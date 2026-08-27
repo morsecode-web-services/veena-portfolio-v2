@@ -130,7 +130,10 @@ export default function VideoModal() {
             className="relative w-full max-w-5xl aspect-video bg-black rounded-2xl overflow-hidden shadow-premium-xl border border-white/10"
             onClick={(e) => e.stopPropagation()}
           >
-            {expandedVideo.url.includes('cloudinary.com') || expandedVideo.url.endsWith('.mp4') ? (
+            {expandedVideo.url.includes('r2.dev') ||
+            expandedVideo.url.includes('r2.cloudflarestorage.com') ||
+            expandedVideo.url.includes('cloudinary.com') ||
+            expandedVideo.url.endsWith('.mp4') ? (
               <video
                 ref={videoRef}
                 src={expandedVideo.url}

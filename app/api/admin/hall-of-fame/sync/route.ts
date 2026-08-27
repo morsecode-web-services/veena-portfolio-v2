@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { createClient } from '@/lib/supabase-server';
-import { uploadGoogleDriveVideoToCloudinary } from '@/lib/cloudinary';
+import { uploadGoogleDriveVideoToR2 } from '@/lib/r2';
 
 async function checkAdminAuth(request: Request): Promise<boolean> {
   const authHeader = request.headers.get('Authorization');
@@ -55,17 +55,14 @@ export async function POST(request: Request) {
     for (const entry of entries || []) {
       const url = entry.video_url || '';
       if (url.includes('drive.google.com') || url.includes('drive.usercontent.google.com')) {
-        console.log(`[Sync] Uploading video for ${entry.student_name}...`);
-        const cloudinaryRes = await uploadGoogleDriveVideoToCloudinary(url);
-        if (cloudinaryRes?.secure_url) {
+        console.log(`[Sync] Uploading video to Cloudflare R2 for ${entry.student_name}...`);
+        const r2Res = await uploadGoogleDriveVideoToR2(url);
+        if (r2Res?.publicUrl) {
           await supabaseAdmin
             .from('hall_of_fame')
             .update({
-              video_url: cloudinaryRes.secure_url,
-              video_type: 'cloudinary',
-              thumbnail_url: cloudinaryRes.secure_url
-                .replace(/\.[^/.]+$/, '.jpg')
-                .replace('/video/upload/', '/video/upload/so_0/'),
+              video_url: r2Res.publicUrl,
+              video_type: 'r2',
               updated_at: new Date().toISOString(),
             })
             .eq('id', entry.id);
@@ -73,8 +70,8 @@ export async function POST(request: Request) {
           results.push({
             id: entry.id,
             name: entry.student_name,
-            status: 'synced',
-            url: cloudinaryRes.secure_url,
+            status: 'synced_to_r2',
+            url: r2Res.publicUrl,
           });
         } else {
           results.push({

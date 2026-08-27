@@ -132,7 +132,7 @@ export default function AdminHallOfFamePage() {
       const json = await res.json();
       if (json.success) {
         await fetchEntries();
-        addToast('All Google Drive videos synced to Cloudinary successfully!', 'success');
+        addToast('All Google Drive videos synced to Cloudflare R2 successfully!', 'success');
       } else {
         addToast(`Sync error: ${json.error || 'Failed to sync'}`, 'error');
       }
@@ -332,10 +332,10 @@ export default function AdminHallOfFamePage() {
             onClick={handleSyncAllVideos}
             disabled={syncingVideos}
             className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold shadow-sm transition-all flex items-center gap-1.5"
-            title="Sync all Google Drive videos to Cloudinary"
+            title="Sync all Google Drive videos to Cloudflare R2"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${syncingVideos ? 'animate-spin' : ''}`} />
-            {syncingVideos ? 'Syncing...' : 'Sync Cloudinary'}
+            {syncingVideos ? 'Syncing...' : 'Sync to R2'}
           </button>
 
           <button
