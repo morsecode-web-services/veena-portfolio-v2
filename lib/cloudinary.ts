@@ -124,7 +124,7 @@ export async function uploadGoogleDriveVideoToCloudinary(
     return null;
   }
 
-  const downloadUrl = `https://drive.usercontent.google.com/download?id=${driveId}&export=download`;
+  const downloadUrl = `https://drive.usercontent.google.com/download?id=${driveId}&export=download&confirm=t`;
 
   try {
     const timestamp = Math.round(new Date().getTime() / 1000);

@@ -18,6 +18,7 @@ import {
   Users,
   Award,
   MessageSquare,
+  RefreshCw,
 } from 'lucide-react';
 import { HallOfFamer } from '@/types/hall-of-fame';
 import { extractGoogleDriveId } from '@/lib/utils';
@@ -35,6 +36,7 @@ export default function AdminHallOfFamePage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [syncingVideos, setSyncingVideos] = useState(false);
 
   // Settings State
   const [pageSettings, setPageSettings] = useState({
@@ -55,6 +57,7 @@ export default function AdminHallOfFamePage() {
     videoUrl: '',
     customThumbnailUrl: '',
     mentorCommentText: '',
+    likesCount: 0,
   });
 
   const [urlPreviewId, setUrlPreviewId] = useState<string | null>(null);
@@ -118,6 +121,28 @@ export default function AdminHallOfFamePage() {
     }
   };
 
+  const handleSyncAllVideos = async () => {
+    setSyncingVideos(true);
+    try {
+      const headers = await getAuthHeaders();
+      const res = await fetch('/api/admin/hall-of-fame/sync', {
+        method: 'POST',
+        headers,
+      });
+      const json = await res.json();
+      if (json.success) {
+        await fetchEntries();
+        addToast('All Google Drive videos synced to Cloudinary successfully!', 'success');
+      } else {
+        addToast(`Sync error: ${json.error || 'Failed to sync'}`, 'error');
+      }
+    } catch (err: any) {
+      addToast(`Sync error: ${err.message || 'Server error'}`, 'error');
+    } finally {
+      setSyncingVideos(false);
+    }
+  };
+
   useEffect(() => {
     fetchEntries();
   }, []);
@@ -141,6 +166,7 @@ export default function AdminHallOfFamePage() {
       videoUrl: '',
       customThumbnailUrl: '',
       mentorCommentText: '',
+      likesCount: 0,
     });
     setIsModalOpen(true);
   };
@@ -155,6 +181,11 @@ export default function AdminHallOfFamePage() {
       videoUrl: entry.videoUrl || '',
       customThumbnailUrl: entry.customThumbnailUrl || '',
       mentorCommentText: entry.mentorComment?.commentText || entry.mentorPraise || '',
+      likesCount:
+        entry.mentorComment?.likesCount ??
+        (entry as any).likesCount ??
+        (entry as any).likes_count ??
+        0,
     });
     setIsModalOpen(true);
   };
@@ -229,6 +260,7 @@ export default function AdminHallOfFamePage() {
       thumbnailUrl: formData.customThumbnailUrl,
       mentorPraise: formData.mentorCommentText,
       mentorComment: mentorCommentObj,
+      likesCount: Number(formData.likesCount) || 0,
     };
 
     try {
@@ -295,12 +327,24 @@ export default function AdminHallOfFamePage() {
           </p>
         </div>
 
-        <button
-          onClick={handleOpenAddModal}
-          className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-semibold shadow-sm transition-all flex items-center gap-2 self-start sm:self-auto"
-        >
-          <Plus className="w-4 h-4 stroke-[2.5]" /> Add Student Showcase
-        </button>
+        <div className="flex items-center gap-2 self-start sm:self-auto">
+          <button
+            onClick={handleSyncAllVideos}
+            disabled={syncingVideos}
+            className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold shadow-sm transition-all flex items-center gap-1.5"
+            title="Sync all Google Drive videos to Cloudinary"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${syncingVideos ? 'animate-spin' : ''}`} />
+            {syncingVideos ? 'Syncing...' : 'Sync Cloudinary'}
+          </button>
+
+          <button
+            onClick={handleOpenAddModal}
+            className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-semibold shadow-sm transition-all flex items-center gap-2"
+          >
+            <Plus className="w-4 h-4 stroke-[2.5]" /> Add Student Showcase
+          </button>
+        </div>
       </div>
 
       {/* 2. Stats Overview Bar */}
@@ -590,6 +634,26 @@ export default function AdminHallOfFamePage() {
                   onChange={(e) => setFormData({ ...formData, mentorCommentText: e.target.value })}
                   className="w-full px-3 py-2 bg-white border border-amber-200 rounded-lg text-slate-800 focus:outline-none focus:ring-1 focus:ring-amber-500 font-sans"
                   placeholder="e.g. Deepa has shown wonderful proficiency in a short time. Her finger placement and meetu precision are remarkable!"
+                />
+              </div>
+
+              {/* LIKES COUNT FIELD */}
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">
+                  Likes Count (Default: 0)
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  value={formData.likesCount}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      likesCount: Math.max(0, parseInt(e.target.value, 10) || 0),
+                    })
+                  }
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 font-semibold focus:outline-none focus:ring-1 focus:ring-slate-900"
+                  placeholder="0"
                 />
               </div>
 

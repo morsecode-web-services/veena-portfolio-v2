@@ -7,7 +7,7 @@ export async function GET(req: NextRequest) {
   }
 
   const range = req.headers.get('range') || 'bytes=0-';
-  const driveUrl = `https://drive.google.com/uc?export=download&id=${fileId}`;
+  const driveUrl = `https://drive.usercontent.google.com/download?id=${fileId}&export=download&confirm=t`;
 
   try {
     const res = await fetch(driveUrl, {

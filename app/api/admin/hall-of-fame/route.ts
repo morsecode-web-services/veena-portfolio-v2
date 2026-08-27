@@ -76,6 +76,7 @@ export async function POST(request: Request) {
       thumbnailUrl,
       mentorPraise,
       mentorComment,
+      likesCount,
     } = body;
 
     if (!studentName || !videoUrl) {
@@ -90,12 +91,19 @@ export async function POST(request: Request) {
       mentorPraise ||
       `${studentName} has shown wonderful proficiency!`;
 
+    const finalLikes =
+      likesCount !== undefined
+        ? Number(likesCount) || 0
+        : mentorComment?.likesCount !== undefined
+          ? Number(mentorComment.likesCount) || 0
+          : 0;
+
     const mentorCommentObj = {
       authorName: mentorComment?.authorName || 'Aishwarya Manikarnike',
       authorAvatar: mentorComment?.authorAvatar || '/images/contact/contact-image.jpg',
       commentText: commentText,
       timestamp: mentorComment?.timestamp || 'Recently',
-      likesCount: mentorComment?.likesCount ?? 18,
+      likesCount: finalLikes,
       isVerified: true,
     };
 
@@ -171,6 +179,7 @@ export async function PUT(request: Request) {
       thumbnailUrl,
       mentorPraise,
       mentorComment,
+      likesCount,
     } = body;
 
     if (!id) {
@@ -219,14 +228,25 @@ export async function PUT(request: Request) {
     if (thumbnailUrl !== undefined) mappedUpdates.thumbnail_url = thumbnailUrl;
 
     const commentText = mentorComment?.commentText || mentorPraise;
-    if (commentText !== undefined) {
+    const finalLikes =
+      likesCount !== undefined
+        ? Number(likesCount)
+        : mentorComment?.likesCount !== undefined
+          ? Number(mentorComment.likesCount)
+          : undefined;
+
+    if (finalLikes !== undefined) {
+      mappedUpdates.likes_count = Math.max(0, finalLikes);
+    }
+
+    if (commentText !== undefined || finalLikes !== undefined) {
       mappedUpdates.mentor_praise = commentText;
       mappedUpdates.mentor_comment = {
         authorName: mentorComment?.authorName || 'Aishwarya Manikarnike',
         authorAvatar: mentorComment?.authorAvatar || '/images/contact/contact-image.jpg',
-        commentText: commentText,
+        commentText: commentText || 'Wonderful proficiency!',
         timestamp: mentorComment?.timestamp || 'Recently',
-        likesCount: mentorComment?.likesCount ?? 18,
+        likesCount: finalLikes !== undefined ? Math.max(0, finalLikes) : 0,
         isVerified: true,
       };
     } else if (mentorComment !== undefined) {
