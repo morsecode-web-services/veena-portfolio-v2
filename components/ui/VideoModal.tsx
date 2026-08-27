@@ -2,16 +2,19 @@
 
 import { m, AnimatePresence } from 'framer-motion';
 import { useVideo } from '@/context/VideoContext';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { extractGoogleDriveId, getGoogleDriveEmbedUrl } from '@/lib/utils';
 
 export default function VideoModal() {
   const { expandedVideo, closeVideo } = useVideo();
   const modalRef = useRef<HTMLDivElement>(null);
+  const [videoError, setVideoError] = useState(false);
 
   // Prevent body scroll and manage focus when modal is open
   useEffect(() => {
     if (expandedVideo) {
       document.body.style.overflow = 'hidden';
+      setVideoError(false); // Reset error state for new video
       // Focus the modal container after a brief delay to ensure it's rendered
       setTimeout(() => {
         modalRef.current?.focus();
@@ -34,6 +37,13 @@ export default function VideoModal() {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [closeVideo, expandedVideo]);
+
+  const driveId = expandedVideo ? extractGoogleDriveId(expandedVideo.url) : null;
+  const embedUrl = expandedVideo
+    ? driveId
+      ? getGoogleDriveEmbedUrl(expandedVideo.url) || expandedVideo.url
+      : expandedVideo.url
+    : '';
 
   return (
     <AnimatePresence>
@@ -74,14 +84,28 @@ export default function VideoModal() {
             className="relative w-full max-w-5xl aspect-video bg-black rounded-2xl overflow-hidden shadow-premium-xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <iframe
-              src={expandedVideo.url}
-              title={expandedVideo.title}
-              className="absolute inset-0 w-full h-full"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-              loading="eager"
-            />
+            {driveId && !videoError ? (
+              <video
+                src={`https://drive.google.com/uc?export=download&id=${driveId}`}
+                className="absolute inset-0 w-full h-full object-contain"
+                controls
+                autoPlay
+                playsInline
+                onError={() => {
+                  console.warn('Google Drive direct stream failed. Falling back to iframe embed.');
+                  setVideoError(true);
+                }}
+              />
+            ) : (
+              <iframe
+                src={embedUrl}
+                title={expandedVideo.title}
+                className="absolute inset-0 w-full h-full border-0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                loading="eager"
+              />
+            )}
           </m.div>
 
           {/* Minimal Title/Caption below video */}
