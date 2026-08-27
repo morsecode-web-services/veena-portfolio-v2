@@ -20,7 +20,6 @@ import {
   MessageSquare,
 } from 'lucide-react';
 import { HallOfFamer } from '@/types/hall-of-fame';
-import { getHallOfFamers } from '@/lib/hall-of-fame';
 import { extractGoogleDriveId } from '@/lib/utils';
 import { useToast } from '@/context/ToastContext';
 import { ImageUpload } from '@/components/admin/ImageUpload';
@@ -83,45 +82,37 @@ export default function AdminHallOfFamePage() {
       const res = await fetch('/api/admin/hall-of-fame');
       const json = await res.json();
       if (json.success && Array.isArray(json.data)) {
-        if (json.data.length > 0) {
-          setEntries(
-            json.data.map((item: any) => ({
-              id: item.id,
-              studentName: item.student_name,
-              cohort: item.cohort || 'Vande Mataram',
-              location: item.location,
-              studentDescription: item.student_description,
-              videoUrl: item.video_url,
-              videoType: item.video_type || 'gdrive',
-              customThumbnailUrl: item.thumbnail_url,
-              mentorPraise: item.mentor_praise,
-              mentorComment: item.mentor_comment || {
-                authorName: 'Aishwarya Manikarnike',
-                authorAvatar: '/images/contact/contact-image.jpg',
-                commentText:
-                  item.mentor_praise || `${item.student_name} has shown wonderful proficiency!`,
-                timestamp: 'Recently',
-                likesCount: item.likes_count || 18,
-                isVerified: true,
-              },
-              dateFeatured: '2026',
-              badges: [],
-              isFeatured: true,
-            }))
-          );
-        } else {
-          // If Supabase table is currently empty, load defaults
-          const fallback = await getHallOfFamers();
-          setEntries(fallback);
-        }
+        setEntries(
+          json.data.map((item: any) => ({
+            id: item.id,
+            studentName: item.student_name,
+            cohort: item.cohort || 'Vande Mataram',
+            location: item.location,
+            studentDescription: item.student_description,
+            videoUrl: item.video_url,
+            videoType: item.video_type || 'gdrive',
+            customThumbnailUrl: item.thumbnail_url,
+            mentorPraise: item.mentor_praise,
+            mentorComment: item.mentor_comment || {
+              authorName: 'Aishwarya Manikarnike',
+              authorAvatar: '/images/contact/contact-image.jpg',
+              commentText:
+                item.mentor_praise || `${item.student_name} has shown wonderful proficiency!`,
+              timestamp: 'Recently',
+              likesCount: item.likes_count || 18,
+              isVerified: true,
+            },
+            dateFeatured: '2026',
+            badges: [],
+            isFeatured: true,
+          }))
+        );
       } else {
-        const fallback = await getHallOfFamers();
-        setEntries(fallback);
+        setEntries([]);
       }
     } catch (err) {
       console.warn('API error fetching hall of fame entries:', err);
-      const fallback = await getHallOfFamers();
-      setEntries(fallback);
+      setEntries([]);
     } finally {
       setLoading(false);
     }

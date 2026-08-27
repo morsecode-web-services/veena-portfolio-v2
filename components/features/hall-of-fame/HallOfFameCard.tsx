@@ -132,8 +132,8 @@ export default function HallOfFameCard({ performer, onSelect, onShareStory }: Ha
         </span>
       </div>
 
-      {/* Video Player */}
-      <div className="relative shrink-0 overflow-hidden">
+      {/* Video Player — fixed 16:9 container prevents layout shift on play */}
+      <div className="relative shrink-0 w-full" style={{ aspectRatio: '16/9' }}>
         <GoogleDriveVideoEmbed
           videoUrl={performer.videoUrl}
           title={performer.studentName}
