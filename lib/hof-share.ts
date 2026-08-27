@@ -77,16 +77,31 @@ function wrapText(
 }
 
 /**
- * Generates a minimal, professional 1080x1350 (4:5) share image.
+ * Generates a minimal, professional 1080x1080 (1:1) share image.
  * White background — video thumbnail, student name, instructor quote, branding.
  */
 export async function generateHofStoryFile(performer: HallOfFamer): Promise<File | null> {
+  // Preload a premium serif font
+  try {
+    if (typeof window !== 'undefined' && 'fonts' in document) {
+      const font = new FontFace(
+        'Playfair Display',
+        'url(https://fonts.gstatic.com/s/playfairdisplay/v37/nuFvD-vYSZcOC_1wvyG79a259K8dGrYB87NfkLNgn5v2.woff2)'
+      );
+      await font.load();
+      document.fonts.add(font);
+    }
+  } catch (e) {
+    console.warn('Font load failed:', e);
+  }
+
   return new Promise(async (resolve) => {
     try {
-      // 4:5 — works great on Instagram, WhatsApp, and as a story preview
+      // 1:1 Square - highly compatible and readable
       const W = 1080;
-      const H = 1350;
-      const PAD = 72;
+      const H = 1080;
+      const PAD = 64;
+      const THUMB_H = 480;
 
       const canvas = document.createElement('canvas');
       canvas.width = W;
@@ -102,16 +117,42 @@ export async function generateHofStoryFile(performer: HallOfFamer): Promise<File
       const cohort = performer.cohort || 'Vande Mataram';
       const thumbnailSrc = getHofThumbnail(performer);
 
+      // Helper to proxy images to avoid canvas CORS pollution
+      const getProxiedUrl = (url: string) => {
+        if (!url) return '';
+        if (url.startsWith('/') || url.startsWith('data:')) return url;
+        const base =
+          typeof window !== 'undefined'
+            ? window.location.origin
+            : 'https://www.aishwaryamanikarnike.com';
+        return `${base}/api/proxy-image?url=${encodeURIComponent(url)}`;
+      };
+
       // ── 1. White background ──────────────────────────────────────────────
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(0, 0, W, H);
 
-      // ── 2. Video thumbnail — full width, 16:9 ───────────────────────────
-      const THUMB_H = Math.round(W * (9 / 16)); // 607px
-      ctx.fillStyle = '#0f172a';
+      // ── 2. Video thumbnail area with fallback pattern ──────────────────
+      const thumbGrad = ctx.createLinearGradient(0, 0, W, THUMB_H);
+      thumbGrad.addColorStop(0, '#0b0f19');
+      thumbGrad.addColorStop(0.5, '#1e293b');
+      thumbGrad.addColorStop(1, '#0b0f19');
+      ctx.fillStyle = thumbGrad;
       ctx.fillRect(0, 0, W, THUMB_H);
 
-      const thumb = await loadImage(thumbnailSrc);
+      // Draw subtle abstract soundwaves/grid on fallback background
+      ctx.strokeStyle = 'rgba(255,255,255,0.03)';
+      ctx.lineWidth = 2;
+      for (let i = 0; i < W; i += 40) {
+        ctx.beginPath();
+        ctx.moveTo(i, 0);
+        ctx.lineTo(i, THUMB_H);
+        ctx.stroke();
+      }
+
+      // Load proxied thumbnail
+      const proxiedThumbnail = getProxiedUrl(thumbnailSrc);
+      const thumb = await loadImage(proxiedThumbnail);
       if (thumb) {
         const ta = thumb.naturalWidth / thumb.naturalHeight;
         const ca = W / THUMB_H;
@@ -131,45 +172,48 @@ export async function generateHofStoryFile(performer: HallOfFamer): Promise<File
 
       // Subtle dark scrim on thumbnail
       const scrim = ctx.createLinearGradient(0, 0, 0, THUMB_H);
-      scrim.addColorStop(0, 'rgba(0,0,0,0.08)');
-      scrim.addColorStop(1, 'rgba(0,0,0,0.42)');
+      scrim.addColorStop(0, 'rgba(0,0,0,0.05)');
+      scrim.addColorStop(1, 'rgba(0,0,0,0.35)');
       ctx.fillStyle = scrim;
       ctx.fillRect(0, 0, W, THUMB_H);
 
       // Cohort label — bottom-left of thumbnail
-      ctx.font = 'bold 24px system-ui, -apple-system, sans-serif';
+      ctx.font = 'bold 22px system-ui, -apple-system, sans-serif';
       const cohortLabel = `COHORT: ${cohort.toUpperCase()}`;
-      const labelW = ctx.measureText(cohortLabel).width + 40;
-      ctx.fillStyle = 'rgba(0,0,0,0.55)';
+      const labelW = ctx.measureText(cohortLabel).width + 36;
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
       ctx.beginPath();
-      ctx.roundRect(PAD, THUMB_H - 72, labelW, 44, 22);
+      if (ctx.roundRect) {
+        ctx.roundRect(PAD, THUMB_H - 64, labelW, 40, 20);
+      } else {
+        ctx.rect(PAD, THUMB_H - 64, labelW, 40);
+      }
       ctx.fill();
-      ctx.fillStyle = '#ffffff';
+      ctx.fillStyle = '#f8fafc';
       ctx.textAlign = 'left';
-      ctx.fillText(cohortLabel, PAD + 20, THUMB_H - 43);
+      ctx.fillText(cohortLabel, PAD + 18, THUMB_H - 37);
 
       // ── 3. Body — white ──────────────────────────────────────────────────
-      let y = THUMB_H + 64;
+      let y = THUMB_H + 54;
 
-      // Student name
+      // Student name (using Playfair Display / Georgia)
       ctx.fillStyle = '#0f172a';
-      ctx.font = 'bold 74px Georgia, "Times New Roman", serif';
+      ctx.font = 'bold 64px "Playfair Display", Georgia, serif';
       ctx.textAlign = 'left';
       ctx.fillText(performer.studentName, PAD, y);
-      y += 12;
 
       // Location + cohort meta row
       y += 36;
       ctx.fillStyle = '#64748b';
-      ctx.font = '30px system-ui, -apple-system, sans-serif';
+      ctx.font = '500 26px system-ui, -apple-system, sans-serif';
       const meta = [performer.location, performer.studentDescription].filter(Boolean).join('  ·  ');
       if (meta) {
         ctx.fillText(meta, PAD, y);
-        y += 44;
+        y += 24;
       }
 
       // Thin divider
-      y += 32;
+      y += 16;
       ctx.strokeStyle = '#e2e8f0';
       ctx.lineWidth = 1.5;
       ctx.beginPath();
@@ -178,26 +222,26 @@ export async function generateHofStoryFile(performer: HallOfFamer): Promise<File
       ctx.stroke();
       y += 52;
 
-      // Instructor quote
+      // Instructor quote (with curly quotes)
       ctx.fillStyle = '#1e293b';
-      ctx.font = 'italic 36px Georgia, "Times New Roman", serif';
+      ctx.font = 'italic 30px "Playfair Display", Georgia, serif';
       ctx.textAlign = 'left';
-      y = wrapText(ctx, `"${mentorComment}"`, PAD, y, W - PAD * 2, 56);
-      y += 32;
+      y = wrapText(ctx, `\u201C${mentorComment.trim()}\u201D`, PAD, y, W - PAD * 2, 46);
+      y += 24;
 
       // Instructor attribution
       ctx.fillStyle = '#475569';
-      ctx.font = '28px system-ui, -apple-system, sans-serif';
+      ctx.font = 'bold 26px system-ui, -apple-system, sans-serif';
       ctx.fillText(`— ${mentorName}`, PAD, y);
-      y += 28;
+      y += 34;
       ctx.fillStyle = '#94a3b8';
-      ctx.font = '24px system-ui, -apple-system, sans-serif';
+      ctx.font = '22px system-ui, -apple-system, sans-serif';
       ctx.fillText('Instructor, Aishwarya Manikarnike Veena Academy', PAD, y);
 
       // ── 4. Bottom branding ────────────────────────────────────────────────
-      const BRAND_Y = H - 56;
+      const BRAND_Y = H - 44;
       ctx.fillStyle = '#94a3b8';
-      ctx.font = '24px system-ui, -apple-system, sans-serif';
+      ctx.font = '22px system-ui, -apple-system, sans-serif';
       ctx.textAlign = 'center';
       ctx.fillText('aishwaryamanikarnike.com/hall-of-fame', W / 2, BRAND_Y);
 
