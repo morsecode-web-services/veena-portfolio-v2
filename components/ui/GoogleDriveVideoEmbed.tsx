@@ -33,6 +33,19 @@ export default function GoogleDriveVideoEmbed({
       className={`relative w-full overflow-hidden bg-navy-950 ${className}`}
       style={{ paddingTop: '56.25%' }} /* 16:9 Aspect Ratio */
     >
+      {/* Styles to scale down Google Drive iframe and controls on mobile */}
+      <style>{`
+        @media (max-width: 767px) {
+          .drive-iframe-mobile-scaled {
+            width: 142.857% !important;
+            height: calc(142.857% + 68.57px) !important;
+            transform: scale(0.7) !important;
+            transform-origin: top left !important;
+            top: -68.57px !important;
+          }
+        }
+      `}</style>
+
       {/* Cohort Pill overlay (pointer-events-none so click passes through to video) */}
       {cohort && (
         <div className="absolute top-3 left-3 z-10 pointer-events-none">
@@ -46,10 +59,10 @@ export default function GoogleDriveVideoEmbed({
         <iframe
           src={embedUrl}
           title={title}
-          className="absolute left-0 w-full border-0 h-full"
-          style={
-            driveId ? { top: '-48px', height: 'calc(100% + 48px)' } : { top: '0px', height: '100%' }
-          }
+          className={`absolute left-0 border-0 ${
+            driveId ? 'drive-iframe-mobile-scaled w-full' : 'w-full h-full top-0'
+          }`}
+          style={driveId ? { top: '-48px', height: 'calc(100% + 48px)' } : undefined}
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowFullScreen
           loading="lazy"
