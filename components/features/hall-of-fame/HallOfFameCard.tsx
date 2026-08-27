@@ -68,7 +68,7 @@ export default function HallOfFameCard({
     try {
       const file = await generateHofStoryFile(performer);
       const shareUrl = getHofShareUrl(performer);
-      const caption = `Celebrating ${performer.studentName}'s performance! ${shareUrl}`;
+      const caption = `Honored and excited to be featured in Aishwarya Manikarnike's Hall of Fame! 🌟 Watch my performance of ${performer.cohort || 'Vande Mataram'} here: ${shareUrl}`;
 
       if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
         try {
