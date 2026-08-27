@@ -138,7 +138,7 @@ export default function HallOfFameCard({
       }`}
     >
       {/* Video Player — fixed 16:9 container prevents layout shift on play */}
-      <div className="relative shrink-0 w-full" style={{ aspectRatio: '16/9' }}>
+      <div className="relative shrink-0 w-full">
         <GoogleDriveVideoEmbed
           videoUrl={performer.videoUrl}
           title={performer.studentName}

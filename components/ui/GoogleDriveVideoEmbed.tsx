@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
-import { Play, ExternalLink, AlertCircle, Loader2, X, Maximize2 } from 'lucide-react';
+import { Play, ExternalLink, AlertCircle, Loader2, X } from 'lucide-react';
 import {
   extractGoogleDriveId,
   getGoogleDriveEmbedUrl,
@@ -111,7 +111,7 @@ export default function GoogleDriveVideoEmbed({
     <div
       ref={containerRef}
       className={`relative w-full overflow-hidden bg-navy-950 ${className}`}
-      style={{ paddingTop: '56.25%' /* 16:9 */ }}
+      style={{ paddingTop: isPlaying && driveId ? '70%' : '56.25%' }}
       onClick={isPlaying && iframeReady ? resetControlsTimer : undefined}
     >
       {/* -- Thumbnail / Play State -- */}
@@ -177,73 +177,52 @@ export default function GoogleDriveVideoEmbed({
 
       {/* -- Iframe / Playing State -- */}
       {isPlaying && (
-        <div
-          className={`absolute inset-0 bg-black transition-opacity duration-300 ${
-            iframeReady ? 'opacity-100' : 'opacity-0'
-          }`}
-        >
-          {embedUrl ? (
-            <iframe
-              ref={iframeRef}
-              src={embedUrl}
-              title={title}
-              className="absolute inset-0 w-full h-full border-0"
-              allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
-              allowFullScreen
-              onLoad={handleIframeLoad}
-            />
-          ) : (
-            <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
-              <AlertCircle className="w-10 h-10 text-gold-400 mb-2" />
-              <p className="text-slate-200 text-sm mb-4">Unable to embed video directly.</p>
-              <a
-                href={videoUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gold-600 text-white text-xs font-semibold hover:bg-gold-700 transition-colors"
-              >
-                Open in Google Drive <ExternalLink className="w-3.5 h-3.5" />
-              </a>
-            </div>
-          )}
-
-          {/* -- Controls — auto-hide after 3s, tap/click anywhere to show again -- */}
+        <>
           <div
-            className={`absolute bottom-3 right-3 z-20 flex items-center gap-1.5 transition-opacity duration-300 ${
-              controlsVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'
+            className={`absolute inset-0 bg-black transition-opacity duration-300 ${
+              iframeReady ? 'opacity-100' : 'opacity-0'
             }`}
           >
-            {/* Fullscreen */}
-            <button
-              onClick={handleFullscreen}
-              aria-label="Fullscreen"
-              className="w-9 h-9 rounded-xl bg-black/60 backdrop-blur-sm border border-white/10 flex items-center justify-center text-white hover:bg-black/80 transition-all active:scale-95 touch-manipulation"
-            >
-              <Maximize2 className="w-4 h-4" />
-            </button>
-
-            {/* Open in Drive */}
-            <a
-              href={videoUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Open in Drive"
-              onClick={(e) => e.stopPropagation()}
-              className="w-9 h-9 rounded-xl bg-black/60 backdrop-blur-sm border border-white/10 flex items-center justify-center text-white hover:bg-black/80 transition-all active:scale-95 touch-manipulation"
-            >
-              <ExternalLink className="w-4 h-4" />
-            </a>
-
-            {/* Close */}
-            <button
-              onClick={handleStop}
-              aria-label="Close video"
-              className="w-9 h-9 rounded-xl bg-black/60 backdrop-blur-sm border border-white/10 flex items-center justify-center text-white hover:bg-black/80 transition-all active:scale-95 touch-manipulation"
-            >
-              <X className="w-4 h-4" />
-            </button>
+            {embedUrl ? (
+              <iframe
+                ref={iframeRef}
+                src={embedUrl}
+                title={title}
+                className="absolute left-0 w-full border-0"
+                style={
+                  driveId
+                    ? { top: '-48px', height: 'calc(100% + 48px)' }
+                    : { top: '0px', height: '100%' }
+                }
+                allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
+                allowFullScreen
+                onLoad={handleIframeLoad}
+              />
+            ) : (
+              <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
+                <AlertCircle className="w-10 h-10 text-gold-400 mb-2" />
+                <p className="text-slate-200 text-sm mb-4">Unable to embed video directly.</p>
+                <a
+                  href={videoUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gold-600 text-white text-xs font-semibold hover:bg-gold-700 transition-colors"
+                >
+                  Open in Google Drive <ExternalLink className="w-3.5 h-3.5" />
+                </a>
+              </div>
+            )}
           </div>
-        </div>
+
+          {/* -- Close Video Button (Top-Left) — Always visible during playback to bypass iframe touch swallowing -- */}
+          <button
+            onClick={handleStop}
+            aria-label="Close video"
+            className="absolute top-3 left-3 z-20 w-8 h-8 rounded-full bg-black/60 backdrop-blur-sm border border-white/15 flex items-center justify-center text-white hover:bg-black/80 transition-all duration-300 active:scale-95 touch-manipulation"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </>
       )}
     </div>
   );
