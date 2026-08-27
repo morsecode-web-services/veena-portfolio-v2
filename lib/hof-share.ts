@@ -128,8 +128,11 @@ export async function generateHofStoryFile(performer: HallOfFamer): Promise<File
         return `${base}/api/proxy-image?url=${encodeURIComponent(url)}`;
       };
 
-      // ── 1. White background ──────────────────────────────────────────────
-      ctx.fillStyle = '#ffffff';
+      // ── 1. Alabaster gradient background ──────────────────────────────
+      const bgGrad = ctx.createLinearGradient(0, 0, 0, H);
+      bgGrad.addColorStop(0, '#ffffff');
+      bgGrad.addColorStop(1, '#FAF9F6');
+      ctx.fillStyle = bgGrad;
       ctx.fillRect(0, 0, W, H);
 
       // ── 2. Video thumbnail area with fallback pattern ──────────────────
@@ -198,7 +201,7 @@ export async function generateHofStoryFile(performer: HallOfFamer): Promise<File
       ctx.fillText(cohortLabel, PAD + 18, labelY + labelH / 2);
       ctx.textBaseline = 'alphabetic'; // Reset baseline
 
-      // ── 3. Body — white ──────────────────────────────────────────────────
+      // ── 3. Body ──────────────────────────────────────────────────────────
       let y = THUMB_H + 78;
 
       // Student name (using Playfair Display / Georgia)
@@ -227,12 +230,35 @@ export async function generateHofStoryFile(performer: HallOfFamer): Promise<File
       ctx.stroke();
       y += 56;
 
+      const quoteStartY = y + 8;
+
+      // Large decorative quotation mark background indicator
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.04)';
+      ctx.font = 'italic italic 240px Georgia, serif';
+      ctx.fillText('\u201C', PAD - 12, quoteStartY + 120);
+
       // Instructor quote (with curly quotes)
       ctx.fillStyle = '#1e293b';
       ctx.font = 'italic 32px "Playfair Display", Georgia, serif';
       ctx.textAlign = 'left';
-      y = wrapText(ctx, `\u201C${mentorComment.trim()}\u201D`, PAD, y, W - PAD * 2, 48);
-      y += 40;
+      const quoteEndY = wrapText(
+        ctx,
+        `\u201C${mentorComment.trim()}\u201D`,
+        PAD + 24,
+        quoteStartY,
+        W - PAD * 2 - 24,
+        48
+      );
+
+      // Left-border quote strip accent dynamically matching text height
+      ctx.strokeStyle = '#e2e8f0';
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(PAD - 4, quoteStartY - 8);
+      ctx.lineTo(PAD - 4, quoteEndY - 34);
+      ctx.stroke();
+
+      y = quoteEndY + 40;
 
       // Instructor attribution
       ctx.fillStyle = '#334155';
