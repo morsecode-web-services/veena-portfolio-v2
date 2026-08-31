@@ -463,17 +463,10 @@ export async function generateHofStoryFile(performer: HallOfFamer): Promise<File
       drawStar(ctx, W / 2 - studentNameW / 2 - 26, y - 16, 5, 8, 3.5);
       drawStar(ctx, W / 2 + studentNameW / 2 + 26, y - 16, 5, 8, 3.5);
 
-      // Location (Bold uppercase gold tag)
-      y += 28;
-      if (performer.location) {
-        ctx.fillStyle = '#b45309'; // Warm Amber
-        ctx.font = 'bold 19px system-ui, -apple-system, sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText(performer.location.toUpperCase(), W / 2, y);
-        y += 26;
-      }
+      // Spacing between name and description/tagline
+      y += 46;
 
-      // Student Description / Tagline (High readability 22px font)
+      // Student Description / Tagline (High readability 21px font)
       if (performer.studentDescription) {
         ctx.fillStyle = '#475569';
         ctx.font = '500 21px system-ui, -apple-system, sans-serif';
@@ -487,7 +480,7 @@ export async function generateHofStoryFile(performer: HallOfFamer): Promise<File
           28,
           2
         );
-        y = descEndY + 12;
+        y = descEndY + 14;
       } else {
         y += 10;
       }
