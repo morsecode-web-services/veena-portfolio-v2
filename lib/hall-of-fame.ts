@@ -32,6 +32,7 @@ export async function getHallOfFamers(): Promise<HallOfFamer[]> {
           studentDescription: item.student_description || item.piece_title,
           videoUrl: item.video_url,
           videoType: item.video_type || 'gdrive',
+          customThumbnailUrl: item.thumbnail_url,
           mentorComment: item.mentor_comment || {
             authorName: MENTOR_AISHWARIYA.authorName,
             authorAvatar: MENTOR_AISHWARIYA.authorAvatar,
