@@ -255,14 +255,22 @@ function wrapText(
   x: number,
   y: number,
   maxWidth: number,
-  lineHeight: number
+  lineHeight: number,
+  maxLines: number = 6
 ): number {
   const words = text.split(' ');
   let line = '';
   let curY = y;
+  let lineCount = 0;
+
   for (let i = 0; i < words.length; i++) {
     const test = line + words[i] + ' ';
     if (ctx.measureText(test).width > maxWidth && i > 0) {
+      lineCount++;
+      if (lineCount >= maxLines) {
+        ctx.fillText(line.trim() + '...', x, curY);
+        return curY + lineHeight;
+      }
       ctx.fillText(line.trim(), x, curY);
       line = words[i] + ' ';
       curY += lineHeight;
@@ -332,8 +340,8 @@ export async function generateHofStoryFile(performer: HallOfFamer): Promise<File
       // 1:1 Square - highly compatible and readable
       const W = 1080;
       const H = 1080;
-      const PAD = 64;
-      const THUMB_H = 480;
+      const PAD = 56;
+      const THUMB_H = 430; // Optimized thumbnail height to leave ample space for text
 
       const canvas = document.createElement('canvas');
       canvas.width = W;
@@ -356,8 +364,8 @@ export async function generateHofStoryFile(performer: HallOfFamer): Promise<File
       ctx.fillRect(0, 0, W, H);
 
       // ── Inset Gold Border Frame ──────────────────────────────────────────
-      const borderInset = 24;
-      ctx.strokeStyle = 'rgba(202, 138, 4, 0.15)';
+      const borderInset = 20;
+      ctx.strokeStyle = 'rgba(202, 138, 4, 0.18)';
       ctx.lineWidth = 1.5;
       ctx.beginPath();
       if (ctx.roundRect) {
@@ -411,143 +419,173 @@ export async function generateHofStoryFile(performer: HallOfFamer): Promise<File
       // Subtle dark scrim on thumbnail
       const scrim = ctx.createLinearGradient(0, 0, 0, THUMB_H);
       scrim.addColorStop(0, 'rgba(0,0,0,0.05)');
-      scrim.addColorStop(1, 'rgba(0,0,0,0.35)');
+      scrim.addColorStop(1, 'rgba(0,0,0,0.4)');
       ctx.fillStyle = scrim;
       ctx.fillRect(0, 0, W, THUMB_H);
 
       // Cohort label — bottom-left of thumbnail
-      ctx.font = 'bold 22px system-ui, -apple-system, sans-serif';
+      ctx.font = 'bold 20px system-ui, -apple-system, sans-serif';
       const cohortLabel = `COHORT: ${cohort.toUpperCase()}`;
-      const labelW = ctx.measureText(cohortLabel).width + 36;
-      const labelH = 44;
-      const labelY = THUMB_H - 72;
-      ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+      const labelW = ctx.measureText(cohortLabel).width + 32;
+      const labelH = 38;
+      const labelY = THUMB_H - 58;
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
       ctx.beginPath();
       if (ctx.roundRect) {
-        ctx.roundRect(PAD, labelY, labelW, labelH, 22);
+        ctx.roundRect(PAD, labelY, labelW, labelH, 19);
       } else {
         ctx.rect(PAD, labelY, labelW, labelH);
       }
       ctx.fill();
 
       // Thin gold cohort pill outline
-      ctx.strokeStyle = 'rgba(202, 138, 4, 0.3)';
+      ctx.strokeStyle = 'rgba(202, 138, 4, 0.4)';
       ctx.lineWidth = 1;
       ctx.stroke();
       ctx.fillStyle = '#f8fafc';
       ctx.textAlign = 'left';
       ctx.textBaseline = 'middle';
-      ctx.fillText(cohortLabel, PAD + 18, labelY + labelH / 2);
+      ctx.fillText(cohortLabel, PAD + 16, labelY + labelH / 2);
       ctx.textBaseline = 'alphabetic'; // Reset baseline
 
       // ── 3. Body ──────────────────────────────────────────────────────────
-      let y = THUMB_H + 78;
+      let y = THUMB_H + 52;
 
       // Student name (centered with stars on both sides)
       ctx.fillStyle = '#0f172a';
-      ctx.font = 'bold 64px "Playfair Display", Georgia, serif';
+      ctx.font = 'bold 48px "Playfair Display", Georgia, serif';
       ctx.textAlign = 'center';
       ctx.fillText(performer.studentName, W / 2, y);
 
       // Draw elegant small gold stars on left and right of the name
       const studentNameW = ctx.measureText(performer.studentName).width;
       ctx.fillStyle = '#ca8a04'; // Warm Gold
-      drawStar(ctx, W / 2 - studentNameW / 2 - 28, y - 20, 5, 8, 3.5);
-      drawStar(ctx, W / 2 + studentNameW / 2 + 28, y - 20, 5, 8, 3.5);
+      drawStar(ctx, W / 2 - studentNameW / 2 - 24, y - 15, 5, 7, 3);
+      drawStar(ctx, W / 2 + studentNameW / 2 + 24, y - 15, 5, 7, 3);
 
-      // Location + cohort meta row (centered)
-      y += 42;
-      ctx.fillStyle = '#64748b';
-      ctx.font = '500 26px system-ui, -apple-system, sans-serif';
-      ctx.textAlign = 'center';
-      const meta = [performer.location, performer.studentDescription].filter(Boolean).join('  ·  ');
-      if (meta) {
-        ctx.fillText(meta, W / 2, y);
-        y += 28;
+      // Location & Description (Issue #2 Fix: Wrapped cleanly without overflow)
+      y += 28;
+      if (performer.location) {
+        ctx.fillStyle = '#b45309'; // Warm Amber
+        ctx.font = 'bold 18px system-ui, -apple-system, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(performer.location.toUpperCase(), W / 2, y);
+        y += 24;
+      }
+
+      if (performer.studentDescription) {
+        ctx.fillStyle = '#64748b';
+        ctx.font = '500 19px system-ui, -apple-system, sans-serif';
+        ctx.textAlign = 'center';
+        // Wrap description cleanly within bounds, maximum 2 lines
+        const descEndY = wrapText(
+          ctx,
+          performer.studentDescription.trim(),
+          W / 2,
+          y,
+          W - PAD * 2 - 48,
+          26,
+          2
+        );
+        y = descEndY + 6;
+      } else {
+        y += 4;
       }
 
       // Gold gradient divider fading out at the edges
-      y += 24;
-      const dividerGrad = ctx.createLinearGradient(PAD, 0, W - PAD, 0);
+      y += 10;
+      const dividerGrad = ctx.createLinearGradient(PAD + 30, 0, W - PAD - 30, 0);
       dividerGrad.addColorStop(0, 'rgba(202, 138, 4, 0)');
-      dividerGrad.addColorStop(0.5, 'rgba(202, 138, 4, 0.65)');
+      dividerGrad.addColorStop(0.5, 'rgba(202, 138, 4, 0.7)');
       dividerGrad.addColorStop(1, 'rgba(202, 138, 4, 0)');
 
       ctx.strokeStyle = dividerGrad;
-      ctx.lineWidth = 2;
+      ctx.lineWidth = 1.5;
       ctx.beginPath();
-      ctx.moveTo(PAD, y);
-      ctx.lineTo(W - PAD, y);
+      ctx.moveTo(PAD + 30, y);
+      ctx.lineTo(W - PAD - 30, y);
       ctx.stroke();
-      y += 56;
+      y += 32;
 
-      const quoteStartY = y + 8;
+      // ── 4. Instructor Quote Box (Issue #3 & #4 Fix: Dynamic Sizing & Clean Border) ──
+      const quoteStartY = y;
 
-      // Large decorative quotation mark background indicator
-      ctx.fillStyle = 'rgba(15, 23, 42, 0.04)';
-      ctx.font = 'italic italic 240px Georgia, serif';
-      ctx.fillText('\u201C', PAD - 12, quoteStartY + 120);
+      // Dynamically calculate font size and line height based on quote length
+      const quoteLen = mentorComment.trim().length;
+      let quoteFontSize = 26;
+      let quoteLineHeight = 38;
+      if (quoteLen > 180) {
+        quoteFontSize = 22;
+        quoteLineHeight = 33;
+      } else if (quoteLen > 120) {
+        quoteFontSize = 24;
+        quoteLineHeight = 35;
+      }
 
-      // Instructor quote (with curly quotes)
       ctx.fillStyle = '#1e293b';
-      ctx.font = 'italic 32px "Playfair Display", Georgia, serif';
+      ctx.font = `italic ${quoteFontSize}px "Playfair Display", Georgia, serif`;
       ctx.textAlign = 'left';
+
+      // Draw quote with curly quotes
       const quoteEndY = wrapText(
         ctx,
         `\u201C${mentorComment.trim()}\u201D`,
-        PAD + 24,
+        PAD + 22,
         quoteStartY,
-        W - PAD * 2 - 24,
-        48
+        W - PAD * 2 - 28,
+        quoteLineHeight,
+        4
       );
 
-      // Left-border quote strip accent dynamically matching text height
-      ctx.strokeStyle = '#e2e8f0';
-      ctx.lineWidth = 4;
+      // Clean gold left accent border dynamically matching text height (Issue #4 fix)
+      ctx.strokeStyle = '#ca8a04';
+      ctx.lineWidth = 3.5;
       ctx.beginPath();
-      ctx.moveTo(PAD - 4, quoteStartY - 8);
-      ctx.lineTo(PAD - 4, quoteEndY - 34);
+      ctx.moveTo(PAD - 2, quoteStartY - quoteFontSize + 6);
+      ctx.lineTo(PAD - 2, quoteEndY - 14);
       ctx.stroke();
 
-      y = quoteEndY + 40;
+      y = quoteEndY + 18;
 
       // Instructor attribution
-      ctx.fillStyle = '#334155';
-      ctx.font = 'bold 28px system-ui, -apple-system, sans-serif';
+      ctx.fillStyle = '#1e293b';
+      ctx.font = 'bold 22px system-ui, -apple-system, sans-serif';
       ctx.fillText(`— ${mentorName}`, PAD, y);
 
       // Verified badge next to instructor name
       const nameW = ctx.measureText(`— ${mentorName}`).width;
-      const badgeX = PAD + nameW + 16;
-      const badgeY = y - 9;
-      const badgeR = 11;
+      const badgeX = PAD + nameW + 14;
+      const badgeY = y - 7;
+      const badgeR = 9;
       ctx.fillStyle = '#ca8a04'; // Warm Gold verified badge
       ctx.beginPath();
       ctx.arc(badgeX, badgeY, badgeR, 0, Math.PI * 2);
       ctx.fill();
       ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 15px system-ui, -apple-system, sans-serif';
+      ctx.font = 'bold 12px system-ui, -apple-system, sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText('✓', badgeX, badgeY + 5);
+      ctx.fillText('✓', badgeX, badgeY + 4);
 
       // Subtitle
       ctx.textAlign = 'left';
-      y += 38;
+      y += 24;
       ctx.fillStyle = '#64748b';
-      ctx.font = '24px system-ui, -apple-system, sans-serif';
-      ctx.fillText('Instructor', PAD, y);
+      ctx.font = '17px system-ui, -apple-system, sans-serif';
+      ctx.fillText('Instructor & Mentor', PAD, y);
 
-      // ── 4. Elegant Star Divider ───────────────────────────────────────────
-      const BRAND_Y = H - 64;
-      const starY = y + (BRAND_Y - y) / 2 - 8;
+      // ── 5. Fixed Bottom Zone (Issue #3 Fix: Zero overlap guaranteed) ──
+      const starY = 1008;
+      const BRAND_Y = 1042;
+
+      // 3 Gold Stars
       ctx.fillStyle = '#ca8a04'; // Warm Gold
-      drawStar(ctx, W / 2, starY, 5, 12, 5.5); // Center Star
-      drawStar(ctx, W / 2 - 36, starY, 5, 8, 3.5); // Left Star
-      drawStar(ctx, W / 2 + 36, starY, 5, 8, 3.5); // Right Star
+      drawStar(ctx, W / 2, starY, 5, 9, 4); // Center Star
+      drawStar(ctx, W / 2 - 28, starY, 5, 6, 2.8); // Left Star
+      drawStar(ctx, W / 2 + 28, starY, 5, 6, 2.8); // Right Star
 
-      // ── 5. Bottom branding ────────────────────────────────────────────────
+      // Bottom branding URL
       ctx.fillStyle = '#64748b';
-      ctx.font = '24px system-ui, -apple-system, sans-serif';
+      ctx.font = '500 18px system-ui, -apple-system, sans-serif';
       ctx.textAlign = 'center';
       ctx.fillText('aishwaryamanikarnike.com/hall-of-fame', W / 2, BRAND_Y);
 

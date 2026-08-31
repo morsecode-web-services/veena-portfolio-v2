@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { isSafePublicUrl } from '@/lib/security';
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -6,6 +7,11 @@ export async function GET(request: NextRequest) {
 
   if (!url) {
     return new NextResponse('Missing url parameter', { status: 400 });
+  }
+
+  // SSRF Protection: Reject private/loopback/cloud metadata URLs
+  if (!isSafePublicUrl(url)) {
+    return new NextResponse('Forbidden: Invalid or private target URL', { status: 403 });
   }
 
   try {
@@ -21,6 +27,12 @@ export async function GET(request: NextRequest) {
     }
 
     const contentType = response.headers.get('content-type') || 'image/jpeg';
+
+    // Only allow image MIME types
+    if (!contentType.startsWith('image/')) {
+      return new NextResponse('Invalid media type: Expected image', { status: 400 });
+    }
+
     const buffer = await response.arrayBuffer();
 
     return new NextResponse(buffer, {

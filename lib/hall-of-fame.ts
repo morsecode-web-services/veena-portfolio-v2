@@ -11,6 +11,14 @@ export const MENTOR_AISHWARIYA = {
 export const INITIAL_HALL_OF_FAMERS: HallOfFamer[] = [];
 
 /**
+ * Sanitizes visitor identifier to prevent malformed or excessively long strings.
+ */
+function sanitizeVisitorId(raw: string): string {
+  if (!raw || typeof raw !== 'string') return 'v_anon';
+  return raw.replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 64) || 'v_anon';
+}
+
+/**
  * Fetches all Hall of Famers from Supabase. Returns only real DB entries.
  */
 export async function getHallOfFamers(): Promise<HallOfFamer[]> {
@@ -76,7 +84,7 @@ export function getVisitorId(): string {
       id = 'v_' + Math.random().toString(36).substring(2, 11) + '_' + Date.now();
       localStorage.setItem('veena_visitor_id', id);
     }
-    return id;
+    return sanitizeVisitorId(id);
   } catch {
     return 'fallback-visitor';
   }
@@ -88,7 +96,7 @@ export function getVisitorId(): string {
  */
 export async function getVisitorLikedIds(visitorId?: string): Promise<string[]> {
   if (typeof window === 'undefined') return [];
-  const vid = visitorId || getVisitorId();
+  const vid = sanitizeVisitorId(visitorId || getVisitorId());
 
   try {
     if (supabase && vid) {
@@ -127,7 +135,7 @@ export async function toggleHallOfFameLike(
   currentLikedState: boolean = false,
   currentLikesCount: number = 0
 ): Promise<{ success: boolean; liked: boolean; likesCount: number }> {
-  const vid = visitorId || getVisitorId();
+  const vid = sanitizeVisitorId(visitorId || getVisitorId());
   const isUuid =
     /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(
       performerId

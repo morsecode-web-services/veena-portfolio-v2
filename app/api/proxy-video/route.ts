@@ -1,9 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { isSafePublicUrl } from '@/lib/security';
 
 export async function GET(req: NextRequest) {
   const url = req.nextUrl.searchParams.get('url');
   if (!url) {
     return new NextResponse('Missing url parameter', { status: 400 });
+  }
+
+  // SSRF Protection: Reject private/loopback/cloud metadata URLs
+  if (!isSafePublicUrl(url)) {
+    return new NextResponse('Forbidden: Invalid or private target URL', { status: 403 });
   }
 
   try {
