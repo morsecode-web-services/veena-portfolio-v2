@@ -19,6 +19,8 @@ import {
   Award,
   MessageSquare,
   RefreshCw,
+  MoveUp,
+  MoveDown,
 } from 'lucide-react';
 import { HallOfFamer } from '@/types/hall-of-fame';
 import { extractGoogleDriveId } from '@/lib/utils';
@@ -37,8 +39,10 @@ export default function AdminHallOfFamePage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [syncingVideos, setSyncingVideos] = useState(false);
+  const [reordering, setReordering] = useState(false);
 
-  // Settings State
+  // Settings State & Full Config
+  const [siteConfig, setSiteConfig] = useState<any | null>(null);
   const [pageSettings, setPageSettings] = useState({
     title: 'Cohort: Vande Mataram',
     subtitle: 'HALL OF FAME',
@@ -79,6 +83,28 @@ export default function AdminHallOfFamePage() {
     return headers;
   };
 
+  const fetchSiteConfig = async () => {
+    try {
+      const res = await fetch('/api/admin/config');
+      if (res.ok) {
+        const data = await res.json();
+        setSiteConfig(data);
+        if (data.hallOfFame) {
+          setPageSettings({
+            title: data.hallOfFame.title || 'Cohort: Vande Mataram',
+            subtitle: data.hallOfFame.subtitle || 'HALL OF FAME',
+            description:
+              data.hallOfFame.description ||
+              'These students showed exceptional display of talent across our Veena learning challenges.',
+            enabled: data.hallOfFame.enabled !== undefined ? data.hallOfFame.enabled : true,
+          });
+        }
+      }
+    } catch (err) {
+      console.warn('Error fetching site config for hall of fame:', err);
+    }
+  };
+
   const fetchEntries = async () => {
     setLoading(true);
     try {
@@ -86,7 +112,7 @@ export default function AdminHallOfFamePage() {
       const json = await res.json();
       if (json.success && Array.isArray(json.data)) {
         setEntries(
-          json.data.map((item: any) => ({
+          json.data.map((item: any, idx: number) => ({
             id: item.id,
             studentName: item.student_name,
             cohort: item.cohort || 'Vande Mataram',
@@ -108,6 +134,8 @@ export default function AdminHallOfFamePage() {
             dateFeatured: '2026',
             badges: [],
             isFeatured: true,
+            order_index: item.order_index ?? idx,
+            orderIndex: item.order_index ?? idx,
           }))
         );
       } else {
@@ -145,6 +173,7 @@ export default function AdminHallOfFamePage() {
 
   useEffect(() => {
     fetchEntries();
+    fetchSiteConfig();
   }, []);
 
   useEffect(() => {
@@ -225,6 +254,49 @@ export default function AdminHallOfFamePage() {
     }
   };
 
+  const handleMoveEntry = async (index: number, direction: 'up' | 'down') => {
+    if (searchQuery) {
+      addToast('Please clear the search filter to reorder all showcases.', 'info');
+      return;
+    }
+
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= entries.length) return;
+
+    const newEntries = [...entries];
+    const temp = newEntries[index];
+    newEntries[index] = newEntries[targetIndex];
+    newEntries[targetIndex] = temp;
+
+    // Optimistically update UI
+    setEntries(newEntries);
+    setReordering(true);
+
+    try {
+      const headers = await getAuthHeaders();
+      const orderedIds = newEntries.map((item) => item.id);
+      const res = await fetch('/api/admin/hall-of-fame', {
+        method: 'PATCH',
+        headers,
+        body: JSON.stringify({ orderedIds }),
+      });
+
+      const json = await res.json();
+      if (!json.success) {
+        addToast(`Failed to save order: ${json.error || 'Database error'}`, 'error');
+        fetchEntries();
+      } else {
+        addToast('Showcase order updated successfully', 'success');
+      }
+    } catch (err: any) {
+      console.error('Error saving order:', err);
+      addToast('Network error while saving order', 'error');
+      fetchEntries();
+    } finally {
+      setReordering(false);
+    }
+  };
+
   const handleSaveEntry = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.studentName || !formData.videoUrl) {
@@ -250,7 +322,7 @@ export default function AdminHallOfFamePage() {
         editingId
       );
 
-    const payload = {
+    const payload: any = {
       id: isRealUuid ? editingId : undefined,
       studentName: formData.studentName,
       cohort: formData.cohort || 'Vande Mataram',
@@ -261,6 +333,7 @@ export default function AdminHallOfFamePage() {
       mentorPraise: formData.mentorCommentText,
       mentorComment: mentorCommentObj,
       likesCount: Number(formData.likesCount) || 0,
+      order_index: !isRealUuid ? entries.length : undefined,
     };
 
     try {
@@ -295,13 +368,55 @@ export default function AdminHallOfFamePage() {
     }
   };
 
-  const handleSaveSettings = (e: React.FormEvent) => {
+  const handleSaveSettings = async (e: React.FormEvent) => {
     e.preventDefault();
     setSavingSettings(true);
-    setTimeout(() => {
+    try {
+      const headers = await getAuthHeaders();
+
+      // Retrieve full config if not already cached
+      let baseConfig = siteConfig;
+      if (!baseConfig) {
+        const cfgRes = await fetch('/api/admin/config');
+        if (cfgRes.ok) {
+          baseConfig = await cfgRes.json();
+        }
+      }
+
+      if (!baseConfig) {
+        throw new Error('Failed to retrieve current site configuration');
+      }
+
+      const updatedConfig = {
+        ...baseConfig,
+        hallOfFame: {
+          ...baseConfig.hallOfFame,
+          title: pageSettings.title,
+          subtitle: pageSettings.subtitle,
+          description: pageSettings.description,
+          enabled: pageSettings.enabled,
+        },
+      };
+
+      const res = await fetch('/api/admin/config', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(updatedConfig),
+      });
+
+      const json = await res.json();
+      if (json.success || res.ok) {
+        setSiteConfig(updatedConfig);
+        addToast('Hall of Fame page settings updated and published successfully!', 'success');
+      } else {
+        addToast(`Failed to save settings: ${json.error || 'Server error'}`, 'error');
+      }
+    } catch (err: any) {
+      console.error('Error saving HOF settings:', err);
+      addToast(`Error saving settings: ${err.message || 'Server error'}`, 'error');
+    } finally {
       setSavingSettings(false);
-      addToast('Hall of Fame settings updated', 'success');
-    }, 400);
+    }
   };
 
   const filteredEntries = entries.filter(
@@ -323,7 +438,7 @@ export default function AdminHallOfFamePage() {
             <Trophy className="w-6 h-6 text-slate-700" /> Hall of Fame
           </h1>
           <p className="text-xs text-slate-500 font-medium mt-1">
-            Manage Vande Mataram student showcases, video embeds, and instructor feedback comments.
+            Manage student showcases, video embeds, page configuration, and showcase display order.
           </p>
         </div>
 
@@ -367,9 +482,14 @@ export default function AdminHallOfFamePage() {
           </div>
           <div>
             <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
-              Active Cohort
+              Active Cohort / Title
             </p>
-            <p className="text-lg font-bold text-slate-800">Vande Mataram</p>
+            <p
+              className="text-lg font-bold text-slate-800 truncate max-w-[200px]"
+              title={pageSettings.title}
+            >
+              {pageSettings.title || 'Vande Mataram'}
+            </p>
           </div>
         </div>
 
@@ -450,6 +570,7 @@ export default function AdminHallOfFamePage() {
                 <table className="w-full text-left">
                   <thead className="bg-slate-50 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-200">
                     <tr>
+                      <th className="px-3 py-3 w-16 text-center">Order</th>
                       <th className="px-4 py-3">Student Name</th>
                       <th className="px-4 py-3">Location</th>
                       <th className="px-4 py-3">Tagline / Description</th>
@@ -459,12 +580,43 @@ export default function AdminHallOfFamePage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-200 text-xs">
-                    {filteredEntries.map((entry) => {
+                    {filteredEntries.map((entry, idx) => {
                       const driveId = extractGoogleDriveId(entry.videoUrl);
                       const commentText =
                         entry.mentorComment?.commentText || entry.mentorPraise || '-';
                       return (
                         <tr key={entry.id} className="hover:bg-slate-50/50 transition-colors">
+                          <td className="px-3 py-3 text-center">
+                            <div className="flex items-center justify-center gap-1">
+                              <span className="text-[11px] font-mono font-bold text-slate-400 w-5 text-right">
+                                #{idx + 1}
+                              </span>
+                              <div className="flex flex-col gap-0.5 ml-1">
+                                <button
+                                  type="button"
+                                  disabled={idx === 0 || !!searchQuery || reordering}
+                                  onClick={() => handleMoveEntry(idx, 'up')}
+                                  className="p-1 hover:bg-slate-200 text-slate-600 rounded disabled:opacity-20 disabled:hover:bg-transparent transition-all"
+                                  title="Move showcase up"
+                                >
+                                  <MoveUp className="w-3 h-3" />
+                                </button>
+                                <button
+                                  type="button"
+                                  disabled={
+                                    idx === filteredEntries.length - 1 ||
+                                    !!searchQuery ||
+                                    reordering
+                                  }
+                                  onClick={() => handleMoveEntry(idx, 'down')}
+                                  className="p-1 hover:bg-slate-200 text-slate-600 rounded disabled:opacity-20 disabled:hover:bg-transparent transition-all"
+                                  title="Move showcase down"
+                                >
+                                  <MoveDown className="w-3 h-3" />
+                                </button>
+                              </div>
+                            </div>
+                          </td>
                           <td className="px-4 py-3 font-semibold text-slate-800">
                             {entry.studentName}
                           </td>
@@ -534,28 +686,69 @@ export default function AdminHallOfFamePage() {
                 value={pageSettings.title}
                 onChange={(e) => setPageSettings({ ...pageSettings, title: e.target.value })}
                 className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 font-semibold focus:outline-none focus:ring-1 focus:ring-slate-900"
+                placeholder="e.g. Cohort: Vande Mataram"
+              />
+              <p className="text-[11px] text-slate-500 mt-1">
+                Main title displayed at top of the Hall of Fame page.
+              </p>
+            </div>
+
+            <div>
+              <label className="block font-semibold text-slate-700 mb-1">
+                Badge / Subtitle Label
+              </label>
+              <input
+                type="text"
+                value={pageSettings.subtitle}
+                onChange={(e) => setPageSettings({ ...pageSettings, subtitle: e.target.value })}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:ring-1 focus:ring-slate-900"
+                placeholder="e.g. HALL OF FAME"
               />
             </div>
 
             <div>
               <label className="block font-semibold text-slate-700 mb-1">
-                Subtitle / Description
+                Subtitle / Description Text
               </label>
               <textarea
                 rows={3}
                 value={pageSettings.description}
                 onChange={(e) => setPageSettings({ ...pageSettings, description: e.target.value })}
                 className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:ring-1 focus:ring-slate-900"
+                placeholder="e.g. These students showed exceptional display of talent across our Veena learning challenges."
               />
+              <p className="text-[11px] text-slate-500 mt-1">
+                The descriptive paragraph displayed right beneath the page title on /hall-of-fame.
+              </p>
             </div>
 
-            <div className="pt-2">
+            <div className="flex items-center gap-3 pt-2">
+              <input
+                type="checkbox"
+                id="hofEnabled"
+                checked={pageSettings.enabled}
+                onChange={(e) => setPageSettings({ ...pageSettings, enabled: e.target.checked })}
+                className="w-4 h-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
+              />
+              <label
+                htmlFor="hofEnabled"
+                className="font-semibold text-slate-700 cursor-pointer select-none"
+              >
+                Enable Hall of Fame page publicly
+              </label>
+            </div>
+
+            <div className="pt-3 border-t border-slate-100">
               <button
                 type="submit"
                 disabled={savingSettings}
-                className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-semibold shadow-sm flex items-center gap-2 transition-all"
+                className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-semibold shadow-sm flex items-center gap-2 transition-all disabled:opacity-50"
               >
-                <Save className="w-3.5 h-3.5" />
+                {savingSettings ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <Save className="w-3.5 h-3.5" />
+                )}
                 {savingSettings ? 'Saving...' : 'Save Settings'}
               </button>
             </div>

@@ -26,4 +26,6 @@ export interface HallOfFamer {
   dateFeatured?: string;
   badges?: any[];
   isFeatured?: boolean;
+  orderIndex?: number;
+  order_index?: number;
 }

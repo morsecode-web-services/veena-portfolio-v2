@@ -180,7 +180,7 @@ export default function HallOfFameCard({
               <span className="text-xs font-bold text-navy-900">{mentorName}</span>
               <CheckCircle2 className="w-3.5 h-3.5 text-gold-600 fill-gold-100" />
             </div>
-            <p className="text-xs font-serif italic text-slate-600 leading-relaxed">
+            <p className="text-xs font-sans text-slate-600 leading-relaxed">
               &ldquo;{mentorCommentText}&rdquo;
             </p>
           </div>

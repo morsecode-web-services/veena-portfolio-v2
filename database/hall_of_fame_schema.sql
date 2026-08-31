@@ -19,13 +19,15 @@ CREATE TABLE IF NOT EXISTS hall_of_fame (
   mentor_praise TEXT,
   mentor_comment JSONB,
   likes_count INT DEFAULT 0 NOT NULL,
+  order_index INT DEFAULT 0 NOT NULL,
   date_featured TEXT,
   is_featured BOOLEAN DEFAULT false,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Index for fast cohort & date sorting queries
+-- Index for fast cohort, order & date sorting queries
+CREATE INDEX IF NOT EXISTS idx_hall_of_fame_order_index ON hall_of_fame(order_index ASC, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_hall_of_fame_cohort ON hall_of_fame(cohort);
 CREATE INDEX IF NOT EXISTS idx_hall_of_fame_created_at ON hall_of_fame(created_at DESC);
 

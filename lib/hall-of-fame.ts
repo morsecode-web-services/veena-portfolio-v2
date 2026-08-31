@@ -20,6 +20,7 @@ export async function getHallOfFamers(): Promise<HallOfFamer[]> {
       const { data, error } = await supabase
         .from('hall_of_fame')
         .select('*')
+        .order('order_index', { ascending: true, nullsFirst: false })
         .order('created_at', { ascending: false });
 
       if (!error && data) {
@@ -41,6 +42,8 @@ export async function getHallOfFamers(): Promise<HallOfFamer[]> {
           },
           dateFeatured: item.date_featured || '2026',
           isFeatured: item.is_featured ?? false,
+          order_index: item.order_index ?? 0,
+          orderIndex: item.order_index ?? 0,
         }));
       }
     }

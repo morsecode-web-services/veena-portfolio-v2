@@ -233,6 +233,13 @@ const defaultConfig: SiteConfig = {
     formSlugs: ['classes', 'performance'],
   },
   showCohortsOnComingSoon: false,
+  hallOfFame: {
+    title: 'Cohort: Vande Mataram',
+    subtitle: 'HALL OF FAME',
+    description:
+      'These students showed exceptional display of talent across our Veena learning challenges.',
+    enabled: true,
+  },
   cohorts_faq: {
     items: [
       {

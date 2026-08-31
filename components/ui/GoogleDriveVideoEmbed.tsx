@@ -31,13 +31,17 @@ export default function GoogleDriveVideoEmbed({
     ? videoUrl.replace(/\.[^/.]+$/, '.jpg').replace('/video/upload/', '/video/upload/so_0/')
     : null;
 
-  const isR2 = videoUrl.includes('r2.dev') || videoUrl.includes('r2.cloudflarestorage.com');
+  const isR2 =
+    videoUrl.includes('r2.dev') ||
+    videoUrl.includes('r2.cloudflarestorage.com') ||
+    videoUrl.includes('cloudflare');
   const isDirectMp4 = videoUrl.endsWith('.mp4');
+  const isGoogleDrive = !!driveId;
 
   const thumbnail =
     propThumbnailUrl ||
     cloudinaryThumbnail ||
-    (driveId ? `https://drive.google.com/thumbnail?id=${driveId}&sz=w800` : null) ||
+    (isGoogleDrive ? `https://drive.google.com/thumbnail?id=${driveId}&sz=w800` : null) ||
     (youtubeId ? `https://img.youtube.com/vi/${youtubeId}/maxresdefault.jpg` : null);
 
   const handlePlayClick = () => {

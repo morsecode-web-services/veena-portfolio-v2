@@ -26,11 +26,14 @@ export function getHofShareText(performer: HallOfFamer): string {
 }
 
 export function getHofThumbnail(performer: HallOfFamer): string {
+  const isGoogleDrive =
+    performer.videoUrl?.includes('drive.google.com') ||
+    performer.videoUrl?.includes('drive.usercontent.google.com');
   const driveId = extractGoogleDriveId(performer.videoUrl);
   const youtubeId = extractYoutubeId(performer.videoUrl);
   return (
     performer.customThumbnailUrl ||
-    (driveId ? getGoogleDriveThumbnailUrl(performer.videoUrl) : null) ||
+    (isGoogleDrive && driveId ? getGoogleDriveThumbnailUrl(performer.videoUrl) : null) ||
     (youtubeId ? `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg` : null) ||
     'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=800&q=80'
   );

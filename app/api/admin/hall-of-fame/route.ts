@@ -41,6 +41,7 @@ export async function GET() {
     const { data, error } = await supabaseAdmin
       .from('hall_of_fame')
       .select('*')
+      .order('order_index', { ascending: true, nullsFirst: false })
       .order('created_at', { ascending: false });
 
     if (error) throw error;
@@ -77,6 +78,8 @@ export async function POST(request: Request) {
       mentorPraise,
       mentorComment,
       likesCount,
+      orderIndex,
+      order_index,
     } = body;
 
     if (!studentName || !videoUrl) {
@@ -126,6 +129,13 @@ export async function POST(request: Request) {
       }
     }
 
+    const finalOrderIndex =
+      order_index !== undefined
+        ? Number(order_index)
+        : orderIndex !== undefined
+          ? Number(orderIndex)
+          : 0;
+
     const newRecord = {
       student_name: studentName,
       cohort: cohort || 'Vande Mataram',
@@ -137,6 +147,7 @@ export async function POST(request: Request) {
       mentor_praise: commentText,
       mentor_comment: mentorCommentObj,
       likes_count: mentorCommentObj.likesCount,
+      order_index: finalOrderIndex,
     };
 
     const { data, error } = await supabaseAdmin
@@ -180,6 +191,8 @@ export async function PUT(request: Request) {
       mentorPraise,
       mentorComment,
       likesCount,
+      orderIndex,
+      order_index,
     } = body;
 
     if (!id) {
@@ -227,6 +240,12 @@ export async function PUT(request: Request) {
     if (finalVideoType !== undefined) mappedUpdates.video_type = finalVideoType;
     if (thumbnailUrl !== undefined) mappedUpdates.thumbnail_url = thumbnailUrl;
 
+    if (order_index !== undefined) {
+      mappedUpdates.order_index = Number(order_index);
+    } else if (orderIndex !== undefined) {
+      mappedUpdates.order_index = Number(orderIndex);
+    }
+
     const commentText = mentorComment?.commentText || mentorPraise;
     const finalLikes =
       likesCount !== undefined
@@ -269,6 +288,51 @@ export async function PUT(request: Request) {
     console.error('Error updating hall_of_fame entry:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to update entry' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PATCH(request: Request) {
+  try {
+    const isAuth = await checkAdminAuth(request);
+    if (!isAuth) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized. Admin login required.' },
+        { status: 401 }
+      );
+    }
+
+    const body = await request.json();
+
+    if (Array.isArray(body.items)) {
+      const updates = body.items.map((item: { id: string; order_index: number }) =>
+        supabaseAdmin
+          .from('hall_of_fame')
+          .update({ order_index: item.order_index, updated_at: new Date().toISOString() })
+          .eq('id', item.id)
+      );
+      await Promise.all(updates);
+      return NextResponse.json({ success: true });
+    } else if (Array.isArray(body.orderedIds)) {
+      const updates = body.orderedIds.map((id: string, index: number) =>
+        supabaseAdmin
+          .from('hall_of_fame')
+          .update({ order_index: index, updated_at: new Date().toISOString() })
+          .eq('id', id)
+      );
+      await Promise.all(updates);
+      return NextResponse.json({ success: true });
+    }
+
+    return NextResponse.json(
+      { success: false, error: 'Missing items or orderedIds array in request payload' },
+      { status: 400 }
+    );
+  } catch (error: any) {
+    console.error('Error reordering hall_of_fame entries:', error);
+    return NextResponse.json(
+      { success: false, error: error.message || 'Failed to reorder entries' },
       { status: 500 }
     );
   }
