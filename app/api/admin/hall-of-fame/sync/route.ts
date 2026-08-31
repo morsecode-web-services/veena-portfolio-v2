@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { createClient } from '@/lib/supabase-server';
-import { uploadGoogleDriveVideoToR2 } from '@/lib/r2';
+import { uploadGoogleDriveVideoToR2, ensureThumbnailForVideo } from '@/lib/r2';
 
 async function checkAdminAuth(request: Request): Promise<boolean> {
   const authHeader = request.headers.get('Authorization');
@@ -50,45 +50,59 @@ export async function POST(request: Request) {
 
     if (error) throw error;
 
-    const results: Array<{ id: string; name: string; status: string; url: string }> = [];
+    const results: Array<{
+      id: string;
+      name: string;
+      videoStatus: string;
+      thumbnailUrl: string;
+    }> = [];
 
     for (const entry of entries || []) {
-      const url = entry.video_url || '';
-      if (url.includes('drive.google.com') || url.includes('drive.usercontent.google.com')) {
-        console.log(`[Sync] Uploading video to Cloudflare R2 for ${entry.student_name}...`);
-        const r2Res = await uploadGoogleDriveVideoToR2(url);
-        if (r2Res?.publicUrl) {
-          await supabaseAdmin
-            .from('hall_of_fame')
-            .update({
-              video_url: r2Res.publicUrl,
-              video_type: 'r2',
-              updated_at: new Date().toISOString(),
-            })
-            .eq('id', entry.id);
+      let finalVideoUrl = entry.video_url || '';
+      let videoStatus = 'unchanged';
 
-          results.push({
-            id: entry.id,
-            name: entry.student_name,
-            status: 'synced_to_r2',
-            url: r2Res.publicUrl,
-          });
-        } else {
-          results.push({
-            id: entry.id,
-            name: entry.student_name,
-            status: 'failed',
-            url,
-          });
+      // 1. Sync Google Drive video to Cloudflare R2 if not yet synced
+      if (
+        finalVideoUrl.includes('drive.google.com') ||
+        finalVideoUrl.includes('drive.usercontent.google.com')
+      ) {
+        console.log(`[Sync] Uploading video to Cloudflare R2 for ${entry.student_name}...`);
+        const r2Res = await uploadGoogleDriveVideoToR2(finalVideoUrl);
+        if (r2Res?.publicUrl) {
+          finalVideoUrl = r2Res.publicUrl;
+          videoStatus = 'synced_to_r2';
         }
-      } else {
-        results.push({
-          id: entry.id,
-          name: entry.student_name,
-          status: 'already_synced_or_external',
-          url,
-        });
       }
+
+      // 2. Ensure high-res static thumbnail (preserves custom thumbnails with 100% priority)
+      const finalThumbUrl = await ensureThumbnailForVideo(
+        finalVideoUrl || entry.video_url,
+        entry.thumbnail_url
+      );
+
+      const updates: Record<string, any> = {
+        updated_at: new Date().toISOString(),
+      };
+
+      if (finalVideoUrl !== entry.video_url) {
+        updates.video_url = finalVideoUrl;
+        updates.video_type = 'r2';
+      }
+
+      if (finalThumbUrl && finalThumbUrl !== entry.thumbnail_url) {
+        updates.thumbnail_url = finalThumbUrl;
+      }
+
+      if (Object.keys(updates).length > 1) {
+        await supabaseAdmin.from('hall_of_fame').update(updates).eq('id', entry.id);
+      }
+
+      results.push({
+        id: entry.id,
+        name: entry.student_name,
+        videoStatus,
+        thumbnailUrl: finalThumbUrl || entry.thumbnail_url || '',
+      });
     }
 
     return NextResponse.json({ success: true, count: results.length, results });

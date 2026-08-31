@@ -1,5 +1,6 @@
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { extractGoogleDriveId } from './utils';
+import { supabaseAdmin } from './supabase-admin';
 
 // Helper to instantiate the S3 client for Cloudflare R2
 export function getR2Client(): S3Client | null {
@@ -20,6 +21,85 @@ export function getR2Client(): S3Client | null {
       secretAccessKey,
     },
   });
+}
+
+/**
+ * Ensures a high-resolution static thumbnail exists for a performance video.
+ * Gives 100% top preference to custom uploaded thumbnails.
+ * If no custom thumbnail exists, extracts and permanently saves a 1200px snapshot.
+ */
+export async function ensureThumbnailForVideo(
+  videoUrl: string,
+  currentThumbnailUrl?: string | null
+): Promise<string> {
+  // 1. Top Preference: If custom thumbnail already provided, keep it untouched
+  if (currentThumbnailUrl && currentThumbnailUrl.trim() !== '') {
+    return currentThumbnailUrl;
+  }
+
+  if (!videoUrl) return '';
+
+  // Extract Drive ID from Drive URL or from R2 filename (e.g. 1jr8ysnHaa3J0j2WQq3BuamQ8Z44t_AuW.mp4)
+  let driveId = extractGoogleDriveId(videoUrl);
+  if (!driveId) {
+    const match = videoUrl.match(/([a-zA-Z0-9_-]{25,})\.mp4/);
+    if (match) {
+      driveId = match[1];
+    }
+  }
+
+  if (!driveId) {
+    return '';
+  }
+
+  try {
+    const thumbUrl = `https://drive.google.com/thumbnail?id=${driveId}&sz=w1200`;
+    console.log(`[Thumbnail] Fetching high-res snapshot for Drive ID: ${driveId}...`);
+    const thumbRes = await fetch(thumbUrl, {
+      headers: {
+        'User-Agent':
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      },
+    });
+
+    if (!thumbRes.ok) {
+      console.warn(
+        `[Thumbnail] Could not fetch thumbnail from source for ${driveId}: status ${thumbRes.status}`
+      );
+      return '';
+    }
+
+    const arrayBuffer = await thumbRes.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    const fileName = `${driveId}_thumb.jpg`;
+
+    // Ensure bucket exists in Supabase storage
+    try {
+      await supabaseAdmin.storage.createBucket('hall-of-fame', { public: true });
+    } catch {}
+
+    const { error: uploadErr } = await supabaseAdmin.storage
+      .from('hall-of-fame')
+      .upload(fileName, buffer, {
+        contentType: 'image/jpeg',
+        upsert: true,
+      });
+
+    if (uploadErr) {
+      console.warn('[Thumbnail] Supabase upload failed:', uploadErr);
+      return '';
+    }
+
+    const {
+      data: { publicUrl },
+    } = supabaseAdmin.storage.from('hall-of-fame').getPublicUrl(fileName);
+
+    console.log(`[Thumbnail] Auto-generated and stored permanent thumbnail: ${publicUrl}`);
+    return publicUrl;
+  } catch (err: any) {
+    console.warn('[Thumbnail] Error ensuring thumbnail:', err.message || err);
+    return '';
+  }
 }
 
 /**

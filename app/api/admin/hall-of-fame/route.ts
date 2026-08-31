@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { createClient } from '@/lib/supabase-server';
-import { uploadGoogleDriveVideoToR2 } from '@/lib/r2';
+import { uploadGoogleDriveVideoToR2, ensureThumbnailForVideo } from '@/lib/r2';
 
 async function checkAdminAuth(request: Request): Promise<boolean> {
   const authHeader = request.headers.get('Authorization');
@@ -136,6 +136,11 @@ export async function POST(request: Request) {
           ? Number(orderIndex)
           : 0;
 
+    const finalThumbnailUrl = await ensureThumbnailForVideo(
+      finalVideoUrl || videoUrl,
+      thumbnailUrl
+    );
+
     const newRecord = {
       student_name: studentName,
       cohort: cohort || 'Vande Mataram',
@@ -143,7 +148,7 @@ export async function POST(request: Request) {
       student_description: studentDescription || null,
       video_url: finalVideoUrl,
       video_type: finalVideoType,
-      thumbnail_url: thumbnailUrl || null,
+      thumbnail_url: finalThumbnailUrl || thumbnailUrl || null,
       mentor_praise: commentText,
       mentor_comment: mentorCommentObj,
       likes_count: mentorCommentObj.likesCount,
@@ -238,7 +243,15 @@ export async function PUT(request: Request) {
     if (studentDescription !== undefined) mappedUpdates.student_description = studentDescription;
     if (finalVideoUrl !== undefined) mappedUpdates.video_url = finalVideoUrl;
     if (finalVideoType !== undefined) mappedUpdates.video_type = finalVideoType;
-    if (thumbnailUrl !== undefined) mappedUpdates.thumbnail_url = thumbnailUrl;
+
+    if (thumbnailUrl !== undefined || finalVideoUrl !== undefined) {
+      const finalThumbnail = await ensureThumbnailForVideo(finalVideoUrl || videoUrl, thumbnailUrl);
+      if (finalThumbnail) {
+        mappedUpdates.thumbnail_url = finalThumbnail;
+      } else if (thumbnailUrl !== undefined) {
+        mappedUpdates.thumbnail_url = thumbnailUrl;
+      }
+    }
 
     if (order_index !== undefined) {
       mappedUpdates.order_index = Number(order_index);
