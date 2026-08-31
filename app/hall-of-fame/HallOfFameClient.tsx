@@ -2,8 +2,6 @@
 
 import React, { useState, useEffect, useMemo, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import Navigation from '@/components/layout/Navigation';
-import Footer from '@/components/layout/Footer';
 import HallOfFameCard from '@/components/features/hall-of-fame/HallOfFameCard';
 import StoryShareModal from '@/components/features/hall-of-fame/StoryShareModal';
 import { HallOfFamer } from '@/types/hall-of-fame';
@@ -67,17 +65,19 @@ function HallOfFameContent({ config }: { config: SiteConfig }) {
   return (
     <main className="min-h-screen bg-slate-50 pt-24 pb-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header — Config-driven Title & Subtitle/Description */}
-        <div className="text-center mb-6">
+        {/* Header — Config-driven Title & Subtitle/Description (Strictly Centered) */}
+        <div className="w-full flex flex-col items-center justify-center text-center mb-6">
           {subtitle && (
-            <p className="text-[11px] font-bold tracking-widest text-gold-600 uppercase mb-1">
+            <p className="w-full text-center text-[11px] font-bold tracking-widest text-gold-600 uppercase mb-1">
               {subtitle}
             </p>
           )}
-          <h1 className="text-2xl md:text-3xl font-serif font-medium text-navy-900 tracking-tight mb-2">
+          <h1 className="w-full text-center text-2xl md:text-3xl font-serif font-medium text-navy-900 tracking-tight mb-2">
             {formattedTitle}
           </h1>
-          <p className="text-sm text-slate-600 max-w-2xl mx-auto leading-relaxed">{description}</p>
+          <p className="text-sm text-slate-600 max-w-2xl mx-auto text-center leading-relaxed">
+            {description}
+          </p>
         </div>
 
         {/* Search Student Input Bar (Centered, No Divider Line) */}
@@ -156,13 +156,11 @@ function HallOfFameContent({ config }: { config: SiteConfig }) {
 export default function HallOfFameClient({ config }: HallOfFameClientProps) {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 font-sans selection:bg-gold-500 selection:text-white">
-      <Navigation />
       <Suspense
         fallback={<div className="pt-32 text-center text-slate-500 text-sm">Loading...</div>}
       >
         <HallOfFameContent config={config} />
       </Suspense>
-      <Footer />
     </div>
   );
 }

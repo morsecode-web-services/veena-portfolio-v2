@@ -26,29 +26,171 @@ export function getHofShareText(performer: HallOfFamer): string {
 }
 
 export function getHofThumbnail(performer: HallOfFamer): string {
+  if (performer.customThumbnailUrl) {
+    return performer.customThumbnailUrl;
+  }
+
+  const isCloudinary = performer.videoUrl?.includes('cloudinary.com');
+  if (isCloudinary) {
+    return performer.videoUrl
+      .replace(/\.[^/.]+$/, '.jpg')
+      .replace('/video/upload/', '/video/upload/so_0/');
+  }
+
+  const youtubeId = extractYoutubeId(performer.videoUrl);
+  if (youtubeId) {
+    return `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`;
+  }
+
   const isGoogleDrive =
     performer.videoUrl?.includes('drive.google.com') ||
     performer.videoUrl?.includes('drive.usercontent.google.com');
   const driveId = extractGoogleDriveId(performer.videoUrl);
-  const youtubeId = extractYoutubeId(performer.videoUrl);
-  return (
-    performer.customThumbnailUrl ||
-    (isGoogleDrive && driveId ? getGoogleDriveThumbnailUrl(performer.videoUrl) : null) ||
-    (youtubeId ? `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg` : null) ||
-    'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=800&q=80'
-  );
+  if (isGoogleDrive && driveId) {
+    return getGoogleDriveThumbnailUrl(performer.videoUrl) || '';
+  }
+
+  return 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=800&q=80';
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
+function getProxiedUrl(url: string): string {
+  if (!url) return '';
+  if (url.startsWith('/') || url.startsWith('data:') || url.startsWith('blob:')) return url;
+  const base =
+    typeof window !== 'undefined' ? window.location.origin : 'https://www.aishwaryamanikarnike.com';
+  return `${base}/api/proxy-image?url=${encodeURIComponent(url)}`;
+}
+
 function loadImage(src: string): Promise<HTMLImageElement | null> {
   return new Promise((resolve) => {
+    if (!src) return resolve(null);
     const img = new Image();
     img.crossOrigin = 'anonymous';
     img.onload = () => resolve(img);
     img.onerror = () => resolve(null);
     img.src = src;
   });
+}
+
+/**
+ * Captures a video frame from a video URL via an offscreen video element.
+ * Uses local proxy to ensure CORS doesn't taint the canvas for toBlob export.
+ */
+function captureVideoFrame(videoUrl: string): Promise<HTMLCanvasElement | null> {
+  if (typeof window === 'undefined') return Promise.resolve(null);
+
+  return new Promise((resolve) => {
+    const video = document.createElement('video');
+    video.crossOrigin = 'anonymous';
+    video.muted = true;
+    video.playsInline = true;
+    video.preload = 'auto';
+
+    // Route through local proxy to guarantee CORS headers
+    const proxyUrl = `/api/proxy-video?url=${encodeURIComponent(videoUrl)}`;
+    video.src = proxyUrl;
+
+    let hasResolved = false;
+    const finish = (result: HTMLCanvasElement | null) => {
+      if (hasResolved) return;
+      hasResolved = true;
+      video.removeAttribute('src');
+      video.load();
+      resolve(result);
+    };
+
+    // Timeout after 4s fallback so we don't stall image generation
+    const timer = setTimeout(() => {
+      finish(null);
+    }, 4000);
+
+    const grabFrame = () => {
+      try {
+        if (video.videoWidth > 0 && video.videoHeight > 0) {
+          const offCanvas = document.createElement('canvas');
+          offCanvas.width = video.videoWidth;
+          offCanvas.height = video.videoHeight;
+          const offCtx = offCanvas.getContext('2d');
+          if (offCtx) {
+            offCtx.drawImage(video, 0, 0, offCanvas.width, offCanvas.height);
+            clearTimeout(timer);
+            finish(offCanvas);
+            return;
+          }
+        }
+      } catch (err) {
+        console.warn('[HOF Share] Video frame capture error:', err);
+      }
+      clearTimeout(timer);
+      finish(null);
+    };
+
+    video.onloadedmetadata = () => {
+      // Seek to 0.5s (or halfway if very short) to get a rich visual frame
+      video.currentTime = Math.min(0.5, (video.duration || 1) / 2);
+    };
+
+    video.onseeked = () => {
+      grabFrame();
+    };
+
+    video.onerror = (e) => {
+      console.warn('[HOF Share] Proxy video loading error:', e);
+      clearTimeout(timer);
+      finish(null);
+    };
+  });
+}
+
+/**
+ * Loads the thumbnail either from direct image (custom, cloudinary, youtube)
+ * or captures a frame directly from Cloudflare R2 / video source.
+ */
+async function loadThumbnailOrFrame(
+  performer: HallOfFamer
+): Promise<HTMLImageElement | HTMLCanvasElement | null> {
+  const isCloudinary = performer.videoUrl?.includes('cloudinary.com');
+  const cloudinaryThumbnail = isCloudinary
+    ? performer.videoUrl
+        .replace(/\.[^/.]+$/, '.jpg')
+        .replace('/video/upload/', '/video/upload/so_0/')
+    : null;
+
+  const youtubeId = extractYoutubeId(performer.videoUrl);
+  const youtubeThumbnail = youtubeId
+    ? `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`
+    : null;
+
+  // 1. If explicit custom thumbnail or direct image service thumbnail exists
+  const directImageSrc = performer.customThumbnailUrl || cloudinaryThumbnail || youtubeThumbnail;
+
+  if (directImageSrc) {
+    const proxiedUrl = getProxiedUrl(directImageSrc);
+    const img = await loadImage(proxiedUrl);
+    if (img) return img;
+  }
+
+  // 2. Capture video frame from Cloudflare R2 / mp4 / direct video
+  if (performer.videoUrl) {
+    const isVideo =
+      performer.videoUrl.endsWith('.mp4') ||
+      performer.videoUrl.includes('r2.dev') ||
+      performer.videoUrl.includes('r2.cloudflarestorage.com') ||
+      performer.videoType === 'r2';
+
+    if (isVideo) {
+      const frame = await captureVideoFrame(performer.videoUrl);
+      if (frame) return frame;
+    }
+  }
+
+  // 3. Fallback placeholder
+  const fallbackSrc = getProxiedUrl(
+    'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=800&q=80'
+  );
+  return await loadImage(fallbackSrc);
 }
 
 function wrapText(
@@ -149,18 +291,6 @@ export async function generateHofStoryFile(performer: HallOfFamer): Promise<File
         `${performer.studentName} has shown wonderful proficiency!`;
       const mentorName = performer.mentorComment?.authorName || 'Aishwarya Manikarnike';
       const cohort = performer.cohort || 'Vande Mataram';
-      const thumbnailSrc = getHofThumbnail(performer);
-
-      // Helper to proxy images to avoid canvas CORS pollution
-      const getProxiedUrl = (url: string) => {
-        if (!url) return '';
-        if (url.startsWith('/') || url.startsWith('data:')) return url;
-        const base =
-          typeof window !== 'undefined'
-            ? window.location.origin
-            : 'https://www.aishwaryamanikarnike.com';
-        return `${base}/api/proxy-image?url=${encodeURIComponent(url)}`;
-      };
 
       // ── 1. Alabaster gradient background ──────────────────────────────
       const bgGrad = ctx.createLinearGradient(0, 0, 0, H);
@@ -199,24 +329,27 @@ export async function generateHofStoryFile(performer: HallOfFamer): Promise<File
         ctx.stroke();
       }
 
-      // Load proxied thumbnail
-      const proxiedThumbnail = getProxiedUrl(thumbnailSrc);
-      const thumb = await loadImage(proxiedThumbnail);
+      // Load thumbnail image or video frame
+      const thumb = await loadThumbnailOrFrame(performer);
       if (thumb) {
-        const ta = thumb.naturalWidth / thumb.naturalHeight;
-        const ca = W / THUMB_H;
-        let sx = 0,
-          sy = 0,
-          sw = thumb.naturalWidth,
-          sh = thumb.naturalHeight;
-        if (ta > ca) {
-          sw = sh * ca;
-          sx = (thumb.naturalWidth - sw) / 2;
-        } else {
-          sh = sw / ca;
-          sy = (thumb.naturalHeight - sh) / 2;
+        const width = (thumb as any).naturalWidth || thumb.width;
+        const height = (thumb as any).naturalHeight || thumb.height;
+        if (width > 0 && height > 0) {
+          const ta = width / height;
+          const ca = W / THUMB_H;
+          let sx = 0,
+            sy = 0,
+            sw = width,
+            sh = height;
+          if (ta > ca) {
+            sw = sh * ca;
+            sx = (width - sw) / 2;
+          } else {
+            sh = sw / ca;
+            sy = (height - sh) / 2;
+          }
+          ctx.drawImage(thumb, sx, sy, sw, sh, 0, 0, W, THUMB_H);
         }
-        ctx.drawImage(thumb, sx, sy, sw, sh, 0, 0, W, THUMB_H);
       }
 
       // Subtle dark scrim on thumbnail
@@ -247,7 +380,6 @@ export async function generateHofStoryFile(performer: HallOfFamer): Promise<File
       ctx.stroke();
       ctx.fillStyle = '#f8fafc';
       ctx.textAlign = 'left';
-      // Adjust text baseline to middle for perfect vertical alignment
       ctx.textBaseline = 'middle';
       ctx.fillText(cohortLabel, PAD + 18, labelY + labelH / 2);
       ctx.textBaseline = 'alphabetic'; // Reset baseline
@@ -350,7 +482,7 @@ export async function generateHofStoryFile(performer: HallOfFamer): Promise<File
       ctx.fillText('Instructor', PAD, y);
 
       // ── 4. Elegant Star Divider ───────────────────────────────────────────
-      const BRAND_Y = H - 64; // Raised slightly from H - 44
+      const BRAND_Y = H - 64;
       const starY = y + (BRAND_Y - y) / 2 - 8;
       ctx.fillStyle = '#ca8a04'; // Warm Gold
       drawStar(ctx, W / 2, starY, 5, 12, 5.5); // Center Star
@@ -358,7 +490,7 @@ export async function generateHofStoryFile(performer: HallOfFamer): Promise<File
       drawStar(ctx, W / 2 + 36, starY, 5, 8, 3.5); // Right Star
 
       // ── 5. Bottom branding ────────────────────────────────────────────────
-      ctx.fillStyle = '#64748b'; // Darker for better contrast
+      ctx.fillStyle = '#64748b';
       ctx.font = '24px system-ui, -apple-system, sans-serif';
       ctx.textAlign = 'center';
       ctx.fillText('aishwaryamanikarnike.com/hall-of-fame', W / 2, BRAND_Y);
@@ -369,7 +501,7 @@ export async function generateHofStoryFile(performer: HallOfFamer): Promise<File
         resolve(new File([blob], name, { type: 'image/png' }));
       }, 'image/png');
     } catch (err) {
-      console.error('Error rendering story card:', err);
+      console.error('[HOF Share] Error rendering story card:', err);
       resolve(null);
     }
   });

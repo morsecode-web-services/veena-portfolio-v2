@@ -19,7 +19,7 @@ export interface HallOfFamer {
   pieceTitle?: string;
   ragaName?: string;
   videoUrl: string;
-  videoType?: 'gdrive' | 'youtube' | 'direct';
+  videoType?: 'gdrive' | 'youtube' | 'direct' | 'r2' | 'cloudinary';
   customThumbnailUrl?: string;
   mentorPraise?: string;
   mentorComment?: MentorComment;
