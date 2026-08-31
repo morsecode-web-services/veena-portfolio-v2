@@ -13,6 +13,7 @@ interface HallOfFameCardProps {
   onSelect: (performer: HallOfFamer) => void;
   onShareStory?: (performer: HallOfFamer) => void;
   isHighlighted?: boolean;
+  initialLiked?: boolean;
 }
 
 export default function HallOfFameCard({
@@ -20,33 +21,25 @@ export default function HallOfFameCard({
   onSelect,
   onShareStory,
   isHighlighted = false,
+  initialLiked = false,
 }: HallOfFameCardProps) {
-  const [liked, setLiked] = useState(false);
+  const [liked, setLiked] = useState(initialLiked);
+  const [isLiking, setIsLiking] = useState(false);
+
+  const initialCount = performer.likesCount ?? performer.mentorComment?.likesCount ?? 0;
+  const [likesCount, setLikesCount] = useState(initialCount);
 
   useEffect(() => {
-    try {
-      const storedLikes = localStorage.getItem('veena_liked_performers');
-      if (storedLikes) {
-        const likedPerformers = JSON.parse(storedLikes);
-        if (likedPerformers.includes(performer.id)) {
-          setLiked(true);
-        }
-      }
-    } catch (e) {
-      console.warn('Could not read liked performers from localStorage', e);
-    }
-  }, [performer.id]);
+    setLiked(initialLiked);
+  }, [initialLiked]);
 
-  const [likesCount, setLikesCount] = useState(
-    performer.mentorComment?.likesCount ?? Math.floor(Math.random() * 20) + 18
-  );
-
-  // Keep likesCount in sync if performer.mentorComment?.likesCount changes
+  // Keep likesCount in sync if performer props update
   useEffect(() => {
-    if (performer.mentorComment?.likesCount !== undefined) {
-      setLikesCount(performer.mentorComment.likesCount);
+    const count = performer.likesCount ?? performer.mentorComment?.likesCount;
+    if (count !== undefined) {
+      setLikesCount(count);
     }
-  }, [performer.mentorComment?.likesCount]);
+  }, [performer.likesCount, performer.mentorComment?.likesCount]);
 
   const [isSharingMobile, setIsSharingMobile] = useState(false);
   const [isSavingImage, setIsSavingImage] = useState(false);
@@ -63,62 +56,34 @@ export default function HallOfFameCard({
 
   const handleLikeToggle = async (e: React.MouseEvent) => {
     e.stopPropagation();
+    if (isLiking) return; // Prevent double-clicking race condition
+
     const prevLiked = liked;
     const prevCount = likesCount;
-    const newLiked = !prevLiked;
+    const optimisticLiked = !prevLiked;
+    const optimisticCount = optimisticLiked ? prevCount + 1 : Math.max(0, prevCount - 1);
 
-    setLiked(newLiked);
-    setLikesCount(newLiked ? prevCount + 1 : Math.max(0, prevCount - 1));
+    // Optimistic UI state
+    setLiked(optimisticLiked);
+    setLikesCount(optimisticCount);
+    setIsLiking(true);
 
-    // Update local storage immediately for responsive UI
     try {
-      const storedLikes = localStorage.getItem('veena_liked_performers');
-      let likedPerformers: string[] = storedLikes ? JSON.parse(storedLikes) : [];
-
-      if (newLiked) {
-        if (!likedPerformers.includes(performer.id)) {
-          likedPerformers.push(performer.id);
-        }
+      const res = await toggleHallOfFameLike(performer.id, undefined, prevLiked, prevCount);
+      if (res && res.success) {
+        setLiked(res.liked);
+        setLikesCount(res.likesCount);
       } else {
-        likedPerformers = likedPerformers.filter((id) => id !== performer.id);
+        // Revert on failure
+        setLiked(prevLiked);
+        setLikesCount(prevCount);
       }
-      localStorage.setItem('veena_liked_performers', JSON.stringify(likedPerformers));
     } catch (err) {
-      console.warn('Could not update liked performers in localStorage', err);
-    }
-
-    const res = await toggleHallOfFameLike(performer.id, undefined, prevLiked, prevCount);
-    if (res.success) {
-      setLiked(res.liked);
-      setLikesCount(res.likesCount);
-
-      // Keep localStorage strictly in sync with server truth
-      try {
-        const storedLikes = localStorage.getItem('veena_liked_performers');
-        let likedPerformers: string[] = storedLikes ? JSON.parse(storedLikes) : [];
-        if (res.liked && !likedPerformers.includes(performer.id)) {
-          likedPerformers.push(performer.id);
-          localStorage.setItem('veena_liked_performers', JSON.stringify(likedPerformers));
-        } else if (!res.liked && likedPerformers.includes(performer.id)) {
-          likedPerformers = likedPerformers.filter((id) => id !== performer.id);
-          localStorage.setItem('veena_liked_performers', JSON.stringify(likedPerformers));
-        }
-      } catch (err) {}
-    } else {
+      console.warn('Like toggle error:', err);
       setLiked(prevLiked);
       setLikesCount(prevCount);
-      // Revert localStorage on failure
-      try {
-        const storedLikes = localStorage.getItem('veena_liked_performers');
-        let likedPerformers: string[] = storedLikes ? JSON.parse(storedLikes) : [];
-        if (prevLiked && !likedPerformers.includes(performer.id)) {
-          likedPerformers.push(performer.id);
-          localStorage.setItem('veena_liked_performers', JSON.stringify(likedPerformers));
-        } else if (!prevLiked && likedPerformers.includes(performer.id)) {
-          likedPerformers = likedPerformers.filter((id) => id !== performer.id);
-          localStorage.setItem('veena_liked_performers', JSON.stringify(likedPerformers));
-        }
-      } catch (err) {}
+    } finally {
+      setIsLiking(false);
     }
   };
 
@@ -258,12 +223,19 @@ export default function HallOfFameCard({
             {/* Like */}
             <button
               onClick={handleLikeToggle}
+              disabled={isLiking}
               aria-label={liked ? 'Unlike' : 'Like'}
-              className={`flex items-center gap-1 text-xs font-medium transition-colors ${
-                liked ? 'text-rose-600' : 'text-slate-500 hover:text-rose-600'
+              className={`flex items-center gap-1.5 text-xs font-semibold py-1 px-2 rounded-lg transition-all active:scale-95 disabled:opacity-70 ${
+                liked
+                  ? 'text-rose-600 bg-rose-50 border border-rose-100'
+                  : 'text-slate-500 hover:text-rose-600 hover:bg-slate-50 border border-transparent'
               }`}
             >
-              <Heart className={`w-3.5 h-3.5 ${liked ? 'fill-rose-600 text-rose-600' : ''}`} />
+              <Heart
+                className={`w-4 h-4 transition-transform active:scale-125 ${
+                  liked ? 'fill-rose-600 text-rose-600' : 'text-slate-400'
+                }`}
+              />
               <span>{likesCount}</span>
             </button>
 

@@ -6,7 +6,7 @@ import HallOfFameCard from '@/components/features/hall-of-fame/HallOfFameCard';
 import StoryShareModal from '@/components/features/hall-of-fame/StoryShareModal';
 import { HallOfFamer } from '@/types/hall-of-fame';
 import { SiteConfig } from '@/types';
-import { getHallOfFamers } from '@/lib/hall-of-fame';
+import { getHallOfFamers, getVisitorLikedIds } from '@/lib/hall-of-fame';
 import { Search, Award, RefreshCw } from 'lucide-react';
 
 interface HallOfFameClientProps {
@@ -18,6 +18,7 @@ function HallOfFameContent({ config }: { config: SiteConfig }) {
   const entryIdFromUrl = searchParams.get('entry');
 
   const [performers, setPerformers] = useState<HallOfFamer[]>([]);
+  const [likedIds, setLikedIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSharePerformer, setSelectedSharePerformer] = useState<HallOfFamer | null>(null);
@@ -32,9 +33,15 @@ function HallOfFameContent({ config }: { config: SiteConfig }) {
   useEffect(() => {
     async function loadData() {
       setLoading(true);
-      const data = await getHallOfFamers();
-      setPerformers(data);
-      setLoading(false);
+      try {
+        const [data, userLikedList] = await Promise.all([getHallOfFamers(), getVisitorLikedIds()]);
+        setPerformers(data);
+        setLikedIds(new Set(userLikedList));
+      } catch (err) {
+        console.warn('Error loading Hall of Fame data:', err);
+      } finally {
+        setLoading(false);
+      }
 
       // Auto-scroll to the target card if entry query param matches
       if (entryIdFromUrl) {
@@ -133,6 +140,7 @@ function HallOfFameContent({ config }: { config: SiteConfig }) {
                 <div key={performer.id} id={`performer-${performer.id}`} className="scroll-mt-32">
                   <HallOfFameCard
                     performer={performer}
+                    initialLiked={likedIds.has(performer.id)}
                     onSelect={(item) => setSelectedSharePerformer(item)}
                     onShareStory={(item) => setSelectedSharePerformer(item)}
                     isHighlighted={performer.id === entryIdFromUrl}

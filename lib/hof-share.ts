@@ -50,7 +50,7 @@ export function getHofThumbnail(performer: HallOfFamer): string {
     return getGoogleDriveThumbnailUrl(performer.videoUrl) || '';
   }
 
-  return 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=800&q=80';
+  return '';
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -75,71 +75,125 @@ function loadImage(src: string): Promise<HTMLImageElement | null> {
 }
 
 /**
- * Captures a video frame from a video URL via an offscreen video element.
- * Uses local proxy to ensure CORS doesn't taint the canvas for toBlob export.
+ * Captures a video frame from a video URL.
+ * Checks in-page rendered video first, then uses a DOM-attached hidden video with proxied CORS.
  */
 function captureVideoFrame(videoUrl: string): Promise<HTMLCanvasElement | null> {
   if (typeof window === 'undefined') return Promise.resolve(null);
 
+  // 1. Instant grab: Check if a <video> for this student is already rendered on the page in GoogleDriveVideoEmbed
+  try {
+    const renderedVideos = Array.from(document.querySelectorAll('video'));
+    for (const v of renderedVideos) {
+      if (
+        (v.currentSrc?.includes(videoUrl) || v.src?.includes(videoUrl)) &&
+        v.videoWidth > 0 &&
+        v.videoHeight > 0
+      ) {
+        const offCanvas = document.createElement('canvas');
+        offCanvas.width = v.videoWidth;
+        offCanvas.height = v.videoHeight;
+        const offCtx = offCanvas.getContext('2d');
+        if (offCtx) {
+          offCtx.drawImage(v, 0, 0, offCanvas.width, offCanvas.height);
+          try {
+            offCanvas.toDataURL(); // Verify not tainted
+            return Promise.resolve(offCanvas);
+          } catch {
+            // Tainted due to direct origin without proxy, fall through to offscreen proxied video
+          }
+        }
+      }
+    }
+  } catch {}
+
+  // 2. Offscreen DOM-attached video with proxied CORS headers
   return new Promise((resolve) => {
     const video = document.createElement('video');
     video.crossOrigin = 'anonymous';
     video.muted = true;
     video.playsInline = true;
+    video.autoplay = false;
     video.preload = 'auto';
 
-    // Route through local proxy to guarantee CORS headers
+    // Must be in DOM for iOS Safari and mobile Chrome to decode video frames
+    video.style.position = 'fixed';
+    video.style.top = '-9999px';
+    video.style.left = '-9999px';
+    video.style.width = '2px';
+    video.style.height = '2px';
+    video.style.opacity = '0';
+    video.style.pointerEvents = 'none';
+    document.body.appendChild(video);
+
     const proxyUrl = `/api/proxy-video?url=${encodeURIComponent(videoUrl)}`;
     video.src = proxyUrl;
 
     let hasResolved = false;
-    const finish = (result: HTMLCanvasElement | null) => {
+    const cleanUp = (result: HTMLCanvasElement | null) => {
       if (hasResolved) return;
       hasResolved = true;
-      video.removeAttribute('src');
-      video.load();
+      try {
+        video.pause();
+        video.removeAttribute('src');
+        video.load();
+        if (video.parentNode) {
+          video.parentNode.removeChild(video);
+        }
+      } catch {}
       resolve(result);
     };
 
-    // Timeout after 4s fallback so we don't stall image generation
+    // Timeout safety net (3.5s)
     const timer = setTimeout(() => {
-      finish(null);
-    }, 4000);
+      cleanUp(null);
+    }, 3500);
 
-    const grabFrame = () => {
+    const grab = () => {
       try {
-        if (video.videoWidth > 0 && video.videoHeight > 0) {
+        const vw = video.videoWidth || 1280;
+        const vh = video.videoHeight || 720;
+        if (vw > 0 && vh > 0) {
           const offCanvas = document.createElement('canvas');
-          offCanvas.width = video.videoWidth;
-          offCanvas.height = video.videoHeight;
+          offCanvas.width = vw;
+          offCanvas.height = vh;
           const offCtx = offCanvas.getContext('2d');
           if (offCtx) {
-            offCtx.drawImage(video, 0, 0, offCanvas.width, offCanvas.height);
+            offCtx.drawImage(video, 0, 0, vw, vh);
             clearTimeout(timer);
-            finish(offCanvas);
+            cleanUp(offCanvas);
             return;
           }
         }
       } catch (err) {
-        console.warn('[HOF Share] Video frame capture error:', err);
+        console.warn('[HOF Share] drawImage error:', err);
       }
       clearTimeout(timer);
-      finish(null);
+      cleanUp(null);
     };
 
-    video.onloadedmetadata = () => {
-      // Seek to 0.5s (or halfway if very short) to get a rich visual frame
-      video.currentTime = Math.min(0.5, (video.duration || 1) / 2);
+    video.onloadeddata = () => {
+      try {
+        video.currentTime = Math.min(0.5, (video.duration || 1) / 2);
+      } catch {
+        grab();
+      }
     };
 
     video.onseeked = () => {
-      grabFrame();
+      grab();
+    };
+
+    video.oncanplay = () => {
+      if (video.currentTime >= 0.1) {
+        grab();
+      }
     };
 
     video.onerror = (e) => {
       console.warn('[HOF Share] Proxy video loading error:', e);
       clearTimeout(timer);
-      finish(null);
+      cleanUp(null);
     };
   });
 }
@@ -163,7 +217,7 @@ async function loadThumbnailOrFrame(
     ? `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`
     : null;
 
-  // 1. If explicit custom thumbnail or direct image service thumbnail exists
+  // 1. Direct thumbnail image (custom, cloudinary or youtube)
   const directImageSrc = performer.customThumbnailUrl || cloudinaryThumbnail || youtubeThumbnail;
 
   if (directImageSrc) {
@@ -186,11 +240,13 @@ async function loadThumbnailOrFrame(
     }
   }
 
-  // 3. Fallback placeholder
-  const fallbackSrc = getProxiedUrl(
-    'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=800&q=80'
-  );
-  return await loadImage(fallbackSrc);
+  // 3. Fallback: load dynamic personalized card image
+  if (performer.id) {
+    const ogCard = await loadImage(`/api/og/hall-of-fame?entry=${performer.id}`);
+    if (ogCard) return ogCard;
+  }
+
+  return null;
 }
 
 function wrapText(

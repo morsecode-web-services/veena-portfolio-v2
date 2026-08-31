@@ -7,14 +7,17 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const range = req.headers.get('range');
+    let range = req.headers.get('range');
+    // If no range or open-ended range from byte 0, bound to first 4MB for fast thumbnail decoding
+    if (!range || range === 'bytes=0-') {
+      range = 'bytes=0-4194304';
+    }
+
     const headers: Record<string, string> = {
       'User-Agent':
         'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      Range: range,
     };
-    if (range) {
-      headers['Range'] = range;
-    }
 
     const res = await fetch(url, {
       method: 'GET',
