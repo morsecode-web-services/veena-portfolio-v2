@@ -24,28 +24,36 @@ export async function getHallOfFamers(): Promise<HallOfFamer[]> {
         .order('created_at', { ascending: false });
 
       if (!error && data) {
-        return data.map((item) => ({
-          id: item.id,
-          studentName: item.student_name,
-          cohort: item.cohort || 'Vande Mataram',
-          location: item.location || 'India',
-          studentDescription: item.student_description || item.piece_title,
-          videoUrl: item.video_url,
-          videoType: item.video_type || 'gdrive',
-          customThumbnailUrl: item.thumbnail_url,
-          mentorComment: item.mentor_comment || {
+        return data.map((item) => {
+          const mentorComment = item.mentor_comment || {
             authorName: MENTOR_AISHWARIYA.authorName,
             authorAvatar: MENTOR_AISHWARIYA.authorAvatar,
             commentText: item.mentor_praise || 'Wonderful proficiency and dedication!',
             timestamp: 'Recently',
             likesCount: item.likes_count || 15,
             isVerified: true,
-          },
-          dateFeatured: item.date_featured || '2026',
-          isFeatured: item.is_featured ?? false,
-          order_index: item.order_index ?? 0,
-          orderIndex: item.order_index ?? 0,
-        }));
+          };
+
+          if (mentorComment) {
+            mentorComment.likesCount = item.likes_count;
+          }
+
+          return {
+            id: item.id,
+            studentName: item.student_name,
+            cohort: item.cohort || 'Vande Mataram',
+            location: item.location || 'India',
+            studentDescription: item.student_description || item.piece_title,
+            videoUrl: item.video_url,
+            videoType: item.video_type || 'gdrive',
+            customThumbnailUrl: item.thumbnail_url,
+            mentorComment,
+            dateFeatured: item.date_featured || '2026',
+            isFeatured: item.is_featured ?? false,
+            order_index: item.order_index ?? 0,
+            orderIndex: item.order_index ?? 0,
+          };
+        });
       }
     }
   } catch (err) {
@@ -74,7 +82,9 @@ export function getVisitorId(): string {
  */
 export async function toggleHallOfFameLike(
   performerId: string,
-  visitorId?: string
+  visitorId?: string,
+  currentLikedState: boolean = false,
+  currentLikesCount: number = 0
 ): Promise<{ success: boolean; liked: boolean; likesCount: number }> {
   const vid = visitorId || getVisitorId();
   const isUuid =
@@ -103,7 +113,7 @@ export async function toggleHallOfFameLike(
 
   return {
     success: true,
-    liked: true,
-    likesCount: Math.floor(Math.random() * 20) + 25,
+    liked: !currentLikedState,
+    likesCount: currentLikedState ? Math.max(0, currentLikesCount - 1) : currentLikesCount + 1,
   };
 }

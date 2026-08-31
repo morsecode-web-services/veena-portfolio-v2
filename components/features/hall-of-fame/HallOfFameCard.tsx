@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Heart, Share2, MapPin, CheckCircle2, Download, Link, Loader2 } from 'lucide-react';
 import { HallOfFamer } from '@/types/hall-of-fame';
@@ -22,9 +22,32 @@ export default function HallOfFameCard({
   isHighlighted = false,
 }: HallOfFameCardProps) {
   const [liked, setLiked] = useState(false);
+
+  useEffect(() => {
+    try {
+      const storedLikes = localStorage.getItem('veena_liked_performers');
+      if (storedLikes) {
+        const likedPerformers = JSON.parse(storedLikes);
+        if (likedPerformers.includes(performer.id)) {
+          setLiked(true);
+        }
+      }
+    } catch (e) {
+      console.warn('Could not read liked performers from localStorage', e);
+    }
+  }, [performer.id]);
+
   const [likesCount, setLikesCount] = useState(
-    performer.mentorComment?.likesCount || Math.floor(Math.random() * 20) + 18
+    performer.mentorComment?.likesCount ?? Math.floor(Math.random() * 20) + 18
   );
+
+  // Keep likesCount in sync if performer.mentorComment?.likesCount changes
+  useEffect(() => {
+    if (performer.mentorComment?.likesCount !== undefined) {
+      setLikesCount(performer.mentorComment.likesCount);
+    }
+  }, [performer.mentorComment?.likesCount]);
+
   const [isSharingMobile, setIsSharingMobile] = useState(false);
   const [isSavingImage, setIsSavingImage] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
@@ -42,15 +65,60 @@ export default function HallOfFameCard({
     e.stopPropagation();
     const prevLiked = liked;
     const prevCount = likesCount;
-    setLiked(!prevLiked);
-    setLikesCount(prevLiked ? Math.max(0, prevCount - 1) : prevCount + 1);
-    const res = await toggleHallOfFameLike(performer.id);
+    const newLiked = !prevLiked;
+
+    setLiked(newLiked);
+    setLikesCount(newLiked ? prevCount + 1 : Math.max(0, prevCount - 1));
+
+    // Update local storage immediately for responsive UI
+    try {
+      const storedLikes = localStorage.getItem('veena_liked_performers');
+      let likedPerformers: string[] = storedLikes ? JSON.parse(storedLikes) : [];
+
+      if (newLiked) {
+        if (!likedPerformers.includes(performer.id)) {
+          likedPerformers.push(performer.id);
+        }
+      } else {
+        likedPerformers = likedPerformers.filter((id) => id !== performer.id);
+      }
+      localStorage.setItem('veena_liked_performers', JSON.stringify(likedPerformers));
+    } catch (err) {
+      console.warn('Could not update liked performers in localStorage', err);
+    }
+
+    const res = await toggleHallOfFameLike(performer.id, undefined, prevLiked, prevCount);
     if (res.success) {
       setLiked(res.liked);
       setLikesCount(res.likesCount);
+
+      // Keep localStorage strictly in sync with server truth
+      try {
+        const storedLikes = localStorage.getItem('veena_liked_performers');
+        let likedPerformers: string[] = storedLikes ? JSON.parse(storedLikes) : [];
+        if (res.liked && !likedPerformers.includes(performer.id)) {
+          likedPerformers.push(performer.id);
+          localStorage.setItem('veena_liked_performers', JSON.stringify(likedPerformers));
+        } else if (!res.liked && likedPerformers.includes(performer.id)) {
+          likedPerformers = likedPerformers.filter((id) => id !== performer.id);
+          localStorage.setItem('veena_liked_performers', JSON.stringify(likedPerformers));
+        }
+      } catch (err) {}
     } else {
       setLiked(prevLiked);
       setLikesCount(prevCount);
+      // Revert localStorage on failure
+      try {
+        const storedLikes = localStorage.getItem('veena_liked_performers');
+        let likedPerformers: string[] = storedLikes ? JSON.parse(storedLikes) : [];
+        if (prevLiked && !likedPerformers.includes(performer.id)) {
+          likedPerformers.push(performer.id);
+          localStorage.setItem('veena_liked_performers', JSON.stringify(likedPerformers));
+        } else if (!prevLiked && likedPerformers.includes(performer.id)) {
+          likedPerformers = likedPerformers.filter((id) => id !== performer.id);
+          localStorage.setItem('veena_liked_performers', JSON.stringify(likedPerformers));
+        }
+      } catch (err) {}
     }
   };
 
