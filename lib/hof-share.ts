@@ -340,8 +340,8 @@ export async function generateHofStoryFile(performer: HallOfFamer): Promise<File
       // 1:1 Square - highly compatible and readable
       const W = 1080;
       const H = 1080;
-      const PAD = 56;
-      const THUMB_H = 430; // Optimized thumbnail height to leave ample space for text
+      const PAD = 52;
+      const THUMB_H = 430; // Kept exactly as configured
 
       const canvas = document.createElement('canvas');
       canvas.width = W;
@@ -364,8 +364,8 @@ export async function generateHofStoryFile(performer: HallOfFamer): Promise<File
       ctx.fillRect(0, 0, W, H);
 
       // ── Inset Gold Border Frame ──────────────────────────────────────────
-      const borderInset = 20;
-      ctx.strokeStyle = 'rgba(202, 138, 4, 0.18)';
+      const borderInset = 18;
+      ctx.strokeStyle = 'rgba(202, 138, 4, 0.2)';
       ctx.lineWidth = 1.5;
       ctx.beginPath();
       if (ctx.roundRect) {
@@ -448,142 +448,167 @@ export async function generateHofStoryFile(performer: HallOfFamer): Promise<File
       ctx.fillText(cohortLabel, PAD + 16, labelY + labelH / 2);
       ctx.textBaseline = 'alphabetic'; // Reset baseline
 
-      // ── 3. Body ──────────────────────────────────────────────────────────
-      let y = THUMB_H + 52;
+      // ── 3. Student Header Details ─────────────────────────────────────────
+      let y = THUMB_H + 48;
 
-      // Student name (centered with stars on both sides)
+      // Student name (Large, bold, luxurious serif)
       ctx.fillStyle = '#0f172a';
-      ctx.font = 'bold 48px "Playfair Display", Georgia, serif';
+      ctx.font = 'bold 52px "Playfair Display", Georgia, serif';
       ctx.textAlign = 'center';
       ctx.fillText(performer.studentName, W / 2, y);
 
-      // Draw elegant small gold stars on left and right of the name
+      // Draw elegant gold stars on left and right of name
       const studentNameW = ctx.measureText(performer.studentName).width;
       ctx.fillStyle = '#ca8a04'; // Warm Gold
-      drawStar(ctx, W / 2 - studentNameW / 2 - 24, y - 15, 5, 7, 3);
-      drawStar(ctx, W / 2 + studentNameW / 2 + 24, y - 15, 5, 7, 3);
+      drawStar(ctx, W / 2 - studentNameW / 2 - 26, y - 16, 5, 8, 3.5);
+      drawStar(ctx, W / 2 + studentNameW / 2 + 26, y - 16, 5, 8, 3.5);
 
-      // Location & Description (Issue #2 Fix: Wrapped cleanly without overflow)
+      // Location (Bold uppercase gold tag)
       y += 28;
       if (performer.location) {
         ctx.fillStyle = '#b45309'; // Warm Amber
-        ctx.font = 'bold 18px system-ui, -apple-system, sans-serif';
+        ctx.font = 'bold 19px system-ui, -apple-system, sans-serif';
         ctx.textAlign = 'center';
         ctx.fillText(performer.location.toUpperCase(), W / 2, y);
-        y += 24;
+        y += 26;
       }
 
+      // Student Description / Tagline (High readability 22px font)
       if (performer.studentDescription) {
-        ctx.fillStyle = '#64748b';
-        ctx.font = '500 19px system-ui, -apple-system, sans-serif';
+        ctx.fillStyle = '#475569';
+        ctx.font = '500 21px system-ui, -apple-system, sans-serif';
         ctx.textAlign = 'center';
-        // Wrap description cleanly within bounds, maximum 2 lines
         const descEndY = wrapText(
           ctx,
           performer.studentDescription.trim(),
           W / 2,
           y,
-          W - PAD * 2 - 48,
-          26,
+          W - PAD * 2 - 40,
+          28,
           2
         );
-        y = descEndY + 6;
+        y = descEndY + 12;
       } else {
-        y += 4;
+        y += 10;
       }
 
-      // Gold gradient divider fading out at the edges
-      y += 10;
-      const dividerGrad = ctx.createLinearGradient(PAD + 30, 0, W - PAD - 30, 0);
-      dividerGrad.addColorStop(0, 'rgba(202, 138, 4, 0)');
-      dividerGrad.addColorStop(0.5, 'rgba(202, 138, 4, 0.7)');
-      dividerGrad.addColorStop(1, 'rgba(202, 138, 4, 0)');
+      // ── 4. Elevated Mentor Praise Card (Fills and balances the lower canvas) ──
+      const FOOTER_RESERVED = 84; // Space for stars & website URL
+      const cardX = PAD;
+      const cardW = W - PAD * 2;
+      const cardY = y;
+      const cardH = H - cardY - FOOTER_RESERVED;
 
-      ctx.strokeStyle = dividerGrad;
+      // Draw warm ivory elevated card container
+      ctx.fillStyle = '#ffffff';
+      ctx.strokeStyle = 'rgba(202, 138, 4, 0.28)';
       ctx.lineWidth = 1.5;
       ctx.beginPath();
-      ctx.moveTo(PAD + 30, y);
-      ctx.lineTo(W - PAD - 30, y);
+      if (ctx.roundRect) {
+        ctx.roundRect(cardX, cardY, cardW, cardH, 20);
+      } else {
+        ctx.rect(cardX, cardY, cardW, cardH);
+      }
+      ctx.fill();
       ctx.stroke();
-      y += 32;
 
-      // ── 4. Instructor Quote Box (Issue #3 & #4 Fix: Dynamic Sizing & Clean Border) ──
-      const quoteStartY = y;
+      // Left gold accent ribbon inside the card
+      const ribbonX = cardX + 22;
+      const ribbonY = cardY + 22;
+      const ribbonH = cardH - 44;
+      ctx.fillStyle = '#ca8a04';
+      ctx.beginPath();
+      if (ctx.roundRect) {
+        ctx.roundRect(ribbonX, ribbonY, 4, ribbonH, 2);
+      } else {
+        ctx.rect(ribbonX, ribbonY, 4, ribbonH);
+      }
+      ctx.fill();
 
-      // Dynamically calculate font size and line height based on quote length
+      // Card Content Setup
+      const innerX = cardX + 46;
+      const innerW = cardW - 76;
       const quoteLen = mentorComment.trim().length;
-      let quoteFontSize = 26;
-      let quoteLineHeight = 38;
+
+      // Dynamic large readable font sizing
+      let quoteFontSize = 28;
+      let quoteLineHeight = 44;
       if (quoteLen > 180) {
-        quoteFontSize = 22;
-        quoteLineHeight = 33;
-      } else if (quoteLen > 120) {
         quoteFontSize = 24;
-        quoteLineHeight = 35;
+        quoteLineHeight = 38;
+      } else if (quoteLen > 120) {
+        quoteFontSize = 26;
+        quoteLineHeight = 41;
       }
 
+      // Calculate vertical centering inside the card
+      ctx.font = `italic ${quoteFontSize}px "Playfair Display", Georgia, serif`;
+      const quoteText = `\u201C${mentorComment.trim()}\u201D`;
+
+      // Measure lines to vertically center
+      const words = quoteText.split(' ');
+      let line = '';
+      let lineCount = 0;
+      for (let i = 0; i < words.length; i++) {
+        const test = line + words[i] + ' ';
+        if (ctx.measureText(test).width > innerW && i > 0) {
+          lineCount++;
+          line = words[i] + ' ';
+        } else {
+          line = test;
+        }
+      }
+      if (line.trim()) lineCount++;
+
+      const estimatedContentH = lineCount * quoteLineHeight + 68;
+      const cardInnerTop = Math.max(
+        cardY + 36,
+        cardY + (cardH - estimatedContentH) / 2 + quoteFontSize - 6
+      );
+
+      // Render Quote Text
       ctx.fillStyle = '#1e293b';
       ctx.font = `italic ${quoteFontSize}px "Playfair Display", Georgia, serif`;
       ctx.textAlign = 'left';
+      const quoteEndY = wrapText(ctx, quoteText, innerX, cardInnerTop, innerW, quoteLineHeight, 5);
 
-      // Draw quote with curly quotes
-      const quoteEndY = wrapText(
-        ctx,
-        `\u201C${mentorComment.trim()}\u201D`,
-        PAD + 22,
-        quoteStartY,
-        W - PAD * 2 - 28,
-        quoteLineHeight,
-        4
-      );
-
-      // Clean gold left accent border dynamically matching text height (Issue #4 fix)
-      ctx.strokeStyle = '#ca8a04';
-      ctx.lineWidth = 3.5;
-      ctx.beginPath();
-      ctx.moveTo(PAD - 2, quoteStartY - quoteFontSize + 6);
-      ctx.lineTo(PAD - 2, quoteEndY - 14);
-      ctx.stroke();
-
-      y = quoteEndY + 18;
-
-      // Instructor attribution
-      ctx.fillStyle = '#1e293b';
-      ctx.font = 'bold 22px system-ui, -apple-system, sans-serif';
-      ctx.fillText(`— ${mentorName}`, PAD, y);
+      // Instructor attribution row inside the card
+      const attrY = quoteEndY + 20;
+      ctx.fillStyle = '#0f172a';
+      ctx.font = 'bold 23px system-ui, -apple-system, sans-serif';
+      ctx.fillText(`— ${mentorName}`, innerX, attrY);
 
       // Verified badge next to instructor name
       const nameW = ctx.measureText(`— ${mentorName}`).width;
-      const badgeX = PAD + nameW + 14;
-      const badgeY = y - 7;
-      const badgeR = 9;
-      ctx.fillStyle = '#ca8a04'; // Warm Gold verified badge
+      const badgeX = innerX + nameW + 14;
+      const badgeY = attrY - 8;
+      const badgeR = 10;
+      ctx.fillStyle = '#ca8a04'; // Warm Gold
       ctx.beginPath();
       ctx.arc(badgeX, badgeY, badgeR, 0, Math.PI * 2);
       ctx.fill();
       ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 12px system-ui, -apple-system, sans-serif';
+      ctx.font = 'bold 13px system-ui, -apple-system, sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText('✓', badgeX, badgeY + 4);
+      ctx.fillText('✓', badgeX, badgeY + 4.5);
 
-      // Subtitle
+      // Instructor Subtitle
       ctx.textAlign = 'left';
-      y += 24;
       ctx.fillStyle = '#64748b';
-      ctx.font = '17px system-ui, -apple-system, sans-serif';
-      ctx.fillText('Instructor & Mentor', PAD, y);
+      ctx.font = '500 18px system-ui, -apple-system, sans-serif';
+      ctx.fillText('Instructor & Mentor', innerX, attrY + 24);
 
-      // ── 5. Fixed Bottom Zone (Issue #3 Fix: Zero overlap guaranteed) ──
-      const starY = 1008;
-      const BRAND_Y = 1042;
+      // ── 5. Balanced Footer Branding ────────────────────────────────────────
+      const starY = H - 52;
+      const BRAND_Y = H - 24;
 
       // 3 Gold Stars
-      ctx.fillStyle = '#ca8a04'; // Warm Gold
-      drawStar(ctx, W / 2, starY, 5, 9, 4); // Center Star
-      drawStar(ctx, W / 2 - 28, starY, 5, 6, 2.8); // Left Star
-      drawStar(ctx, W / 2 + 28, starY, 5, 6, 2.8); // Right Star
+      ctx.fillStyle = '#ca8a04';
+      drawStar(ctx, W / 2, starY, 5, 8, 3.5);
+      drawStar(ctx, W / 2 - 24, starY, 5, 5, 2.2);
+      drawStar(ctx, W / 2 + 24, starY, 5, 5, 2.2);
 
-      // Bottom branding URL
+      // Website URL
       ctx.fillStyle = '#64748b';
       ctx.font = '500 18px system-ui, -apple-system, sans-serif';
       ctx.textAlign = 'center';
