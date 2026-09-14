@@ -27,7 +27,7 @@ interface WebhookLog {
   event_type: string;
   student_name: string;
   student_email: string;
-  status: 'success' | 'failed' | 'partial_success' | 'duplicate';
+  status: 'success' | 'failed' | 'partial_success' | 'duplicate' | 'skipped';
   notification_status?: {
     telegram?: { status: string; error?: string; link?: string };
     email?: { status: string; error?: string };
@@ -54,7 +54,9 @@ export default function WebhookDashboard() {
   const [loading, setLoading] = useState(true);
   const [selectedLog, setSelectedLog] = useState<WebhookLog | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filter, setFilter] = useState<'all' | 'success' | 'failed' | 'partial_success'>('all');
+  const [filter, setFilter] = useState<
+    'all' | 'success' | 'failed' | 'partial_success' | 'skipped'
+  >('all');
   const [activeTab, setActiveTab] = useState<'logs' | 'settings'>('logs');
   const [settings, setSettings] = useState({
     email_enabled: true,
@@ -163,6 +165,8 @@ export default function WebhookDashboard() {
         return <AlertCircle className="h-5 w-5 text-amber-500" />;
       case 'duplicate':
         return <RefreshCcw className="h-5 w-5 text-purple-400" />;
+      case 'skipped':
+        return <Zap className="h-5 w-5 text-blue-500" />;
       default:
         return <Clock className="h-5 w-5 text-gray-400" />;
     }
@@ -272,6 +276,7 @@ export default function WebhookDashboard() {
                     <option value="partial_success">Partial Success</option>
                     <option value="failed">Failed Only</option>
                     <option value="duplicate">Duplicates</option>
+                    <option value="skipped">External / Skipped</option>
                   </select>
                 </div>
               </div>
@@ -355,7 +360,9 @@ export default function WebhookDashboard() {
                                 ? 'bg-red-50 text-red-700 border-red-200'
                                 : selectedLog.status === 'duplicate'
                                   ? 'bg-purple-50 text-purple-700 border-purple-200'
-                                  : 'bg-amber-50 text-amber-700 border-amber-200'
+                                  : selectedLog.status === 'skipped'
+                                    ? 'bg-blue-50 text-blue-700 border-blue-200'
+                                    : 'bg-amber-50 text-amber-700 border-amber-200'
                           }`}
                         >
                           {selectedLog.status.replace('_', ' ')}

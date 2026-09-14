@@ -158,10 +158,10 @@ export async function POST(req: Request) {
           const currency = paymentEntity?.currency || 'INR';
           const { display: amountFormatted } = await getFormattedAmount(amountPaise, currency);
           const notes = paymentEntity?.notes || {};
-          const studentName = notes.studentName || notes.name || paymentEntity?.email || 'Unknown';
+          const studentName =
+            notes.studentName || notes.name || notes.full_name || paymentEntity?.email || 'Unknown';
           const studentEmail = notes.studentEmail || notes.email || paymentEntity?.email || 'N/A';
           const studentPhone = notes.studentPhone || notes.phone || paymentEntity?.contact || 'N/A';
-          const cohortTitle = notes.cohortTitle || notes.cohort || 'Unknown Cohort';
           const paymentId = paymentEntity?.id || 'N/A';
           const now = new Date().toLocaleString('en-IN', {
             timeZone: 'Asia/Kolkata',
@@ -172,16 +172,48 @@ export async function POST(req: Request) {
             minute: '2-digit',
           });
 
-          const alertMsg =
-            `❌ <b>Payment Failed</b>\n\n` +
-            `👤 ${studentName}\n` +
-            `📧 ${studentEmail}\n` +
-            `📱 ${studentPhone}\n` +
-            `💳 ${amountFormatted} via ${method}\n` +
-            `🎓 ${cohortTitle}\n` +
-            `🆔 ${paymentId}\n` +
-            `⚠️ ${errorDesc}${errorSource ? ` (${errorSource})` : ''}\n` +
-            `⏰ ${now}`;
+          // Check if this failed payment belongs to a cohort
+          let isCohort = false;
+          let cohortTitle = notes.cohortTitle || notes.cohort || 'Cohort';
+          if (notes.cohortId) {
+            const { data: c } = await supabaseAdmin
+              .from('cohorts')
+              .select('title')
+              .eq('id', notes.cohortId)
+              .maybeSingle();
+            if (c) {
+              cohortTitle = c.title;
+              isCohort = true;
+            }
+          }
+
+          const workshopTitle =
+            notes.title ||
+            notes.workshop ||
+            notes.workshop_name ||
+            notes.page_title ||
+            paymentEntity?.description ||
+            'Workshop / External Page';
+
+          const alertMsg = isCohort
+            ? `❌ <b>Payment Failed (Cohort)</b>\n\n` +
+              `👤 ${studentName}\n` +
+              `📧 ${studentEmail}\n` +
+              `📱 ${studentPhone}\n` +
+              `💳 ${amountFormatted} via ${method}\n` +
+              `🎓 ${cohortTitle}\n` +
+              `🆔 ${paymentId}\n` +
+              `⚠️ ${errorDesc}${errorSource ? ` (${errorSource})` : ''}\n` +
+              `⏰ ${now}`
+            : `❌ <b>Payment Failed (Workshop / External)</b>\n\n` +
+              `👤 ${studentName}\n` +
+              `📧 ${studentEmail}\n` +
+              `📱 ${studentPhone}\n` +
+              `💳 ${amountFormatted} via ${method}\n` +
+              `🏷️ ${workshopTitle}\n` +
+              `🆔 ${paymentId}\n` +
+              `⚠️ ${errorDesc}${errorSource ? ` (${errorSource})` : ''}\n` +
+              `⏰ ${now}`;
 
           await sendAdminAlert(alertMsg);
 
@@ -193,7 +225,7 @@ export async function POST(req: Request) {
                 status: 'failed',
                 student_email: studentEmail !== 'N/A' ? studentEmail : null,
                 student_name: studentName !== 'Unknown' ? studentName : null,
-                error_message: errorDesc,
+                error_message: `${errorDesc}${isCohort ? '' : ` (External: ${workshopTitle})`}`,
               })
               .eq('id', logId);
           }
@@ -233,14 +265,134 @@ export async function POST(req: Request) {
           const paymentId = paymentEntity.id;
           const customerId = paymentEntity.customer_id || null;
 
-          const studentName = notes.studentName || notes.name || 'Student';
+          const studentName = notes.studentName || notes.name || notes.full_name || 'Student';
           let studentEmail = notes.studentEmail || notes.email || paymentEntity?.email || null;
           const studentPhone = notes.studentPhone || notes.phone || paymentEntity?.contact || null;
           let telegramChatId = notes.telegram_chat_id || null;
           let cohortTitle = 'Cohort';
           let finalCohortId = notes.cohortId || null;
+          const formSlug = notes.formSlug || null;
 
-          // If email is still missing, try to find the student by phone number in our DB
+          // ── Verify if this is a Site Cohort or Form Payment ───────────────
+          let isCohort = false;
+          let isCustomForm = false;
+
+          if (finalCohortId) {
+            const { data: cohort } = await supabaseAdmin
+              .from('cohorts')
+              .select('id, telegram_chat_id, title')
+              .eq('id', finalCohortId)
+              .maybeSingle();
+
+            if (cohort) {
+              isCohort = true;
+              cohortTitle = cohort.title;
+              if (cohort.telegram_chat_id) {
+                telegramChatId = cohort.telegram_chat_id;
+              }
+            } else {
+              finalCohortId = null;
+            }
+          }
+
+          // Reverse lookup: Find cohort by Telegram ID if not resolved
+          if (!isCohort && telegramChatId) {
+            const { data: cohort } = await supabaseAdmin
+              .from('cohorts')
+              .select('id, title, telegram_chat_id')
+              .eq('telegram_chat_id', telegramChatId)
+              .limit(1)
+              .maybeSingle();
+
+            if (cohort) {
+              isCohort = true;
+              finalCohortId = cohort.id;
+              cohortTitle = cohort.title;
+            }
+          }
+
+          // Check if it matches a custom form in form_configs
+          if (
+            !isCohort &&
+            formSlug &&
+            formSlug !== 'cohort_enrollment' &&
+            formSlug !== 'cohort_reenrollment'
+          ) {
+            const { data: formCfg } = await supabaseAdmin
+              .from('form_configs')
+              .select('form_slug, telegram_chat_id')
+              .eq('form_slug', formSlug)
+              .maybeSingle();
+
+            if (formCfg) {
+              isCustomForm = true;
+              if (formCfg.telegram_chat_id) {
+                telegramChatId = formCfg.telegram_chat_id;
+              }
+            }
+          }
+
+          const now = new Date().toLocaleString('en-IN', {
+            timeZone: 'Asia/Kolkata',
+            hour12: true,
+            day: '2-digit',
+            month: 'short',
+            hour: '2-digit',
+            minute: '2-digit',
+          });
+
+          // ── Handle External / Workshop Payments ───────────────────────────
+          // If payment was not created for a recognized cohort or site form,
+          // notify the admin via Telegram and skip sending cohort welcome emails.
+          if (!isCohort && !isCustomForm) {
+            const workshopTitle =
+              notes.title ||
+              notes.workshop ||
+              notes.workshop_name ||
+              notes.page_title ||
+              mainEntity.description ||
+              paymentEntity.description ||
+              'Workshop / External Page';
+
+            console.log(
+              `[Webhook] External payment detected: "${workshopTitle}" (${paymentId}) — sending admin alert & skipping cohort flows`
+            );
+
+            const alertMsg =
+              `🎟️ <b>New Workshop / External Payment!</b>\n\n` +
+              `👤 ${studentName}\n` +
+              `📧 ${studentEmail || 'N/A'}\n` +
+              `📱 ${studentPhone || 'N/A'}\n` +
+              `💳 ${amountFormatted}\n` +
+              `🏷️ ${workshopTitle}\n` +
+              `🆔 ${paymentId}\n` +
+              `⏰ ${now}`;
+
+            await sendAdminAlert(alertMsg);
+
+            if (logId) {
+              await supabaseAdmin
+                .from('webhook_logs')
+                .update({
+                  event_id: paymentId,
+                  status: 'skipped',
+                  student_email: studentEmail || null,
+                  student_name: studentName !== 'Student' ? studentName : null,
+                  error_message: `External payment (${workshopTitle}) — acknowledged, no cohort emails sent`,
+                  notification_status: {
+                    telegram: { status: 'skipped', error: 'External payment' },
+                    email: { status: 'skipped', error: 'External payment' },
+                    whatsapp: { status: 'skipped', error: 'External payment' },
+                    twilio_whatsapp: { status: 'skipped', error: 'External payment' },
+                  },
+                })
+                .eq('id', logId);
+            }
+
+            return;
+          }
+
+          // If email is still missing for cohort payment, try to find student by phone number in our DB
           if (!studentEmail && studentPhone) {
             try {
               const { data: student } = await supabaseAdmin
@@ -251,33 +403,6 @@ export async function POST(req: Request) {
               if (student?.user_email) studentEmail = student.user_email;
             } catch (lookupErr) {
               console.warn('[Webhook] Could not resolve email by phone:', lookupErr);
-            }
-          }
-
-          // ── Fetch Cohort Settings from DB ─────────────────────────────────
-          if (finalCohortId) {
-            const { data: cohort } = await supabaseAdmin
-              .from('cohorts')
-              .select('telegram_chat_id, title')
-              .eq('id', finalCohortId)
-              .single();
-
-            if (cohort?.telegram_chat_id) {
-              telegramChatId = cohort.telegram_chat_id;
-              cohortTitle = cohort.title;
-            }
-          } else if (telegramChatId) {
-            // Reverse lookup: Find cohort by Telegram ID
-            const { data: cohort } = await supabaseAdmin
-              .from('cohorts')
-              .select('id, title')
-              .eq('telegram_chat_id', telegramChatId)
-              .limit(1)
-              .single();
-
-            if (cohort) {
-              finalCohortId = cohort.id;
-              cohortTitle = cohort.title;
             }
           }
 
