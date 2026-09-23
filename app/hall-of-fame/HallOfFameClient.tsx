@@ -11,15 +11,22 @@ import { Search, Award, RefreshCw } from 'lucide-react';
 
 interface HallOfFameClientProps {
   config: SiteConfig;
+  initialPerformers?: HallOfFamer[];
 }
 
-function HallOfFameContent({ config }: { config: SiteConfig }) {
+function HallOfFameContent({
+  config,
+  initialPerformers,
+}: {
+  config: SiteConfig;
+  initialPerformers?: HallOfFamer[];
+}) {
   const searchParams = useSearchParams();
   const entryIdFromUrl = searchParams.get('entry');
 
-  const [performers, setPerformers] = useState<HallOfFamer[]>([]);
+  const [performers, setPerformers] = useState<HallOfFamer[]>(initialPerformers || []);
   const [likedIds, setLikedIds] = useState<Set<string>>(new Set());
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!initialPerformers || initialPerformers.length === 0);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSharePerformer, setSelectedSharePerformer] = useState<HallOfFamer | null>(null);
 
@@ -32,11 +39,19 @@ function HallOfFameContent({ config }: { config: SiteConfig }) {
 
   useEffect(() => {
     async function loadData() {
-      setLoading(true);
       try {
-        const [data, userLikedList] = await Promise.all([getHallOfFamers(), getVisitorLikedIds()]);
-        setPerformers(data);
-        setLikedIds(new Set(userLikedList));
+        if (!initialPerformers || initialPerformers.length === 0) {
+          setLoading(true);
+          const [data, userLikedList] = await Promise.all([
+            getHallOfFamers(),
+            getVisitorLikedIds(),
+          ]);
+          setPerformers(data);
+          setLikedIds(new Set(userLikedList));
+        } else {
+          const userLikedList = await getVisitorLikedIds();
+          setLikedIds(new Set(userLikedList));
+        }
       } catch (err) {
         console.warn('Error loading Hall of Fame data:', err);
       } finally {
@@ -54,7 +69,7 @@ function HallOfFameContent({ config }: { config: SiteConfig }) {
       }
     }
     loadData();
-  }, [entryIdFromUrl]);
+  }, [entryIdFromUrl, initialPerformers]);
 
   const filteredPerformers = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
@@ -161,13 +176,13 @@ function HallOfFameContent({ config }: { config: SiteConfig }) {
   );
 }
 
-export default function HallOfFameClient({ config }: HallOfFameClientProps) {
+export default function HallOfFameClient({ config, initialPerformers }: HallOfFameClientProps) {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 font-sans selection:bg-gold-500 selection:text-white">
       <Suspense
         fallback={<div className="pt-32 text-center text-slate-500 text-sm">Loading...</div>}
       >
-        <HallOfFameContent config={config} />
+        <HallOfFameContent config={config} initialPerformers={initialPerformers} />
       </Suspense>
     </div>
   );

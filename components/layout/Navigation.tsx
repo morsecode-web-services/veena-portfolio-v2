@@ -21,22 +21,48 @@ export default function Navigation({ config, isScrolled = false }: NavigationPro
   const hamburgerButtonRef = useRef<HTMLButtonElement>(null);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
 
-  // Pages that show no nav links and no hamburger
+  // Standalone pages that shouldn't show navigation menu
   const isStandalonePage =
-    pathname === '/hall-of-fame' ||
-    pathname?.startsWith('/hall-of-fame') ||
-    pathname === '/cohorts' ||
-    pathname?.startsWith('/cohorts');
+    (process.env.NEXT_PUBLIC_SITE_LIVE === 'false' && pathname?.startsWith('/forms/')) ||
+    pathname?.startsWith('/link/') ||
+    pathname === '/coming-soon';
 
-  const navItems = useMemo(() => {
+  interface NavItem {
+    id: string;
+    label: string;
+    isPageLink?: boolean;
+    path?: string;
+  }
+
+  const navItems = useMemo<NavItem[]>(() => {
+    const isBlogEnabled = Boolean(
+      config?.sections?.['Blog'] === true ||
+      config?.sections?.['blog'] === true ||
+      config?.layoutOrder?.includes('Blog') ||
+      config?.layoutOrder?.includes('blog')
+    );
+
+    const isCohortsEnabled =
+      config?.sections?.['Cohorts'] !== false && config?.sections?.['cohorts'] !== false;
+    const isHallOfFameEnabled =
+      config?.sections?.['Hall of Fame'] !== false &&
+      config?.sections?.['hallOfFame'] !== false &&
+      config?.hallOfFame?.enabled !== false;
+
     // Default fallback if no config
-    const defaultItems = [
+    const defaultItems: NavItem[] = [
       { id: 'home', label: 'Home' },
       { id: 'about', label: 'About' },
       { id: 'gallery', label: 'Gallery' },
       { id: 'music', label: 'Music' },
       { id: 'events', label: 'Events' },
-      { id: 'hall-of-fame', label: 'Hall of Fame', isPageLink: true, path: '/hall-of-fame' },
+      ...(isCohortsEnabled
+        ? [{ id: 'cohorts', label: 'Cohorts', isPageLink: true, path: '/cohorts' }]
+        : []),
+      ...(isHallOfFameEnabled
+        ? [{ id: 'hall-of-fame', label: 'Hall of Fame', isPageLink: true, path: '/hall-of-fame' }]
+        : []),
+      ...(isBlogEnabled ? [{ id: 'blog', label: 'Blog', isPageLink: true, path: '/blog' }] : []),
       { id: 'press', label: 'Press' },
       { id: 'faq', label: 'FAQ' },
       { id: 'contact', label: 'Contact' },
@@ -44,18 +70,30 @@ export default function Navigation({ config, isScrolled = false }: NavigationPro
 
     if (!config?.layoutOrder) return defaultItems;
 
-    const configItems = config.layoutOrder
+    const configItems: NavItem[] = config.layoutOrder
       .filter((section) => !config.sections || config.sections[section] !== false)
       .map((section) => ({
         id: section.toLowerCase(),
         label: section,
       }));
 
-    // Inject Hall of Fame into config navigation if not present
-    return [
-      ...configItems,
-      { id: 'hall-of-fame', label: 'Hall of Fame', isPageLink: true, path: '/hall-of-fame' },
+    const additionalPages: NavItem[] = [
+      ...(isCohortsEnabled
+        ? [{ id: 'cohorts', label: 'Cohorts', isPageLink: true, path: '/cohorts' }]
+        : []),
+      ...(isHallOfFameEnabled
+        ? [{ id: 'hall-of-fame', label: 'Hall of Fame', isPageLink: true, path: '/hall-of-fame' }]
+        : []),
+      ...(isBlogEnabled ? [{ id: 'blog', label: 'Blog', isPageLink: true, path: '/blog' }] : []),
     ];
+
+    const result: NavItem[] = [...configItems];
+    for (const page of additionalPages) {
+      if (!result.some((item) => item.id === page.id)) {
+        result.push(page);
+      }
+    }
+    return result;
   }, [config]);
 
   // Body scroll lock when mobile menu is open
@@ -88,8 +126,16 @@ export default function Navigation({ config, isScrolled = false }: NavigationPro
   useEffect(() => {
     setMounted(true);
 
-    if (pathname === '/hall-of-fame') {
+    if (pathname === '/hall-of-fame' || pathname?.startsWith('/hall-of-fame')) {
       setActiveSection('hall-of-fame');
+      return;
+    }
+    if (pathname === '/cohorts' || pathname?.startsWith('/cohorts')) {
+      setActiveSection('cohorts');
+      return;
+    }
+    if (pathname === '/blog' || pathname?.startsWith('/blog')) {
+      setActiveSection('blog');
       return;
     }
 
@@ -122,12 +168,18 @@ export default function Navigation({ config, isScrolled = false }: NavigationPro
     path?: string;
   }) => {
     if (item.isPageLink && item.path) {
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new Event('app:navigation-start'));
+      }
       router.push(item.path);
       setIsMenuOpen(false);
       return;
     }
 
     if (pathname !== '/') {
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new Event('app:navigation-start'));
+      }
       router.push(`/#${item.id}`);
       setIsMenuOpen(false);
       return;
@@ -168,6 +220,12 @@ export default function Navigation({ config, isScrolled = false }: NavigationPro
             >
               <button
                 onClick={() => handleNavClick(item)}
+                onMouseEnter={() => {
+                  if (item.path) router.prefetch(item.path);
+                }}
+                onFocus={() => {
+                  if (item.path) router.prefetch(item.path);
+                }}
                 className={`relative text-xs font-medium transition-all duration-300 min-h-[44px] flex items-center justify-center px-1.5 lg:px-3 ${
                   activeSection === item.id
                     ? 'text-gold-600'
@@ -261,6 +319,12 @@ export default function Navigation({ config, isScrolled = false }: NavigationPro
                         <li key={item.id} role="none">
                           <button
                             onClick={() => handleNavClick(item)}
+                            onMouseEnter={() => {
+                              if (item.path) router.prefetch(item.path);
+                            }}
+                            onFocus={() => {
+                              if (item.path) router.prefetch(item.path);
+                            }}
                             className={`text-base font-medium py-3.5 px-2 transition-colors hover:text-gold-600 w-full text-left flex items-center justify-between ${
                               activeSection === item.id ? 'text-gold-600' : 'text-charcoal-700'
                             }`}

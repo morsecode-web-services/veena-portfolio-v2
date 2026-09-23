@@ -69,11 +69,7 @@ export default function Header({ config }: HeaderProps) {
   const artistName = config?.artist.name || 'Aishwarya Manikarnike';
 
   const isStandaloneNavPage =
-    pathname === '/cohorts' ||
-    pathname?.startsWith('/cohorts') ||
-    pathname === '/hall-of-fame' ||
-    pathname?.startsWith('/hall-of-fame') ||
-    (process.env.NEXT_PUBLIC_SITE_LIVE === 'false' && pathname?.startsWith('/forms/'));
+    process.env.NEXT_PUBLIC_SITE_LIVE === 'false' && pathname?.startsWith('/forms/');
 
   return (
     <m.header

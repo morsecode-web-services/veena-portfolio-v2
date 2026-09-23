@@ -147,21 +147,40 @@ export default function AdminLayoutClient({ children }: AdminLayoutClientProps) 
     router.push('/admin/login');
   };
 
-  const navItems = [
-    { name: 'Cohorts', href: '/admin/cohorts', icon: Users },
-    { name: 'Students', href: '/admin/students', icon: Search },
-    { name: 'Hall of Fame', href: '/admin/hall-of-fame', icon: Award },
-    { name: 'Events', href: '/admin/events', icon: Calendar },
-    { name: 'Blog', href: '/admin/blogs', icon: FileText },
-    { name: 'Videos', href: '/admin/videos', icon: LayoutDashboard },
-    { name: 'Forms', href: '/admin/forms', icon: Settings },
-    { name: 'Responses', href: '/admin/responses', icon: FileText, badge: responsesCount },
-    { name: 'Smart Links', href: '/admin/smart-links', icon: LinkIcon },
-    { name: 'Leads', href: '/admin/leads', icon: Users, badge: leadsCount },
-    { name: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
-    { name: 'Automations', href: '/admin/webhooks', icon: Settings },
-    { name: 'Architect', href: '/admin/config', icon: PenTool },
-    { name: 'Public Site', href: '/', icon: Home },
+  const navCategories = [
+    {
+      title: 'Performer & Media',
+      items: [
+        { name: 'Events', href: '/admin/events', icon: Calendar },
+        { name: 'Videos', href: '/admin/videos', icon: LayoutDashboard },
+        { name: 'Blog', href: '/admin/blogs', icon: FileText },
+      ],
+    },
+    {
+      title: 'Academy & Students',
+      items: [
+        { name: 'Cohorts', href: '/admin/cohorts', icon: Users },
+        { name: 'Students', href: '/admin/students', icon: Search },
+        { name: 'Hall of Fame', href: '/admin/hall-of-fame', icon: Award },
+      ],
+    },
+    {
+      title: 'Inquiries & Growth',
+      items: [
+        { name: 'Leads', href: '/admin/leads', icon: Users, badge: leadsCount },
+        { name: 'Forms', href: '/admin/forms', icon: Settings },
+        { name: 'Responses', href: '/admin/responses', icon: FileText, badge: responsesCount },
+        { name: 'Smart Links', href: '/admin/smart-links', icon: LinkIcon },
+      ],
+    },
+    {
+      title: 'Platform & Tools',
+      items: [
+        { name: 'Architect', href: '/admin/config', icon: PenTool },
+        { name: 'Automations', href: '/admin/webhooks', icon: Settings },
+        { name: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
+      ],
+    },
   ];
 
   return (
@@ -206,67 +225,96 @@ export default function AdminLayoutClient({ children }: AdminLayoutClientProps) 
             </div>
           </div>
 
-          <nav className="flex-1 px-3 space-y-1">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = pathname === item.href;
-              const badgeCount = item.badge ?? 0;
-
-              return (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  title={isCollapsed ? item.name : ''}
-                  className={`
-                                        flex items-center gap-4 px-3 py-2 rounded transition-all relative group
-                                        ${
-                                          isActive
-                                            ? 'bg-slate-850 text-white font-medium'
-                                            : 'text-slate-400 hover:bg-slate-850 hover:text-white'
-                                        }
-                                    `}
-                  onClick={() => setIsSidebarOpen(false)}
-                >
-                  <div className="min-w-[24px] flex justify-center">
-                    <Icon
-                      className={`h-4 w-4 transition-transform duration-300 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`}
-                    />
+          <nav className="flex-1 px-3 space-y-4 overflow-y-auto scrollbar-hide pb-4">
+            {navCategories.map((category, catIdx) => (
+              <div key={category.title} className="space-y-1">
+                {!isCollapsed ? (
+                  <div className="text-[10px] font-bold tracking-wider text-slate-500 uppercase px-3 pt-2 pb-1">
+                    {category.title}
                   </div>
+                ) : (
+                  catIdx > 0 && <div className="my-2 border-t border-slate-800" />
+                )}
 
-                  {!isCollapsed && (
-                    <m.span
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      className="font-medium text-xs whitespace-nowrap"
-                    >
-                      {item.name}
-                    </m.span>
-                  )}
+                {category.items.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = pathname === item.href;
+                  const badgeCount = item.badge ?? 0;
 
-                  {badgeCount > 0 && (
-                    <span
+                  return (
+                    <Link
+                      key={item.name}
+                      href={item.href}
+                      title={isCollapsed ? item.name : ''}
                       className={`
-                                            absolute text-[9px] font-bold rounded text-center
+                                            flex items-center gap-4 px-3 py-2 rounded transition-all relative group
                                             ${
-                                              isCollapsed
-                                                ? 'top-2 right-2 w-4 h-4 bg-slate-800 text-slate-200 border border-slate-700 flex items-center justify-center'
-                                                : 'right-3 px-1.5 py-0.5 bg-slate-800 text-slate-350 border border-slate-700'
+                                              isActive
+                                                ? 'bg-slate-850 text-white font-medium'
+                                                : 'text-slate-400 hover:bg-slate-850 hover:text-white'
                                             }
                                         `}
+                      onClick={() => setIsSidebarOpen(false)}
                     >
-                      {badgeCount}
-                    </span>
-                  )}
+                      <div className="min-w-[24px] flex justify-center">
+                        <Icon
+                          className={`h-4 w-4 transition-transform duration-300 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`}
+                        />
+                      </div>
 
-                  {isActive && !isCollapsed && (
-                    <m.div
-                      layoutId="active-indicator"
-                      className="absolute left-0 w-1 h-6 bg-slate-400 rounded-r-full"
-                    />
-                  )}
-                </Link>
-              );
-            })}
+                      {!isCollapsed && (
+                        <m.span
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          className="font-medium text-xs whitespace-nowrap"
+                        >
+                          {item.name}
+                        </m.span>
+                      )}
+
+                      {badgeCount > 0 && (
+                        <span
+                          className={`
+                                                absolute text-[9px] font-bold rounded text-center
+                                                ${
+                                                  isCollapsed
+                                                    ? 'top-2 right-2 w-4 h-4 bg-slate-800 text-slate-200 border border-slate-700 flex items-center justify-center'
+                                                    : 'right-3 px-1.5 py-0.5 bg-slate-800 text-slate-350 border border-slate-700'
+                                                }
+                                            `}
+                        >
+                          {badgeCount}
+                        </span>
+                      )}
+
+                      {isActive && !isCollapsed && (
+                        <m.div
+                          layoutId="active-indicator"
+                          className="absolute left-0 w-1 h-6 bg-slate-400 rounded-r-full"
+                        />
+                      )}
+                    </Link>
+                  );
+                })}
+              </div>
+            ))}
+
+            {/* Quick Public Site Link */}
+            <div className="pt-2 border-t border-slate-800">
+              <Link
+                href="/"
+                title={isCollapsed ? 'Public Site' : ''}
+                className="flex items-center gap-4 px-3 py-2 rounded text-slate-400 hover:bg-slate-850 hover:text-white transition-all group"
+                onClick={() => setIsSidebarOpen(false)}
+              >
+                <div className="min-w-[24px] flex justify-center">
+                  <Home className="h-4 w-4 group-hover:scale-110 transition-transform" />
+                </div>
+                {!isCollapsed && (
+                  <span className="font-medium text-xs whitespace-nowrap">Public Site</span>
+                )}
+              </Link>
+            </div>
           </nav>
 
           <div className="p-3 mt-auto border-t border-slate-800/50">

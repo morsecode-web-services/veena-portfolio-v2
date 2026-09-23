@@ -66,8 +66,10 @@ export async function generateMetadata({
   };
 }
 
-export default async function HallOfFamePage() {
-  const config = await loadConfig();
+import { getHallOfFamers } from '@/lib/hall-of-fame';
 
-  return <HallOfFameClient config={config} />;
+export default async function HallOfFamePage() {
+  const [config, performers] = await Promise.all([loadConfig(), getHallOfFamers()]);
+
+  return <HallOfFameClient config={config} initialPerformers={performers} />;
 }

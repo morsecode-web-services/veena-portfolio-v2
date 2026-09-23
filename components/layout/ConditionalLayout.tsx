@@ -1,11 +1,12 @@
 'use client';
 
-import React from 'react';
+import React, { Suspense } from 'react';
 import { usePathname } from 'next/navigation';
 import Header from './Header';
 import Footer from './Footer';
 import VideoModal from '@/components/ui/VideoModal';
 import BackToTop from '@/components/ui/BackToTop';
+import NavigationProgressBar from '@/components/ui/NavigationProgressBar';
 
 interface ConditionalLayoutProps {
   children: React.ReactNode;
@@ -26,6 +27,9 @@ export default function ConditionalLayout({
 
   return (
     <>
+      <Suspense fallback={null}>
+        <NavigationProgressBar />
+      </Suspense>
       {jsonLdData && !isStandalonePage && (
         <script
           type="application/ld+json"
